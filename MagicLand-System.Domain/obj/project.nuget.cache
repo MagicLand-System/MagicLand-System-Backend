@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "d5p/RLDVDSDTyVsiR+fkReuUaGx3dqEOnAJtN9tBM/z68AnBY0oyoXtmBIir4tXZxRsfma0qLfhXJnDHru/W3Q==",
+  "dgSpecHash": "wLjfxXvNO5dHq7BZlX+vmvKWfURiDW2JRaIaaVuFvQdn8v3AWeTCTRHgJp/v3PiVbPsDMwE3UvqzIJINQgWGMg==",
   "success": true,
   "projectFilePath": "D:\\Capstone-2024\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Thuong\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
-    "C:\\Users\\Thuong\\.nuget\\packages\\epplus\\7.0.0\\epplus.7.0.0.nupkg.sha512",
+    "C:\\Users\\Thuong\\.nuget\\packages\\epplus\\7.0.1\\epplus.7.0.1.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\epplus.interfaces\\6.1.1\\epplus.interfaces.6.1.1.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\epplus.system.drawing\\6.1.1\\epplus.system.drawing.6.1.1.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
@@ -66,7 +66,7 @@
     "C:\\Users\\Thuong\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\system.security.accesscontrol\\6.0.0\\system.security.accesscontrol.6.0.0.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\system.security.cryptography.cng\\5.0.0\\system.security.cryptography.cng.5.0.0.nupkg.sha512",
-    "C:\\Users\\Thuong\\.nuget\\packages\\system.security.cryptography.pkcs\\7.0.2\\system.security.cryptography.pkcs.7.0.2.nupkg.sha512",
+    "C:\\Users\\Thuong\\.nuget\\packages\\system.security.cryptography.pkcs\\7.0.3\\system.security.cryptography.pkcs.7.0.3.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\system.security.cryptography.protecteddata\\6.0.0\\system.security.cryptography.protecteddata.6.0.0.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\system.security.permissions\\6.0.0\\system.security.permissions.6.0.0.nupkg.sha512",
     "C:\\Users\\Thuong\\.nuget\\packages\\system.security.principal.windows\\5.0.0\\system.security.principal.windows.5.0.0.nupkg.sha512",

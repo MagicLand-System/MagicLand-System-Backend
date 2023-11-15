@@ -46,7 +46,7 @@
           }
         }
       },
-      "EPPlus/7.0.0": {
+      "EPPlus/7.0.1": {
         "type": "package",
         "dependencies": {
           "EPPlus.Interfaces": "6.1.1",
@@ -54,7 +54,7 @@
           "Microsoft.Extensions.Configuration.Json": "7.0.0",
           "Microsoft.IO.RecyclableMemoryStream": "2.3.2",
           "System.ComponentModel.Annotations": "5.0.0",
-          "System.Security.Cryptography.Pkcs": "7.0.2",
+          "System.Security.Cryptography.Pkcs": "7.0.3",
           "System.Text.Encoding.CodePages": "7.0.0"
         },
         "compile": {
@@ -1070,7 +1070,7 @@
           }
         }
       },
-      "System.Security.Cryptography.Pkcs/7.0.2": {
+      "System.Security.Cryptography.Pkcs/7.0.3": {
         "type": "package",
         "dependencies": {
           "System.Formats.Asn1": "7.0.0"
@@ -1308,15 +1308,15 @@
         "lib/netstandard2.0/Azure.Identity.xml"
       ]
     },
-    "EPPlus/7.0.0": {
-      "sha512": "fqDPDAB0v+sU1m0VxDy4jBKhH77BoiaGjglnzflUVoHDL3Bnf8Xf/V8/dm3uYhMwChExnqFXxYscslu46seZQQ==",
+    "EPPlus/7.0.1": {
+      "sha512": "eNTOmxcexmUskNUb4PQNNNtsqP5LXfNYBMkVnze1G09KmGxXgVB7kd6Ogm3/6NZSZmRisMjsyUKa0rUoExhJGA==",
       "type": "package",
-      "path": "epplus/7.0.0",
+      "path": "epplus/7.0.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "EPPlusLogo.png",
-        "epplus.7.0.0.nupkg.sha512",
+        "epplus.7.0.1.nupkg.sha512",
         "epplus.nuspec",
         "lib/net35/EPPlus.dll",
         "lib/net35/EPPlus.xml",
@@ -3051,10 +3051,10 @@
         "version.txt"
       ]
     },
-    "System.Security.Cryptography.Pkcs/7.0.2": {
-      "sha512": "xhFNJOcQSWhpiVGLLBQYoxAltQSQVycMkwaX1z7I7oEdT9Wr0HzSM1yeAbfoHaERIYd5s6EpLSOLs2qMchSKlA==",
+    "System.Security.Cryptography.Pkcs/7.0.3": {
+      "sha512": "yhwEHH5Gzl/VoADrXtt5XC95OFoSjNSWLHNutE7GwdOgefZVRvEXRSooSpL8HHm3qmdd9epqzsWg28UJemt22w==",
       "type": "package",
-      "path": "system.security.cryptography.pkcs/7.0.2",
+      "path": "system.security.cryptography.pkcs/7.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3079,7 +3079,7 @@
         "runtimes/win/lib/net6.0/System.Security.Cryptography.Pkcs.xml",
         "runtimes/win/lib/net7.0/System.Security.Cryptography.Pkcs.dll",
         "runtimes/win/lib/net7.0/System.Security.Cryptography.Pkcs.xml",
-        "system.security.cryptography.pkcs.7.0.2.nupkg.sha512",
+        "system.security.cryptography.pkcs.7.0.3.nupkg.sha512",
         "system.security.cryptography.pkcs.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -3473,8 +3473,9 @@
   },
   "projectFileDependencyGroups": {
     "net7.0": [
-      "EPPlus >= 7.0.0",
+      "EPPlus >= 7.0.1",
       "Microsoft.EntityFrameworkCore >= 7.0.13",
+      "Microsoft.EntityFrameworkCore.Design >= 7.0.13",
       "Microsoft.EntityFrameworkCore.SqlServer >= 7.0.13",
       "Microsoft.EntityFrameworkCore.Tools >= 7.0.13"
     ]
@@ -3525,9 +3526,15 @@
         "dependencies": {
           "EPPlus": {
             "target": "Package",
-            "version": "[7.0.0, )"
+            "version": "[7.0.1, )"
           },
           "Microsoft.EntityFrameworkCore": {
+            "target": "Package",
+            "version": "[7.0.13, )"
+          },
+          "Microsoft.EntityFrameworkCore.Design": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
             "target": "Package",
             "version": "[7.0.13, )"
           },
@@ -3558,7 +3565,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.310\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.311\\RuntimeIdentifierGraph.json"
       }
     }
   }
