@@ -14,7 +14,7 @@ namespace MagicLand_System.Domain.Models
         public string District { get; set; }
         public string City { get; set; }
         [ForeignKey("User")]
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; } = null;
         public User User { get; set; }  
         public ICollection<Class> Classes { get; set; } = new List<Class>();    
     }
