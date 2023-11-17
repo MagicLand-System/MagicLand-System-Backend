@@ -20,7 +20,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo() { Title = "Blog System", Version = "v1" });
+    options.SwaggerDoc("v1", new OpenApiInfo() { Title = "MagicLand System", Version = "v1" });
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
         In = ParameterLocation.Header,
