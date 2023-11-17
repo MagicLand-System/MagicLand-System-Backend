@@ -10,12 +10,12 @@ namespace MagicLand_System.Domain.Models
     public class ClassInstance
     {
         public Guid Id { get; set; }
-        [ForeignKey("Schedule")]    
-        public Guid ScheduleId { get; set; }    
-        public Session Schedule { get; set; }
-        [ForeignKey("User")]
+        [ForeignKey("Session")]    
+        public Guid SessionId { get; set; }    
+        public Session Session { get; set; }
+        [ForeignKey("Student")]
         public Guid StudentId { get; set; }
-        public User User { get; set; }
+        public Student Student { get; set; }
         public string Status { get; set; }
     }
 }
