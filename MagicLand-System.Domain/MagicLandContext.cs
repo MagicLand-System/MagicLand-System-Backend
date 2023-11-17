@@ -107,7 +107,7 @@ namespace MagicLand_System.Domain
             });
             modelBuilder.Entity<ClassInstance>(entity =>
             {
-                entity.ToTable("ClasInstance");
+                entity.ToTable("ClassInstance");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Session).WithMany(e => e.ClassInstances).HasForeignKey(e => e.SessionId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(e => e.Student).WithMany(e => e.ClassInstances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
@@ -134,7 +134,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("PersonalWallet");
                 entity.HasKey(entity => entity.Id);
-                entity.Property(entity => entity.Banlance).HasDefaultValue(0);
+                entity.Property(entity => entity.Balance).HasDefaultValue(0);
 
                 entity.HasOne(e => e.User).WithOne(e => e.PersonalWallet).HasForeignKey<User>(e => e.PersonalWalletId);
             });

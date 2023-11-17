@@ -28,13 +28,11 @@ namespace MagicLand_System.Domain.Models
         public Guid RoleId { get; set; }
         public Role Role { get; set; }
         [ForeignKey("Cart")]
-        public Guid CartId { get; set; }
+        public Guid? CartId { get; set; } = null;
         public Cart Cart { get; set; }
         [ForeignKey("PersonalWallet")]
-        public Guid PersonalWalletId { get; set; }
+        public Guid? PersonalWalletId { get; set; } = null;
         public PersonalWallet PersonalWallet { get; set; }
-        public ICollection<StudentTransaction> StudentTransactions { get; set; } = new List<StudentTransaction>();
-        public ICollection<ClassInstance> ClassInstances { get; set; } = new List<ClassInstance>();
         public ICollection<UserPromotion> UserPromotions { get; set; } = new List<UserPromotion>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<ClassFeeTransaction> ClassFeeTransactions { get; set; } = new List<ClassFeeTransaction>();
