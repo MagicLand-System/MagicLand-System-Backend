@@ -26,6 +26,7 @@ namespace MagicLand_System.Domain.Models
         public Guid CourseId { get; set; }  
         public Course Course { get; set; }
         public double Price { get; set; }
+        public ICollection<ClassTransaction> ClasssTransactions { get; set; } = new List<ClassTransaction>();
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
     }
 }

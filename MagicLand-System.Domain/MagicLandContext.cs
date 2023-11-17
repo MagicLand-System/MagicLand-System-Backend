@@ -1,6 +1,11 @@
 ﻿using MagicLand_System.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain
 {
@@ -11,24 +16,24 @@ namespace MagicLand_System.Domain
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<PersonalWallet> PersonalWallets { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }
-        public DbSet<Cart> Carts { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }    
+        public DbSet<Cart> Carts { get; set; }  
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Address> Address { get; set; }
         public DbSet<UserPromotion> UserPromotions { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionTransaction> PromotionTransactions { get; set; }
-        public DbSet<Student> Students { get; set; }
+        public DbSet<Student> Students { get; set; }    
         public DbSet<ClassFeeTransaction> ClassFeeTransactions { get; set; }
         public DbSet<ClassTransaction> ClassTransactions { get; set; }
         public DbSet<Class> Classes { get; set; }
         public DbSet<StudentTransaction> StudentTransactions { get; set; }
         public DbSet<ClassInstance> ClassInstances { get; set; }
-        public DbSet<Course> Courses { get; set; }
+        public DbSet<Course> Courses { get; set; }  
         public DbSet<CoursePrerequisite> CoursePrerequisites { get; set; }
         public DbSet<Slot> Slots { get; set; }
-        public DbSet<Session> Schedules { get; set; }
-        public DbSet<Room> Rooms { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<Room> Rooms { get; set; }  
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -71,11 +76,56 @@ namespace MagicLand_System.Domain
                 entity.HasOne(e => e.User).WithOne(e => e.Address).HasForeignKey<User>(e => e.AddressId);
 
             });
+            modelBuilder.Entity<Cart>(entity =>
+            {
+                entity.ToTable("Cart");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<CartItem>(entity =>
+            {
+                entity.ToTable("CartItem");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Cart).WithMany(e => e.Carts).HasForeignKey(e => e.CartId);
+            });
+            modelBuilder.Entity<Class>(entity =>
+            {
+                entity.ToTable("Class");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User).WithMany(e => e.Classes).HasForeignKey(entity => entity.LecturerId);
+                entity.HasOne(e => e.Course).WithMany(r => r.Classes).HasForeignKey(e => e.CourseId);
+                entity.HasOne(e => e.Address).WithMany(r => r.Classes).HasForeignKey(e => e.AddressId);
+                entity.Property(e => e.StartTime).HasDefaultValueSql("getutcdate()");
+                entity.Property(e => e.EndTime).HasDefaultValueSql("getutcdate()");
+            });
+            modelBuilder.Entity<ClassFeeTransaction>(entity =>
+            {
+                entity.ToTable("ClassFeeTransaction");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User).WithMany(e => e.ClassFeeTransactions).HasForeignKey(e => e.ParentId);
+                entity.Property(e => e.DateCreated).HasDefaultValueSql("getutcdate()");
+            });
+            modelBuilder.Entity<ClassInstance>(entity =>
+            {
+                entity.ToTable("ClasInstance");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.ClassInstances).HasForeignKey(e => e.ScheduleId);
+            });
+            modelBuilder.Entity<ClassTransaction>(entity =>
+            {
+                entity.ToTable("ClassTransaction");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Class).WithMany(entity => entity.ClasssTransactions);
+                entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.ClassTransactions).HasForeignKey(e => e.ClassFeeTransactionId);
+            });
+            modelBuilder.Entity<Course>(entity =>
+            {
+                entity.ToTable("Course");
+                entity.HasKey(e => e.Id);
             modelBuilder.Entity<CoursePrerequisite>(entity =>
             {
                 entity.ToTable("CoursePrerequisite");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Course).WithMany(e => e.coursePrerequisites).HasForeignKey(e => e.CurrentCourseId);
+                entity.HasOne(e => e.Course).WithMany(e => e.CoursePrerequisites).HasForeignKey(e => e.CurrentCourseId);
             });
             modelBuilder.Entity<PersonalWallet>(entity =>
             {
@@ -143,6 +193,7 @@ namespace MagicLand_System.Domain
                 entity.HasOne(e => e.Student).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.StudentId);
                 entity.HasOne(e => e.ClassTransaction).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.ClassTransactionId);
 
+            });
             });
             modelBuilder.Entity<StudentTransaction>(entity =>
             {
