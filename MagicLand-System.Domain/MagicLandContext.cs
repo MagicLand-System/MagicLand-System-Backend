@@ -74,9 +74,54 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Address");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.User).WithOne(e => e.Address).HasForeignKey<User>(e => e.AddressId);
-                
             });
+            modelBuilder.Entity<Cart>(entity =>
+            {
+                entity.ToTable("Cart");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<CartItem>(entity =>
+            {
+                entity.ToTable("CartItem");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Cart).WithMany(e => e.Carts).HasForeignKey(e => e.CartId);
+            });
+            modelBuilder.Entity<Class>(entity =>
+            {
+                entity.ToTable("Class");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User).WithMany(e => e.Classes).HasForeignKey(entity => entity.LecturerId);
+                entity.HasOne(e => e.Course).WithMany(r => r.Classes).HasForeignKey(e => e.CourseId);
+                entity.HasOne(e => e.Address).WithMany(r => r.Classes).HasForeignKey(e => e.AddressId);
+                entity.Property(e => e.StartTime).HasDefaultValueSql("getutcdate()");
+                entity.Property(e => e.EndTime).HasDefaultValueSql("getutcdate()");
+            });
+            modelBuilder.Entity<ClassFeeTransaction>(entity =>
+            {
+                entity.ToTable("ClassFeeTransaction");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User).WithMany(e => e.ClassFeeTransactions).HasForeignKey(e => e.ParentId);
+                entity.Property(e => e.DateCreated).HasDefaultValueSql("getutcdate()");
+            });
+            modelBuilder.Entity<ClassInstance>(entity =>
+            {
+                entity.ToTable("ClasInstance");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.ClassInstances).HasForeignKey(e => e.ScheduleId);
+            });
+            modelBuilder.Entity<ClassTransaction>(entity =>
+            {
+                entity.ToTable("ClassTransaction");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Class).WithMany(entity => entity.ClasssTransactions);
+                entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.ClassTransactions).HasForeignKey(e => e.ClassFeeTransactionId);
+            });
+            modelBuilder.Entity<Course>(entity =>
+            {
+                entity.ToTable("Course");
+                entity.HasKey(e => e.Id);
 
+            });
         }
     }
 }

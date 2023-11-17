@@ -12,8 +12,9 @@ namespace MagicLand_System.Domain.Models
         public string Name { get; set; }
         public int NumberOfSession { get; set; }
         public int MinYearStudent { get; set; } = 3;
-        public int MaxYearStudent { get; set; }
+        public int MaxYearStudent { get; set; } = 120;
         public string Status { get; set; }
-        public ICollection<CoursePrerequisite> coursePrerequisites { get; set; } = new List<CoursePrerequisite>();
+        public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
+        public ICollection<Class> Classes { get; set; } = new List<Class>();
     }
 }

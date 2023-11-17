@@ -16,5 +16,6 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("ClassFeeTransaction")]
         public Guid ClassFeeTransactionId { get; set; }
         public ClassFeeTransaction ClassFeeTransaction { get; set; }    
+        public ICollection<StudentTransaction> StudentTransactions { get; set; } = new List<StudentTransaction>();
     }
 }

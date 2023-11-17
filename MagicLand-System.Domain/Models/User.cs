@@ -37,5 +37,7 @@ namespace MagicLand_System.Domain.Models
         public ICollection<ClassInstance> ClassInstances { get; set; } = new List<ClassInstance>();
         public ICollection<UserPromotion> UserPromotions { get; set; } = new List<UserPromotion>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
+        public ICollection<ClassFeeTransaction> ClassFeeTransactions { get; set; } = new List<ClassFeeTransaction>();
+        public ICollection<Student> Students { get; set; } = new List<Student>();
     }
 }

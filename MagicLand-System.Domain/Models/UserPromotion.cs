@@ -17,6 +17,6 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("User")]
         public Guid UserId { get; set; }    
         public User User { get; set; }
-        public ICollection<PromotionTransaction> promotionTransactions { get; set; } = new List<PromotionTransaction>();
+        public ICollection<PromotionTransaction> PromotionTransactions { get; set; } = new List<PromotionTransaction>();
     }
 }
