@@ -80,6 +80,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Cart");
                 entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User).WithOne(e => e.Cart).HasForeignKey<User>(e => e.CartId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<CartItem>(entity =>
             {
@@ -108,14 +109,16 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("ClasInstance");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Schedule).WithMany(e => e.ClassInstances).HasForeignKey(e => e.ScheduleId);
+                entity.HasOne(e => e.Session).WithMany(e => e.ClassInstances).HasForeignKey(e => e.SessionId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Student).WithMany(e => e.ClassInstances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<ClassTransaction>(entity =>
             {
                 entity.ToTable("ClassTransaction");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Class).WithMany(entity => entity.ClasssTransactions);
-                entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.ClassTransactions).HasForeignKey(e => e.ClassFeeTransactionId);
+                entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.ClassTransactions).HasForeignKey(e => e.ClassFeeTransactionId).OnDelete(DeleteBehavior.Restrict);
+
             });
             modelBuilder.Entity<Course>(entity =>
             {
@@ -158,7 +161,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("PromotionTransaction");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.UserPromotion).WithMany(e => e.PromotionTransactions).HasForeignKey(e => e.UserPromotionId);
-                entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.PromotionTransactions).HasForeignKey(e => e.UserPromotionId);
+                entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.PromotionTransactions).HasForeignKey(e => e.UserPromotionId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Room>(entity =>
             {
@@ -200,7 +203,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("StudentTransaction");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Student).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.StudentId);
-                entity.HasOne(e => e.ClassTransaction).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.ClassTransactionId);
+                entity.HasOne(e => e.ClassTransaction).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.ClassTransactionId).OnDelete(DeleteBehavior.Restrict);
 
             });
         }
