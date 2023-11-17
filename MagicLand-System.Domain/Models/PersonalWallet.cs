@@ -10,7 +10,7 @@ namespace MagicLand_System.Domain.Models
     public class PersonalWallet
     {
         public Guid Id { get; set; }
-        public double Banlance { get; set; }
+        public double Balance { get; set; }
         [ForeignKey("User")]
         public Guid UserId { get; set; }
         public User User { get; set; }  
