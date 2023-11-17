@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain.Models
 {
-    public class Schedule
+    public class Session
     {
         public Guid Id { get; set; }
         [ForeignKey("Class")]

@@ -12,7 +12,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         [ForeignKey("Schedule")]    
         public Guid ScheduleId { get; set; }    
-        public Schedule Schedule { get; set; }
+        public Session Schedule { get; set; }
         [ForeignKey("User")]
         public Guid StudentId { get; set; }
         public User User { get; set; }
