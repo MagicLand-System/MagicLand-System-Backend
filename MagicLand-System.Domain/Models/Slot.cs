@@ -11,6 +11,6 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public string StartTime { get; set; }   
         public string EndTime { get; set; }
-        public ICollection<Schedule> Schedules { get; set;} = new List<Schedule>();
+        public ICollection<Session> Sessions { get; set;} = new List<Session>();
     }
 }
