@@ -8,6 +8,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<Course>> GetCoursesAsync();
         Task<List<Course>> GetCourseByIdAsync(Guid id);
         Task<List<Course>> SearchCourseAsync(string keyWord);
-        Task<List<Course>> FilterCourseAsync(FilterCourseRequest request);
+        Task<List<Course>> FilterCourseAsync(int minYearsOld , string? keyWord = null, int? maxYearsOld = null,int? numberOfSession = null);
     }
 }
