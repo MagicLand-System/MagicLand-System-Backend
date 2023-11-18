@@ -101,6 +101,8 @@ Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOlds
 ('fded66d4-c3e7-4721-b509-e71feab6723a','Basic Math', 6, 3, 6, 'ACTIVE');
 Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status]) Values
 ('a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 'Advance Math', 5, 5, 12, 'ACTIVE');
+Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status]) Values
+('9cbca0ad-7048-4777-a13f-8c34e92dea43', 'Normal Math', 7, 5, 7, 'ACTIVE');
 
 
 
@@ -108,7 +110,8 @@ Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOlds
 GO
 Insert into CoursePrerequisite (Id, CurrentCourseId, PrerequisiteCourseId) Values
 ('4df39613-41d4-4411-861a-af3bf76e8007', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 'fded66d4-c3e7-4721-b509-e71feab6723a');
-
+Insert into CoursePrerequisite (Id, CurrentCourseId, PrerequisiteCourseId) Values
+('a7c0ee77-73cb-4fcc-9db4-b03aeb47ac06', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '9cbca0ad-7048-4777-a13f-8c34e92dea43');
 
 
 --- Class --- Create Time: 11/17/2023 - 2:13 PM / Finish: 2:43 PM

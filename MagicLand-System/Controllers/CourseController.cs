@@ -1,11 +1,15 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
 {
+    [ApiController]
     public class CourseController : BaseController<CourseController>
     {
         private readonly ICourseService _courseService;
@@ -14,24 +18,40 @@ namespace MagicLand_System.Controllers
             _courseService = courseService;
         }
 
-        [HttpGet(ApiEndpointConstant.Course.CourseEnpoint)]
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAll)]
+        [AllowAnonymous]
         public async Task<IActionResult> GetCourses()
         {
             var courses = await _courseService.GetCoursesAsync();
             return Ok(courses);
         }
 
-        [HttpGet(ApiEndpointConstant.Course.SearchCourse)]
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.SearchCourse)]
+        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
+        [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
             var courses = await _courseService.SearchCourseAsync(keyWord);
             return Ok(courses);
         }
 
-        [HttpGet(ApiEndpointConstant.Course.FilterCourse)]
-        public async Task<IActionResult> FilterCourse([FromQuery] int minYearsOld, [FromQuery] string? keywork = null, [FromQuery] int? maxYearsOld = null , [FromQuery] int? numberOfSession = null)
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.CourseById)]
+        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCoureById(Guid id)
         {
-            var courses = await _courseService.FilterCourseAsync(minYearsOld,keywork, maxYearsOld,numberOfSession);
+            var courses = await _courseService.GetCourseByIdAsync(id);
+            return Ok(courses);
+        }
+
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.FilterCourse)]
+        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> FilterCourse([FromQuery] string? keyword = null, [FromQuery] int? minYearsOld = null, [FromQuery] int? maxYearsOld = null , [FromQuery] int? numberOfSession = null)
+        {
+            var courses = await _courseService.FilterCourseAsync(keyword, minYearsOld, maxYearsOld,numberOfSession);
             return Ok(courses);
         }
     }
