@@ -32,11 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Mappers\" />
-    <Folder Include="PayLoad\Request\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MagicLand-System.Domain\MagicLand-System.Domain.csproj" />
     <ProjectReference Include="..\MagicLand-System.Repository\MagicLand-System.Repository.csproj" />
   </ItemGroup>

@@ -2,9 +2,9 @@
 {
     public enum RoleEnum
     {
-        User,
-        Lecturer,
-        Staff,
-        Administrator
+        ADMIN,
+        STAFF,
+        PARENT,
+        LECTURER
     }
 }
