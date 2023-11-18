@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -33,6 +34,28 @@ namespace MagicLand_System.Utils
             var token = new JwtSecurityToken(issuer, null, claims, notBefore: DateTime.Now, expires, credentials);
             return jwtHandler.WriteToken(token);
         }
-
+        public static string ReadToken(string token)
+        {
+            IConfiguration config = new ConfigurationBuilder()
+             .SetBasePath(Directory.GetCurrentDirectory())
+             .AddJsonFile("appsettings.json", true, true)
+             .Build();
+            JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
+            if (jwtHandler.CanReadToken(token))
+            {
+                SecurityToken securityToken;
+                ClaimsPrincipal claimsPrincipal = jwtHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = config["Jwt:Issuer"],
+                    ValidateAudience = false,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"])) // Thay đổi theo cấu hình của bạn
+                }, out securityToken);
+                IEnumerable<Claim> claims = claimsPrincipal.Claims;
+                string userId = claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+                return userId;
+            }
+            return string.Empty;
+        }
     }
 }
