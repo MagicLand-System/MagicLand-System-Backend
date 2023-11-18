@@ -1,24 +1,24 @@
 GO
 USE master;
 GO
-DROP DATABASE MagicLand;
+DROP DATABASE MagicLandDBServer;
 GO
-CREATE DATABASE MagicLand;
+CREATE DATABASE MagicLandServer;
 GO
-USE MagicLand;
+USE MagicLandDBServer;
 
 
 --- Role --- Create Time: 11/17/2023 - 12:44 PM
 Go
-Insert into [Role] (Id, [Name], [Status]) Values
-('3c1849af-400c-43ca-979e-58c71ce9301d', 'ADMIN', 'ACTIVE');
+Insert into [Role] (Id, [Name]) Values
+('3c1849af-400c-43ca-979e-58c71ce9301d', 'ADMIN');
 
-Insert into [Role] (Id, [Name], [Status]) Values
-('2f1ab569-d516-4a46-9a55-61dbcd6b3692', 'STAFF', 'ACTIVE');
-Insert into [Role] (Id, [Name], [Status]) Values
-('2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', 'LECTURER', 'ACTIVE');
-Insert into [Role] (Id, [Name], [Status]) Values
-('dcf51c70-37df-4950-90b6-cc424d6e0296', 'PARENT', 'ACTIVE');
+Insert into [Role] (Id, [Name]) Values
+('2f1ab569-d516-4a46-9a55-61dbcd6b3692', 'STAFF');
+Insert into [Role] (Id, [Name]) Values
+('2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', 'LECTURER');
+Insert into [Role] (Id, [Name]) Values
+('dcf51c70-37df-4950-90b6-cc424d6e0296', 'PARENT');
 
 
 
@@ -37,16 +37,16 @@ Insert into [Address] (Id, Street, District, City) Values
 Go
 -- Admintrator
 Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, AddressId, RoleId) Values
-('08048a0b-7d2b-47de-9153-5fa23163aa3f', 'Admintrator', '', '', '', '', '', '3c1849af-400c-43ca-979e-58c71ce9301d');
+('08048a0b-7d2b-47de-9153-5fa23163aa3f', 'Admintrator', '09212312212','admin@gmail.com', 'MALE', '2023-11-17',null, '3c1849af-400c-43ca-979e-58c71ce9301d');
 -- Parent 
 Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, AddressId, RoleId) Values
-('42276dec-4252-4ad2-8cb6-296c58ad062e', 'Tran Dai Nghia', '0123456789', 'nghia@gmail.com', 'Male', '1990-10-10', '171df1f0-933a-47e2-b56c-a917e095a7c3', 'dcf51c70-37df-4950-90b6-cc424d6e0296');
+('42276dec-4252-4ad2-8cb6-296c58ad062e', 'Tran Dai Nghia', '0962243201', 'nghia@gmail.com', 'MALE', '1990-10-10', '171df1f0-933a-47e2-b56c-a917e095a7c3', 'dcf51c70-37df-4950-90b6-cc424d6e0296');
 -- Lecture 
 Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, AddressId, RoleId) Values
-('66aa922d-4392-4958-bbef-fc9689c9779b', 'Nguyen Thi Tram', '0123456789', 'tram@gmail.com', 'Female', '1990-11-11', 'de71ab17-6b33-4a6f-bef1-5802fa8324d7', '2bdbb8f4-0527-4f9b-8597-ff4d55ba4998');
+('66aa922d-4392-4958-bbef-fc9689c9779b', 'Nguyen Thi Tram', '0985081621', 'tram@gmail.com', 'FEMALE', '1990-11-11', 'de71ab17-6b33-4a6f-bef1-5802fa8324d7', '2bdbb8f4-0527-4f9b-8597-ff4d55ba4998');
 -- Staff 
 Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, AddressId, RoleId) Values
-('0888d62c-d820-4344-b6be-979ee79cc504', 'Ngo Tong Tai', '0123456789', 'tai@gmail.com', 'Male', '1990-12-12', 'b358bd99-d041-4619-8240-6b5277e76d1c', '2f1ab569-d516-4a46-9a55-61dbcd6b3692');
+('0888d62c-d820-4344-b6be-979ee79cc504', 'Ngo Tong Tai', '0325021012', 'tai@gmail.com', 'MALE', '1990-12-12', 'b358bd99-d041-4619-8240-6b5277e76d1c', '2f1ab569-d516-4a46-9a55-61dbcd6b3692');
 
 
 --- Personal Wallet --- Create Time: 11/17/2023 - 1:02 PM
@@ -61,10 +61,10 @@ Insert into PersonalWallet (Id, UserId, Balance) Values
 -- 1. Pay for [ Name Class]
 -- 2. Top up your wallet from [ Name Bank]
 Go
-Insert into WalletTransaction (Id, PersonalWalletId, [Money], [Type], [Description], CreatedDate) Values 
-('6a3ab18a-13e9-4388-ba8d-821c0f5cd10f', 'b468f0e3-adf8-4217-a577-cf399cd6a713', 1100000, 'TOPUP', 'Top up your wallet from Agribank', '2023-17-11');
-Insert into WalletTransaction (Id, PersonalWalletId, [Money], [Type], [Description], CreatedDate) Values 
-('bad11716-6585-4555-acdc-5982c7855dce', 'b468f0e3-adf8-4217-a577-cf399cd6a713', 100000, 'PAYMENT', 'Pay for advanced math classes', '2023-17-11');
+Insert into WalletTransaction (Id, PersonalWalletId, [Money], [Type], [Description], CreatedTime) Values 
+('6a3ab18a-13e9-4388-ba8d-821c0f5cd10f', 'b468f0e3-adf8-4217-a577-cf399cd6a713', 1100000, 'TOPUP', 'Top up your wallet from Agribank', '2023-11-17');
+Insert into WalletTransaction (Id, PersonalWalletId, [Money], [Type], [Description], CreatedTime) Values 
+('bad11716-6585-4555-acdc-5982c7855dce', 'b468f0e3-adf8-4217-a577-cf399cd6a713', 100000, 'PAYMENT', 'Pay for advanced math classes', '2023-11-17');
 
 
 
@@ -80,9 +80,9 @@ Insert into Promotion ( Id, Code, [Image], UnitDiscount, DiscountValue, EndDate)
 --- User Promotion --- Create Time: 11/17/2023 - 1:17 PM
 GO
 Insert into UserPromotion (Id, UserId, PromotionId, AccumulateQuantity) Values
-('3642e93c-bb30-48f6-9b3d-fedc7349b3dd', '42276dec-4252-4ad2-8cb6-296c58ad062e', '7ab4f60d-5b04-4474-a891-eee0b4817541', 1);
+('3642e93c-bb30-48f6-9b3d-fedc7349b3dd','42276DEC-4252-4AD2-8CB6-296C58AD062E','7ab4f60d-5b04-4474-a891-eee0b4817541',1);
 Insert into UserPromotion (Id, UserId, PromotionId, AccumulateQuantity) Values
-('b0a3a1ad-20ff-4131-9419-3d8c31513017', '42276dec-4252-4ad2-8cb6-296c58ad062e', '2f905f4f-432c-4d04-98b9-57daa89ceefa', 1);
+('b0a3a1ad-20ff-4131-9419-3d8c31513017','42276DEC-4252-4AD2-8CB6-296C58AD062E', '2f905f4f-432c-4d04-98b9-57daa89ceefa', 1);
 
 
 
@@ -97,10 +97,10 @@ Insert into Student (Id, ParentId, FullName, DateOfBirth, Gender, Email) Values
 
 --- Course --- Create Time: 11/17/2023 - 2:19 PM / Finish Time: 2:25 PM
 GO
-Insert into Course (Id, [Name], NumberOfLesson, MinYearsStudent, MaxYearsStudent, [Status]) Values
-('fded66d4-c3e7-4721-b509-e71feab6723a', 'Basic Math', 6, 2020, 2018, 'ACTIVE');
-Insert into Course (Id, [Name], NumberOfLesson, MinYearsStudent, MaxYearsStudent, [Status]) Values
-('a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 'Advance Math', 12, 2020, 2018, 'ACTIVE');
+Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status]) Values
+('fded66d4-c3e7-4721-b509-e71feab6723a','Basic Math', 6, 3, 6, 'ACTIVE');
+Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status]) Values
+('a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 'Advance Math', 5, 5, 12, 'ACTIVE');
 
 
 
@@ -113,20 +113,20 @@ Insert into CoursePrerequisite (Id, CurrentCourseId, PrerequisiteCourseId) Value
 
 --- Class --- Create Time: 11/17/2023 - 2:13 PM / Finish: 2:43 PM
 GO
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
-('c6d70a5f-56ae-4de0-b441-c080da024524', '4 Simple calculation', 'fded66d4-c3e7-4721-b509-e71feab6723a', '2022-17-11', '2023-01-05', 'STARTED', 'OFFLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000, 'efa2d425-b9ec-4e47-bbad-e445a587bbdd', 30);
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
-('74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', 'Math with basic geometry', 'fded66d4-c3e7-4721-b509-e71feab6723a', '2023-11-25', '2024-01-25', 'UPCOMING', 'ONLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000, '', 30);
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
-('77a0a23f-5a3d-4447-8985-d7ed203d322f', 'Fractions and Unknown numbers', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '2023-9-17', '2023-11-17', 'ENDED', 'ONLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000, '', 30);
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
+Insert into Class (Id, [Name], CourseId, StartTime, EndTime, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
+('c6d70a5f-56ae-4de0-b441-c080da024524', '4 Simple calculation', 'fded66d4-c3e7-4721-b509-e71feab6723a', '2022-11-17', '2023-01-05', 'STARTED', 'OFFLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000,'efa2d425-b9ec-4e47-bbad-e445a587bbdd', 30);
+Insert into Class (Id, [Name], CourseId, StartTime, EndTime, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
+('74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', 'Math with basic geometry', 'fded66d4-c3e7-4721-b509-e71feab6723a', '2023-11-25', '2024-01-25', 'UPCOMING', 'ONLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000,'efa2d425-b9ec-4e47-bbad-e445a587bbdd' , 30);
+Insert into Class (Id, [Name], CourseId, StartTime, EndTime, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
+('77a0a23f-5a3d-4447-8985-d7ed203d322f', 'Fractions and Unknown numbers', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '2023-9-17', '2023-11-17', 'ENDED', 'ONLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000,'efa2d425-b9ec-4e47-bbad-e445a587bbdd', 30);
+Insert into Class (Id, [Name], CourseId, StartTime, EndTime, [Status], Method, LecturerId, Price, AddressId, LimitNumberStudent) Values
 ('592fd51c-e177-49c2-a2dd-a679d02a91c4', 'Geometry of space', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '2023-11-27', '2024-01-27', 'UPCOMING', 'OFFLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 100000, 'efa2d425-b9ec-4e47-bbad-e445a587bbdd', 30);
 
 
 
 --- Class Fee Transaction --- Create Time: 11/17/2023 - 2:45 PM 
 GO
-Insert into ClassFeeTransaction (Id, ParentId, [Date], ActualPrice) Values 
+Insert into ClassFeeTransaction (Id, ParentId, DateCreated, ActualPrice) Values 
 ('2308df16-f4fa-48fe-976b-9fa39ce8f606', '42276dec-4252-4ad2-8cb6-296c58ad062e', '2023-11-17', 100000);
 
 
