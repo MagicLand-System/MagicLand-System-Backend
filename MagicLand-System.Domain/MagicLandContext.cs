@@ -154,7 +154,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("UserPromotion");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Promotion).WithMany(e => e.UserPromotions).HasForeignKey(e => e.PromotionId);
-                entity.HasOne(e => e.User).WithMany(e => e.UserPromotions).HasForeignKey(e => e.PromotionId);
+                entity.HasOne(e => e.User).WithMany(e => e.UserPromotions).HasForeignKey(e => e.UserId);
             });
             modelBuilder.Entity<PromotionTransaction>(entity =>
             {

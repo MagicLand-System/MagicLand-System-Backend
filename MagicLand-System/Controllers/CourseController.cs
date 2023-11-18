@@ -22,16 +22,16 @@ namespace MagicLand_System.Controllers
         }
 
         [HttpGet(ApiEndpointConstant.Course.SearchCourse)]
-        public async Task<IActionResult> SearchCourse([FromBody] string keyWord)
+        public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
             var courses = await _courseService.SearchCourseAsync(keyWord);
             return Ok(courses);
         }
 
         [HttpGet(ApiEndpointConstant.Course.FilterCourse)]
-        public async Task<IActionResult> FilterCourse([FromBody] FilterCourseRequest request)
+        public async Task<IActionResult> FilterCourse([FromQuery] int minYearsOld, [FromQuery] string? keywork = null, [FromQuery] int? maxYearsOld = null , [FromQuery] int? numberOfSession = null)
         {
-            var courses = await _courseService.FilterCourseAsync(request);
+            var courses = await _courseService.FilterCourseAsync(minYearsOld,keywork, maxYearsOld,numberOfSession);
             return Ok(courses);
         }
     }
