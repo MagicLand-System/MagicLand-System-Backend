@@ -17,7 +17,7 @@ namespace MagicLand_System.Services.Implements
         public UserService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
-
+        
         public async Task<LoginResponse> Authentication(LoginRequest loginRequest)
         {
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()) , include : u => u.Include(u => u.Role));

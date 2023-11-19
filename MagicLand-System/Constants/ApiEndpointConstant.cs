@@ -39,5 +39,13 @@
             public const string CourseById = ApiEndpoint + "/{id}";
             public const string FilterCourse = SearchCourse + "/filter";
         }
+        public static class Student
+        {
+            public const string StudentsEndpoint = ApiEndpoint + "/students";
+            public const string StudentEndpoint = StudentsEndpoint + "/{id}";
+            public const string StudentEnpointCreate = StudentsEndpoint + "/add";
+            public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
+            public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
+        }
     }
 }

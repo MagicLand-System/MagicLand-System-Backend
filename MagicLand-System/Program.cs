@@ -82,6 +82,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICourseService, CourseService>();    
+builder.Services.AddScoped<IStudentService, StudentService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

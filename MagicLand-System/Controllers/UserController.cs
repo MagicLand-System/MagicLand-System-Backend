@@ -63,6 +63,10 @@ namespace MagicLand_System.Controllers
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
+            if(!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
             var isSuccess = await _userService.RegisterNewUser(request);
             if (!isSuccess) 
             {
