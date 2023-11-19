@@ -24,20 +24,28 @@
             public const string AuthenticationEndpointRefreshToken = ApiEndpoint + "/auth/refreshtoken";
 
         }
-        public static class Class
+        public static class ClassEnpoint
         {
-            public const string ClassEnpoint = ApiEndpoint + "/classes";
-            public const string SearchClass = ClassEnpoint + "/search";
-            public const string ClassById = ClassEnpoint + "/{id}";
-            public const string ClassByCourseId = ClassEnpoint + "/course/{id}";
+            public const string GetAll = ApiEndpoint + "/classes";
+            public const string SearchClass = GetAll + "/search";
+            public const string ClassById = GetAll + "/{id}";
+            public const string ClassByCourseId = GetAll + "/course/{id}";
             public const string FilterClass = SearchClass + "/search/filter";
         }
-        public static class Course
+        public static class CourseEnpoint
         {
-            public const string CourseEnpoint = ApiEndpoint + "/Courses";
-            public const string SearchCourse = CourseEnpoint + "/search";
+            public const string GetAll = ApiEndpoint + "/Courses";
+            public const string SearchCourse = GetAll + "/search";
             public const string CourseById = ApiEndpoint + "/{id}";
             public const string FilterCourse = SearchCourse + "/filter";
+        }
+        public static class Student
+        {
+            public const string StudentsEndpoint = ApiEndpoint + "/students";
+            public const string StudentEndpoint = StudentsEndpoint + "/{id}";
+            public const string StudentEnpointCreate = StudentsEndpoint + "/add";
+            public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
+            public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
         }
     }
 }
