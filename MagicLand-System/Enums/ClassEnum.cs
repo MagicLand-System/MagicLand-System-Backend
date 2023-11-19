@@ -2,7 +2,7 @@
 {
     public enum ClassEnum
     {
-        ACTIVE,
-        INACTIVE
+        OFFLINE,
+        ONLINE
     }
 }

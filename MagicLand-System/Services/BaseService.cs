@@ -3,12 +3,11 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using System.Security.Claims;
 
 namespace MagicLand_System.Services
 {
-    public abstract class BaseService<T>  where T : class
+    public abstract class BaseService<T> where T : class
     {
         protected IUnitOfWork<MagicLandContext> _unitOfWork;
         protected ILogger<T> _logger;
@@ -38,7 +37,7 @@ namespace MagicLand_System.Services
         protected async Task<User> GetUserFromJwt()
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
-            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id,include : x => x.Include(x => x.Role).Include(x => x.Students));
+            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.Students));
             return account;
         }
     }
