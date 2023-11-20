@@ -26,7 +26,7 @@ namespace MagicLand_System.Services.Implements
           
             var filteredCourses = string.IsNullOrEmpty(keyWord)
                 ? courses.ToList()
-                : courses.Where(x => x.Name.ToLower().Contains(keyWord)).ToList();
+                : courses.Where(x => x.Name.ToLower().Contains(keyWord.ToLower())).ToList();
 
            
             filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
