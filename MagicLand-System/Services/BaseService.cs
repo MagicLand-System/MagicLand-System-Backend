@@ -37,7 +37,7 @@ namespace MagicLand_System.Services
         protected async Task<User> GetUserFromJwt()
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
-            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.Students));
+            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.Students).Include(x => x.PersonalWallet));
             return account;
         }
     }

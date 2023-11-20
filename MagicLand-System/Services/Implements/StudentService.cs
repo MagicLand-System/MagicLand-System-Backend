@@ -105,13 +105,14 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
             }
-            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room)); 
+            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class)); 
             var listStudentSchedule = new List<StudentScheduleResponse>();
             StudentScheduleResponse studentSchedule = null;
             Session session = new Session();
             foreach (var Id in sessionIds)
             {
                 session = sessions.SingleOrDefault(s => s.Id == Id);
+                var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector : x => x.FullName,predicate :  x => x.Id.Equals(session.Class.LecturerId));
                 studentSchedule = new StudentScheduleResponse
                 {
                     Date = session.Date,
@@ -122,6 +123,8 @@ namespace MagicLand_System.Services.Implements
                     Method = session.Class.Method,
                     RoomInFloor = session.Room.Floor,
                     RoomName = session.Room.Name,
+                    ClassName = session.Class.Name,
+                    LecturerName = lecturerName,
                 };
                 listStudentSchedule.Add(studentSchedule);
             }

@@ -129,6 +129,9 @@ namespace MagicLand_System.Services.Implements
                 UserId = user.Id,
                 Balance = 0
             };
+            user.CartId = cart.Id;
+            user.PersonalWalletId = personalWallet.Id;
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
             await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
