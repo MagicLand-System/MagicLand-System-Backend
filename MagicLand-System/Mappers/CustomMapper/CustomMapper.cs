@@ -21,6 +21,7 @@ namespace MagicLand_System.Mappers.CustomMapper
                 NumberOfSession = course.NumberOfSession,
                 MinAgeStudent = course.MinYearOldsStudent,
                 MaxAgeStudent = course.MaxYearOldsStudent,
+                Image = course.Image,
                 CoursePrerequisites = coursePrerequisites != null
                 ? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
                 : new List<CourseResponse>()
