@@ -42,6 +42,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.Student.StudentEndpointGetClass)]
         [ProducesResponseType(typeof(StudentClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
+        [CustomAuthorize(Enums.RoleEnum.PARENT)]
         public async Task<IActionResult> GetClassFromStudent([FromQuery] string studentId)
         {
             var response = await _studentService.GetClassOfStudent(studentId);
@@ -59,6 +60,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.Student.StudentGetSchedule)]
         [ProducesResponseType(typeof(StudentClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
+        [CustomAuthorize(Enums.RoleEnum.PARENT)]
         public async Task<IActionResult> GetScheduleFromStudent([FromQuery] string studentId)
         {
             var response = await _studentService.GetScheduleOfStudent(studentId);
