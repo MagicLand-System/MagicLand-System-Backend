@@ -98,6 +98,9 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("LecturerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -122,6 +125,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Video")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -210,6 +216,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MaxYearOldsStudent")
                         .HasColumnType("int");
@@ -341,18 +350,16 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Floor")
+                    b.Property<int?>("Floor")
                         .HasColumnType("int");
 
                     b.Property<string>("LinkURL")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -417,12 +424,11 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AvatarImage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -471,6 +477,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Property<Guid?>("AddressId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarImage")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("CartId")
                         .HasColumnType("uniqueidentifier");

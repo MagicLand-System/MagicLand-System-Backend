@@ -18,7 +18,7 @@ namespace MagicLand_System.Domain.Models
         public string FullName { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string Gender { get; set; }
-        public string Email { get; set; }
+        public string? AvatarImage { get; set; } 
         public ICollection<StudentTransaction> StudentTransactions { get; set; } = new List<StudentTransaction>();
         public ICollection<ClassInstance> ClassInstances { get; set; } = new List<ClassInstance>();
     }

@@ -7,7 +7,7 @@
         public int? NumberOfSession { get; set; } 
         public int? MinAgeStudent { get; set; }
         public int? MaxAgeStudent { get; set; }
-
+        public string? Image { get; set; }
 
         public List<CourseResponse>? CoursePrerequisites { get; set; }
     }

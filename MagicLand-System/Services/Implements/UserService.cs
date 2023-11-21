@@ -17,7 +17,7 @@ namespace MagicLand_System.Services.Implements
         public UserService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
-
+        
         public async Task<LoginResponse> Authentication(LoginRequest loginRequest)
         {
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()) , include : u => u.Include(u => u.Role));
@@ -129,6 +129,9 @@ namespace MagicLand_System.Services.Implements
                 UserId = user.Id,
                 Balance = 0
             };
+            user.CartId = cart.Id;
+            user.PersonalWalletId = personalWallet.Id;
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
             await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
