@@ -14,9 +14,12 @@ namespace MagicLand_System.PayLoad.Response
         public Decimal Price { get; set; }
         public int LimitNumberStudent { get; set; }
         public int NumberStudentRegistered { get; set; }
+        public string? Status { get; set; }
+
 
         public AddressResponse? Address { get; set; }
         public UserResponse? Lecture { get; set; }
+        public List<SessionResponse>? Sessions { get; set; }
 
     }
 }

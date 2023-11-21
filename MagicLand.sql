@@ -170,6 +170,8 @@ GO
 Insert into Room(Id, [Name], [Floor], [Status], LinkUrl) Values
 ('99f6f043-3fee-435f-a8ae-1f55f13b3256', '609', 4, 'ACTIVE', null)
 Insert into Room(Id, [Name], [Floor], [Status], LinkUrl) Values
+('c4cf53be-440b-445f-b8f3-82d7f3af409c', '404', 2, 'ACTIVE', null)
+Insert into Room(Id, [Name], [Floor], [Status], LinkUrl) Values
 ('5cc8a8e9-d53e-46de-b177-c4fc7c1c84c4', '609', 4, 'ACTIVE', 'https://room')
 
 
@@ -183,6 +185,12 @@ Insert into [Session] (Id, ClassId, [DayOfWeek], [Date], SlotId, RoomId) Values
 Insert into [Session] (Id, ClassId, [DayOfWeek], [Date], SlotId, RoomId) Values 
 ('007f12eb-93d7-43e7-a065-de4919cd2b10', 'c6d70a5f-56ae-4de0-b441-c080da024524', 6, '2023-11-22', '417997ac-afd7-4363-bfe5-6cdd56d4713a', '99f6f043-3fee-435f-a8ae-1f55f13b3256');
 
+Insert into [Session] (Id, ClassId, [DayOfWeek], [Date], SlotId, RoomId) Values 
+('6814331b-8564-480f-ac55-75ea58168a49', '74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', 2, '2023-11-18', '417997ac-afd7-4363-bfe5-6cdd56d4713a', 'c4cf53be-440b-445f-b8f3-82d7f3af409c');
+Insert into [Session] (Id, ClassId, [DayOfWeek], [Date], SlotId, RoomId) Values 
+('52fca4b4-73d4-4734-bb7a-95cead567338', '74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', 4, '2023-11-20', '417997ac-afd7-4363-bfe5-6cdd56d4713a', 'c4cf53be-440b-445f-b8f3-82d7f3af409c');
+Insert into [Session] (Id, ClassId, [DayOfWeek], [Date], SlotId, RoomId) Values 
+('e4d7f722-655c-42e6-89f6-29289b361120', '74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', 6, '2023-11-22', '417997ac-afd7-4363-bfe5-6cdd56d4713a', 'c4cf53be-440b-445f-b8f3-82d7f3af409c');
 --- Class Instance --- Create Time: 11/17/2023 - 3:28 PM
 GO
 Insert into ClassInstance (Id, SessionId, StudentId, [Status]) Values

@@ -27,10 +27,9 @@
         public static class ClassEnpoint
         {
             public const string GetAll = ApiEndpoint + "/classes";
-            public const string SearchClass = GetAll + "/search";
             public const string ClassById = GetAll + "/{id}";
             public const string ClassByCourseId = GetAll + "/course/{id}";
-            public const string FilterClass = SearchClass + "/search/filter";
+            public const string FilterClass = GetAll + "/filter";
         }
         public static class CourseEnpoint
         {

@@ -1,5 +1,7 @@
-﻿using MagicLand_System.Domain.Models;
+﻿using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response;
 
 namespace MagicLand_System.Mappers.CustomMapper
@@ -27,7 +29,54 @@ namespace MagicLand_System.Mappers.CustomMapper
             };
             return response;
         }
-    
+
+        public static SessionResponse fromSessionToSessionResponse(Session session)
+        {
+            if (session == null)
+            {
+                return new SessionResponse();
+            }
+            SessionResponse response = new SessionResponse
+            {
+                Id = session.Id,
+                DayOfWeek = DateTimeHelper.GetDatesFromDateFilter(session.DayOfWeek)[0].ToString(),
+                Date = session.Date,
+                Slot = fromSlotToSlotResponse(session.Slot),
+                RoomResponse = fromRoomToRoomResponse(session.Room)
+            };
+            return response;
+        }
+
+        public static SlotResponse fromSlotToSlotResponse(Slot slot)
+        {
+            if (slot == null)
+            {
+                return new SlotResponse();
+            }
+            SlotResponse response = new SlotResponse
+            {
+               StartTime = TimeOnly.Parse(slot.StartTime),
+               EndTime = TimeOnly.Parse(slot.EndTime)
+            };
+            return response;
+        }
+
+        public static RoomResponse fromRoomToRoomResponse(Room room)
+        {
+            if (room == null)
+            {
+                return new RoomResponse();
+            }
+            RoomResponse response = new RoomResponse
+            {
+                Id = room.Id,
+                Name = room.Name,
+                Floor = room.Floor,
+                Status = room.Status!.ToString(),
+                LinkUrl = room.LinkURL != null ? room.LinkURL : "NoLink"
+            };
+            return response;
+        }
         public static UserResponse fromUserToUserResponse(User user)
         {
             if (user == null)
@@ -42,7 +91,8 @@ namespace MagicLand_System.Mappers.CustomMapper
                 Email = user.Email,
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
-                Address = fromAddressToAddressResponse(user.Address)
+                Address = fromAddressToAddressResponse(user.Address),
+                AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? DefaultAvatarConstant.DefaultAvatar() : user.AvatarImage,
             };
             return response;
         }
