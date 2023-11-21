@@ -46,7 +46,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<CourseResponse> GetCourseByIdAsync(Guid id)
         {
-            var course = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.CoursePrerequisites));
+            var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
             var coursePrerequisites = course == null 
                 ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
                 : await GetCoursePrerequesites(course);
