@@ -38,7 +38,6 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.Authentication.AuthenticationEndpointRefreshToken)]
         [ProducesResponseType(typeof(NewTokenResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
-        [Authorize]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest refreshTokenRequest)
         {
             var token = await _userService.RefreshToken(refreshTokenRequest);
