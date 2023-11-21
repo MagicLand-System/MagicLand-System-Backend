@@ -30,7 +30,7 @@ namespace MagicLand_System.Utils
                 new Claim(ClaimTypes.Role,account.Role.Name)
             };
             if (guidClaim != null) claims.Add(new Claim(guidClaim.Item1, guidClaim.Item2.ToString()));
-            var expires = DateTime.Now.AddHours(3);
+            var expires = DateTime.Now.AddHours(1);
             var token = new JwtSecurityToken(issuer, null, claims, notBefore: DateTime.Now, expires, credentials);
             return jwtHandler.WriteToken(token);
         }
@@ -43,15 +43,7 @@ namespace MagicLand_System.Utils
             JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
             if (jwtHandler.CanReadToken(token))
             {
-                SecurityToken securityToken;
-                ClaimsPrincipal claimsPrincipal = jwtHandler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = config["Jwt:Issuer"],
-                    ValidateAudience = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"])) // Thay đổi theo cấu hình của bạn
-                }, out securityToken);
-                IEnumerable<Claim> claims = claimsPrincipal.Claims;
+                IEnumerable<Claim> claims = jwtHandler.ReadJwtToken(token).Claims;
                 string userId = claims.FirstOrDefault(c => c.Type == "userId")?.Value;
                 return userId;
             }
