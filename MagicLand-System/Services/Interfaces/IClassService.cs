@@ -1,5 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Class;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -7,8 +7,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<ClassResponse>> GetClassesAsync();
         Task<List<ClassResponse>> GetClassesByCourseIdAsync(Guid id);
-        Task<List<ClassResponse>> SearchClass();
-        Task<List<ClassResponse>> FilterClass();
-        Task<ClassResponse> GetClassById(Guid id);
+        Task<List<ClassResponse>> FilterClassAsync(List<string>? keyWords, double? minPrice, double? maxPrice, int? limitStudent);
+        Task<ClassResponse> GetClassByIdAsync(Guid id);
     }
 }

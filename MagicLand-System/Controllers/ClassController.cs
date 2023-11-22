@@ -1,10 +1,8 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.Services.Implements;
+using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -17,18 +15,16 @@ namespace MagicLand_System.Controllers
         {
             _classService = classService;
         }
-        
+
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAll)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetCourses()
+        public async Task<IActionResult> GetClasses()
         {
             var courses = await _classService.GetClassesAsync();
             return Ok(courses);
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [AllowAnonymous]
         public async Task<IActionResult> GetClassByCourseId(Guid id)
         {
@@ -36,14 +32,13 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
+     
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassById)]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [AllowAnonymous]
         public async Task<IActionResult> GetClassById(Guid id)
         {
-            var courses = await _classService.GetClassById(id);
-            if(courses == null)
+            var courses = await _classService.GetClassByIdAsync(id);
+            if (courses == null)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -53,6 +48,18 @@ namespace MagicLand_System.Controllers
                 });
             }
             return Ok(courses);
+        }
+      
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.FilterClass)]
+        [AllowAnonymous]
+        public async Task<IActionResult> FilterClass(
+            [FromQuery] List<string>? keyWords,
+            [FromQuery] double? minPrice,
+            [FromQuery] double? maxPrice,
+            [FromQuery] int? limitStudent)
+        {
+            var classes = await _classService.FilterClassAsync(keyWords, minPrice, maxPrice, limitStudent);
+            return Ok(classes);
         }
     }
 }

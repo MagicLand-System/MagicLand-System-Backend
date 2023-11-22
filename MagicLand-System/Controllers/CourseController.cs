@@ -1,7 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
-using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Course;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +18,7 @@ namespace MagicLand_System.Controllers
             _courseService = courseService;
         }
 
+     
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAll)]
         [AllowAnonymous]
         public async Task<IActionResult> GetCourses()
@@ -26,8 +27,8 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
+     
         [HttpGet(ApiEndpointConstant.CourseEnpoint.SearchCourse)]
-        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
@@ -35,9 +36,8 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
+       
         [HttpGet(ApiEndpointConstant.CourseEnpoint.CourseById)]
-        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [AllowAnonymous]
         public async Task<IActionResult> GetCoureById(Guid id)
         {
@@ -45,9 +45,8 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
+      
         [HttpGet(ApiEndpointConstant.CourseEnpoint.FilterCourse)]
-        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [AllowAnonymous]
         public async Task<IActionResult> FilterCourse([FromQuery] string? keyword = null, [FromQuery] int? minYearsOld = null, [FromQuery] int? maxYearsOld = null , [FromQuery] int? numberOfSession = null)
         {

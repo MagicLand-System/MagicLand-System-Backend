@@ -130,5 +130,11 @@ namespace MagicLand_System.Services.Implements
             }
             return listStudentSchedule;
         }
+
+        public async Task<List<Student>> GetStudentsOfCurrentParent()
+        {
+            var students = await _unitOfWork.GetRepository<Student>().GetListAsync(predicate: x => x.ParentId == GetUserIdFromJwt());
+            return students.ToList();
+        }
     }
 }

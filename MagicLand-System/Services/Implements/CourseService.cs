@@ -2,11 +2,10 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Mappers.CustomMapper;
-using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Course;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -19,16 +18,16 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<CourseResponse>> FilterCourseAsync(string? keyWord, int? minYearsOld, int? maxYearsOld, int? numberOfSession)
         {
 
-            minYearsOld = minYearsOld == null ? minYearsOld = 0: minYearsOld;
-            maxYearsOld = maxYearsOld == null ? maxYearsOld = 150 : maxYearsOld;
+            minYearsOld ??= 0;
+            maxYearsOld ??= 150;
 
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.CoursePrerequisites));
-          
+
             var filteredCourses = string.IsNullOrEmpty(keyWord)
                 ? courses.ToList()
                 : courses.Where(x => x.Name.ToLower().Contains(keyWord.ToLower())).ToList();
 
-           
+
             filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
             ? throw new BadHttpRequestException("Range Of Age Not Valid", StatusCodes.Status400BadRequest)
             : filteredCourses.Where(x => x.MinYearOldsStudent >= minYearsOld && x.MaxYearOldsStudent <= maxYearsOld).ToList();
@@ -47,9 +46,11 @@ namespace MagicLand_System.Services.Implements
         public async Task<CourseResponse> GetCourseByIdAsync(Guid id)
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
-            var coursePrerequisites = course == null 
+
+            var coursePrerequisites = course == null
                 ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
                 : await GetCoursePrerequesites(course);
+
             return CustomMapper.fromCourseToCourseResponse(course.ToList()[0], coursePrerequisites);
         }
 
@@ -65,7 +66,7 @@ namespace MagicLand_System.Services.Implements
             .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)))).ToList();
         }
 
-      
+
         public async Task<List<CourseResponse>> SearchCourseAsync(String keyWord)
         {
             var courses = string.IsNullOrEmpty(keyWord)
