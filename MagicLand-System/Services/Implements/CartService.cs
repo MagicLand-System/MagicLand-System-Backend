@@ -57,7 +57,7 @@ namespace MagicLand_System.Services.Implements
                           RenderStudentInClass(studentIds, newItem)
                      );
 
-                    result = await _unitOfWork.CommitAsync() > 1 ? result : "Add Failed";
+                    result = await _unitOfWork.CommitAsync() > 0 ? result : "Add Failed";
                 }
 
                 return result;
