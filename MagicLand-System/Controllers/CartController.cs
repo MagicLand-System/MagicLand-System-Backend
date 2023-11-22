@@ -21,6 +21,7 @@ namespace MagicLand_System.Controllers
             _studentService = studentService;
         }
 
+
         #region document API modify cart
         /// <summary>
         /// Add a class and students register in class to cart Or, update a student registered in current cart item
@@ -78,7 +79,14 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
 
-
+        #region document API get cart
+        /// <summary>
+        ///  View Cart Of Current Parent
+        /// </summary>
+        /// <response code="200">Show a cart of current parent</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="500">Unhandel database error</response>
+        #endregion
         [HttpGet(ApiEndpointConstant.CartEnpoint.GetCart)]
         [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
