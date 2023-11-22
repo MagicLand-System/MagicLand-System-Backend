@@ -1,6 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
-using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Course;
 
 namespace MagicLand_System.Services.Interfaces
 {

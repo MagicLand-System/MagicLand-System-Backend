@@ -19,6 +19,7 @@ namespace MagicLand_System.Domain
         public DbSet<WalletTransaction> WalletTransactions { get; set; }    
         public DbSet<Cart> Carts { get; set; }  
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<CartItemRelation> CartItemRelations { get; set; }
         public DbSet<Address> Address { get; set; }
         public DbSet<UserPromotion> UserPromotions { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
@@ -87,6 +88,12 @@ namespace MagicLand_System.Domain
                 entity.ToTable("CartItem");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Cart).WithMany(e => e.Carts).HasForeignKey(e => e.CartId);
+            });
+            modelBuilder.Entity<CartItemRelation>(entity =>
+            {
+                entity.ToTable("CartItemRelation");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.CartItem).WithMany(e => e.CartItemRelations).HasForeignKey(e => e.CartItemId);
             });
             modelBuilder.Entity<Class>(entity =>
             {
