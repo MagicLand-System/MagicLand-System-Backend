@@ -58,6 +58,7 @@
             public const string StudentEnpointCreate = StudentsEndpoint + "/add";
             public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
             public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
+            public const string StudentGetCurrentChildren = StudentsEndpoint + "/currentuser";
         }
     }
 }

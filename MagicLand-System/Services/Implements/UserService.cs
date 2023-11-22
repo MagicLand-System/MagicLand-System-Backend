@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
+using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -39,6 +41,103 @@ namespace MagicLand_System.Services.Implements
                 Phone = user.Phone,
             };
             return loginResponse;
+        }
+
+        public async Task<bool> CheckoutNow(CheckoutRequest request)
+        {
+            var price = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Id.Equals(request.ClassId));
+            var user = await GetCurrentUser();
+            var numberOfStudents = request.StudentsIdList?.Count();
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.Equals(request.ClassId),include : x => x.Include(x => x.Sessions));
+            var session = cls.Sessions.FirstOrDefault(x => x.Id == x.Id);
+            var classInstance = await _unitOfWork.GetRepository<ClassInstance>().GetListAsync(predicate: x => x.SessionId == session.Id);
+            var numberOfStudentInClass = 0;
+            if(classInstance != null)
+            {
+                numberOfStudentInClass = classInstance.Count();
+            }
+            var isExceed = numberOfStudentInClass + numberOfStudents > cls.LimitNumberStudent;
+            if(isExceed)
+            {
+                throw new BadHttpRequestException($"you add exceed {numberOfStudents + numberOfStudents - cls.LimitNumberStudent} students at now ", StatusCodes.Status400BadRequest);
+            }
+            if (numberOfStudents == 0 || numberOfStudents == null)
+            {
+                throw new BadHttpRequestException("let add children", StatusCodes.Status400BadRequest);
+            }
+            if (user == null)
+            {
+                throw new BadHttpRequestException("user is unauthencated", StatusCodes.Status400BadRequest);
+            }
+            var transactionClassFee = new ClassFeeTransaction
+            {
+                ParentId = user.Id,
+                Id = Guid.NewGuid(),
+                ActualPrice = price * numberOfStudents,
+                DateCreated = DateTime.Now,
+            };
+            await _unitOfWork.GetRepository<ClassFeeTransaction>().InsertAsync(transactionClassFee);
+            bool isSuccessAtClassFee = await _unitOfWork.CommitAsync() > 0;
+            if (!isSuccessAtClassFee)
+            {
+                throw new BadHttpRequestException("insert classfee is failed", StatusCodes.Status400BadRequest);
+            }
+            List<Guid> promotionList = request.UserPromotions;
+            if (promotionList.Count > 0)
+            {
+                foreach (var promotionId in promotionList)
+                {
+                    var promtionTransaction = new PromotionTransaction
+                    {
+                        ClassFeeTransactionId = transactionClassFee.Id,
+                        UserPromotionId = promotionId,
+                        Id = Guid.NewGuid()
+                    };
+                    await _unitOfWork.GetRepository<PromotionTransaction>().InsertAsync(promtionTransaction);
+                    bool isSuccessAtTransactionPromotion = await _unitOfWork.CommitAsync() > 0;
+                    if (!isSuccessAtTransactionPromotion)
+                    {
+                        throw new BadHttpRequestException("insert transaction promotion is failed", StatusCodes.Status400BadRequest);
+                    }
+                }
+            }
+            List<Guid> StudentIds = request.StudentsIdList;
+            foreach (var studentId in StudentIds)
+            {
+                var studentTransaction = new StudentTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    ClassTransactionId = transactionClassFee.Id,
+                    StudentId = studentId,
+                };
+                await _unitOfWork.GetRepository<StudentTransaction>().InsertAsync(studentTransaction);
+                bool isSuccessAtTransactionStudent = await _unitOfWork.CommitAsync() > 0;
+                if (!isSuccessAtTransactionStudent)
+                {
+                    throw new BadHttpRequestException("insert transaction student is failed", StatusCodes.Status400BadRequest);
+                }
+            }
+            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.ClassId.Equals(request.ClassId));
+            foreach (var sessionx in sessions)
+            {
+                foreach (var studentId in StudentIds)
+                {
+                    var classInstancex = new ClassInstance
+                    {
+                        Id = Guid.NewGuid(),
+                        SessionId = session.Id,
+                        Status = "UpComming",
+                        StudentId = studentId,
+                    };
+                    await _unitOfWork.GetRepository<ClassInstance>().InsertAsync(classInstancex);
+                    bool isSuccessAtClassInstance = await _unitOfWork.CommitAsync() > 0;
+                    if (!isSuccessAtClassInstance)
+                    {
+                        throw new BadHttpRequestException("class Instance is failed", StatusCodes.Status400BadRequest);
+                    }
+                }
+            }
+            return true;
         }
 
         public async Task<bool> CheckUserExistByPhone(string phone)
