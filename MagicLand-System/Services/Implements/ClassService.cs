@@ -104,7 +104,8 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.ClasssTransactions)
                 .Include(x => x.User).ThenInclude(u => u.Address)
                 .Include(x => x.Address)!
-                .Include(x => x.ClasssTransactions));
+                .Include(x => x.ClasssTransactions)
+                .Include(x => x.Course));
 
         }
     }

@@ -6,6 +6,7 @@ using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Address;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Session;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MagicLand_System.Mappers.Classes
 {
@@ -29,7 +30,10 @@ namespace MagicLand_System.Mappers.Classes
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.User)))
                 .ForMember(dest => dest.Sessions, opt => opt.MapFrom(src => src.Sessions
-                .Select(s => CustomMapper.CustomMapper.fromSessionToSessionResponse(s)) ?? new List<SessionResponse>()));
+                .Select(s => CustomMapper.CustomMapper.fromSessionToSessionResponse(s)) ?? new List<SessionResponse>()))
+                .ForMember(dest => dest.MinYearOldsStudent,opt => opt.MapFrom(src => src.Course.MinYearOldsStudent))
+                .ForMember(dest => dest.MaxYearOldsStudent, opt => opt.MapFrom(src => src.Course.MaxYearOldsStudent));
+                 
 
             CreateMap<Address, AddressResponse>();
         }
