@@ -75,6 +75,24 @@ namespace MagicLand_System.Controllers
             }
             return Ok(response);
         }
+        [HttpGet(ApiEndpointConstant.Student.StudentGetCurrentChildren)]
+        [ProducesResponseType(typeof(StudentScheduleResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(NotFoundResult))]
+        [CustomAuthorize(Enums.RoleEnum.PARENT)]
+        public async Task<IActionResult> GetStudentFromCurentUser()
+        {
+            var response = await _studentService.GetStudentsOfCurrentParent();
+            if (response == null || response.Count == 0)
+            {
+                return NotFound(new ErrorResponse
+                {
+                    Error = "Not found any children",
+                    StatusCode = StatusCodes.Status404NotFound,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            return Ok(response);
+        }
 
     }
 }
