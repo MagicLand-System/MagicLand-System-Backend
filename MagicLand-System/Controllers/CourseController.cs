@@ -20,8 +20,6 @@ namespace MagicLand_System.Controllers
 
      
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAll)]
-        [ProducesResponseType(typeof(List<CourseResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
         [AllowAnonymous]
         public async Task<IActionResult> GetCourses()
         {
@@ -31,8 +29,6 @@ namespace MagicLand_System.Controllers
 
      
         [HttpGet(ApiEndpointConstant.CourseEnpoint.SearchCourse)]
-        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
@@ -42,8 +38,6 @@ namespace MagicLand_System.Controllers
 
        
         [HttpGet(ApiEndpointConstant.CourseEnpoint.CourseById)]
-        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BadHttpRequestException), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         public async Task<IActionResult> GetCoureById(Guid id)
         {
@@ -53,9 +47,6 @@ namespace MagicLand_System.Controllers
 
       
         [HttpGet(ApiEndpointConstant.CourseEnpoint.FilterCourse)]
-        [ProducesResponseType(typeof(CourseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BadHttpRequestException), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
         [AllowAnonymous]
         public async Task<IActionResult> FilterCourse([FromQuery] string? keyword = null, [FromQuery] int? minYearsOld = null, [FromQuery] int? maxYearsOld = null , [FromQuery] int? numberOfSession = null)
         {

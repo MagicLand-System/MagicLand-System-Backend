@@ -17,8 +17,6 @@ namespace MagicLand_System.Controllers
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAll)]
-        [ProducesResponseType(typeof(List<ClassResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
         [AllowAnonymous]
         public async Task<IActionResult> GetClasses()
         {
@@ -27,8 +25,6 @@ namespace MagicLand_System.Controllers
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
-        [ProducesResponseType(typeof(List<ClassResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BadHttpRequestException), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         public async Task<IActionResult> GetClassByCourseId(Guid id)
         {
@@ -38,8 +34,6 @@ namespace MagicLand_System.Controllers
 
      
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassById)]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]  
         [AllowAnonymous]
         public async Task<IActionResult> GetClassById(Guid id)
         {
@@ -57,8 +51,6 @@ namespace MagicLand_System.Controllers
         }
       
         [HttpGet(ApiEndpointConstant.ClassEnpoint.FilterClass)]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         public async Task<IActionResult> FilterClass(
             [FromQuery] List<string>? keyWords,

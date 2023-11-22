@@ -22,10 +22,6 @@ namespace MagicLand_System.Controllers
         }
 
         [HttpPost(ApiEndpointConstant.CartEnpoint.AddCart)]
-        [ProducesResponseType(typeof(String), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnauthorizedAccessException), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
-        [ProducesErrorResponseType(typeof(BadHttpRequestException))]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> AddCart([FromBody] CartRequest cartRequest)
         {
@@ -58,9 +54,6 @@ namespace MagicLand_System.Controllers
 
 
         [HttpGet(ApiEndpointConstant.CartEnpoint.GetCart)]
-        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnauthorizedAccessException), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetCart()
         {
