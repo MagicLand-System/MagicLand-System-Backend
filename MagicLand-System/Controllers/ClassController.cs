@@ -50,7 +50,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
         [ProducesResponseType(typeof(List<ClassResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BadHttpRequestException), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         public async Task<IActionResult> GetClassByCourseId(Guid id)
         {

@@ -1,11 +1,9 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Cart;
-using MagicLand_System.PayLoad.Response.Class;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -23,36 +21,38 @@ namespace MagicLand_System.Controllers
             _studentService = studentService;
         }
 
-        #region document API add new item to cart
+        #region document API modify cart
         /// <summary>
-        /// Add class with student, which parent are interested, in to cart
+        /// Add a class and students register in class to cart Or, update a student registered in current cart item
         /// </summary>
-        /// <param name="studentIds">Id of all student that parent register to class </param>
-        /// <param name="classId">Id of class that parent registered</param>
+        /// <param name="cartRequest">Store all student id and class id register</param>
+        /// <returns>A cart after modify action</returns>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "studentIds": "172c40fe-32e4-43fd-b982-c87afe8b54fa", "f9113f7e-ae51-4f65-a7b4-2348f666787d"
+        ///        "studentIds": [ "3fa85f64-5717-4562-b3fc-2c963f66afa6" , "f9113f7e-ae51-4f65-a7b4-2348f666787d"],
+        ///        "classId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
+        ///     }
+        ///     Or
+        ///     {
+        ///        "studentIds": [],
         ///        "classId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Add cart success</response>
-        /// <response code="400">Request invalid</response>
+        /// <response code="200">Return a cart after modify success</response>
+        /// <response code="400">Invalid request</response>
         /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="500">Unhandel database commit error</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CartEnpoint.AddCart)]
-        [ProducesResponseType(typeof(String), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnauthorizedAccessException), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
-        //[ProducesErrorResponseType(typeof(ErrorResponse))]
-        [ProducesErrorResponseType(typeof(BadHttpRequestException))]
+        [HttpPost(ApiEndpointConstant.CartEnpoint.ModifyCart)]
+        [ProducesErrorResponseType(typeof(ErrorResponse))]
+        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> AddCart([FromQuery] List<Guid> studentIds, [FromQuery] Guid classId)
+        public async Task<IActionResult> ModifyCart([FromBody] CartRequest cartRequest)
         {
-            if (await _classService.GetClassByIdAsync(classId) == null)
+            if (await _classService.GetClassByIdAsync(cartRequest.ClassId) == null)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -63,7 +63,7 @@ namespace MagicLand_System.Controllers
             }
 
             var students = await _studentService.GetStudentsOfCurrentParent();
-            var invalidStudentIds = studentIds.Except(students.Select(s => s.Id)).ToList();
+            var invalidStudentIds = cartRequest.StudentIds.Except(students.Select(s => s.Id)).ToList();
 
             if (invalidStudentIds.Any())
             {
@@ -74,7 +74,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            var result = await _cartService.AddCartAsync(studentIds, classId);
+            var result = await _cartService.ModifyCartOffCurrentParentAsync(cartRequest.StudentIds, cartRequest.ClassId);
             return Ok(result);
         }
 
@@ -90,13 +90,46 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpGet(ApiEndpointConstant.CartEnpoint.GetCart)]
         [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UnauthorizedAccessException), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(UnhandledExceptionEventHandler), StatusCodes.Status500InternalServerError)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetCart()
         {
             var cart = await _cartService.GetCartOfCurrentParentAsync();
             return Ok(cart);
+        }
+
+        #region document API delete item in cart
+        /// <summary>
+        ///   Delete current item in cart
+        /// </summary>
+        /// <param name="id">Id of current item in cart </param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "itemId": "77982AA8-5DFE-41AE-3776-08DBEB2BCC68"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Delete Success</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="500">Unhandel database error</response>
+        #endregion
+        [HttpDelete(ApiEndpointConstant.CartEnpoint.DeleteCartItem)]
+        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> DeleteCartItem(Guid id)
+        {
+            var result = await _cartService.DeleteItemInCartOfCurrentParentAsync(id);
+            if (!result)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Cart Item Id Not Esxited",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            return Ok("Delete Success");
         }
     }
 }

@@ -5,7 +5,8 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface ICartService
     {
-        Task<string> AddCartAsync(List<Guid> studentIds, Guid classId);
+        Task<CartResponse> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId);
         Task<CartResponse> GetCartOfCurrentParentAsync();
+        Task<bool> DeleteItemInCartOfCurrentParentAsync(Guid itemId);
     }
 }
