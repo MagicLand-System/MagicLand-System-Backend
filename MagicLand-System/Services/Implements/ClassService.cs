@@ -2,7 +2,7 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Mappers.CustomMapper;
-using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +57,7 @@ namespace MagicLand_System.Services.Implements
             return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
         }
 
-        public async Task<ClassResponse> GetClassById(Guid id)
+        public async Task<ClassResponse> GetClassByIdAsync(Guid id)
         {
 
             var cls = await _unitOfWork.GetRepository<Class>()

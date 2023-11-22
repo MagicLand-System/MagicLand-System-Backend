@@ -31,6 +31,13 @@
             public const string ClassByCourseId = GetAll + "/course/{id}";
             public const string FilterClass = GetAll + "/filter";
         }
+
+        public static class CartEnpoint
+        {
+            public const string Origin = ApiEndpoint + "/cart";
+            public const string AddCart = Origin + "/add";
+            public const string GetCart = Origin + "/view";
+        }
         public static class CourseEnpoint
         {
             public const string GetAll = ApiEndpoint + "/Courses";

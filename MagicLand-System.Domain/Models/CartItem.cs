@@ -14,5 +14,7 @@ namespace MagicLand_System.Domain.Models
         public Guid CartId { get; set; }
         public Cart Cart { get; set; }
         public Guid ClassId { get; set; }
+
+        public ICollection<CartItemRelation> CartItemRelations { get; set; } = new List<CartItemRelation>();
     }
 }

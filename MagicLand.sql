@@ -49,6 +49,10 @@ Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, AddressId, 
 ('0888d62c-d820-4344-b6be-979ee79cc504', 'Ngo Tong Tai', '0325021012', 'tai@gmail.com', 'MALE', '1990-12-12', 'b358bd99-d041-4619-8240-6b5277e76d1c', '2f1ab569-d516-4a46-9a55-61dbcd6b3692');
 
 
+--- Cart ---
+Insert into Cart (Id, UserId) Values 
+('b05c1ef3-a32f-492f-a5ca-359085df545d', '42276dec-4252-4ad2-8cb6-296c58ad062e');
+
 --- Personal Wallet --- Create Time: 11/17/2023 - 1:02 PM
 Go
 Insert into PersonalWallet (Id, UserId, Balance) Values

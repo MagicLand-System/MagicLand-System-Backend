@@ -81,6 +81,25 @@ namespace MagicLand_System.Domain.Migrations
                     b.ToTable("CartItem", (string)null);
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CartItemRelation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CartItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CartItemId");
+
+                    b.ToTable("CartItemRelation", (string)null);
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Class", b =>
                 {
                     b.Property<Guid>("Id")
@@ -598,6 +617,17 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Cart");
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CartItemRelation", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.CartItem", "CartItem")
+                        .WithMany("CartItemRelations")
+                        .HasForeignKey("CartItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CartItem");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Class", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Address", "Address")
@@ -834,6 +864,11 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Navigation("User")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CartItem", b =>
+                {
+                    b.Navigation("CartItemRelations");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Class", b =>
