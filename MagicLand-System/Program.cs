@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -51,8 +50,6 @@ builder.Services.AddSwaggerGen(options =>
         Format = "time",
         Example = OpenApiAnyFactory.CreateFromJson("\"13:45:42.0000000\"")
     });
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 builder.Services.AddDbContext<MagicLandContext>();
 builder.Services.AddScoped<IUnitOfWork<MagicLandContext>, UnitOfWork<MagicLandContext>>();
@@ -84,7 +81,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ICourseService, CourseService>();    
+builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ICartService, CartService>();
