@@ -31,12 +31,18 @@
             public const string ClassByCourseId = GetAll + "/course/{id}";
             public const string FilterClass = GetAll + "/filter";
         }
+        public static class PromotionEnpoint
+        {
+            public const string GetAll = ApiEndpoint + "/promotion";
+            public const string GetCurrent = GetAll + "/currentUser";
+        }
 
         public static class CartEnpoint
         {
             public const string Origin = ApiEndpoint + "/cart";
-            public const string AddCart = Origin + "/add";
+            public const string ModifyCart = Origin + "/modify";
             public const string GetCart = Origin + "/view";
+            public const string DeleteCartItem = Origin + "/item/{id}/delete";
         }
         public static class CourseEnpoint
         {

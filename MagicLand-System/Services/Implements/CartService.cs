@@ -4,12 +4,9 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Mappers.CustomMapper;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Class;
-using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Finance.Implementations;
-using System.Runtime.ConstrainedExecution;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -19,27 +16,27 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<string> AddCartAsync(List<Guid> studentIds, Guid classId)
+        public async Task<CartResponse> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId)
         {
-            var currentParentCart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
-                predicate: x => x.UserId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.Carts).ThenInclude(cts => cts.CartItemRelations));
+            var currentParentCart = await FetchCurrentParentCart();
 
-            string result = "Add Success";
+            var cartReponse = new CartResponse();
             try
             {
                 if (currentParentCart.Carts.Count() > 0 && currentParentCart.Carts.Any(x => x.ClassId == classId))
                 {
                     var sameCurrentCartItem = currentParentCart.Carts.SingleOrDefault(x => x.ClassId == classId);
 
-                    _unitOfWork.GetRepository<CartItemRelation>().DeleteRangeAsync(sameCurrentCartItem!.CartItemRelations);                
+                    _unitOfWork.GetRepository<CartItemRelation>().DeleteRangeAsync(sameCurrentCartItem!.CartItemRelations);
 
                     await _unitOfWork.GetRepository<CartItemRelation>().InsertRangeAsync
                         (
                              RenderStudentInClass(studentIds, sameCurrentCartItem)
                         );
 
-                    result = await _unitOfWork.CommitAsync() > 0 ? "Update Success" : "Uncatch Error Exception!";
+                    cartReponse = await _unitOfWork.CommitAsync() > 0
+                        ? await GetCartOfCurrentParentAsync()
+                        : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
                 }
                 else
                 {
@@ -57,15 +54,24 @@ namespace MagicLand_System.Services.Implements
                           RenderStudentInClass(studentIds, newItem)
                      );
 
-                    result = await _unitOfWork.CommitAsync() > 0 ? result : "Add Failed";
+                    cartReponse = await _unitOfWork.CommitAsync() > 0
+                        ? await GetCartOfCurrentParentAsync()
+                        : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
                 }
 
-                return result;
+                return cartReponse;
             }
             catch (Exception ex)
             {
                 throw new BadHttpRequestException(ex.InnerException != null ? ex.InnerException.Message : ex.Message, StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private async Task<Cart> FetchCurrentParentCart()
+        {
+            return await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+                predicate: x => x.UserId == GetUserIdFromJwt(),
+                include: x => x.Include(x => x.Carts).ThenInclude(cts => cts.CartItemRelations));
         }
 
         private List<CartItemRelation> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
@@ -82,21 +88,20 @@ namespace MagicLand_System.Services.Implements
         {
             try
             {
-                var cart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(predicate: x => x.UserId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.Carts).ThenInclude(c => c.CartItemRelations));
+                var currentParrentCart = await FetchCurrentParentCart();
 
-                if (cart != null && cart.Carts.Count() > 0)
+                if (currentParrentCart != null && currentParrentCart.Carts.Count() > 0)
                 {
                     var classes = new List<ClassResponse>();
-                    foreach(var task in cart.Carts.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
-                    .SingleOrDefaultAsync( predicate: x => x.Id == cartItem.ClassId, include: x => x.Include(x => x.User).Include(x => x.Address)!)))
+                    foreach (var task in currentParrentCart.Carts.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
+                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x.Include(x => x.User).Include(x => x.Address)!)))
                     {
                         var cls = await task;
                         classes.Add(_mapper.Map<ClassResponse>(cls));
                     }
 
                     var students = new List<Student>();
-                    foreach (var task in cart.Carts.SelectMany(c => c.CartItemRelations)
+                    foreach (var task in currentParrentCart.Carts.SelectMany(c => c.CartItemRelations)
                         .Where(cartItemRelation => cartItemRelation != null)
                         .Select(async cartItemRelation => await _unitOfWork.GetRepository<Student>()
                         .SingleOrDefaultAsync(predicate: c => c.Id == cartItemRelation.StudentId)))
@@ -139,11 +144,31 @@ namespace MagicLand_System.Services.Implements
 
                     //    students.Add(student);
                     //}
-                    return CustomMapper.fromCartToCartResponse(cart, students, classes);
+                    return CustomMapper.fromCartToCartResponse(currentParrentCart, students, classes);
                 }
 
-                return new CartResponse { Id = cart != null ? cart.Id : default };
+                return new CartResponse { Id = currentParrentCart != null ? currentParrentCart.Id : default };
 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> DeleteItemInCartOfCurrentParentAsync(Guid itemId)
+        {
+            try
+            {
+                var currentParentCart = await FetchCurrentParentCart();
+                var cartItemDelete = currentParentCart.Carts.SingleOrDefault(x => x.Id == itemId);
+                if (cartItemDelete == null)
+                {
+                    return false;
+                }
+                _unitOfWork.GetRepository<CartItem>().DeleteAsync(cartItemDelete);
+
+                return await _unitOfWork.CommitAsync() > 0 ? true : false;
             }
             catch (Exception ex)
             {
