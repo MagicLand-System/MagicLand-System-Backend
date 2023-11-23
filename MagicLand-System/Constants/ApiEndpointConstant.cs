@@ -16,6 +16,7 @@
             public const string UserEndPointExist = UsersEndpoint + "checkExist";
             public const string UserEndPointGetCurrentUser = UsersEndpoint + "/getcurrentuser";
             public const string UserEndPointRegister = UsersEndpoint + "/register";
+            public const string UserEndPointCheckoutNow = UsersEndpoint + "/checkoutnow";
         }
         public static class Authentication
         {

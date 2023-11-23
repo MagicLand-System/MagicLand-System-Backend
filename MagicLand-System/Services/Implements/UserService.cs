@@ -82,6 +82,14 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("insert classfee is failed", StatusCodes.Status400BadRequest);
             }
+            ClassTransaction classTransaction = new ClassTransaction
+            {
+                Id = Guid.NewGuid(),
+                ClassFeeTransactionId = transactionClassFee.Id,
+                ClassId = request.ClassId,
+            };
+            await _unitOfWork.GetRepository<ClassTransaction>().InsertAsync(classTransaction);
+            bool isSuccessAtClassTransaction = await _unitOfWork.CommitAsync() > 0;
             List<Guid> promotionList = request.UserPromotions;
             if (promotionList.Count > 0)
             {
@@ -107,7 +115,7 @@ namespace MagicLand_System.Services.Implements
                 var studentTransaction = new StudentTransaction
                 {
                     Id = Guid.NewGuid(),
-                    ClassTransactionId = transactionClassFee.Id,
+                    ClassTransactionId = classTransaction.Id,
                     StudentId = studentId,
                 };
                 await _unitOfWork.GetRepository<StudentTransaction>().InsertAsync(studentTransaction);
@@ -118,15 +126,27 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.ClassId.Equals(request.ClassId));
+            List<ClassInstance> classInstances = new List<ClassInstance>();
             foreach (var sessionx in sessions)
             {
-                foreach (var studentId in StudentIds)
+                StudentIds.ForEach(studentId =>
+                {
+                    var classInstancex = new ClassInstance
+                    {
+                        Id = Guid.NewGuid(),
+                        SessionId = sessionx.Id,
+                        Status = "NotYet",
+                        StudentId = studentId,
+                    };
+                    classInstances.Add(classInstancex);
+                });
+               /* foreach (var studentId in StudentIds)
                 {
                     var classInstancex = new ClassInstance
                     {
                         Id = Guid.NewGuid(),
                         SessionId = session.Id,
-                        Status = "UpComming",
+                        Status = "NotYet",
                         StudentId = studentId,
                     };
                     await _unitOfWork.GetRepository<ClassInstance>().InsertAsync(classInstancex);
@@ -135,7 +155,13 @@ namespace MagicLand_System.Services.Implements
                     {
                         throw new BadHttpRequestException("class Instance is failed", StatusCodes.Status400BadRequest);
                     }
-                }
+                } */
+            }
+            await _unitOfWork.GetRepository<ClassInstance>().InsertRangeAsync(classInstances);
+            bool isSuccessAtClassInstance = await _unitOfWork.CommitAsync() > 0;
+            if (!isSuccessAtClassInstance)
+            {
+                throw new BadHttpRequestException("class Instance is failed", StatusCodes.Status400BadRequest);
             }
             var actualPrice = price * numberOfStudents;
             var lastPrice = actualPrice;
@@ -167,8 +193,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("update failed at personal wallet", StatusCodes.Status400BadRequest);
             }
-
-            return true;
+            return isPersonalWallet;
         }
 
         public async Task<bool> CheckUserExistByPhone(string phone)
