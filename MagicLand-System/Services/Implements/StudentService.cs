@@ -69,8 +69,8 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
             }
             List<StudentClassResponse> responses = new List<StudentClassResponse>();
-            StudentClassResponse response = null;
-            foreach (var classM in classes)
+            StudentClassResponse response = new StudentClassResponse();
+            foreach (var classM in allClass)
             {
                 response = new StudentClassResponse
                 {
