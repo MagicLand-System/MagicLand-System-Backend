@@ -137,6 +137,37 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
             }
+            var actualPrice = price * numberOfStudents;
+            var lastPrice = actualPrice;
+            if(promotionList.Count > 0)
+            {
+                foreach(var promotion in promotionList)
+                {
+                    var userpromotion = await _unitOfWork.GetRepository<UserPromotion>().SingleOrDefaultAsync(predicate : x => x.Id.Equals(promotion),include : x => x.Include(x => x.Promotion));
+                    var promotionx = userpromotion.Promotion;
+                    var unit = promotionx.UnitDiscount;
+                    if (unit.ToLower().Equals("cash"))
+                    {
+                        lastPrice = actualPrice - promotionx.DiscountValue;
+                    } else
+                    {
+                        lastPrice = actualPrice * (1 - (promotionx.DiscountValue / 100));
+                    }
+                }
+            }
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+            if(personalWallet.Balance < lastPrice) 
+            {
+                throw new BadHttpRequestException("balance is not enough to payment", StatusCodes.Status400BadRequest);
+            }
+            personalWallet.Balance = personalWallet.Balance - lastPrice.Value;
+            _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
+            bool isPersonalWallet = await _unitOfWork.CommitAsync() > 0;
+            if (!isPersonalWallet)
+            {
+                throw new BadHttpRequestException("update failed at personal wallet", StatusCodes.Status400BadRequest);
+            }
+
             return true;
         }
 

@@ -33,7 +33,7 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<StudentClassResponse>> GetClassOfStudent(string studentId)
+        public async Task<List<StudentClassResponse>> GetClassOfStudent(string studentId,string? status = null)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync( predicate : x => x.Id.ToString().Equals(studentId));  
             if(student == null)
@@ -50,7 +50,14 @@ namespace MagicLand_System.Services.Implements
                             select new { ClassId = grouped.Key });
             Class studentClass = null;
             List<Class> classes = new List<Class>();
-            var allClass = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.Id == x.Id,include : x => x.Include(x => x.Course).Include(x => x.User));
+            ICollection<Class> allClass = null;
+            if(status != null)
+            {
+                allClass = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id && x.Status.ToLower().Equals(status.ToLower()), include: x => x.Include(x => x.Course).Include(x => x.User));
+            } else
+            {
+                allClass = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id , include: x => x.Include(x => x.Course).Include(x => x.User));
+            }
             foreach (var classInstance in classIds)
             {
                 studentClass = allClass.SingleOrDefault(x => x.Id == classInstance.ClassId);
