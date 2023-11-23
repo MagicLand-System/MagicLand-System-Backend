@@ -43,9 +43,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(StudentClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
-        public async Task<IActionResult> GetClassFromStudent([FromQuery] string studentId)
+        public async Task<IActionResult> GetClassFromStudent([FromQuery] string studentId, [FromQuery] string status = null)
         {
-            var response = await _studentService.GetClassOfStudent(studentId);
+            var response = await _studentService.GetClassOfStudent(studentId,status);
             if(response == null || response.Count == 0)
             {
                 return NotFound(new ErrorResponse
