@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain.Models
 {
+    //Delete If Need
     public class Address
     {
         public Guid Id { get; set; } 

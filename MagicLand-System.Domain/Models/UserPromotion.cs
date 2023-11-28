@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain.Models
 {
+    //On Fixing
     public class UserPromotion
     {
         public Guid Id { get; set; }

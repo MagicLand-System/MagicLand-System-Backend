@@ -13,6 +13,9 @@ namespace MagicLand_System.Domain.Models
         public int? Floor { get; set; }
         public string? Status { get; set; }
         public string? LinkURL { get; set; } 
-        public ICollection<Session> Sessions  { get; set; } = new List<Session>();
+        public int Capacity { get; set; }
+
+
+        public ICollection<Schedule> Schedules  { get; set; } = new List<Schedule>();
     }
 }

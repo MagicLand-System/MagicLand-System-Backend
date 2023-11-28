@@ -24,12 +24,12 @@ namespace MagicLand_System.Mappers.Classes
                 ? ClassEnum.ONLINE.ToString()
                 : ClassEnum.OFFLINE.ToString()))
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(src => (decimal)src.Price))
-                .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.ClasssTransactions.Count()))
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address ?? new Address()))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.User)))
-                .ForMember(dest => dest.Sessions, opt => opt.MapFrom(src => src.Sessions
-                .Select(s => CustomMapper.CustomMapper.fromSessionToSessionResponse(s)) ?? new List<SessionResponse>()));
+                //.ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.ClasssTransactions.Count()))
+                //.ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address ?? new Address()))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+                //.ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.User)))
+                //.ForMember(dest => dest.Sessions, opt => opt.MapFrom(src => src.Sessions
+                //.Select(s => CustomMapper.CustomMapper.fromSessionToSessionResponse(s)) ?? new List<SessionResponse>()));
 
             CreateMap<Address, AddressResponse>();
         }

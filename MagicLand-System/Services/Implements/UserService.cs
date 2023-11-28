@@ -95,46 +95,46 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
             }
-            User user = new User
-            {
-                AddressId = address.Id,
-                DateOfBirth = registerRequest.DateOfBirth,
-                Email = registerRequest.Email,
-                FullName = registerRequest.FullName,
-                Gender = registerRequest.Gender,
-                Phone = registerRequest.Phone,
-                RoleId = role,
-                Id = Guid.NewGuid(),
-            };
-            await _unitOfWork.GetRepository<User>().InsertAsync(user);
-            var isUserSuccess = await _unitOfWork.CommitAsync() > 0;
-            if (!isUserSuccess)
-            {
-                throw new BadHttpRequestException("user can't insert", StatusCodes.Status400BadRequest);
-            }
-            Cart cart = new Cart
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-            };
-            await _unitOfWork.GetRepository<Cart>().InsertAsync(cart);
-            var isCartSuccess = await _unitOfWork.CommitAsync() > 0;
-            if (!isCartSuccess)
-            {
-                throw new BadHttpRequestException("cart can't insert", StatusCodes.Status400BadRequest);
-            }
-            PersonalWallet personalWallet = new PersonalWallet
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                Balance = 0
-            };
-            user.CartId = cart.Id;
-            user.PersonalWalletId = personalWallet.Id;
-            _unitOfWork.GetRepository<User>().UpdateAsync(user);
-            await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
-            var isSuccess = await _unitOfWork.CommitAsync() > 0;
-            return isSuccess;
+            //User user = new User
+            //{
+            //    AddressId = address.Id,
+            //    DateOfBirth = registerRequest.DateOfBirth,
+            //    Email = registerRequest.Email,
+            //    FullName = registerRequest.FullName,
+            //    Gender = registerRequest.Gender,
+            //    Phone = registerRequest.Phone,
+            //    RoleId = role,
+            //    Id = Guid.NewGuid(),
+            //};
+            //await _unitOfWork.GetRepository<User>().InsertAsync(user);
+            //var isUserSuccess = await _unitOfWork.CommitAsync() > 0;
+            //if (!isUserSuccess)
+            //{
+            //    throw new BadHttpRequestException("user can't insert", StatusCodes.Status400BadRequest);
+            //}
+            //Cart cart = new Cart
+            //{
+            //    Id = Guid.NewGuid(),
+            //    UserId = user.Id,
+            //};
+            //await _unitOfWork.GetRepository<Cart>().InsertAsync(cart);
+            //var isCartSuccess = await _unitOfWork.CommitAsync() > 0;
+            //if (!isCartSuccess)
+            //{
+            //    throw new BadHttpRequestException("cart can't insert", StatusCodes.Status400BadRequest);
+            //}
+            //PersonalWallet personalWallet = new PersonalWallet
+            //{
+            //    Id = Guid.NewGuid(),
+            //    UserId = user.Id,
+            //    Balance = 0
+            //};
+            //user.CartId = cart.Id;
+            //user.PersonalWalletId = personalWallet.Id;
+            //_unitOfWork.GetRepository<User>().UpdateAsync(user);
+            //await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
+            //var isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return true; //isSuccess;
         }
     }
 }
