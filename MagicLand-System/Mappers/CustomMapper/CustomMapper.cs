@@ -188,20 +188,20 @@ namespace MagicLand_System.Mappers.CustomMapper
             return response;
         }
 
-        public static AddressResponse fromAddressToAddressResponse(Address address)
-        {
-            if (address == null)
-            {
-                return new AddressResponse();
-            }
-            AddressResponse response = new AddressResponse
-            {
-                Id = address.Id,
-                Street = address.Street,
-                District = address.District,
-                City = address.City
-            };
-            return response;
-        }
+        //public static AddressResponse fromAddressToAddressResponse(Address address)
+        //{
+        //    if (address == null)
+        //    {
+        //        return new AddressResponse();
+        //    }
+        //    AddressResponse response = new AddressResponse
+        //    {
+        //        Id = address.Id,
+        //        Street = address.Street,
+        //        District = address.District,
+        //        City = address.City
+        //    };
+        //    return response;
+        //}
     }
 }

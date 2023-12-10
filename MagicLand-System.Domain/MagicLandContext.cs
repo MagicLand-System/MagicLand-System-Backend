@@ -1,11 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain
 {
@@ -16,25 +11,22 @@ namespace MagicLand_System.Domain
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<PersonalWallet> PersonalWallets { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }    
-        public DbSet<Cart> Carts { get; set; }  
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<StudentInCart> StudentIncarts { get; set; }
-        public DbSet<Address> Address { get; set; } // Delete If Need
+
         public DbSet<UserPromotion> UserPromotions { get; set; } // On Fixing
         public DbSet<Promotion> Promotions { get; set; } // On Fixing
         public DbSet<PromotionTransaction> PromotionTransactions { get; set; } // On Fixing
-        public DbSet<Student> Students { get; set; }    
-        public DbSet<ClassFeeTransaction> ClassFeeTransactions { get; set; } // Delete If Need
-        public DbSet<ClassTransaction> ClassTransactions { get; set; } // Delete If Need
+        public DbSet<Student> Students { get; set; }
         public DbSet<Class> Classes { get; set; }
-        public DbSet<StudentTransaction> StudentTransactions { get; set; } // Delete If Need
         public DbSet<StudentClass> StudentClasses { get; set; }
-        public DbSet<Course> Courses { get; set; }  
+        public DbSet<Course> Courses { get; set; }
         public DbSet<CoursePrerequisite> CoursePrerequisites { get; set; }
         public DbSet<Slot> Slots { get; set; }
         public DbSet<Schedule> Sessions { get; set; }
-        public DbSet<Room> Rooms { get; set; }  
+        public DbSet<Room> Rooms { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -69,11 +61,7 @@ namespace MagicLand_System.Domain
                 entity.HasKey(entity => entity.Id);
                 entity.Property(entity => entity.Name).HasMaxLength(20);
             });
-            //modelBuilder.Entity<Address>(entity =>
-            //{
-            //    entity.ToTable("Address");
-            //    entity.HasKey(e => e.Id);
-            //});
+
             modelBuilder.Entity<Cart>(entity =>
             {
                 entity.ToTable("Cart");
@@ -101,13 +89,7 @@ namespace MagicLand_System.Domain
                 entity.Property(e => e.StartDate).HasDefaultValueSql("getutcdate()");
                 entity.Property(e => e.EndDate).HasDefaultValueSql("getutcdate()");
             });
-            //modelBuilder.Entity<ClassFeeTransaction>(entity =>
-            //{
-            //    entity.ToTable("ClassFeeTransaction");
-            //    entity.HasKey(e => e.Id);
-            //    entity.HasOne(e => e.User).WithMany(e => e.ClassFeeTransactions).HasForeignKey(e => e.ParentId);
-            //    entity.Property(e => e.DateCreated).HasDefaultValueSql("getutcdate()");
-            //});
+
             modelBuilder.Entity<StudentClass>(entity =>
             {
                 entity.ToTable("StudentClass");
@@ -115,14 +97,7 @@ namespace MagicLand_System.Domain
                 entity.HasOne(e => e.Class).WithMany(e => e.StudentClasses).HasForeignKey(e => e.ClassId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(e => e.Student).WithMany(e => e.StudentClasses).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
             });
-            //modelBuilder.Entity<ClassTransaction>(entity =>
-            //{
-            //    entity.ToTable("ClassTransaction");
-            //    entity.HasKey(e => e.Id);
-            //    entity.HasOne(e => e.Class).WithMany(entity => entity.ClasssTransactions);
-            //    entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.ClassTransactions).HasForeignKey(e => e.ClassFeeTransactionId).OnDelete(DeleteBehavior.Restrict);
 
-            //});
             modelBuilder.Entity<Course>(entity =>
             {
                 entity.ToTable("Course");
@@ -148,24 +123,7 @@ namespace MagicLand_System.Domain
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.PersonalWallet).WithMany(e => e.WalletTransactions).HasForeignKey(e => e.PersonalWalletId);
             });
-            //modelBuilder.Entity<Promotion>(entity =>
-            //{
-            //    entity.ToTable("Promotion");
-            //    entity.HasKey(entity => entity.Id);
-            //});
-            //modelBuilder.Entity<UserPromotion>(entity =>
-            //{
-            //    entity.ToTable("UserPromotion");
-            //    entity.HasKey(entity => entity.Id);
-            //    entity.HasOne(e => e.Promotion).WithMany(e => e.UserPromotions).HasForeignKey(e => e.PromotionId);
-            //});
-            //modelBuilder.Entity<PromotionTransaction>(entity =>
-            //{
-            //    entity.ToTable("PromotionTransaction");
-            //    entity.HasKey(entity => entity.Id);
-            //    entity.HasOne(e => e.UserPromotion).WithMany(e => e.PromotionTransactions).HasForeignKey(e => e.UserPromotionId);
-            //    entity.HasOne(e => e.ClassFeeTransaction).WithMany(e => e.PromotionTransactions).HasForeignKey(e => e.UserPromotionId).OnDelete(DeleteBehavior.Restrict);
-            //});
+
             modelBuilder.Entity<Room>(entity =>
             {
                 entity.ToTable("Room");
@@ -192,15 +150,7 @@ namespace MagicLand_System.Domain
                 entity.HasOne(e => e.User).WithMany(e => e.Students).HasForeignKey(e => e.ParentId);
 
             });
-          
-            //modelBuilder.Entity<StudentTransaction>(entity =>
-            //{
-            //    entity.ToTable("StudentTransaction");
-            //    entity.HasKey(entity => entity.Id);
-            //    entity.HasOne(e => e.Student).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.StudentId);
-            //    entity.HasOne(e => e.ClassTransaction).WithMany(e => e.StudentTransactions).HasForeignKey(e => e.ClassTransactionId).OnDelete(DeleteBehavior.Restrict);
 
-            //});
         }
     }
 }

@@ -31,7 +31,7 @@ namespace MagicLand_System.Mappers.Classes
                 //.ForMember(dest => dest.Sessions, opt => opt.MapFrom(src => src.Sessions
                 //.Select(s => CustomMapper.CustomMapper.fromSessionToSessionResponse(s)) ?? new List<SessionResponse>()));
 
-            CreateMap<Address, AddressResponse>();
+            //CreateMap<Address, AddressResponse>();
         }
     }
 }

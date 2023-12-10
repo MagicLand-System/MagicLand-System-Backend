@@ -1,13 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Net;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -18,7 +10,7 @@ namespace MagicLand_System.Domain.Models
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Gender { get; set; }
-        public string? AvatarImage { get; set;}
+        public string? AvatarImage { get; set; }
         public DateTime? DateOfBirth { get; set; } = null;
         public string? Street { get; set; }
         public string? City { get; set; }

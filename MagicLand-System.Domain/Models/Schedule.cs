@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -15,8 +10,8 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("Class")]
         public Guid ClassId { get; set; }
-        public required Class Class { get; set; }    
-      
+        public required Class Class { get; set; }
+
         [ForeignKey("Slot")]
         public Guid SlotId { get; set; }
         public Slot? Slot { get; set; }

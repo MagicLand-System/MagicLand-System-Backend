@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -30,8 +25,8 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("User")]
         public Guid LecturerId { get; set; }
         public User? Lecture { get; set; }
-    
-        
+
+
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
     }

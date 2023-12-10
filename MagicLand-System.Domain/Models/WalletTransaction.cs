@@ -15,6 +15,7 @@ namespace MagicLand_System.Domain.Models
         public string? Description { get; set; }
         public DateTime CreatedTime { get; set; }
 
+
         [ForeignKey("PersonalWallet")]
         public Guid PersonalWalletId { get; set; }
         public required PersonalWallet PersonalWallet { get; set; }

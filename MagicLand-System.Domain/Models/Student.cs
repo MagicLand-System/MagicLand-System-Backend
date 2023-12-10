@@ -1,10 +1,4 @@
-﻿using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -18,10 +12,10 @@ namespace MagicLand_System.Domain.Models
         public string? AvatarImage { get; set; }
 
         [ForeignKey("User")]
-        public Guid ParentId { get;set; }
+        public Guid ParentId { get; set; }
         public required User User { get; set; }
-       
-       
+
+
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
     }
 }

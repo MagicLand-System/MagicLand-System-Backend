@@ -77,24 +77,24 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> RegisterNewUser(RegisterRequest registerRequest)
         {
-            Address address = new Address
-            {
-                Street = registerRequest.Street,
-                City = registerRequest.City,
-                District = registerRequest.District,
-                Id = Guid.NewGuid(),
-            };
-           await _unitOfWork.GetRepository<Address>().InsertAsync(address);
-           var isAddressSuccess = await _unitOfWork.CommitAsync() > 0;
-           if(!isAddressSuccess)
-           {
-                throw new BadHttpRequestException("address can't insert", StatusCodes.Status400BadRequest);
-           }
-           var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate : x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()),selector : x => x.Id);
-           if(registerRequest.DateOfBirth > DateTime.Now)
-            {
-                throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
-            }
+           // Address address = new Address
+           // {
+           //     Street = registerRequest.Street,
+           //     City = registerRequest.City,
+           //     District = registerRequest.District,
+           //     Id = Guid.NewGuid(),
+           // };
+           //await _unitOfWork.GetRepository<Address>().InsertAsync(address);
+           //var isAddressSuccess = await _unitOfWork.CommitAsync() > 0;
+           //if(!isAddressSuccess)
+           //{
+           //     throw new BadHttpRequestException("address can't insert", StatusCodes.Status400BadRequest);
+           //}
+           //var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate : x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()),selector : x => x.Id);
+           //if(registerRequest.DateOfBirth > DateTime.Now)
+           // {
+           //     throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
+           // }
             //User user = new User
             //{
             //    AddressId = address.Id,
