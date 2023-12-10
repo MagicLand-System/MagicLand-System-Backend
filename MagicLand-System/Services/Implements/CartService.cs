@@ -23,13 +23,13 @@ namespace MagicLand_System.Services.Implements
             var cartReponse = new CartResponse();
             try
             {
-                if (currentParentCart.Carts.Count() > 0 && currentParentCart.Carts.Any(x => x.ClassId == classId))
+                if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.ClassId == classId))
                 {
-                    var sameCurrentCartItem = currentParentCart.Carts.SingleOrDefault(x => x.ClassId == classId);
+                    var sameCurrentCartItem = currentParentCart.CartItems.SingleOrDefault(x => x.ClassId == classId);
 
-                    _unitOfWork.GetRepository<CartItemRelation>().DeleteRangeAsync(sameCurrentCartItem!.CartItemRelations);
+                    _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(sameCurrentCartItem!.StudentInCarts);
 
-                    await _unitOfWork.GetRepository<CartItemRelation>().InsertRangeAsync
+                    await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
                         (
                              RenderStudentInClass(studentIds, sameCurrentCartItem)
                         );
@@ -49,7 +49,7 @@ namespace MagicLand_System.Services.Implements
 
                     await _unitOfWork.GetRepository<CartItem>().InsertAsync(newItem);
 
-                    await _unitOfWork.GetRepository<CartItemRelation>().InsertRangeAsync
+                    await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
                      (
                           RenderStudentInClass(studentIds, newItem)
                      );
@@ -71,12 +71,12 @@ namespace MagicLand_System.Services.Implements
         {
             return await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: x => x.UserId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.Carts).ThenInclude(cts => cts.CartItemRelations));
+                include: x => x.Include(x => x.CartItems).ThenInclude(cts => cts.StudentInCarts));
         }
 
-        private List<CartItemRelation> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
+        private List<StudentInCart> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
         {
-            return studentIds.Select(s => new CartItemRelation
+            return studentIds.Select(s => new StudentInCart
             {
                 Id = new Guid(),
                 CartItemId = cartItem.Id,
@@ -90,18 +90,18 @@ namespace MagicLand_System.Services.Implements
             {
                 var currentParrentCart = await FetchCurrentParentCart();
 
-                if (currentParrentCart != null && currentParrentCart.Carts.Count() > 0)
+                if (currentParrentCart != null && currentParrentCart.CartItems.Count() > 0)
                 {
                     var classes = new List<ClassResponse>();
-                    foreach (var task in currentParrentCart.Carts.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
-                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x.Include(x => x.User).Include(x => x.Address)!)))
+                    foreach (var task in currentParrentCart.CartItems.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
+                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId)))
                     {
                         var cls = await task;
                         classes.Add(_mapper.Map<ClassResponse>(cls));
                     }
 
                     var students = new List<Student>();
-                    foreach (var task in currentParrentCart.Carts.SelectMany(c => c.CartItemRelations)
+                    foreach (var task in currentParrentCart.CartItems.SelectMany(c => c.StudentInCarts)
                         .Where(cartItemRelation => cartItemRelation != null)
                         .Select(async cartItemRelation => await _unitOfWork.GetRepository<Student>()
                         .SingleOrDefaultAsync(predicate: c => c.Id == cartItemRelation.StudentId)))
@@ -161,7 +161,7 @@ namespace MagicLand_System.Services.Implements
             try
             {
                 var currentParentCart = await FetchCurrentParentCart();
-                var cartItemDelete = currentParentCart.Carts.SingleOrDefault(x => x.Id == itemId);
+                var cartItemDelete = currentParentCart.CartItems.SingleOrDefault(x => x.Id == itemId);
                 if (cartItemDelete == null)
                 {
                     return false;

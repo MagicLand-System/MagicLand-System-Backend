@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain.Models
 {
+    //On Fixing
     public class PromotionTransaction
     {
         public Guid Id { get; set; }
         [ForeignKey("ClassFeeTransaction")]
         public Guid ClassFeeTransactionId { get; set; }
-        public ClassFeeTransaction ClassFeeTransaction { get; set; }
+
         [ForeignKey("UserPromotion")]
         public Guid UserPromotionId { get; set; }
         public UserPromotion UserPromotion { get; set; }  

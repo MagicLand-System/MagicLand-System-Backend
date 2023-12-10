@@ -19,7 +19,7 @@ namespace MagicLand_System.Mappers.CustomMapper
         // Use to handel and support complicated mapping //
         public static CartResponse fromCartToCartResponse(Cart cart, List<Student> students, List<ClassResponse> cls)
         {
-            if (cart == null || cart.Carts == null || students.Count == 0 || cls == null)
+            if (cart == null || cart.CartItems == null || students.Count == 0 || cls == null)
             {
                 return new CartResponse();
             }
@@ -59,10 +59,10 @@ namespace MagicLand_System.Mappers.CustomMapper
             CartResponse response = new CartResponse
             {
                 Id = cart.Id,
-                CartItems = cart.Carts.Select(cts => fromCartItemToCartItemResponse(
+                CartItems = cart.CartItems.Select(cts => fromCartItemToCartItemResponse(
                 cts.Id,
                 cls.FirstOrDefault(cls => cls.Id == cts.ClassId)!,
-                cts.CartItemRelations.Select(cir => students.FirstOrDefault(stu => stu.Id == cir.StudentId))!)).ToList()
+                cts.StudentInCarts.Select(cir => students.FirstOrDefault(stu => stu.Id == cir.StudentId))!)).ToList()
             };
 
             return response;
@@ -121,7 +121,7 @@ namespace MagicLand_System.Mappers.CustomMapper
             return response;
         }
 
-        public static SessionResponse fromSessionToSessionResponse(Session session)
+        public static SessionResponse fromSessionToSessionResponse(Schedule session)
         {
             if (session == null)
             {
@@ -182,26 +182,26 @@ namespace MagicLand_System.Mappers.CustomMapper
                 Email = user.Email,
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
-                Address = fromAddressToAddressResponse(user.Address),
+                //Address = fromAddressToAddressResponse(user.Address),
                 AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? DefaultAvatarConstant.DefaultAvatar() : user.AvatarImage,
             };
             return response;
         }
 
-        public static AddressResponse fromAddressToAddressResponse(Address address)
-        {
-            if (address == null)
-            {
-                return new AddressResponse();
-            }
-            AddressResponse response = new AddressResponse
-            {
-                Id = address.Id,
-                Street = address.Street,
-                District = address.District,
-                City = address.City
-            };
-            return response;
-        }
+        //public static AddressResponse fromAddressToAddressResponse(Address address)
+        //{
+        //    if (address == null)
+        //    {
+        //        return new AddressResponse();
+        //    }
+        //    AddressResponse response = new AddressResponse
+        //    {
+        //        Id = address.Id,
+        //        Street = address.Street,
+        //        District = address.District,
+        //        City = address.City
+        //    };
+        //    return response;
+        //}
     }
 }

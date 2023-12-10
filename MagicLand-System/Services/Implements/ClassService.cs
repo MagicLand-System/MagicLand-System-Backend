@@ -21,18 +21,19 @@ namespace MagicLand_System.Services.Implements
             var classes = await FetchClasses();
 
             //For satisfy all key word
-            classes = keyWords == null || keyWords.Count() == 0
-                    ? classes
-                    : classes.Where(c => keyWords.All(k =>
-                    k == null ||
-                   c.Name.ToLower().Contains(k.ToLower()) ||
-                   c.StartTime.ToString().ToLower().Contains(k.ToLower()) ||
-                   c.EndTime.ToString().ToLower().Contains(k.ToLower()) ||
-                   c.Method.ToString().ToLower().Contains(k.ToLower()) || 
-                   c.Status.ToString().ToLower().Contains(k.ToLower()) ||
-                   (c.Address != null && (c.Address.City!.ToLower().Contains(k.ToLower()) || 
-                   c.Address.Street!.ToLower().Contains(k.ToLower()) || 
-                   c.Address.District!.ToLower().Contains(k.ToLower()))))).ToList();
+
+            //classes = keyWords == null || keyWords.Count() == 0
+            //        ? classes
+            //        : classes.Where(c => keyWords.All(k =>
+            //        k == null ||
+            //       c.Name.ToLower().Contains(k.ToLower()) ||
+            //       c.StartDate.ToString().ToLower().Contains(k.ToLower()) ||
+            //       c.EndDate.ToString().ToLower().Contains(k.ToLower()) ||
+            //       c.Method.ToString().ToLower().Contains(k.ToLower()) || 
+            //       c.Status.ToString().ToLower().Contains(k.ToLower()) ||
+            //       (c.Address != null && (c.Address.City!.ToLower().Contains(k.ToLower()) || 
+            //       c.Address.Street!.ToLower().Contains(k.ToLower()) || 
+            //       c.Address.District!.ToLower().Contains(k.ToLower()))))).ToList();
 
             //For satisfy just one key word
             //classes = keyWords == null || keyWords.Count() == 0
@@ -61,14 +62,7 @@ namespace MagicLand_System.Services.Implements
         {
 
             var cls = await _unitOfWork.GetRepository<Class>()
-               .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
-               .Include(x => x.ClasssTransactions)
-               .Include(x => x.User).ThenInclude(u => u.Address)
-               .Include(x => x.Address)!
-               .Include(x => x.Sessions.OrderByDescending(s => s.Date))
-               .ThenInclude(s => s.Room)
-               .Include(x => x.Sessions.OrderByDescending(s => s.Date))
-               .ThenInclude(s => s.Slot));
+               .SingleOrDefaultAsync(predicate: x => x.Id == id);
 
             return _mapper.Map<ClassResponse>(cls);
         }
@@ -87,11 +81,7 @@ namespace MagicLand_System.Services.Implements
             var classes = course == null
                 ? throw new BadHttpRequestException("Course Id Not Exist", StatusCodes.Status400BadRequest)
                 : await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(predicate: x => x.CourseId == id, include: x => x
-                .Include(x => x.ClasssTransactions)
-                .Include(x => x.User).ThenInclude(u => u.Address)
-                .Include(x => x.Address)!
-                .Include(x => x.ClasssTransactions));
+                .GetListAsync(predicate: x => x.CourseId == id);
 
             return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
         }
@@ -100,12 +90,7 @@ namespace MagicLand_System.Services.Implements
         private async Task<ICollection<Class>> FetchClasses()
         {
             return await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(include: x => x
-                .Include(x => x.ClasssTransactions)
-                .Include(x => x.User).ThenInclude(u => u.Address)
-                .Include(x => x.Address)!
-                .Include(x => x.ClasssTransactions)
-                .Include(x => x.Course));
+                .GetListAsync();
 
         }
     }
