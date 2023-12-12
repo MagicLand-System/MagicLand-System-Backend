@@ -27,6 +27,9 @@ namespace MagicLand_System.Domain
         public DbSet<Slot> Slots { get; set; }
         public DbSet<Schedule> Sessions { get; set; }
         public DbSet<Room> Rooms { get; set; }
+        public DbSet<CourseCategory> CourseCategories { get; set; }
+        public DbSet<CourseDescription> CourseDescriptions { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -102,6 +105,8 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Course");
                 entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.CourseCategory).WithMany(e => e.Courses).HasForeignKey(e => e.CourseCategoryId).OnDelete(DeleteBehavior.Restrict);
+               
             });
             modelBuilder.Entity<CoursePrerequisite>(entity =>
             {
@@ -150,7 +155,17 @@ namespace MagicLand_System.Domain
                 entity.HasOne(e => e.User).WithMany(e => e.Students).HasForeignKey(e => e.ParentId);
 
             });
-
+            modelBuilder.Entity<CourseCategory>(entity =>
+            {
+                entity.ToTable("CourseCategory");
+                entity.HasKey(entity => entity.Id);
+            });
+            modelBuilder.Entity<CourseDescription>(entity =>
+            {
+                entity.ToTable("CourseDescription");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Course).WithMany(e => e.CourseDescriptions).HasForeignKey(e => e.CourseId);
+            });
         }
     }
 }

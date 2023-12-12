@@ -14,6 +14,7 @@ namespace MagicLand_System.Domain.Models
         public DateTime? DateOfBirth { get; set; } = null;
         public string? Street { get; set; }
         public string? City { get; set; }
+        public string? District { get; set; }
 
 
         [ForeignKey("Role")]

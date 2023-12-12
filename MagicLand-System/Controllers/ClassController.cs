@@ -18,7 +18,7 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Classes
         /// <summary>
-        ///  Get All Class Existed
+        ///  Get all Class Existed
         /// </summary>
         /// <response code="200">Return a list of Course statify request</response>
         /// <response code="500">Unhandel database error</response>
@@ -95,17 +95,15 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Search or Filter class by specific key word and option filter
         /// </summary>
-        /// <param name="keyWords">for class it must be contains all key word</param>
-        /// <param name="minPrice">for class price must bigger than this price</param>
-        /// <param name="maxPrice">for class price must lower than this price</param>
+        /// <param name="keyWords">for class field statifys one of keyword</param>
+        /// <param name="leastNumberStudent">for class must required at least number student</param>
         /// <param name="limitStudent">for class have the limit student equal to this</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "keyWords": "Basic", "online", "11/25/2023", "ho chi minh"
-        ///        "minPrice": 80000
-        ///        "maxPrice": 120000
+        ///        "keyWords": "Basic", "online", "11/25/2023", "ho chi minh", "prn231"
+        ///        "leastNumberStudent": 10
         ///        "limitStudent": 30
         ///     }
         ///
@@ -119,11 +117,10 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> FilterClass(
             [FromQuery] List<string>? keyWords,
-            [FromQuery] double? minPrice,
-            [FromQuery] double? maxPrice,
+            [FromQuery] int? leastNumberStudent,
             [FromQuery] int? limitStudent)
         {
-            var classes = await _classService.FilterClassAsync(keyWords, minPrice, maxPrice, limitStudent);
+            var classes = await _classService.FilterClassAsync(keyWords, leastNumberStudent, limitStudent);
             return Ok(classes);
         }
     }

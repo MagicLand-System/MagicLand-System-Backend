@@ -102,9 +102,9 @@ namespace MagicLand_System.Services.Implements
 
                     var students = new List<Student>();
                     foreach (var task in currentParrentCart.CartItems.SelectMany(c => c.StudentInCarts)
-                        .Where(cartItemRelation => cartItemRelation != null)
-                        .Select(async cartItemRelation => await _unitOfWork.GetRepository<Student>()
-                        .SingleOrDefaultAsync(predicate: c => c.Id == cartItemRelation.StudentId)))
+                        .Where(studentInCart => studentInCart != null)
+                        .Select(async studentInCart => await _unitOfWork.GetRepository<Student>()
+                        .SingleOrDefaultAsync(predicate: c => c.Id == studentInCart.StudentId)))
                     {
                         var student = await task;
                         students.Add(student);

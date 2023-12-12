@@ -1,7 +1,5 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
-using MagicLand_System.Helpers;
-using MagicLand_System.PayLoad.Response.Address;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Course;
@@ -62,7 +60,7 @@ namespace MagicLand_System.Mappers.CustomMapper
                 CartItems = cart.CartItems.Select(cts => fromCartItemToCartItemResponse(
                 cts.Id,
                 cls.FirstOrDefault(cls => cls.Id == cts.ClassId)!,
-                cts.StudentInCarts.Select(cir => students.FirstOrDefault(stu => stu.Id == cir.StudentId))!)).ToList()
+                cts.StudentInCarts.Select(sic => students.FirstOrDefault(stu => stu.Id == sic.StudentId))!)).ToList()
             };
 
             return response;
@@ -73,7 +71,6 @@ namespace MagicLand_System.Mappers.CustomMapper
             CartItemResponse response = new CartItemResponse
             {
                 Id = cartItemId,
-                CurrentTotalPrice = (double)(cls.Price * students.Count()),
                 Students = students.Select(s => fromStudentToStudentResponse(s)).ToList(),
                 Class = cls
             };
@@ -110,18 +107,38 @@ namespace MagicLand_System.Mappers.CustomMapper
             {
                 Id = course.Id,
                 Name = course.Name,
+                Subject = course.CourseCategory!.Name,
                 NumberOfSession = course.NumberOfSession,
                 MinAgeStudent = course.MinYearOldsStudent,
                 MaxAgeStudent = course.MaxYearOldsStudent,
                 Image = course.Image,
+                Price = (decimal)course.Price,
                 CoursePrerequisites = coursePrerequisites != null
                 ? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
-                : new List<CourseResponse>()
+                : new List<CourseResponse>(),
+                Sessions = course.Sessions != null
+                ? course.Sessions.Select(s => fromSessionToSessionResponse(s)).ToList()
+                : new List<SessionResponse>(),
+                Description = course.CourseDescriptions.Select(cd => fromCourseDescriptionToCourseDescriptionResponse(cd)).ToList(),
             };
             return response;
         }
 
-        public static SessionResponse fromSessionToSessionResponse(Schedule session)
+        public static CourseDescriptionResponse fromCourseDescriptionToCourseDescriptionResponse(CourseDescription courseDescription)
+        {
+            if(courseDescription == null)
+            {
+                return new CourseDescriptionResponse();
+            }
+            CourseDescriptionResponse response = new CourseDescriptionResponse
+            {
+                Title = courseDescription.Title,
+                Content = courseDescription.Content,
+                Order = courseDescription.Order,
+            };
+            return response;
+        }
+        public static SessionResponse fromSessionToSessionResponse(Session session)
         {
             if (session == null)
             {
@@ -130,10 +147,9 @@ namespace MagicLand_System.Mappers.CustomMapper
             SessionResponse response = new SessionResponse
             {
                 Id = session.Id,
-                DayOfWeek = DateTimeHelper.GetDatesFromDateFilter(session.DayOfWeek)[0].ToString(),
-                Date = session.Date,
-                Slot = fromSlotToSlotResponse(session.Slot),
-                RoomResponse = fromRoomToRoomResponse(session.Room)
+                NoSession = session.NoSession,
+                Content = session.Content ??= string.Empty,
+                Description = session.Description ??= string.Empty
             };
             return response;
         }
@@ -164,7 +180,9 @@ namespace MagicLand_System.Mappers.CustomMapper
                 Name = room.Name,
                 Floor = room.Floor ?? 0,
                 Status = room.Status!.ToString(),
-                LinkUrl = room.LinkURL != null ? room.LinkURL : "NoLink"
+                LinkUrl = room.LinkURL != null ? room.LinkURL : "NoLink",
+                Capacity = room.Capacity,
+
             };
             return response;
         }
@@ -182,26 +200,11 @@ namespace MagicLand_System.Mappers.CustomMapper
                 Email = user.Email,
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
-                //Address = fromAddressToAddressResponse(user.Address),
                 AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? DefaultAvatarConstant.DefaultAvatar() : user.AvatarImage,
+                Address = user.City + " " + user.District + " " + user.Street,
             };
             return response;
         }
 
-        //public static AddressResponse fromAddressToAddressResponse(Address address)
-        //{
-        //    if (address == null)
-        //    {
-        //        return new AddressResponse();
-        //    }
-        //    AddressResponse response = new AddressResponse
-        //    {
-        //        Id = address.Id,
-        //        Street = address.Street,
-        //        District = address.District,
-        //        City = address.City
-        //    };
-        //    return response;
-        //}
     }
 }
