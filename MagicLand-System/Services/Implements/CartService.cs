@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.Mappers.CustomMapper;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -109,7 +112,7 @@ namespace MagicLand_System.Services.Implements
                         var student = await task;
                         students.Add(student);
                     }
-
+                    #region
                     // Leave InCase Using Back
 
                     //foreach (var cts in cart.Carts)
@@ -144,6 +147,7 @@ namespace MagicLand_System.Services.Implements
 
                     //    students.Add(student);
                     //}
+                    #endregion
                     return CustomMapper.fromCartToCartResponse(currentParrentCart, students, classes);
                 }
 
@@ -174,6 +178,85 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<BillResponse> CheckOutCartAsync(List<CartItemResponse> cartItems)
+        {
+            double actualTotal = 0;
+            var newTransactions = new List<WalletTransaction>();
+            var newStudentInClass = new List<StudentClass>();
+
+            var currentPayer = await GetUserFromJwt();
+
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
+                   .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+
+            foreach (var item in cartItems)
+            {
+                var price = await _unitOfWork.GetRepository<Course>()
+                .SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Classes.Any(c => c.Id.Equals(item.Class.Id)));
+
+                double total = CalculateTotal(item.Students.Count(), price);
+                actualTotal += total;
+
+                var newTransaction = new WalletTransaction
+                {
+                    Id = new Guid(),
+                    Money = total,
+                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
+                    Description = $"Registered class {item.Class.Name} via cart",
+                    CreatedTime = DateTime.Now,
+                };
+
+                var studentInClasses = item.Students.Select(stu =>
+                new StudentClass
+                {
+                    Id = new Guid(),
+                    Status = "NORMAL",
+                    StudentId = stu.Id,
+                    ClassId = item.Id,
+                }).ToList();
+
+
+                newTransactions.Add(newTransaction);
+                newStudentInClass.AddRange(studentInClasses);
+            }
+
+            try
+            {
+                if (personalWallet.Balance < actualTotal)
+                {
+                    throw new BadHttpRequestException("Your balance not enough for register all class selected", StatusCodes.Status400BadRequest);
+                }
+
+                personalWallet.Balance = personalWallet.Balance - actualTotal;
+
+                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
+                await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(newTransactions);
+                await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(newStudentInClass);
+
+                await _unitOfWork.CommitAsync();
+
+            }catch(Exception ex)
+            {
+                throw new Exception(ex.InnerException!.ToString());
+            }
+           
+            var bill = new BillResponse
+            {
+                Status = "Purchase Success",
+                Date = DateTime.Now,
+                Method = CheckOutMethodEnum.SystemWallet,
+                Payer = currentPayer.FullName!,
+                MoneyPaid = actualTotal,
+            };
+
+            return bill;
+        }
+        protected double CalculateTotal(int numberStudents, double price)
+        {
+            return price * numberStudents;
+            //Apply promotion/sales
         }
     }
 }

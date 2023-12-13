@@ -17,7 +17,7 @@ namespace MagicLand_System.Controllers
         {
             _studentService = studentService;
         }
-        [HttpPost(ApiEndpointConstant.Student.StudentEnpointCreate)]
+        [HttpPost(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate)]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
@@ -39,7 +39,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new {Message = "Create Successfully"});
         }
-        [HttpGet(ApiEndpointConstant.Student.StudentEndpointGetClass)]
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentEndpointGetClass)]
         [ProducesResponseType(typeof(StudentClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
@@ -57,7 +57,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(response);
         }
-        [HttpGet(ApiEndpointConstant.Student.StudentGetSchedule)]
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentGetSchedule)]
         [ProducesResponseType(typeof(StudentScheduleResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
@@ -75,7 +75,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(response);
         }
-        [HttpGet(ApiEndpointConstant.Student.StudentGetCurrentChildren)]
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentGetCurrentChildren)]
         [ProducesResponseType(typeof(StudentScheduleResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]

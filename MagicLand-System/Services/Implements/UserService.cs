@@ -6,11 +6,15 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Cart;
+using MagicLand_System.PayLoad.Response.Student;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -19,16 +23,16 @@ namespace MagicLand_System.Services.Implements
         public UserService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
-        
+
         public async Task<LoginResponse> Authentication(LoginRequest loginRequest)
         {
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()) , include : u => u.Include(u => u.Role));
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()), include: u => u.Include(u => u.Role));
             if (user == null)
             {
                 return null;
             }
             string Role = user.Role.Name;
-            Tuple<string,Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
+            Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
             var token = JwtUtil.GenerateJwtToken(user, guidClaim);
             LoginResponse loginResponse = new LoginResponse
             {
@@ -43,162 +47,9 @@ namespace MagicLand_System.Services.Implements
             return loginResponse;
         }
 
-        public async Task<bool> CheckoutNow(CheckoutRequest request)
-        {
-            var price = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Id.Equals(request.ClassId));
-            var user = await GetCurrentUser();
-            var numberOfStudents = request.StudentsIdList?.Count();
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.Equals(request.ClassId),include : x => x.Include(x => x.Sessions));
-            var session = cls.Sessions.FirstOrDefault(x => x.Id == x.Id);
-            var classInstance = await _unitOfWork.GetRepository<ClassInstance>().GetListAsync(predicate: x => x.SessionId == session.Id);
-            var numberOfStudentInClass = 0;
-            if(classInstance != null)
-            {
-                numberOfStudentInClass = classInstance.Count();
-            }
-            var isExceed = numberOfStudentInClass + numberOfStudents > cls.LimitNumberStudent;
-            if(isExceed)
-            {
-                throw new BadHttpRequestException($"you add exceed {numberOfStudents + numberOfStudents - cls.LimitNumberStudent} students at now ", StatusCodes.Status400BadRequest);
-            }
-            if (numberOfStudents == 0 || numberOfStudents == null)
-            {
-                throw new BadHttpRequestException("let add children", StatusCodes.Status400BadRequest);
-            }
-            if (user == null)
-            {
-                throw new BadHttpRequestException("user is unauthencated", StatusCodes.Status400BadRequest);
-            }
-            var transactionClassFee = new ClassFeeTransaction
-            {
-                ParentId = user.Id,
-                Id = Guid.NewGuid(),
-                ActualPrice = price * numberOfStudents,
-                DateCreated = DateTime.Now,
-            };
-            await _unitOfWork.GetRepository<ClassFeeTransaction>().InsertAsync(transactionClassFee);
-            bool isSuccessAtClassFee = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessAtClassFee)
-            {
-                throw new BadHttpRequestException("insert classfee is failed", StatusCodes.Status400BadRequest);
-            }
-            ClassTransaction classTransaction = new ClassTransaction
-            {
-                Id = Guid.NewGuid(),
-                ClassFeeTransactionId = transactionClassFee.Id,
-                ClassId = request.ClassId,
-            };
-            await _unitOfWork.GetRepository<ClassTransaction>().InsertAsync(classTransaction);
-            bool isSuccessAtClassTransaction = await _unitOfWork.CommitAsync() > 0;
-            List<Guid> promotionList = request.UserPromotions;
-            if (promotionList.Count > 0)
-            {
-                foreach (var promotionId in promotionList)
-                {
-                    var promtionTransaction = new PromotionTransaction
-                    {
-                        ClassFeeTransactionId = transactionClassFee.Id,
-                        UserPromotionId = promotionId,
-                        Id = Guid.NewGuid()
-                    };
-                    await _unitOfWork.GetRepository<PromotionTransaction>().InsertAsync(promtionTransaction);
-                    bool isSuccessAtTransactionPromotion = await _unitOfWork.CommitAsync() > 0;
-                    if (!isSuccessAtTransactionPromotion)
-                    {
-                        throw new BadHttpRequestException("insert transaction promotion is failed", StatusCodes.Status400BadRequest);
-                    }
-                }
-            }
-            List<Guid> StudentIds = request.StudentsIdList;
-            foreach (var studentId in StudentIds)
-            {
-                var studentTransaction = new StudentTransaction
-                {
-                    Id = Guid.NewGuid(),
-                    ClassTransactionId = classTransaction.Id,
-                    StudentId = studentId,
-                };
-                await _unitOfWork.GetRepository<StudentTransaction>().InsertAsync(studentTransaction);
-                bool isSuccessAtTransactionStudent = await _unitOfWork.CommitAsync() > 0;
-                if (!isSuccessAtTransactionStudent)
-                {
-                    throw new BadHttpRequestException("insert transaction student is failed", StatusCodes.Status400BadRequest);
-                }
-            }
-            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.ClassId.Equals(request.ClassId));
-            List<ClassInstance> classInstances = new List<ClassInstance>();
-            foreach (var sessionx in sessions)
-            {
-                StudentIds.ForEach(studentId =>
-                {
-                    var classInstancex = new ClassInstance
-                    {
-                        Id = Guid.NewGuid(),
-                        SessionId = sessionx.Id,
-                        Status = "NotYet",
-                        StudentId = studentId,
-                    };
-                    classInstances.Add(classInstancex);
-                });
-               /* foreach (var studentId in StudentIds)
-                {
-                    var classInstancex = new ClassInstance
-                    {
-                        Id = Guid.NewGuid(),
-                        SessionId = session.Id,
-                        Status = "NotYet",
-                        StudentId = studentId,
-                    };
-                    await _unitOfWork.GetRepository<ClassInstance>().InsertAsync(classInstancex);
-                    bool isSuccessAtClassInstance = await _unitOfWork.CommitAsync() > 0;
-                    if (!isSuccessAtClassInstance)
-                    {
-                        throw new BadHttpRequestException("class Instance is failed", StatusCodes.Status400BadRequest);
-                    }
-                } */
-            }
-            await _unitOfWork.GetRepository<ClassInstance>().InsertRangeAsync(classInstances);
-            bool isSuccessAtClassInstance = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessAtClassInstance)
-            {
-                throw new BadHttpRequestException("class Instance is failed", StatusCodes.Status400BadRequest);
-            }
-            var actualPrice = price * numberOfStudents;
-            var lastPrice = actualPrice;
-            if(promotionList.Count > 0)
-            {
-                foreach(var promotion in promotionList)
-                {
-                    var userpromotion = await _unitOfWork.GetRepository<UserPromotion>().SingleOrDefaultAsync(predicate : x => x.Id.Equals(promotion),include : x => x.Include(x => x.Promotion));
-                    var promotionx = userpromotion.Promotion;
-                    var unit = promotionx.UnitDiscount;
-                    if (unit.ToLower().Equals("cash"))
-                    {
-                        lastPrice = actualPrice - promotionx.DiscountValue;
-                    } else
-                    {
-                        lastPrice = actualPrice * (1 - (promotionx.DiscountValue / 100));
-                    }
-                }
-            }
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
-            if(personalWallet.Balance < lastPrice) 
-            {
-                throw new BadHttpRequestException("balance is not enough to payment", StatusCodes.Status400BadRequest);
-            }
-            personalWallet.Balance = personalWallet.Balance - lastPrice.Value;
-            _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
-            bool isPersonalWallet = await _unitOfWork.CommitAsync() > 0;
-            if (!isPersonalWallet)
-            {
-                throw new BadHttpRequestException("update failed at personal wallet", StatusCodes.Status400BadRequest);
-            }
-            return isPersonalWallet;
-        }
-
         public async Task<bool> CheckUserExistByPhone(string phone)
         {
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Phone.Trim().Equals(phone.Trim()));
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()));
             if (user == null)
             {
                 return false;
@@ -214,14 +65,15 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<User>> GetUsers()
         {
-            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate : x => x.Id == x.Id);
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Id == x.Id);
             return users.ToList();
         }
 
         public async Task<NewTokenResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest)
         {
             var userId = JwtUtil.ReadToken(refreshTokenRequest.OldToken);
-            if(string.IsNullOrEmpty(userId)) {
+            if (string.IsNullOrEmpty(userId))
+            {
                 return null;
             }
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse(userId), include: u => u.Include(u => u.Role));
@@ -232,24 +84,24 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> RegisterNewUser(RegisterRequest registerRequest)
         {
-           // Address address = new Address
-           // {
-           //     Street = registerRequest.Street,
-           //     City = registerRequest.City,
-           //     District = registerRequest.District,
-           //     Id = Guid.NewGuid(),
-           // };
-           //await _unitOfWork.GetRepository<Address>().InsertAsync(address);
-           //var isAddressSuccess = await _unitOfWork.CommitAsync() > 0;
-           //if(!isAddressSuccess)
-           //{
-           //     throw new BadHttpRequestException("address can't insert", StatusCodes.Status400BadRequest);
-           //}
-           //var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate : x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()),selector : x => x.Id);
-           //if(registerRequest.DateOfBirth > DateTime.Now)
-           // {
-           //     throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
-           // }
+            // Address address = new Address
+            // {
+            //     Street = registerRequest.Street,
+            //     City = registerRequest.City,
+            //     District = registerRequest.District,
+            //     Id = Guid.NewGuid(),
+            // };
+            //await _unitOfWork.GetRepository<Address>().InsertAsync(address);
+            //var isAddressSuccess = await _unitOfWork.CommitAsync() > 0;
+            //if(!isAddressSuccess)
+            //{
+            //     throw new BadHttpRequestException("address can't insert", StatusCodes.Status400BadRequest);
+            //}
+            //var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate : x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()),selector : x => x.Id);
+            //if(registerRequest.DateOfBirth > DateTime.Now)
+            // {
+            //     throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
+            // }
             //User user = new User
             //{
             //    AddressId = address.Id,
@@ -290,6 +142,125 @@ namespace MagicLand_System.Services.Implements
             //await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
             //var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return true; //isSuccess;
+        }
+
+        public async Task<BillResponse> CheckoutNowAsync(CheckoutRequest request)
+        {
+            var price = await _unitOfWork.GetRepository<Course>()
+                .SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Classes.Any(c => c.Id.Equals(request.ClassId)));
+
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
+                .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+
+
+            var currentPayer = await GetCurrentUser();
+
+            var total = CalculateTotal(request.StudentsIdList.Count(), price);
+
+            try
+            {
+                var newTransaction = new WalletTransaction
+                {
+                    Id = new Guid(),
+                    Money = total,
+                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
+                    Description = "Direct registered class",
+                    CreatedTime = DateTime.Now,
+                };
+
+                var studentInClasses = request.StudentsIdList.Select(sil =>
+                new StudentClass
+                {
+                    Id = new Guid(),
+                    Status = "NORMAL",
+                    StudentId = sil,
+                    ClassId = request.ClassId,
+                }).ToList();
+
+                personalWallet.Balance = personalWallet.Balance - total;
+
+                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
+                await _unitOfWork.GetRepository<WalletTransaction>().InsertAsync(newTransaction);
+                await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentInClasses);
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.InnerException!.ToString());
+            }
+
+            var bill = new BillResponse
+            {
+                Status = "Purchase Success",
+                Date = DateTime.Now,
+                Method = CheckOutMethodEnum.SystemWallet,
+                Payer = currentPayer.FullName!,
+                MoneyPaid = total,
+            };
+
+            return bill;
+        }
+
+
+        public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
+        {
+            var course = await _unitOfWork.GetRepository<Course>()
+                .SingleOrDefaultAsync(predicate: x => x.Classes.Any(c => c.Id.Equals(classId)), include: x => x
+                .Include(x => x.Classes)
+                .ThenInclude(c => c.Schedules)
+                .ThenInclude(s => s.Slot)
+                .Include(x => x.Classes)
+                .ThenInclude(c => c.StudentClasses));
+
+            var cls = course.Classes.SingleOrDefault(c => c.Id.Equals(classId))!;
+
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
+                .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+
+            var total = CalculateTotal(studentIds.Count(), course.Price);
+
+            if (allStudentSchedules != null && allStudentSchedules.Count() > 0)
+            {
+                //Checking Schedule
+            }
+
+            //Checking Course Prerequsite  ?
+
+            foreach (var id in studentIds)
+            {
+                var student = await _unitOfWork.GetRepository<Student>()
+                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
+
+                var age = DateTime.Now.Year - student.DateOfBirth.Year;
+                if (age > course.MaxYearOldsStudent || age < course.MinYearOldsStudent)
+                {
+                    throw new BadHttpRequestException($"Student {student.FullName} is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
+                }
+
+                if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
+                {
+                    throw new BadHttpRequestException($"Student {student.FullName} is already asign class {cls.Name}", StatusCodes.Status400BadRequest);
+                }
+            }
+
+            if (cls.StudentClasses.Count() + studentIds.Count() > cls.LimitNumberStudent)
+            {
+                throw new BadHttpRequestException($"Class {cls.Name} has over student index", StatusCodes.Status400BadRequest);
+            }
+
+            if (personalWallet.Balance < total)
+            {
+                throw new BadHttpRequestException("Your balance has not enough", StatusCodes.Status400BadRequest);
+            }
+            return true;
+        }
+
+        protected double CalculateTotal(int numberStudent, double price)
+        {
+            var totalPrice = price * numberStudent;
+            var actualTotal = totalPrice; //Apply Promotion/Sales
+            return actualTotal;
         }
     }
 }

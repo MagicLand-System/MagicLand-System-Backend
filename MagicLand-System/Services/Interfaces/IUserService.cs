@@ -2,6 +2,8 @@
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Cart;
+using MagicLand_System.PayLoad.Response.Student;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -13,6 +15,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<User> GetCurrentUser();
         Task<NewTokenResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest);
         Task<bool> RegisterNewUser(RegisterRequest registerRequest);
-        Task<bool> CheckoutNow(CheckoutRequest request);
+        Task<BillResponse> CheckoutNowAsync(CheckoutRequest request);
+        Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> schedules, Guid classId, List<Guid> studentIds);
     }
 }
