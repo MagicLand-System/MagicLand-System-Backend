@@ -50,7 +50,7 @@
             public const string GetAll = ApiEndpoint + "/Courses";
             public const string SearchCourse = GetAll + "/search";
             public const string CourseById = ApiEndpoint + "/{id}";
-            public const string FilterCourse = SearchCourse + "/filter";
+            public const string FilterCourse = "/filter";
         }
         public static class Student
         {

@@ -7,7 +7,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<ClassResponse>> GetClassesAsync();
         Task<List<ClassResponse>> GetClassesByCourseIdAsync(Guid id);
-        Task<List<ClassResponse>> FilterClassAsync(List<string>? keyWords, double? minPrice, double? maxPrice, int? limitStudent);
+        Task<List<ClassResponse>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent);
         Task<ClassResponse> GetClassByIdAsync(Guid id);
     }
 }

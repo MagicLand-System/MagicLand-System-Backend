@@ -7,5 +7,6 @@
         public int Floor { get; set; }
         public string? Status { get; set; }
         public string? LinkUrl { get; set; }
+        public int Capacity { get; set; } = 100;
     }
 }

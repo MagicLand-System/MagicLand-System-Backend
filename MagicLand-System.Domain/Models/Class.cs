@@ -9,10 +9,11 @@ namespace MagicLand_System.Domain.Models
         public string? ClassCode { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public string? Address { get; set; } = "Home";
+        public string? Street { get; set; } = "Home";
+        public string? City { get; set; } = "";
+        public string? District { get; set; } = "";
         public string? Status { get; set; }
         public string? Method { get; set; }
-        public double Price { get; set; }
         public int LimitNumberStudent { get; set; }
         public int LeastNumberStudent { get; set; }
         public string? Image { get; set; } = null;
@@ -25,7 +26,6 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("User")]
         public Guid LecturerId { get; set; }
         public User? Lecture { get; set; }
-
 
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();

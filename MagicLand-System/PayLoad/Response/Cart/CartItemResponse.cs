@@ -6,7 +6,6 @@ namespace MagicLand_System.PayLoad.Response.Cart
     public class CartItemResponse
     {
         public Guid Id { get; set; }
-        public double CurrentTotalPrice { get; set; } = 0;
 
         public required List<StudentResponse> Students { get; set; }
         public required ClassResponse Class { get; set; }
