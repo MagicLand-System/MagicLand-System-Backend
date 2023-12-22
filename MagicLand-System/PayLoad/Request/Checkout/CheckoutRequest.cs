@@ -1,9 +1,9 @@
-﻿namespace MagicLand_System.PayLoad.Request.Checkout
+﻿
+namespace MagicLand_System.PayLoad.Request.Checkout
 {
     public class CheckoutRequest
     {
-        public List<Guid> StudentsIdList { get; set; }
-        public List<Guid>? UserPromotions { get; set; } = null;
-        public Guid ClassId { get; set; }
+        public required List<Guid> StudentsIdList { get; set; }
+        public required Guid ClassId { get; set; }
     }
 }

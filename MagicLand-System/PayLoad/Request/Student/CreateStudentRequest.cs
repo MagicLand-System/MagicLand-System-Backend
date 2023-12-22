@@ -10,5 +10,6 @@ namespace MagicLand_System.PayLoad.Request.Student
         [Required(ErrorMessage = "Full name is missing")]
         public string Gender { get; set; }
         public string? AvatarImage { get; set; }
+        public string? Email { get; set; }  
     }
 }

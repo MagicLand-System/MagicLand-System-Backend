@@ -6,6 +6,7 @@ using MagicLand_System.PayLoad.Response.Student;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -33,44 +34,50 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<StudentClassResponse>> GetClassOfStudent(string studentId,string? status = null)
+        public async Task<List<StudentClassResponse>> GetClassOfStudent(string studentId,string status)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync( predicate : x => x.Id.ToString().Equals(studentId));  
             if(student == null)
             {
                 throw new BadHttpRequestException("StudentId is not exist",StatusCodes.Status400BadRequest);
             }
-            var listClassInstance = await _unitOfWork.GetRepository<ClassInstance>().GetListAsync(predicate : x => x.StudentId.ToString().Equals(studentId) , include : x => x.Include(x => x.Session));
+            var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
             {
                 throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
             }
             var classIds = (from classInstance in listClassInstance
-                            group classInstance by classInstance.Session.ClassId into grouped
+                            group classInstance by classInstance.ClassId into grouped
                             select new { ClassId = grouped.Key });
+            var myx = classIds.ToList();
             Class studentClass = null;
             List<Class> classes = new List<Class>();
-            ICollection<Class> allClass = null;
-            if(status != null)
+            List<Class> allClass = new List<Class>();
+           
+            allClass = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Course).Include(x => x.Lecture))).ToList();
+            foreach (var classInstance in myx)
             {
-                allClass = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id && x.Status.ToLower().Equals(status.ToLower()), include: x => x.Include(x => x.Course).Include(x => x.User));
-            } else
-            {
-                allClass = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id , include: x => x.Include(x => x.Course).Include(x => x.User));
+                if (status.IsNullOrEmpty()) 
+                {
+                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()));
+                }
+                else
+                {
+                    studentClass = studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()) && status.Trim().Equals(x.Status.Trim()));
+                }
+                if(studentClass != null)
+                {
+                    classes.Add(studentClass);
+                }
             }
-            foreach (var classInstance in classIds)
-            {
-                studentClass = allClass.SingleOrDefault(x => x.Id == classInstance.ClassId);
-                classes.Add(studentClass);
-            }
-            if(classes.Count == 0)
+            if (classes.Count == 0)
             {
 
                 throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
             }
             List<StudentClassResponse> responses = new List<StudentClassResponse>();
-            StudentClassResponse response = new StudentClassResponse();
-            foreach (var classM in allClass)
+            StudentClassResponse response = null;
+            foreach (var classM in classes)
             {
                 response = new StudentClassResponse
                 {
@@ -78,17 +85,17 @@ namespace MagicLand_System.Services.Implements
                     StatusClass = classM.Status,
                     Method = classM.Method,
                     CourseName = classM.Course.Name,
-                    EndTime = classM.EndTime,
-                    MaxYearOldsStudentOfCourse = classM.Course.MaxYearOldsStudent,
-                    MinYearOldsStudentOfCourse = classM.Course.MinYearOldsStudent,
-                    LecturerName = classM.User.FullName,
+                    EndTime = classM.EndDate,
+                    MaxYearOldsStudentOfCourse = classM.Course.MaxYearOldsStudent.Value,
+                    MinYearOldsStudentOfCourse = classM.Course.MinYearOldsStudent.Value,
+                    LecturerName = classM.Lecture.FullName,
                     NumberOfSession = classM.Course.NumberOfSession,
-                    StartTime = classM.StartTime,
+                    StartTime = classM.StartDate,
                     Status = classM.Status
                 };
                 responses.Add(response);
             }
-            return responses;   
+            return responses;//responses;   
         }
 
         public async Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId)
@@ -98,44 +105,48 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("StudentId is not exist", StatusCodes.Status400BadRequest);
             }
-            var listClassInstance = await _unitOfWork.GetRepository<ClassInstance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Session));
+            var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
             {
                 throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
             }
             var sessionIds = new List<Guid>();
-            foreach(var classInstance in listClassInstance)
+            foreach (var classInstance in listClassInstance)
             {
-                sessionIds.Add(classInstance.Session.Id);
+                sessionIds.Add(classInstance.Class.Id);
             }
-            if(sessionIds.Count == 0) 
+            if (sessionIds.Count == 0)
             {
                 throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
             }
-            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class)); 
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class));
             var listStudentSchedule = new List<StudentScheduleResponse>();
             StudentScheduleResponse studentSchedule = null;
-            Session session = new Session();
+            List<Schedule> scheduleList = new List<Schedule>();
             foreach (var Id in sessionIds)
             {
-                session = sessions.SingleOrDefault(s => s.Id == Id);
-                var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector : x => x.FullName,predicate :  x => x.Id.Equals(session.Class.LecturerId));
+                var listResult = (schedules.Where(s => s.ClassId == Id)).ToList();
+                scheduleList.AddRange(listResult);
+            }
+            foreach (var schedule in scheduleList)
+            {
+                var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class.LecturerId));
                 studentSchedule = new StudentScheduleResponse
                 {
-                    Date = session.Date,
-                    DayOfWeek = session.DayOfWeek,
-                    EndTime = session.Slot.EndTime,
-                    StartTime = session.Slot.StartTime,
-                    LinkURL = session.Room.LinkURL,
-                    Method = session.Class.Method,
-                    RoomInFloor = session.Room.Floor,
-                    RoomName = session.Room.Name,
-                    ClassName = session.Class.Name,
+                    Date = schedule.Date,
+                    DayOfWeek = schedule.DayOfWeek,
+                    EndTime = schedule.Slot.EndTime,
+                    StartTime = schedule.Slot.StartTime,
+                    LinkURL =  schedule.Room.LinkURL,
+                    Method = schedule.Class.Method,
+                    RoomInFloor = schedule.Room.Floor,
+                    RoomName = schedule.Room.Name,
+                    ClassName = schedule.Class.Name,
                     LecturerName = lecturerName,
                 };
                 listStudentSchedule.Add(studentSchedule);
             }
-            return listStudentSchedule;
+            return listStudentSchedule; //listStudentSchedule;
         }
 
         public async Task<List<Student>> GetStudentsOfCurrentParent()

@@ -8,5 +8,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<CartResponse> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId);
         Task<CartResponse> GetCartOfCurrentParentAsync();
         Task<bool> DeleteItemInCartOfCurrentParentAsync(Guid itemId);
+        Task<BillResponse> CheckOutCartAsync(List<CartItemResponse> cartItems);
     }
 }

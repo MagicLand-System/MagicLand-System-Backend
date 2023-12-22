@@ -22,32 +22,6 @@ namespace MagicLand_System.Domain.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Address", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("District")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Address", (string)null);
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.Cart", b =>
                 {
                     b.Property<Guid>("Id")
@@ -74,30 +48,14 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CartId");
 
                     b.ToTable("CartItem", (string)null);
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.CartItemRelation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CartItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CartItemId");
-
-                    b.ToTable("CartItemRelation", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Class", b =>
@@ -106,19 +64,28 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AddressId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClassCode")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("EndTime")
+                    b.Property<string>("District")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LeastNumberStudent")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("LecturerId")
                         .HasColumnType("uniqueidentifier");
@@ -127,31 +94,26 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Method")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Price")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("StartTime")
+                    b.Property<DateTime>("StartDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
                     b.Property<string>("Status")
-                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Street")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Video")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AddressId");
 
                     b.HasIndex("CourseId");
 
@@ -160,105 +122,80 @@ namespace MagicLand_System.Domain.Migrations
                     b.ToTable("Class", (string)null);
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassFeeTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double?>("ActualPrice")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("DateCreated")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("getutcdate()");
-
-                    b.Property<Guid>("ParentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("ClassFeeTransaction", (string)null);
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassInstance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("ClassInstance", (string)null);
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassFeeTransactionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClassFeeTransactionId");
-
-                    b.HasIndex("ClassId");
-
-                    b.ToTable("ClassTransaction", (string)null);
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("CourseCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MaxYearOldsStudent")
+                    b.Property<int?>("MaxYearOldsStudent")
                         .HasColumnType("int");
 
-                    b.Property<int>("MinYearOldsStudent")
+                    b.Property<int?>("MinYearOldsStudent")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("NumberOfSession")
                         .HasColumnType("int");
 
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
+
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CourseCategoryId");
+
                     b.ToTable("Course", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CourseCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CourseCategory", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CourseDescription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("CourseDescription", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CoursePrerequisite", b =>
@@ -325,7 +262,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Promotion", (string)null);
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PromotionTransaction", b =>
@@ -344,7 +281,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("UserPromotionId");
 
-                    b.ToTable("PromotionTransaction", (string)null);
+                    b.ToTable("PromotionTransactions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Role", b =>
@@ -358,6 +295,9 @@ namespace MagicLand_System.Domain.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Role", (string)null);
@@ -368,6 +308,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Floor")
                         .HasColumnType("int");
@@ -386,7 +329,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.ToTable("Room", (string)null);
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Schedule", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -415,7 +358,32 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("SlotId");
 
-                    b.ToTable("Session", (string)null);
+                    b.ToTable("Schedule", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NoSession")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("Session");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Slot", b =>
@@ -449,12 +417,13 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("ParentId")
@@ -467,13 +436,37 @@ namespace MagicLand_System.Domain.Migrations
                     b.ToTable("Student", (string)null);
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.StudentTransaction", b =>
+            modelBuilder.Entity("MagicLand_System.Domain.Models.StudentClass", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ClassTransactionId")
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("StudentClass", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.StudentInCart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CartItemId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("StudentId")
@@ -481,11 +474,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClassTransactionId");
+                    b.HasIndex("CartItemId");
 
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("StudentTransaction", (string)null);
+                    b.ToTable("StudentInCart", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.User", b =>
@@ -494,48 +485,46 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AddressId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("AvatarImage")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("CartId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("DateOfBirth")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
+                    b.Property<string>("District")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("PersonalWalletId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Street")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("AddressId")
-                        .IsUnique()
-                        .HasFilter("[AddressId] IS NOT NULL");
+                    b.HasKey("Id");
 
                     b.HasIndex("CartId")
                         .IsUnique()
@@ -573,7 +562,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserPromotion", (string)null);
+                    b.ToTable("UserPromotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.WalletTransaction", b =>
@@ -586,7 +575,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("Money")
@@ -596,7 +584,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Type")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -609,7 +596,7 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.CartItem", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Cart", "Cart")
-                        .WithMany("Carts")
+                        .WithMany("CartItems")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -617,89 +604,45 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Cart");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.CartItemRelation", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.CartItem", "CartItem")
-                        .WithMany("CartItemRelations")
-                        .HasForeignKey("CartItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CartItem");
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.Class", b =>
                 {
-                    b.HasOne("MagicLand_System.Domain.Models.Address", "Address")
-                        .WithMany("Classes")
-                        .HasForeignKey("AddressId");
-
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
                         .WithMany("Classes")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MagicLand_System.Domain.Models.User", "User")
+                    b.HasOne("MagicLand_System.Domain.Models.User", "Lecture")
                         .WithMany("Classes")
                         .HasForeignKey("LecturerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Address");
-
                     b.Navigation("Course");
 
-                    b.Navigation("User");
+                    b.Navigation("Lecture");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassFeeTransaction", b =>
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
                 {
-                    b.HasOne("MagicLand_System.Domain.Models.User", "User")
-                        .WithMany("ClassFeeTransactions")
-                        .HasForeignKey("ParentId")
+                    b.HasOne("MagicLand_System.Domain.Models.CourseCategory", "CourseCategory")
+                        .WithMany("Courses")
+                        .HasForeignKey("CourseCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CourseCategory");
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CourseDescription", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
+                        .WithMany("CourseDescriptions")
+                        .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassInstance", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.Session", "Session")
-                        .WithMany("ClassInstances")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MagicLand_System.Domain.Models.Student", "Student")
-                        .WithMany("ClassInstances")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassTransaction", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.ClassFeeTransaction", "ClassFeeTransaction")
-                        .WithMany("ClassTransactions")
-                        .HasForeignKey("ClassFeeTransactionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MagicLand_System.Domain.Models.Class", "Class")
-                        .WithMany("ClasssTransactions")
-                        .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Class");
-
-                    b.Navigation("ClassFeeTransaction");
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CoursePrerequisite", b =>
@@ -715,39 +658,31 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PromotionTransaction", b =>
                 {
-                    b.HasOne("MagicLand_System.Domain.Models.ClassFeeTransaction", "ClassFeeTransaction")
-                        .WithMany("PromotionTransactions")
-                        .HasForeignKey("UserPromotionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("MagicLand_System.Domain.Models.UserPromotion", "UserPromotion")
                         .WithMany("PromotionTransactions")
                         .HasForeignKey("UserPromotionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ClassFeeTransaction");
-
                     b.Navigation("UserPromotion");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Schedule", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Class", "Class")
-                        .WithMany("Sessions")
+                        .WithMany("Schedules")
                         .HasForeignKey("ClassId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.Room", "Room")
-                        .WithMany("Sessions")
+                        .WithMany("Schedules")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.Slot", "Slot")
-                        .WithMany("Sessions")
+                        .WithMany("Schedules")
                         .HasForeignKey("SlotId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -757,6 +692,17 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Room");
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
+                        .WithMany("Sessions")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Student", b =>
@@ -770,31 +716,38 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.StudentTransaction", b =>
+            modelBuilder.Entity("MagicLand_System.Domain.Models.StudentClass", b =>
                 {
-                    b.HasOne("MagicLand_System.Domain.Models.ClassTransaction", "ClassTransaction")
-                        .WithMany("StudentTransactions")
-                        .HasForeignKey("ClassTransactionId")
+                    b.HasOne("MagicLand_System.Domain.Models.Class", "Class")
+                        .WithMany("StudentClasses")
+                        .HasForeignKey("ClassId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.Student", "Student")
-                        .WithMany("StudentTransactions")
+                        .WithMany("StudentClasses")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ClassTransaction");
+                    b.Navigation("Class");
 
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.StudentInCart", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.CartItem", "CartItem")
+                        .WithMany("StudentInCarts")
+                        .HasForeignKey("CartItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CartItem");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.User", b =>
                 {
-                    b.HasOne("MagicLand_System.Domain.Models.Address", "Address")
-                        .WithOne("User")
-                        .HasForeignKey("MagicLand_System.Domain.Models.User", "AddressId");
-
                     b.HasOne("MagicLand_System.Domain.Models.Cart", "Cart")
                         .WithOne("User")
                         .HasForeignKey("MagicLand_System.Domain.Models.User", "CartId")
@@ -810,8 +763,6 @@ namespace MagicLand_System.Domain.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_USER_ROLE");
-
-                    b.Navigation("Address");
 
                     b.Navigation("Cart");
 
@@ -829,7 +780,7 @@ namespace MagicLand_System.Domain.Migrations
                         .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.User", "User")
-                        .WithMany("UserPromotions")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -850,17 +801,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("PersonalWallet");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Address", b =>
-                {
-                    b.Navigation("Classes");
-
-                    b.Navigation("User")
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.Cart", b =>
                 {
-                    b.Navigation("Carts");
+                    b.Navigation("CartItems");
 
                     b.Navigation("User")
                         .IsRequired();
@@ -868,39 +811,35 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CartItem", b =>
                 {
-                    b.Navigation("CartItemRelations");
+                    b.Navigation("StudentInCarts");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Class", b =>
                 {
-                    b.Navigation("ClasssTransactions");
+                    b.Navigation("Schedules");
 
-                    b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassFeeTransaction", b =>
-                {
-                    b.Navigation("ClassTransactions");
-
-                    b.Navigation("PromotionTransactions");
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.ClassTransaction", b =>
-                {
-                    b.Navigation("StudentTransactions");
+                    b.Navigation("StudentClasses");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
                 {
                     b.Navigation("Classes");
 
+                    b.Navigation("CourseDescriptions");
+
                     b.Navigation("CoursePrerequisites");
+
+                    b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CourseCategory", b =>
+                {
+                    b.Navigation("Courses");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PersonalWallet", b =>
                 {
-                    b.Navigation("User")
-                        .IsRequired();
+                    b.Navigation("User");
 
                     b.Navigation("WalletTransactions");
                 });
@@ -917,35 +856,24 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Room", b =>
                 {
-                    b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
-                {
-                    b.Navigation("ClassInstances");
+                    b.Navigation("Schedules");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Slot", b =>
                 {
-                    b.Navigation("Sessions");
+                    b.Navigation("Schedules");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Student", b =>
                 {
-                    b.Navigation("ClassInstances");
-
-                    b.Navigation("StudentTransactions");
+                    b.Navigation("StudentClasses");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.User", b =>
                 {
-                    b.Navigation("ClassFeeTransactions");
-
                     b.Navigation("Classes");
 
                     b.Navigation("Students");
-
-                    b.Navigation("UserPromotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.UserPromotion", b =>

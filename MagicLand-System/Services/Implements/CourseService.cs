@@ -15,37 +15,46 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<CourseResponse>> FilterCourseAsync(string? keyWord, int? minYearsOld, int? maxYearsOld, int? numberOfSession)
+        public async Task<List<CourseResponse>> FilterCourseAsync(int minYearsOld, int maxYearsOld, int? numberOfSession, double minPrice, double maxPrice, string? subject, int? rate)
         {
 
-            minYearsOld ??= 0;
-            maxYearsOld ??= 150;
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x
+            .Include(x => x.CoursePrerequisites)
+            .Include(x => x.CourseCategory)
+            .Include(x => x.CourseDescriptions)
+            .Include(x => x.Sessions));
 
-            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.CoursePrerequisites));
+            var filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
+             ? throw new BadHttpRequestException("Range Of Age Not Valid", StatusCodes.Status400BadRequest)
+             : courses.Where(x => x.MinYearOldsStudent >= minYearsOld && x.MaxYearOldsStudent <= maxYearsOld).ToList();
 
-            var filteredCourses = string.IsNullOrEmpty(keyWord)
-                ? courses.ToList()
-                : courses.Where(x => x.Name.ToLower().Contains(keyWord.ToLower())).ToList();
-
-
-            filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
-            ? throw new BadHttpRequestException("Range Of Age Not Valid", StatusCodes.Status400BadRequest)
-            : filteredCourses.Where(x => x.MinYearOldsStudent >= minYearsOld && x.MaxYearOldsStudent <= maxYearsOld).ToList();
+            filteredCourses = minPrice > maxPrice || minPrice < 0 || maxPrice < 0
+            ? throw new BadHttpRequestException("Range Of Price Not Valid", StatusCodes.Status400BadRequest)
+            : filteredCourses.Where(x => x.Price >= minPrice && x.Price <= maxPrice).ToList();
 
             filteredCourses = numberOfSession != null
             ? filteredCourses.Where(x => x.NumberOfSession == numberOfSession).ToList()
+            : filteredCourses;
+
+            filteredCourses = subject != null
+            ? filteredCourses.Where(x => x.CourseCategory!.Name!.ToLower().Equals(subject.ToLower())).ToList()
             : filteredCourses;
 
             Course[] coursePrerequisiteFiltereds = await GetCoursePrerequesites(filteredCourses);
 
             return filteredCourses.Select(fc => CustomMapper
                    .fromCourseToCourseResponse(fc, coursePrerequisiteFiltereds
-                  .Where(cpf => fc.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == cpf.Id)))).ToList();
+                   .Where(cpf => fc.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == cpf.Id)))).ToList();
         }
 
         public async Task<CourseResponse> GetCourseByIdAsync(Guid id)
         {
-            var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
+            var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
+            .Include(x => x.CoursePrerequisites)
+            .Include(x => x.Sessions)
+            .Include(x => x.CourseDescriptions)
+            .Include(x => x.CourseCategory)
+            .Include(x => x.Sessions));
 
             var coursePrerequisites = course == null
                 ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
@@ -57,7 +66,11 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<CourseResponse>> GetCoursesAsync()
         {
             var courses = await _unitOfWork.GetRepository<Course>()
-                .GetListAsync(include: x => x.Include(x => x.CoursePrerequisites));
+                .GetListAsync(include: x => x
+                .Include(x => x.CoursePrerequisites)
+                .Include(x => x.CourseCategory)
+                .Include(x => x.CourseDescriptions)
+                .Include(x => x.Sessions));
 
             Course[] coursePrerequisites = await GetCoursePrerequesites(courses);
 
@@ -67,11 +80,16 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        public async Task<List<CourseResponse>> SearchCourseAsync(String keyWord)
+        public async Task<List<CourseResponse>> SearchCourseByNameAsync(string keyWord)
         {
             var courses = string.IsNullOrEmpty(keyWord)
-            ? await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.CoursePrerequisites))
-            : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name.ToLower().Contains(keyWord.ToLower()), include: x => x.Include(x => x.CoursePrerequisites));
+            ? await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x
+            .Include(x => x.CoursePrerequisites)
+            .Include(x => x.CourseDescriptions)
+            .Include(x => x.Sessions))
+            : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
+            .Include(x => x.CoursePrerequisites)
+            .Include(x => x.Sessions));
 
             Course[] coursePrerequisites = await GetCoursePrerequesites(courses);
 

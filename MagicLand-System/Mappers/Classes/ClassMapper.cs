@@ -6,7 +6,7 @@ using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Address;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Session;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Net;
 
 namespace MagicLand_System.Mappers.Classes
 {
@@ -21,21 +21,15 @@ namespace MagicLand_System.Mappers.Classes
 
             CreateMap<Class, ClassResponse>()
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
-                .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method.ToString().Equals(ClassEnum.ONLINE.ToString())
+                .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
+                .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassEnum.ONLINE.ToString())
                 ? ClassEnum.ONLINE.ToString()
                 : ClassEnum.OFFLINE.ToString()))
-                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => (decimal)src.Price))
-                .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.ClasssTransactions.Count()))
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address ?? new Address()))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.User)))
-                .ForMember(dest => dest.Sessions, opt => opt.MapFrom(src => src.Sessions
-                .Select(s => CustomMapper.CustomMapper.fromSessionToSessionResponse(s)) ?? new List<SessionResponse>()))
-                .ForMember(dest => dest.MinYearOldsStudent,opt => opt.MapFrom(src => src.Course.MinYearOldsStudent))
-                .ForMember(dest => dest.MaxYearOldsStudent, opt => opt.MapFrom(src => src.Course.MaxYearOldsStudent));
-                 
-
-            CreateMap<Address, AddressResponse>();
+                .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
+                .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.Lecture!)))
+                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules!));
         }
     }
 }

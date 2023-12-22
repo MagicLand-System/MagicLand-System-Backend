@@ -35,7 +35,7 @@ namespace MagicLand_System.Controllers
 
         #region document API Search Courses
         /// <summary>
-        ///  Get All Courses By Name
+        ///  Get all courses contain Name key word
         /// </summary>
         /// <remarks>
         /// Sample request:
@@ -52,7 +52,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
-            var courses = await _courseService.SearchCourseAsync(keyWord);
+            var courses = await _courseService.SearchCourseByNameAsync(keyWord);
             return Ok(courses);
         }
 
@@ -85,18 +85,24 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Get Specific List Of Course By KeyWord And Filter Options
         /// </summary>
-        /// <param name="keyword">for course must contains the key word </param>
-        /// <param name="minYearsOld">for course age of student must bigger than this</param>
-        /// <param name="maxYearsOld">for course age of student must lower than this</param>
-        /// <param name="numberOfSession">for course must have a sessions equal to this</param>
+        /// <param name="minYearsOld">for course age of student must bigger than this age</param>
+        /// <param name="maxYearsOld">for course age of student must lower than this age</param>
+        /// <param name="numberOfSession">for course must have a sessions equal to this number</param>
+        /// <param name="minPrice">for course have price higher than this price</param>
+        /// <param name="maxPrice">for course have price lower than this price</param>
+        /// <param name="subject">for all course belong subject</param>
+        /// <param name="rate">for all course have euqal or higher than this rate</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "keyword": "basic math"
-        ///        "minYearsOld": 3
-        ///        "maxYearsOld": 7
-        ///        "numberOfSession": 6
+        ///        "subject": "Math",
+        ///        "minYearsOld": 3,
+        ///        "maxYearsOld": 7,
+        ///        "numberOfSession": 6,
+        ///        "minPrice": 2000000,
+        ///        "maxPrice": 8000000,
+        ///        "rate": 5
         ///     }
         ///
         /// </remarks>
@@ -106,9 +112,16 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.FilterCourse)]
         [AllowAnonymous]
-        public async Task<IActionResult> FilterCourse([FromQuery] string? keyword = null, [FromQuery] int? minYearsOld = null, [FromQuery] int? maxYearsOld = null , [FromQuery] int? numberOfSession = null)
+        public async Task<IActionResult> FilterCourse(
+            [FromQuery] string subject,
+            [FromQuery] int minYearsOld = 0,
+            [FromQuery] int maxYearsOld = 120,
+            [FromQuery] int? numberOfSession = null,
+            [FromQuery] double minPrice = 0,
+            [FromQuery] double maxPrice = double.MaxValue,
+            [FromQuery] int? rate = null)
         {
-            var courses = await _courseService.FilterCourseAsync(keyword, minYearsOld, maxYearsOld,numberOfSession);
+            var courses = await _courseService.FilterCourseAsync(minYearsOld, maxYearsOld, numberOfSession, minPrice, maxPrice, subject, rate);
             return Ok(courses);
         }
     }

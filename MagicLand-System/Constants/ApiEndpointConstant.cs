@@ -17,6 +17,7 @@
             public const string UserEndPointGetCurrentUser = UsersEndpoint + "/getcurrentuser";
             public const string UserEndPointRegister = UsersEndpoint + "/register";
             public const string UserEndPointCheckoutNow = UsersEndpoint + "/checkoutnow";
+            public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
         }
         public static class Authentication
         {
@@ -44,22 +45,33 @@
             public const string ModifyCart = Origin + "/modify";
             public const string GetCart = Origin + "/view";
             public const string DeleteCartItem = Origin + "/item/{id}/delete";
+            public const string CheckOutCart = Origin + "/item/checkout";
         }
         public static class CourseEnpoint
         {
-            public const string GetAll = ApiEndpoint + "/Courses";
+            public const string GetAll = ApiEndpoint + "/courses";
             public const string SearchCourse = GetAll + "/search";
             public const string CourseById = ApiEndpoint + "/{id}";
-            public const string FilterCourse = SearchCourse + "/filter";
+            public const string FilterCourse = "/filter";
         }
-        public static class Student
+        public static class StudentEndpoint
         {
             public const string StudentsEndpoint = ApiEndpoint + "/students";
-            public const string StudentEndpoint = StudentsEndpoint + "/{id}";
+            public const string StudentEndpointGet = StudentsEndpoint + "/{id}";
             public const string StudentEnpointCreate = StudentsEndpoint + "/add";
             public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
             public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
             public const string StudentGetCurrentChildren = StudentsEndpoint + "/currentuser";
+        }
+        public static class RoomEnpoint
+        {
+            public const string GetAll = ApiEndpoint + "/rooms";
+            public const string RoomById = GetAll + "/{id}";
+        }
+        public static class SlotEnpoint
+        {
+            public const string GetAll = ApiEndpoint + "/slots";
+            public const string SlotById = GetAll + "/{id}";
         }
     }
 }

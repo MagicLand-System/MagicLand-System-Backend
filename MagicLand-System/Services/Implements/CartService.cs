@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.Mappers.CustomMapper;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -23,13 +26,13 @@ namespace MagicLand_System.Services.Implements
             var cartReponse = new CartResponse();
             try
             {
-                if (currentParentCart.Carts.Count() > 0 && currentParentCart.Carts.Any(x => x.ClassId == classId))
+                if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.ClassId == classId))
                 {
-                    var sameCurrentCartItem = currentParentCart.Carts.SingleOrDefault(x => x.ClassId == classId);
+                    var sameCurrentCartItem = currentParentCart.CartItems.SingleOrDefault(x => x.ClassId == classId);
 
-                    _unitOfWork.GetRepository<CartItemRelation>().DeleteRangeAsync(sameCurrentCartItem!.CartItemRelations);
+                    _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(sameCurrentCartItem!.StudentInCarts);
 
-                    await _unitOfWork.GetRepository<CartItemRelation>().InsertRangeAsync
+                    await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
                         (
                              RenderStudentInClass(studentIds, sameCurrentCartItem)
                         );
@@ -49,7 +52,7 @@ namespace MagicLand_System.Services.Implements
 
                     await _unitOfWork.GetRepository<CartItem>().InsertAsync(newItem);
 
-                    await _unitOfWork.GetRepository<CartItemRelation>().InsertRangeAsync
+                    await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
                      (
                           RenderStudentInClass(studentIds, newItem)
                      );
@@ -71,12 +74,12 @@ namespace MagicLand_System.Services.Implements
         {
             return await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: x => x.UserId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.Carts).ThenInclude(cts => cts.CartItemRelations));
+                include: x => x.Include(x => x.CartItems).ThenInclude(cts => cts.StudentInCarts));
         }
 
-        private List<CartItemRelation> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
+        private List<StudentInCart> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
         {
-            return studentIds.Select(s => new CartItemRelation
+            return studentIds.Select(s => new StudentInCart
             {
                 Id = new Guid(),
                 CartItemId = cartItem.Id,
@@ -90,26 +93,26 @@ namespace MagicLand_System.Services.Implements
             {
                 var currentParrentCart = await FetchCurrentParentCart();
 
-                if (currentParrentCart != null && currentParrentCart.Carts.Count() > 0)
+                if (currentParrentCart != null && currentParrentCart.CartItems.Count() > 0)
                 {
                     var classes = new List<ClassResponse>();
-                    foreach (var task in currentParrentCart.Carts.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
-                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x.Include(x => x.User).Include(x => x.Address)!)))
+                    foreach (var task in currentParrentCart.CartItems.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
+                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId)))
                     {
                         var cls = await task;
                         classes.Add(_mapper.Map<ClassResponse>(cls));
                     }
 
                     var students = new List<Student>();
-                    foreach (var task in currentParrentCart.Carts.SelectMany(c => c.CartItemRelations)
-                        .Where(cartItemRelation => cartItemRelation != null)
-                        .Select(async cartItemRelation => await _unitOfWork.GetRepository<Student>()
-                        .SingleOrDefaultAsync(predicate: c => c.Id == cartItemRelation.StudentId)))
+                    foreach (var task in currentParrentCart.CartItems.SelectMany(c => c.StudentInCarts)
+                        .Where(studentInCart => studentInCart != null)
+                        .Select(async studentInCart => await _unitOfWork.GetRepository<Student>()
+                        .SingleOrDefaultAsync(predicate: c => c.Id == studentInCart.StudentId)))
                     {
                         var student = await task;
                         students.Add(student);
                     }
-
+                    #region
                     // Leave InCase Using Back
 
                     //foreach (var cts in cart.Carts)
@@ -144,6 +147,7 @@ namespace MagicLand_System.Services.Implements
 
                     //    students.Add(student);
                     //}
+                    #endregion
                     return CustomMapper.fromCartToCartResponse(currentParrentCart, students, classes);
                 }
 
@@ -161,7 +165,7 @@ namespace MagicLand_System.Services.Implements
             try
             {
                 var currentParentCart = await FetchCurrentParentCart();
-                var cartItemDelete = currentParentCart.Carts.SingleOrDefault(x => x.Id == itemId);
+                var cartItemDelete = currentParentCart.CartItems.SingleOrDefault(x => x.Id == itemId);
                 if (cartItemDelete == null)
                 {
                     return false;
@@ -174,6 +178,85 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<BillResponse> CheckOutCartAsync(List<CartItemResponse> cartItems)
+        {
+            double actualTotal = 0;
+            var newTransactions = new List<WalletTransaction>();
+            var newStudentInClass = new List<StudentClass>();
+
+            var currentPayer = await GetUserFromJwt();
+
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
+                   .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+
+            foreach (var item in cartItems)
+            {
+                var price = await _unitOfWork.GetRepository<Course>()
+                .SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Classes.Any(c => c.Id.Equals(item.Class.Id)));
+
+                double total = CalculateTotal(item.Students.Count(), price);
+                actualTotal += total;
+
+                var newTransaction = new WalletTransaction
+                {
+                    Id = new Guid(),
+                    Money = total,
+                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
+                    Description = $"Registered class {item.Class.Name} via cart",
+                    CreatedTime = DateTime.Now,
+                };
+
+                var studentInClasses = item.Students.Select(stu =>
+                new StudentClass
+                {
+                    Id = new Guid(),
+                    Status = "NORMAL",
+                    StudentId = stu.Id,
+                    ClassId = item.Id,
+                }).ToList();
+
+
+                newTransactions.Add(newTransaction);
+                newStudentInClass.AddRange(studentInClasses);
+            }
+
+            try
+            {
+                if (personalWallet.Balance < actualTotal)
+                {
+                    throw new BadHttpRequestException("Your balance not enough for register all class selected", StatusCodes.Status400BadRequest);
+                }
+
+                personalWallet.Balance = personalWallet.Balance - actualTotal;
+
+                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
+                await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(newTransactions);
+                await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(newStudentInClass);
+
+                await _unitOfWork.CommitAsync();
+
+            }catch(Exception ex)
+            {
+                throw new Exception(ex.InnerException!.ToString());
+            }
+           
+            var bill = new BillResponse
+            {
+                Status = "Purchase Success",
+                Date = DateTime.Now,
+                Method = CheckOutMethodEnum.SystemWallet,
+                Payer = currentPayer.FullName!,
+                MoneyPaid = actualTotal,
+            };
+
+            return bill;
+        }
+        protected double CalculateTotal(int numberStudents, double price)
+        {
+            return price * numberStudents;
+            //Apply promotion/sales
         }
     }
 }
