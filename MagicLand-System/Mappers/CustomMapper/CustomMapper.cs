@@ -113,15 +113,15 @@ namespace MagicLand_System.Mappers.CustomMapper
                 MaxAgeStudent = course.MaxYearOldsStudent,
                 Image = course.Image,
                 Price = (decimal)course.Price,
-                CoursePrerequisites = coursePrerequisites != null
-                ? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
-                : new List<CourseResponse>(),
-                Sessions = course.Sessions != null
-                ? course.Sessions.Select(s => fromSessionToSessionResponse(s)).ToList()
-                : new List<SessionResponse>(),
-                Description = course.CourseDescriptions.Select(cd => fromCourseDescriptionToCourseDescriptionResponse(cd)).ToList(),
+                //CoursePrerequisites = coursePrerequisites != null
+                //? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
+                //: new List<CourseResponse>(),
+                //Sessions = course.Sessions != null
+                //? course.Sessions.Select(s => fromSessionToSessionResponse(s)).ToList()
+                //: new List<SessionResponse>(),
+                //Description = course.CourseDescriptions.Select(cd => fromCourseDescriptionToCourseDescriptionResponse(cd)).ToList(),
             };
-            return response;
+             return response;
         }
 
         public static CourseDescriptionResponse fromCourseDescriptionToCourseDescriptionResponse(CourseDescription courseDescription)

@@ -9,8 +9,7 @@ namespace MagicLand_System.Domain.Models
         public string? Content { get; set; }
         public string? Description { get; set; }
 
-        [ForeignKey("Course")]
-        public Guid CourseId { get; set; }
-        public required Course Course { get; set; }
+        public Guid TopicId { get; set; }
+        public Topic Topic { get; set; }
     }
 }

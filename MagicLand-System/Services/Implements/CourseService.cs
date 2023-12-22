@@ -21,8 +21,8 @@ namespace MagicLand_System.Services.Implements
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x
             .Include(x => x.CoursePrerequisites)
             .Include(x => x.CourseCategory)
-            .Include(x => x.CourseDescriptions)
-            .Include(x => x.Sessions));
+            .Include(x => x.CourseDescriptions));
+            //.Include(x => x.Sessions));
 
             var filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
              ? throw new BadHttpRequestException("Range Of Age Not Valid", StatusCodes.Status400BadRequest)
@@ -51,10 +51,10 @@ namespace MagicLand_System.Services.Implements
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
             .Include(x => x.CoursePrerequisites)
-            .Include(x => x.Sessions)
+            //.Include(x => x.Sessions)
             .Include(x => x.CourseDescriptions)
-            .Include(x => x.CourseCategory)
-            .Include(x => x.Sessions));
+            .Include(x => x.CourseCategory));
+            //.Include(x => x.Sessions));
 
             var coursePrerequisites = course == null
                 ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
@@ -69,8 +69,8 @@ namespace MagicLand_System.Services.Implements
                 .GetListAsync(include: x => x
                 .Include(x => x.CoursePrerequisites)
                 .Include(x => x.CourseCategory)
-                .Include(x => x.CourseDescriptions)
-                .Include(x => x.Sessions));
+                .Include(x => x.CourseDescriptions));
+                //.Include(x => x.Sessions));
 
             Course[] coursePrerequisites = await GetCoursePrerequesites(courses);
 
@@ -85,11 +85,11 @@ namespace MagicLand_System.Services.Implements
             var courses = string.IsNullOrEmpty(keyWord)
             ? await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x
             .Include(x => x.CoursePrerequisites)
-            .Include(x => x.CourseDescriptions)
-            .Include(x => x.Sessions))
+            .Include(x => x.CourseDescriptions))
+            //.Include(x => x.Sessions))
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
-            .Include(x => x.CoursePrerequisites)
-            .Include(x => x.Sessions));
+            .Include(x => x.CoursePrerequisites));
+            //.Include(x => x.Sessions));
 
             Course[] coursePrerequisites = await GetCoursePrerequesites(courses);
 
