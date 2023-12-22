@@ -3,9 +3,11 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.User;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -80,6 +82,22 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new {Message = "Created Successfully"});
         }
-
+        [HttpGet(ApiEndpointConstant.User.UserEndPointGetLecturer)]
+        [ProducesResponseType(typeof(LecturerResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(NotFoundObjectResult))]
+        public async Task<IActionResult> GetLecturers()
+        {
+            var users = await _userService.GetLecturers();
+            if (users == null)
+            {
+                return NotFound(new ErrorResponse
+                {
+                    Error = "not found any lecturers",
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            return Ok(users);
+        }
     }
 }

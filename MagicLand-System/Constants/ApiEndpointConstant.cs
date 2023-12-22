@@ -17,6 +17,7 @@
             public const string UserEndPointGetCurrentUser = UsersEndpoint + "/getcurrentuser";
             public const string UserEndPointRegister = UsersEndpoint + "/register";
             public const string UserEndPointCheckoutNow = UsersEndpoint + "/checkoutnow";
+            public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
         }
         public static class Authentication
         {
@@ -61,6 +62,16 @@
             public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
             public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
             public const string StudentGetCurrentChildren = StudentsEndpoint + "/currentuser";
+        }
+        public static class RoomEnpoint
+        {
+            public const string GetAll = ApiEndpoint + "/rooms";
+            public const string RoomById = GetAll + "/{id}";
+        }
+        public static class SlotEnpoint
+        {
+            public const string GetAll = ApiEndpoint + "/slots";
+            public const string SlotById = GetAll + "/{id}";
         }
     }
 }

@@ -14,7 +14,7 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("User")]
         public Guid UserId { get; set; }
-        public required User User { get; set; }
+        public  User User { get; set; }
 
         public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
     }

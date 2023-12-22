@@ -8,6 +8,7 @@ using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.User;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -84,63 +85,52 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> RegisterNewUser(RegisterRequest registerRequest)
         {
-            // Address address = new Address
-            // {
-            //     Street = registerRequest.Street,
-            //     City = registerRequest.City,
-            //     District = registerRequest.District,
-            //     Id = Guid.NewGuid(),
-            // };
-            //await _unitOfWork.GetRepository<Address>().InsertAsync(address);
-            //var isAddressSuccess = await _unitOfWork.CommitAsync() > 0;
-            //if(!isAddressSuccess)
-            //{
-            //     throw new BadHttpRequestException("address can't insert", StatusCodes.Status400BadRequest);
-            //}
-            //var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate : x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()),selector : x => x.Id);
-            //if(registerRequest.DateOfBirth > DateTime.Now)
-            // {
-            //     throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
-            // }
-            //User user = new User
-            //{
-            //    AddressId = address.Id,
-            //    DateOfBirth = registerRequest.DateOfBirth,
-            //    Email = registerRequest.Email,
-            //    FullName = registerRequest.FullName,
-            //    Gender = registerRequest.Gender,
-            //    Phone = registerRequest.Phone,
-            //    RoleId = role,
-            //    Id = Guid.NewGuid(),
-            //};
-            //await _unitOfWork.GetRepository<User>().InsertAsync(user);
-            //var isUserSuccess = await _unitOfWork.CommitAsync() > 0;
-            //if (!isUserSuccess)
-            //{
-            //    throw new BadHttpRequestException("user can't insert", StatusCodes.Status400BadRequest);
-            //}
-            //Cart cart = new Cart
-            //{
-            //    Id = Guid.NewGuid(),
-            //    UserId = user.Id,
-            //};
-            //await _unitOfWork.GetRepository<Cart>().InsertAsync(cart);
-            //var isCartSuccess = await _unitOfWork.CommitAsync() > 0;
-            //if (!isCartSuccess)
-            //{
-            //    throw new BadHttpRequestException("cart can't insert", StatusCodes.Status400BadRequest);
-            //}
-            //PersonalWallet personalWallet = new PersonalWallet
-            //{
-            //    Id = Guid.NewGuid(),
-            //    UserId = user.Id,
-            //    Balance = 0
-            //};
-            //user.CartId = cart.Id;
-            //user.PersonalWalletId = personalWallet.Id;
-            //_unitOfWork.GetRepository<User>().UpdateAsync(user);
-            //await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
-            //var isSuccess = await _unitOfWork.CommitAsync() > 0;
+            var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()), selector: x => x.Id);
+            if (registerRequest.DateOfBirth > DateTime.Now)
+            {
+                throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
+            }
+            User user = new User
+            {
+                DateOfBirth = registerRequest.DateOfBirth,
+                Email = registerRequest.Email,
+                FullName = registerRequest.FullName,
+                Gender = registerRequest.Gender,
+                Phone = registerRequest.Phone,
+                RoleId = role,
+                District = registerRequest.District,
+                Street = registerRequest.Street,
+                City = registerRequest.City,    
+                Id = Guid.NewGuid(),
+            };
+            await _unitOfWork.GetRepository<User>().InsertAsync(user);
+            var isUserSuccess = await _unitOfWork.CommitAsync() > 0;
+            if (!isUserSuccess)
+            {
+                throw new BadHttpRequestException("user can't insert", StatusCodes.Status400BadRequest);
+            }
+            Cart cart = new Cart
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+            };
+            await _unitOfWork.GetRepository<Cart>().InsertAsync(cart);
+            var isCartSuccess = await _unitOfWork.CommitAsync() > 0;
+            if (!isCartSuccess)
+            {
+                throw new BadHttpRequestException("cart can't insert", StatusCodes.Status400BadRequest);
+            }
+            PersonalWallet personalWallet = new PersonalWallet
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Balance = 0
+            };
+            user.CartId = cart.Id;
+            user.PersonalWalletId = personalWallet.Id;
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+            await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWallet);
+            var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return true; //isSuccess;
         }
 
@@ -261,6 +251,37 @@ namespace MagicLand_System.Services.Implements
             var totalPrice = price * numberStudent;
             var actualTotal = totalPrice; //Apply Promotion/Sales
             return actualTotal;
+        }
+
+        public async Task<List<LecturerResponse>> GetLecturers()
+        {
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(include : x => x.Include(x => x.Role));
+            if (users == null)
+            {
+                return null;
+            }
+            var lecturers = users.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
+            List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
+            foreach (var user in lecturers)
+            {
+                LecturerResponse response = new LecturerResponse
+                {
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    AvatarImage = user.AvatarImage,
+                    DateOfBirth = user.DateOfBirth,
+                    Gender = user.Gender,
+                    Phone = user.Phone,
+                    Id = user.Id,
+                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()
+                };
+                lecturerResponses.Add(response);
+            }
+            if(lecturerResponses.Count == 0)
+            {
+                return null;
+            }
+            return lecturerResponses;
         }
     }
 }

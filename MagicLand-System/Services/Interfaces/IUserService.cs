@@ -4,6 +4,7 @@ using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.User;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -17,5 +18,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<bool> RegisterNewUser(RegisterRequest registerRequest);
         Task<BillResponse> CheckoutNowAsync(CheckoutRequest request);
         Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> schedules, Guid classId, List<Guid> studentIds);
+        Task<List<LecturerResponse>> GetLecturers();
     }
 }

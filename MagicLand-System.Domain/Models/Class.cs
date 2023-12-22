@@ -21,7 +21,7 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("Course")]
         public Guid CourseId { get; set; }
-        public required Course Course { get; set; }
+        public Course Course { get; set; }
 
         [ForeignKey("User")]
         public Guid LecturerId { get; set; }
