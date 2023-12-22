@@ -16,10 +16,9 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("CourseCategory")]
         public Guid CourseCategoryId { get; set; }
+        public Guid? CourseSyllabusId { get; set; }
+        public CourseSyllabus? CourseSyllabus { get; set; }
         public CourseCategory CourseCategory { get; set; } = new CourseCategory();
-
-
-        public ICollection<Session> Sessions { get; set; } = new List<Session>();
         public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<CourseDescription> CourseDescriptions { get; set; } = new List<CourseDescription>();

@@ -29,7 +29,7 @@ namespace MagicLand_System.Domain
         public DbSet<Room> Rooms { get; set; }
         public DbSet<CourseCategory> CourseCategories { get; set; }
         public DbSet<CourseDescription> CourseDescriptions { get; set; }
-
+        public DbSet<CourseSyllabus> CourseSyllabuses { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -106,7 +106,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Course");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.CourseCategory).WithMany(e => e.Courses).HasForeignKey(e => e.CourseCategoryId).OnDelete(DeleteBehavior.Restrict);
-               
+                entity.HasOne(e => e.CourseSyllabus).WithOne(e => e.Course).HasForeignKey<CourseSyllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<CoursePrerequisite>(entity =>
             {
@@ -165,6 +165,23 @@ namespace MagicLand_System.Domain
                 entity.ToTable("CourseDescription");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Course).WithMany(e => e.CourseDescriptions).HasForeignKey(e => e.CourseId);
+            });
+            modelBuilder.Entity<CourseSyllabus>(entity =>
+            {
+                entity.ToTable("CourseSyllabus");
+                entity.HasKey(entity => entity.Id);
+            });
+            modelBuilder.Entity<Topic>(entity =>
+            {
+                entity.ToTable("Topic");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.Topics).HasForeignKey(e => e.CourseSyllabusId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<Session>(entity =>
+            {
+                entity.ToTable("Session");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Topic).WithMany(e => e.Sessions).HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
