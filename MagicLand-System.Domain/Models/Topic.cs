@@ -12,6 +12,7 @@ namespace MagicLand_System.Domain.Models
         public string Name { get; set; }
         public int OrderNumber {  get; set; }   
         public Guid CourseSyllabusId { get; set; }
+
         public CourseSyllabus CourseSyllabus { get; set; }
         public ICollection<Session> Sessions = new List<Session>();
     }

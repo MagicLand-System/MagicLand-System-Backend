@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response.Session;
+using MagicLand_System.PayLoad.Response.Syllabus;
 
 namespace MagicLand_System.PayLoad.Response.Course
 {
@@ -16,6 +17,6 @@ namespace MagicLand_System.PayLoad.Response.Course
 
         public List<CourseDescriptionResponse>? Description { get; set; }
         public List<CourseResponse>? CoursePrerequisites { get; set; }
-        public List<SessionResponse>? Sessions { get; set; }
+        public SyllabusResponse Syllabus { get; set; } = new SyllabusResponse();
     }
 }
