@@ -7,6 +7,8 @@ using MagicLand_System.PayLoad.Response.Room;
 using MagicLand_System.PayLoad.Response.Session;
 using MagicLand_System.PayLoad.Response.Slot;
 using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.Syllabus;
+using MagicLand_System.PayLoad.Response.Topic;
 using MagicLand_System.PayLoad.Response.User;
 
 namespace MagicLand_System.Mappers.CustomMapper
@@ -103,6 +105,7 @@ namespace MagicLand_System.Mappers.CustomMapper
                 return new CourseResponse();
             }
 
+            
             CourseResponse response = new CourseResponse
             {
                 Id = course.Id,
@@ -113,17 +116,48 @@ namespace MagicLand_System.Mappers.CustomMapper
                 MaxAgeStudent = course.MaxYearOldsStudent,
                 Image = course.Image,
                 Price = (decimal)course.Price,
-                //CoursePrerequisites = coursePrerequisites != null
-                //? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
-                //: new List<CourseResponse>(),
-                //Sessions = course.Sessions != null
-                //? course.Sessions.Select(s => fromSessionToSessionResponse(s)).ToList()
-                //: new List<SessionResponse>(),
-                //Description = course.CourseDescriptions.Select(cd => fromCourseDescriptionToCourseDescriptionResponse(cd)).ToList(),
+                CoursePrerequisites = coursePrerequisites != null
+                ? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
+                : new List<CourseResponse>(),
+                Description = course.CourseDescriptions.Select(cd => fromCourseDescriptionToCourseDescriptionResponse(cd)).ToList(),
+                Syllabus = fromSyllabusToSyllabusResponse(course.CourseSyllabus!),
             };
              return response;
         }
 
+        public static SyllabusResponse fromSyllabusToSyllabusResponse(CourseSyllabus courseSyllabus)
+        {
+            if(courseSyllabus == null)
+            {
+                return new SyllabusResponse();
+            }
+
+            SyllabusResponse response = new SyllabusResponse()
+            {
+                Name = courseSyllabus.Name ??= "Undefined",
+                UpdateTime = courseSyllabus.UpdateTime,
+                Topics = courseSyllabus.Topics.Select(tp => fromTopicToTopicResponse(tp)).ToList(),
+            };
+
+            return response;
+        }
+
+        public static TopicResponse fromTopicToTopicResponse(Topic topic)
+        {
+            if(topic == null)
+            {
+                return new TopicResponse();
+            }
+
+            TopicResponse response = new TopicResponse
+            {
+                Name = topic.Name ??= "Undefined",
+                OrderNumber = topic.OrderNumber,
+                Sessions = topic.Sessions.Select(s => fromSessionToSessionResponse(s)).ToList(),
+            };
+
+            return response;
+        }
         public static CourseDescriptionResponse fromCourseDescriptionToCourseDescriptionResponse(CourseDescription courseDescription)
         {
             if(courseDescription == null)

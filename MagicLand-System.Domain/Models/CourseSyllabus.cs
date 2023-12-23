@@ -9,7 +9,7 @@ namespace MagicLand_System.Domain.Models
     public class CourseSyllabus
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public DateTime UpdateTime { get; set; }
         public Guid? CourseId { get; set; } = null;
         public Course? Course { get; set; }
