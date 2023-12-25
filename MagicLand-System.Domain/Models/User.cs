@@ -15,9 +15,10 @@ namespace MagicLand_System.Domain.Models
         public string? Street { get; set; }
         public string? City { get; set; }
         public string? District { get; set; }
+
         [ForeignKey("Role")]
         public Guid RoleId { get; set; }
-        public Role Role { get; set; }
+        public Role? Role { get; set; }
 
         [ForeignKey("Cart")]
         public Guid? CartId { get; set; } = null;

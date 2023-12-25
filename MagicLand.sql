@@ -1,251 +1,364 @@
-GO
+﻿GO
 USE master;
 GO
-DROP DATABASE MagicLandDBServer;
+DROP DATABASE MagicLandDBLocal;
 GO
-CREATE DATABASE MagicLandServer;
+CREATE DATABASE MagicLandDBLocal;
 GO
-USE MagicLandDBServer;
+USE MagicLandDBLocal;
 
-
---- Role --- Create Time: 11/17/2023 - 12:44 PM
-Go
-Insert into [Role] (Id, [Name]) Values
-('3c1849af-400c-43ca-979e-58c71ce9301d', 'ADMIN');
-
-Insert into [Role] (Id, [Name]) Values
-('2f1ab569-d516-4a46-9a55-61dbcd6b3692', 'STAFF');
-Insert into [Role] (Id, [Name]) Values
-('2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', 'LECTURER');
-Insert into [Role] (Id, [Name]) Values
-('dcf51c70-37df-4950-90b6-cc424d6e0296', 'PARENT');
-
-
---- User --- Create Time: 11/17/2023 - 12:53 PM
-Go
--- Admintrator
-Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, RoleId) Values
-('08048a0b-7d2b-47de-9153-5fa23163aa3f', 'Admintrator', '09212312212','admin@gmail.com', 'MALE', '2023-11-17', '3c1849af-400c-43ca-979e-58c71ce9301d');
--- Parent 
-Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, RoleId, AvatarImage, City, Street) Values
-('42276dec-4252-4ad2-8cb6-296c58ad062e', 'Tran Dai Nghia', '0962243201', 'nghia@gmail.com', 'MALE', '1990-10-10', 'dcf51c70-37df-4950-90b6-cc424d6e0296', null, 'Ho Chi Minh', 'D7 district high technogy');
--- Lecture 
-Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, RoleId, AvatarImage, City, Street) Values
-('66aa922d-4392-4958-bbef-fc9689c9779b', 'Nguyen Thi Tram', '0985081621', 'tram@gmail.com', 'FEMALE', '1990-11-11', '2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', null, 'Ho Chi Minh', 'Pham Van Dong brige linh xuan');
--- Staff 
-Insert into [User] (Id, FullName, Phone, Email, Gender, DateOfBirth, RoleId, AvatarImage, City, Street) Values
-('0888d62c-d820-4344-b6be-979ee79cc504', 'Ngo Tong Tai', '0325021012', 'tai@gmail.com', 'MALE', '1990-12-12', '2f1ab569-d516-4a46-9a55-61dbcd6b3692', null, 'Ha Noi', 'Freedom stat center area');
-
-
---- Cart ---
-Insert into Cart (Id, UserId) Values 
-('b05c1ef3-a32f-492f-a5ca-359085df545d', '42276dec-4252-4ad2-8cb6-296c58ad062e');
-
---- Personal Wallet --- Create Time: 11/17/2023 - 1:02 PM
-Go
-Insert into PersonalWallet (Id, UserId, Balance) Values
-('b468f0e3-adf8-4217-a577-cf399cd6a713', '42276dec-4252-4ad2-8cb6-296c58ad062e', 1000000)
-
-
-
---- Wallet Transaction --- Create Time: 11/17/2023 - 1: 03 PM
--- Description format --
--- 1. Pay for [ Name Class]
--- 2. Top up your wallet from [ Name Bank]
-Go
-Insert into WalletTransaction (Id, PersonalWalletId, [Money], [Type], [Description], CreatedTime) Values 
-('6a3ab18a-13e9-4388-ba8d-821c0f5cd10f', 'b468f0e3-adf8-4217-a577-cf399cd6a713', 1100000, 'TOPUP', 'Top up your wallet from Agribank', '2023-11-17');
-Insert into WalletTransaction (Id, PersonalWalletId, [Money], [Type], [Description], CreatedTime) Values 
-('bad11716-6585-4555-acdc-5982c7855dce', 'b468f0e3-adf8-4217-a577-cf399cd6a713', 100000, 'PAYMENT', 'Pay for advanced math classes', '2023-11-17');
-
-
-
---- Promotion --- Create Time: 11/17/2023 - 1:10 PM - *** In Fixing Not Insert ***
-Go
-Insert into Promotion ( Id, Code, [Image], UnitDiscount, DiscountValue, EndDate) Values
-('7ab4f60d-5b04-4474-a891-eee0b4817541', 'VfvO1856oHM4hQxdJ0YMdbVubsEeiq', '', 'PERCENTAGE', 10, '2023-12-17');
-Insert into Promotion ( Id, Code, [Image], UnitDiscount, DiscountValue, EndDate) Values
-('2f905f4f-432c-4d04-98b9-57daa89ceefa', 'Hlin2ab8EtBE6PktNBJQbA59qPq5rS', '', 'CASH', 10000, '2023-12-17');
-
-
-
---- User Promotion --- Create Time: 11/17/2023 - 1:17 PM - *** In Fixing Not Insert ***
+INSERT [dbo].[Role] ([Id], [Name], [Status]) VALUES (N'3c1849af-400c-43ca-979e-58c71ce9301d', N'ADMIN', NULL)
+INSERT [dbo].[Role] ([Id], [Name], [Status]) VALUES (N'2f1ab569-d516-4a46-9a55-61dbcd6b3692', N'STAFF', NULL)
+INSERT [dbo].[Role] ([Id], [Name], [Status]) VALUES (N'dcf51c70-37df-4950-90b6-cc424d6e0296', N'PARENT', NULL)
+INSERT [dbo].[Role] ([Id], [Name], [Status]) VALUES (N'2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', N'LECTURER', NULL)
 GO
-Insert into UserPromotion (Id, UserId, PromotionId, AccumulateQuantity) Values
-('3642e93c-bb30-48f6-9b3d-fedc7349b3dd','42276DEC-4252-4AD2-8CB6-296C58AD062E','7ab4f60d-5b04-4474-a891-eee0b4817541',1);
-Insert into UserPromotion (Id, UserId, PromotionId, AccumulateQuantity) Values
-('b0a3a1ad-20ff-4131-9419-3d8c31513017','42276DEC-4252-4AD2-8CB6-296C58AD062E', '2f905f4f-432c-4d04-98b9-57daa89ceefa', 1);
-
-
-
---- Student --- Create Time: 11/17/2023 - 1:37 PM
+INSERT [dbo].[Cart] ([Id], [UserId]) VALUES (N'97fb6f87-ccd9-4c69-88bb-10ee442cfda5', N'71e936ab-8a76-442f-8795-975a154191a9')
+INSERT [dbo].[Cart] ([Id], [UserId]) VALUES (N'9faa8dbf-31d9-4ba3-a637-2b81bf848b42', N'2c834677-14bc-463d-b92c-fa54890f9da3')
+INSERT [dbo].[Cart] ([Id], [UserId]) VALUES (N'84808909-42c3-4025-9769-b07b14d47740', N'db94c309-90ed-46b2-8525-476058cce422')
 GO
-Insert into Student (Id, ParentId, FullName, DateOfBirth, Gender, Email, AvatarImage) Values
-('172c40fe-32e4-43fd-b982-c87afe8b54fa', '42276dec-4252-4ad2-8cb6-296c58ad062e', 'Tran Bao Trong', '2009-9-9', 'Male', 'trong@gmail.com', null);
-Insert into Student (Id, ParentId, FullName, DateOfBirth, Gender, Email, AvatarImage) Values
-('f9113f7e-ae51-4f65-a7b4-2348f666787d', '42276dec-4252-4ad2-8cb6-296c58ad062e', 'Tran Thanh Van', '2005-8-8', 'Female', 'van@gmail.com', null);
-
---- CourseCategory --- Create Time: 12/10/2023 - 1:18 PM
+INSERT [dbo].[PersonalWallet] ([Id], [Balance], [UserId]) VALUES (N'492fc4a5-34e6-4157-9b0d-450604f11c41', 0, N'71e936ab-8a76-442f-8795-975a154191a9')
+INSERT [dbo].[PersonalWallet] ([Id], [Balance], [UserId]) VALUES (N'4978bb21-3501-4ef0-b0b6-75bcdece8aab', 900000, N'db94c309-90ed-46b2-8525-476058cce422')
+INSERT [dbo].[PersonalWallet] ([Id], [Balance], [UserId]) VALUES (N'fc835fda-d486-4f24-a3a0-b792bf8d84f1', 0, N'2c834677-14bc-463d-b92c-fa54890f9da3')
 GO
-Insert into CourseCategory (Id, [Name]) values ('f9e93ffc-e2e6-4881-be8c-24e411050900', 'MATH')
-Insert into CourseCategory (Id, [Name]) values ('3103b0d7-d169-4155-96cd-4c30d72f82cc', 'PHYSIC')
-Insert into CourseCategory (Id, [Name]) values ('3e9687b0-8f5c-4384-b5b1-1dae3a0703ee', 'LANGUAGE')
-Insert into CourseCategory (Id, [Name]) values ('06f5a898-e0db-4766-b0af-3340ec5d7b04', 'PAIN')
-Insert into CourseCategory (Id, [Name]) values ('8184d47a-5ffd-4c71-a0ea-fd768cd64865', 'DRAWING ')
-Insert into CourseCategory (Id, [Name]) values ('291c9d7b-d7f2-4bb8-884f-2fe45703b662', 'DANCE')
-Insert into CourseCategory (Id, [Name]) values ('9bd5c634-6b0a-42c3-a898-d2db78ee73bc', 'PROGRAM')
-
---- Course --- Create Time: 11/17/2023 - 2:19 PM / Finish Time: 2:25 PM
+--- Admin ---
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'08048a0b-7d2b-47de-9153-5fa23163aa3f', N'Admintrator', N'0329035040', N'Nam', CAST(N'2023-11-17T00:00:00.0000000' AS DateTime2), N'admin@gmail.com', N'3c1849af-400c-43ca-979e-58c71ce9301d', NULL, NULL, NULL, NULL, NULL, NULL)
+--- Staff ---
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'e74b2587-c7db-4b08-9262-3c3163f3c7cc', N'Staff', N'0971822093', N'Nam', CAST(N'2002-11-19T00:00:00.0000000' AS DateTime2), N'thanhlee@gmail.com', N'2f1ab569-d516-4a46-9a55-61dbcd6b3692', NULL, NULL, NULL, N'Bình Dương', N'Tạ Quang Bửu', N'TP.Thủ Đức')
+--- Parent ---
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'db94c309-90ed-46b2-8525-476058cce422', N'Trần Lê Bảo Ngọc', N'0912344640', N'Nữ', CAST(N'2002-12-15T00:00:00.0000000' AS DateTime2), N'ngoctlbse160583@fpt.edu.vn', N'dcf51c70-37df-4950-90b6-cc424d6e0296', N'84808909-42c3-4025-9769-b07b14d47740', N'4978bb21-3501-4ef0-b0b6-75bcdece8aab', NULL, N'Hồ Chí Minh', N' 12 Nguyễn Văn Tăng', N'Quận 9')
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'71e936ab-8a76-442f-8795-975a154191a9', N'Trần Lê Bảo Ngọc', N'+84912344640', N'Nữ', CAST(N'2002-12-14T17:00:00.0000000' AS DateTime2), N'ngoctlbse160583@fpt.edu.vn', N'dcf51c70-37df-4950-90b6-cc424d6e0296', N'97fb6f87-ccd9-4c69-88bb-10ee442cfda5', N'492fc4a5-34e6-4157-9b0d-450604f11c41', NULL, N'Hồ Chí Minh', N'Vinhomes Grand Park', N'Quận 9')
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'2c834677-14bc-463d-b92c-fa54890f9da3', N'Ngô Gia Thưởng', N'0963245204', N'Nam', CAST(N'2002-07-01T00:00:00.0000000' AS DateTime2), N'thuongngse160604@fpt.edu.vn', N'dcf51c70-37df-4950-90b6-cc424d6e0296', N'9faa8dbf-31d9-4ba3-a637-2b81bf848b42', N'fc835fda-d486-4f24-a3a0-b792bf8d84f1', NULL, N'Bình Dương', N'69 Tân Lập', N'Đông Hòa')
+--- Lecture ---
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'ca9680a5-729d-4f8b-ba91-0b9c587269a1', N'Đoàn Nguyễn Thành Hòa', N'0321245512', N'Nam', CAST(N'1985-12-12T00:00:00.0000000' AS DateTime2), N'hoadnt@fe.edu.vn', N'2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', NULL, NULL, NULL, N'Hồ Chí Minh', N'140 Phạm Văn Đồng', N'TP.Thủ Đức')
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'2a95e7fd-010a-4f73-870b-1a0610c7fefa', N'Nguyễn Thị Cẩm Hương', N'0321234561', N'Nữ', CAST(N'1986-12-12T00:00:00.0000000' AS DateTime2), N'huongntc@fe.edu.vn', N'2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', NULL, NULL, NULL, N'Hồ Chí Minh', N'139 Phạm Văn Đồng', N'TP.Thủ Ðức')
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'573cc370-aeab-4d9a-ba2c-42b28e4f70dc', N'Mai Thị Phương', N'0321541202', N'Nữ', CAST(N'1979-12-13T00:00:00.0000000' AS DateTime2), N'phuongmt@fe.edu.vn', N'2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', NULL, NULL, NULL, N'Hồ Chí Minh', N'141 Phạm Văn Đồng', N'TP.Thủ Đức')
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'0e5a97fc-b930-4536-9cef-e5a7d0023ad8', N'Kiều Trọng Khánh', N'0908133304', N'Nữ', CAST(N'1986-12-12T00:00:00.0000000' AS DateTime2), N'khanhkt@fe.edu.vn', N'2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', NULL, NULL, NULL, N'Hồ Chí Minh', N'137 Phạm Văn Đồng', N'TP.Thủ Đức')
+INSERT [dbo].[User] ([Id], [FullName], [Phone], [Gender], [DateOfBirth], [Email], [RoleId], [CartId], [PersonalWalletId], [AvatarImage], [City], [Street], [District]) VALUES (N'66aa922d-4392-4958-bbef-fc9689c9779b', N'Nguyễn Thị Trâm', N'0985081627', N'Nữ', CAST(N'1990-11-11T00:00:00.0000000' AS DateTime2), N'tramnt@fe.edu.vn', N'2bdbb8f4-0527-4f9b-8597-ff4d55ba4998', NULL, NULL, NULL, N'Hồ Chí Minh', N'138 Phạm Văn Đong', N'TP.Thủ Đức')
 GO
-Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status], Price, CourseCategoryId) Values
-('fded66d4-c3e7-4721-b509-e71feab6723a','Basic Math', 6, 3, 6, 'ACTIVE', 2000000, 'f9e93ffc-e2e6-4881-be8c-24e411050900');
-Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status], Price, CourseCategoryId) Values
-('a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 'Advance Math', 5, 5, 12, 'ACTIVE', 2500000, 'f9e93ffc-e2e6-4881-be8c-24e411050900');
-Insert into Course (Id, [Name], NumberOfSession, MinYearOldsStudent, MaxYearOldsStudent, [Status], Price, CourseCategoryId) Values
-('9cbca0ad-7048-4777-a13f-8c34e92dea43', 'Normal Math', 3, 5, 7, 'ACTIVE', 17000000, 'f9e93ffc-e2e6-4881-be8c-24e411050900');
-
---- Course Description --- Create Time: 12/11/2023 - 2:26
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'3e9687b0-8f5c-4384-b5b1-1dae3a0703ee', N'LANGUAGE')
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'f9e93ffc-e2e6-4881-be8c-24e411050900', N'MATH')
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'291c9d7b-d7f2-4bb8-884f-2fe45703b662', N'DANCE')
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'06f5a898-e0db-4766-b0af-3340ec5d7b04', N'SINGING')
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'3103b0d7-d169-4155-96cd-4c30d72f82cc', N'PHYSIC')
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'9bd5c634-6b0a-42c3-a898-d2db78ee73bc', N'PROGRAM')
+INSERT [dbo].[CourseCategory] ([Id], [Name]) VALUES (N'8184d47a-5ffd-4c71-a0ea-fd768cd64865', N'DRAWING ')
 GO
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('a19598fb-f125-47a7-8334-0cbc85b34240', 'Basic Math', 'This course help leaning math basic in easy', 1, 'fded66d4-c3e7-4721-b509-e71feab6723a')
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('b33c6d7a-6b7e-48ca-91c0-3744b388ddc1', 'Why Should Chose This Course', 'Have the most common and easy way to teach help student leaning faster', 2, 'fded66d4-c3e7-4721-b509-e71feab6723a')
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('d830a44d-2a75-4a1d-903b-ca9f77cbb53d', 'Why Sould Chose This Course', 'Tranning significant skill set', 3, 'fded66d4-c3e7-4721-b509-e71feab6723a')
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('1df32ba5-cd02-44b1-b745-5f04a065fd05', 'Why Should Chose This Course', 'Improvement thinking and progressing', 4, 'fded66d4-c3e7-4721-b509-e71feab6723a')
-
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('d7079327-f296-4000-a3d4-ff5f44498d60', 'This is title', 'This is content', 1, 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32')
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('16c8455b-b3f7-48ea-a45c-6d02a0c00130', 'This is title', 'This is content', 2, 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32')
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('13824a01-009f-4efc-85f7-e95c3f7b9b30', 'This is title', 'This is content', 3, 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32')
-
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('57bfc13f-cf2e-460a-8be0-148fddfb30e8', 'This is title', 'This is content', 1, '9cbca0ad-7048-4777-a13f-8c34e92dea43')
-Insert into CourseDescription (Id, Title, Content, [Order], CourseId) Values 
-('8362ecd6-8475-4d07-9706-2ae0616499c2', 'This is title', 'This is content', 2, '9cbca0ad-7048-4777-a13f-8c34e92dea43')
---- Course Prerequisite --- Create: 11/17/2023 - 2:24
+INSERT [dbo].[Course] ([Id], [Name], [NumberOfSession], [MinYearOldsStudent], [MaxYearOldsStudent], [Status], [Image], [CourseCategoryId], [Price], [CourseSyllabusId], [MainDescription]) VALUES (N'871606a7-baa0-4c79-b685-1443502d02b3', N'Vẽ Thế Giới Quanh Em', 20, 4, 10, N'UPCOMMING', N'thegioiquanhem.png', N'8184d47a-5ffd-4c71-a0ea-fd768cd64865', 300000, N'f1e65ede-29c1-4c96-a8e1-27e052087395', N'Khóa học "Vẽ thế giới quanh em" không chỉ là hành trình nghệ thuật, mà là một cuộc phiêu lưu sáng tạo dành cho các tâm hồn trẻ thơ. Tại đây, chúng tôi kết hợp nghệ thuật và giáo dục để mang lại cho trẻ không chỉ kỹ năng vẽ tuyệt vời mà còn sự hiểu biết sâu rộng về thế giới.')
+INSERT [dbo].[Course] ([Id], [Name], [NumberOfSession], [MinYearOldsStudent], [MaxYearOldsStudent], [Status], [Image], [CourseCategoryId], [Price], [CourseSyllabusId], [MainDescription]) VALUES (N'06f5a898-e0db-4766-b0af-3340ec5d7b04', N'Học Tiếng Anh Cho Bé 1', 16, 4, 6, N'UPCOMMING', N'hoctienganh1.png', N'3e9687b0-8f5c-4384-b5b1-1dae3a0703ee', 400000, N'06f5a898-e0db-4766-b0af-3340ec5d7b04', N'Dành cho những người mới bắt đầu không chỉ là việc học ngôn ngữ, mà là một chuyến phiêu lưu đầy kỳ thú để mở cánh cửa cho sự hiểu biết và giao tiếp trong thế giới rộng lớn của tiếng Anh.')
+INSERT [dbo].[Course] ([Id], [Name], [NumberOfSession], [MinYearOldsStudent], [MaxYearOldsStudent], [Status], [Image], [CourseCategoryId], [Price], [CourseSyllabusId], [MainDescription]) VALUES (N'f4f0b221-c583-4ca5-b26a-417889c2f9ad', N'Tập Bé Hát', 6, 4, 10, N'UPCOMMING', N'tapbehat.png', N'06f5a898-e0db-4766-b0af-3340ec5d7b04', 200000, N'5dcd78f3-293e-4b7c-a099-b22f5da6374d', N'Mở ra cho bé một thế giới của âm nhạc và tiếng hát, tận hưởng và thể hiện cảm xúc qua giọng ca hòa mình chìm đắm vào những giai điệu du dương.')
+INSERT [dbo].[Course] ([Id], [Name], [NumberOfSession], [MinYearOldsStudent], [MaxYearOldsStudent], [Status], [Image], [CourseCategoryId], [Price], [CourseSyllabusId], [MainDescription]) VALUES (N'735616c5-b24a-4c16-a30a-a27a570cd6fe', N'Toán Tư Duy Cho Bé', 18, 4, 6, N'UPCOMMING', N'toan.png', N'f9e93ffc-e2e6-4881-be8c-24e411050900', 200000, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78', N'khóa học Toán Tư Duy được thiết kế dành cho các bé từ 3 tuổi đến 15 tuổi nhằm giúp phát triển trí não, nâng cao độ hiểu biết của trẻ về toán')
+INSERT [dbo].[Course] ([Id], [Name], [NumberOfSession], [MinYearOldsStudent], [MaxYearOldsStudent], [Status], [Image], [CourseCategoryId], [Price], [CourseSyllabusId], [MainDescription]) VALUES (N'856fe3a8-13bb-40e0-a413-a6cee33b7130', N'Học Tiếng Anh Cho Bé 2', 16, 4, 10, N'UPCOMMING', N'hoctienganh2.png', N'3e9687b0-8f5c-4384-b5b1-1dae3a0703ee', 600000, N'06f5a898-e0db-4766-b0af-3340ec5d7b05', N'Khóa học "Tiếng Anh Nâng Cao" là bước tiến quan trọng sau khi hoàn thành khóa học "Tiếng Anh Cơ Bản". Khóa học chú trọng vào việc phát triển kỹ năng ngôn ngữ và giao tiếp tiếng Anh của bé ở mức độ thành thạo cao hơn.')
 GO
-Insert into CoursePrerequisite (Id, CurrentCourseId, PrerequisiteCourseId) Values
-('4df39613-41d4-4411-861a-af3bf76e8007', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 'fded66d4-c3e7-4721-b509-e71feab6723a');
-Insert into CoursePrerequisite (Id, CurrentCourseId, PrerequisiteCourseId) Values
-('a7c0ee77-73cb-4fcc-9db4-b03aeb47ac06', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '9cbca0ad-7048-4777-a13f-8c34e92dea43');
-
-
---- Class --- Create Time: 11/17/2023 - 2:13 PM / Finish: 2:43 PM
+INSERT [dbo].[SubDescriptionTitle] ([Id], [Title], [CourseId]) VALUES (N'0398be4b-8942-4806-b8b7-a8ab39ea3675', N'Hãy Cùng Nhau Khám Phá Thế Giới', N'871606a7-baa0-4c79-b685-1443502d02b3')
+INSERT [dbo].[SubDescriptionTitle] ([Id], [Title], [CourseId]) VALUES (N'9ef646ad-6aa9-4f3a-b1ea-2f6ff7cf3240', N'Tại Sao Nên Bắt Đầu Hành Trình Này?', N'06f5a898-e0db-4766-b0af-3340ec5d7b04')
+INSERT [dbo].[SubDescriptionTitle] ([Id], [Title], [CourseId]) VALUES (N'f7cd2e64-52a2-4b28-bc29-3be4f86450b1', N'Lí Do Bé Nên Học Hát?', N'f4f0b221-c583-4ca5-b26a-417889c2f9ad')
+INSERT [dbo].[SubDescriptionTitle] ([Id], [Title], [CourseId]) VALUES (N'aa28d108-f7c9-47af-9ee9-51208dd55d13', N'Vì Sao Nên Cho Bé Học Toán Tư Duy Từ Sớm?', N'735616c5-b24a-4c16-a30a-a27a570cd6fe')
+INSERT [dbo].[SubDescriptionTitle] ([Id], [Title], [CourseId]) VALUES (N'ff53bb85-593a-40ef-baab-8f993e859098', N'Chặn Kế Tiếp Của Hành Trình Khám Phá Ngôn Ngữ Anh', N'856fe3a8-13bb-40e0-a413-a6cee33b7130')
 GO
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, LimitNumberStudent, City, District, Street, ClassCode, LeastNumberStudent) Values
-('c6d70a5f-56ae-4de0-b441-c080da024524', '4 Simple calculation', 'fded66d4-c3e7-4721-b509-e71feab6723a', '2022-11-17', '2023-01-05', 'STARTED', 'OFFLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 30, 'Ho Chi Minh', '9', 'D7 hightech', 'MAD292', 10);
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, LimitNumberStudent, City, District, Street, ClassCode, LeastNumberStudent) Values
-('74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', 'Math with basic geometry', 'fded66d4-c3e7-4721-b509-e71feab6723a', '2023-11-25', '2024-01-25', 'UPCOMING', 'ONLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 30, 'Home', '', '', 'MAD291', 10);
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, LimitNumberStudent, City, District, Street, ClassCode, LeastNumberStudent) Values
-('77a0a23f-5a3d-4447-8985-d7ed203d322f', 'Fractions and Unknown numbers', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '2023-9-17', '2023-11-17', 'ENDED', 'ONLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 30, 'Home', '', '', 'MES202', 10);
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, LimitNumberStudent, City, District, Street, ClassCode, LeastNumberStudent) Values
-('592fd51c-e177-49c2-a2dd-a679d02a91c4', 'Geometry of space', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', '2023-11-27', '2024-01-27', 'UPCOMING', 'OFFLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 30, 'Ho Chi Minh', '9', 'D7 hightech', 'PRN231',10);
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'10d2eaf9-8bc5-4095-999d-360bb3f9a9e1', N'Kỳ Thú Hành Trình Văn Hóa', N'Bé sẽ đi du lịch qua những góc kỳ thú của thế giới thông qua bức tranh của mình. Khám phá văn hóa, kiến trúc và đặc điểm độc đáo của mỗi quốc gia qua ngôn ngữ hình vẽ.', N'0398be4b-8942-4806-b8b7-a8ab39ea3675')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'ef0d3c5e-495a-4095-b265-ca9b4d8612af', N'Bí Mật Của Nghệ Thuật Sáng Tạo', N'Học cách tạo ra những tác phẩm nghệ thuật sáng tạo và độc đáo của riêng bạn. Chia sẻ bí mật của sự sáng tạo và tìm ra nguồn cảm hứng không ngừng từ thế giới xung quanh.', N'0398be4b-8942-4806-b8b7-a8ab39ea3675')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'd6d1b34b-350b-4cc7-b6ef-6fbb5b64a340', N'Kỹ Năng Tư Duy và Giao Tiếp', N'Vẽ không chỉ là về nét bút và màu sắc, mà còn là về cách diễn đạt ý tưởng. Khóa học giúp trẻ phát triển kỹ năng tư duy và giao tiếp thông qua ngôn ngữ nghệ thuật của bé.', N'0398be4b-8942-4806-b8b7-a8ab39ea3675')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'aba406ba-b130-48d7-bbda-7da3845b165a', N'Sáng Tạo Trong Môi Trường Vui Nhộn', N'Với không khí học vui nhộn và năng động, trẻ không chỉ học về nghệ thuật mà còn trải nghiệm sự vui nhộn và niềm hứng thú trong quá trình sáng tạo.', N'0398be4b-8942-4806-b8b7-a8ab39ea3675')
 
-Insert into Class (Id, [Name], CourseId, StartDate, EndDate, [Status], Method, LecturerId, LimitNumberStudent, City, District, Street, ClassCode, LeastNumberStudent) Values
-('e79b39f1-b0e4-4ef5-9d66-6794c2099020', 'Equations', '9cbca0ad-7048-4777-a13f-8c34e92dea43', '2023-11-27', '2024-01-27', 'UPCOMING', 'OFFLINE', '66aa922d-4392-4958-bbef-fc9689c9779b', 30, 'Ho Chi Minh', '9', 'D7 hightech', 'PRU292', 10);
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'bea7664b-c1a3-491a-8cac-272a52ff4b28', N'Học Ngôn Ngữ Là Mở Cửa Tương Lai', N'Việc học tiếng Anh mở ra cơ hội tương lai không giới hạn. Khám phá một thế giới mới của sự hiểu biết, giao tiếp, và cơ hội nghề nghiệp khi bạn trang bị cho mình kỹ năng ngôn ngữ toàn cầu.', N'9ef646ad-6aa9-4f3a-b1ea-2f6ff7cf3240')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'b251f3ff-ebab-4f64-a8d0-741bd359882f', N'Giao Tiếp Hiệu Quả và Tự Tin', N'Không chỉ học từ sách giáo trình, mà còn thực hành giao tiếp trong môi trường học tập thân thiện. Xây dựng sự tự tin trong việc nói và hiểu tiếng Anh qua các hoạt động thực hành và trò chơi.', N'9ef646ad-6aa9-4f3a-b1ea-2f6ff7cf3240')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'457c9208-85f1-44b6-a5a6-408fb2e48c51', N'Học Một Cách Tự Nhiên và Thú Vị', N'Khóa học được thiết kế để học một cách tự nhiên và thú vị. Qua trò chơi, hoạt động nhóm và bài học thực tế, bạn sẽ không chỉ học tiếng Anh mà còn tận hưởng quá trình học tập.', N'9ef646ad-6aa9-4f3a-b1ea-2f6ff7cf3240')
 
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'c54f4e45-6bf5-4141-b21f-fd70f23bb785', N'Phát Triển Kỹ Năng Ngôn Ngữ', N'Hát là một cách tuyệt vời để phát triển kỹ năng ngôn ngữ. Từ việc phát âm đến mở rộng từ vựng, các bé sẽ phát triển khả năng ngôn ngữ của mình một cách tự nhiên qua việc hát những bài hát yêu thích.', N'f7cd2e64-52a2-4b28-bc29-3be4f86450b1')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'ccb4e427-f5f7-4375-8b2e-73da488cbfc9', N'Tăng Cường Cảm Xúc và Tự Tin', N'Hát là một phương tiện tuyệt vời để thể hiện cảm xúc. Qua việc hát, các bé có cơ hội bày tỏ cảm xúc, tăng cường khả năng giao tiếp và xây dựng lòng tự tin.', N'f7cd2e64-52a2-4b28-bc29-3be4f86450b1')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'4ccce9b7-3082-4de0-9410-303193884011', N'Phát Hiện Tài Năng Âm Nhạc', N'Khóa học này sẽ giúp phát hiện và phát triển tài năng âm nhạc của các bé. Từ việc nhận biết giai điệu đến việc rèn luyện giọng hát, chúng tôi sẽ khám phá cùng bé những khía cạnh mới của thế giới âm nhạc.', N'f7cd2e64-52a2-4b28-bc29-3be4f86450b1')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'38c03c8e-14b2-4ce3-a012-7a29e0089dbd', N'Kết Nối Xã Hội và Văn Hóa', N'Hát là ngôn ngữ giao tiếp thực sự. Bé sẽ có cơ hội tham gia vào các hoạt động xã hội và văn hóa, tạo ra những trải nghiệm tương tác qua việc hát cùng bạn bè và tham gia các sự kiện âm nhạc.', N'f7cd2e64-52a2-4b28-bc29-3be4f86450b1')
 
---- Slot --- Create Time: 11/17/2023 - 2:55 PM / Finish: 3:05 PM
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'bdc7c8e0-5252-4776-9db8-60df871a2885', N'Phát Triễn Tư Duy và Kỹ Năng', N'Phát triển trí não và nâng cao các kỹ năng nhận biết với các phép tính toán', N'aa28d108-f7c9-47af-9ee9-51208dd55d13')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'2cd97577-ac3e-4c4b-8f74-ff0c665fe03a', N'Rèn Luyện Tính Kỷ Luật, Tự Giác, Tỉ Mỉ, Có Trách Nhiệm', N'Học sinh sẽ được trau dồi qua quá trình học tập thử thách', N'aa28d108-f7c9-47af-9ee9-51208dd55d13')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'8de4277c-ab2d-453b-b7d6-773815600007', N'Tránh Ảnh Hưởng Tiêu Cực Từ Công Nghệ', N'Hạn chế thời gian sử dụng điện thoại, máy tính trò chời bừa bải tránh bị lừa đảo', N'aa28d108-f7c9-47af-9ee9-51208dd55d13')
+
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'c64165f1-6a80-4ef9-8c38-9ca8dd6455e6', N'Xây Dựng Nền Tảng Ngôn Ngữ Vững Chắc', N'Bé sẽ xây dựng nền tảng ngôn ngữ vững chắc và sâu rộng hơn. Khám phá các chủ đề phức tạp và mở rộng từ vựng, từ ngữ thông qua các bài học chất lượng cao.', N'ff53bb85-593a-40ef-baab-8f993e859098')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'0d5e7ee3-cd26-41df-add1-fbd6bb0d92c0', N'Giao Tiếp Hiệu Quả trong Các Tình Huống Thực Tế', N'Vượt qua cấp độ giao tiếp cơ bản, bé sẽ thực hành và hoàn thiện kỹ năng giao tiếp của mình trong các tình huống thực tế. Học cách thảo luận, thuyết trình và tham gia vào các cuộc trò chuyện.', N'ff53bb85-593a-40ef-baab-8f993e859098')
+INSERT [dbo].[SubDescriptionContent] ([Id], [Content], [Description], [SubDescriptionTitleId]) VALUES (N'769abf18-0efc-43d2-b8cb-52fa01df1966', N'Học Đặc Điểm Ngôn Ngữ và Ngữ Pháp Chi Tiết', N'Khám phá sâu rộng các ngữ pháp và cấu trúc ngôn ngữ. bé sẽ hiểu rõ hơn về cách sử dụng ngôn ngữ để diễn đạt ý và truyền đạt thông điệp một cách chính xác.', N'ff53bb85-593a-40ef-baab-8f993e859098')
 GO
-Insert into Slot (Id, StartTime, EndTime) Values
-('417997ac-afd7-4363-bfe5-6cdd56d4713a', '7:00', '9:00');
-Insert into Slot (Id, StartTime, EndTime) Values
-('301efd4a-618e-4495-8e7e-daa223d3945e', '9:15', '11:15');
-Insert into Slot (Id, StartTime, EndTime) Values
-('6ab50a00-08ba-483c-bf5d-0d55b05a2ccc', '12:00', '14:00');
-Insert into Slot (Id, StartTime, EndTime) Values
-('2291e53b-094b-493e-8132-c6494d2b18a8', '14:15', '16:15');
-Insert into Slot (Id, StartTime, EndTime) Values
-('688fe18c-5db1-40aa-a7f3-f47ccd9fd395', '16:30', '18:30');
-Insert into Slot (Id, StartTime, EndTime) Values
-('418704fb-fac8-4119-8795-c8fe5d348753', '19:00', '21:00');
-
-
---- Room --- Create Time: 11/17/2023 - 3:06 PM
+INSERT [dbo].[CourseSyllabus] ([Id], [Name], [UpdateTime], [CourseId]) VALUES (N'f1e65ede-29c1-4c96-a8e1-27e052087395', N'How To Draw The World', CAST(N'2023-12-23T00:00:00.0000000' AS DateTime2), N'871606a7-baa0-4c79-b685-1443502d02b3')
+INSERT [dbo].[CourseSyllabus] ([Id], [Name], [UpdateTime], [CourseId]) VALUES (N'06f5a898-e0db-4766-b0af-3340ec5d7b04', N'Learning English 1', CAST(N'2023-12-23T00:00:00.0000000' AS DateTime2), N'06f5a898-e0db-4766-b0af-3340ec5d7b04')
+INSERT [dbo].[CourseSyllabus] ([Id], [Name], [UpdateTime], [CourseId]) VALUES (N'06f5a898-e0db-4766-b0af-3340ec5d7b05', N'Learning English 2', CAST(N'2023-12-23T00:00:00.0000000' AS DateTime2), N'856fe3a8-13bb-40e0-a413-a6cee33b7130')
+INSERT [dbo].[CourseSyllabus] ([Id], [Name], [UpdateTime], [CourseId]) VALUES (N'5dcd78f3-293e-4b7c-a099-b22f5da6374d', N'Singing For Children', CAST(N'2023-12-23T00:00:00.0000000' AS DateTime2), N'f4f0b221-c583-4ca5-b26a-417889c2f9ad')
+INSERT [dbo].[CourseSyllabus] ([Id], [Name], [UpdateTime], [CourseId]) VALUES (N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78', N'Mathematical Thinking', CAST(N'2023-12-23T00:00:00.0000000' AS DateTime2), N'735616c5-b24a-4c16-a30a-a27a570cd6fe')
 GO
-Insert into Room(Id, [Name], [Floor], [Status], LinkUrl, Capacity) Values
-('99f6f043-3fee-435f-a8ae-1f55f13b3256', '609', 4, 'ACTIVE', null, 30)
-Insert into Room(Id, [Name], [Floor], [Status], LinkUrl, Capacity) Values
-('c4cf53be-440b-445f-b8f3-82d7f3af409c', '404', 2, 'ACTIVE', null, 30)
-Insert into Room(Id, [Name], [Floor], [Status], LinkUrl, Capacity) Values
-('5cc8a8e9-d53e-46de-b177-c4fc7c1c84c4', '609', 4, 'ACTIVE', 'https://room', 0)
-
-
-
---- Session --- Create Time: 11/17/2023 - 2:53 PM / Finish: 3:14 PM
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'db64d396-6302-46c6-abfa-11dbd07695be', N'Phép Trừ Trong Phạm Vi 10', 8, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'4ebb0515-4afe-4553-9ff4-31b395c15f39', N'Animals', 3, N'06f5a898-e0db-4766-b0af-3340ec5d7b05')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'b23021e6-3e0d-4469-822f-31de8fd2919a', N'My Family', 3, N'06f5a898-e0db-4766-b0af-3340ec5d7b04')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'7ace3eb6-cf0e-4dd4-8a2b-3fd8f7895acc', N'Cách Vẽ Thế Giới Kỳ Diệu', 3, N'f1e65ede-29c1-4c96-a8e1-27e052087395')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'80d8975b-31e8-4d4a-bc9e-41dfc3966c6c', N'My Room', 4, N'06f5a898-e0db-4766-b0af-3340ec5d7b04')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'c3d325e8-9eae-49ef-a689-5addb86cfd13', N'Cách Vẽ Thế Giới Thời Trang', 4, N'f1e65ede-29c1-4c96-a8e1-27e052087395')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'a6e30ec5-b9d3-4d91-bb68-5d20ca9bd02b', N'So Sánh Bằng Nhau', 2, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'bababa9f-7838-4610-ba71-5f8c8d0b58f0', N'Phép Trừ Trong Phạm Vi 5', 6, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'd4b9fe7c-69b7-4002-9d75-608ce8112241', N'Food', 2, N'06f5a898-e0db-4766-b0af-3340ec5d7b05')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'5f4fe5ea-e048-4313-86be-61b1a064e763', N'Welcome', 1, N'06f5a898-e0db-4766-b0af-3340ec5d7b04')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'debf2822-89d0-4815-b6a0-6bf2cbbd8274', N'My Face', 1, N'06f5a898-e0db-4766-b0af-3340ec5d7b05')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'689a5c7c-5681-4577-8511-6c343fb41534', N'My Garden', 4, N'06f5a898-e0db-4766-b0af-3340ec5d7b05')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Tập Hát Cho Bé', 1, N'5dcd78f3-293e-4b7c-a099-b22f5da6374d')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'ebdeca5c-fbf3-4da3-80b4-82e86fbbe9af', N'Cách Vẽ Phương Tiện Di Chuyển', 2, N'f1e65ede-29c1-4c96-a8e1-27e052087395')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'9f88ad3d-94c7-4d28-aeea-86af99a42469', N'So Sánh Cao Thấp', 4, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'ea8cef5e-cd92-4dfa-a34f-91e7c7ebe706', N'So Sánh Nhiều Hơn , Ít hơn', 1, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'4fa8bbb2-b0bc-4e18-8521-a75c336721c1', N'Phép Cộng Trong Phạm Vi 10', 7, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'2107d0d0-2c89-417d-a54f-b221328af9f0', N'Cách Vẽ Động Vật Hoang Dã', 1, N'f1e65ede-29c1-4c96-a8e1-27e052087395')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'c21fefa9-01ef-4ee2-bdfb-bf65049d5eca', N'Cách Vẽ Thế Giới Tiền Sử', 5, N'f1e65ede-29c1-4c96-a8e1-27e052087395')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'42df44da-cf16-43a3-a098-c12bf5f3d8c0', N'Cách Vẽ Động Vật', 1, N'f1e65ede-29c1-4c96-a8e1-27e052087395')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'397037f3-49e5-463e-9c78-d62adef17e8e', N'My Class', 2, N'06f5a898-e0db-4766-b0af-3340ec5d7b04')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'6a407190-8b0f-4686-a880-dbebadca413c', N'Phép Cộng Trong Phạm Vi 5', 5, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
+INSERT [dbo].[Topic] ([Id], [Name], [OrderNumber], [CourseSyllabusId]) VALUES (N'847ab6bd-e4b5-452d-ae9e-f86e2743a4b6', N'So Sánh Dài Ngắn', 3, N'5016cb94-4f8c-4ad4-813a-b6704e4f3a78')
 GO
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('a127da28-40ff-40fb-b40d-8fbccc7e5650', 'fded66d4-c3e7-4721-b509-e71feab6723a', 1, 'This is cotent for session 1 of coure basic math', 'This is description for session 1 of coure basic math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('680b3459-228b-4fd3-b68d-54b629b7b523', 'fded66d4-c3e7-4721-b509-e71feab6723a', 2, 'This is cotent for session 2 of coure basic math', 'This is description for session 2 of coure basic math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('007f12eb-93d7-43e7-a065-de4919cd2b10', 'fded66d4-c3e7-4721-b509-e71feab6723a', 3, 'This is cotent for session 3 of coure basic math', 'This is description for session 3 of coure basic math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('6814331b-8564-480f-ac55-75ea58168a49', 'fded66d4-c3e7-4721-b509-e71feab6723a', 4, 'This is cotent for session 4 of coure basic math', 'This is description for session 4 of coure basic math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('52fca4b4-73d4-4734-bb7a-95cead567338', 'fded66d4-c3e7-4721-b509-e71feab6723a', 5, 'This is cotent for session 5 of coure basic math', 'This is description for session 5 of coure basic math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('e4d7f722-655c-42e6-89f6-29289b361120', 'fded66d4-c3e7-4721-b509-e71feab6723a', 6, 'This is cotent for session 6 of coure basic math', 'This is description for session 6 of coure basic math');
-
-
--- Insert Time: 11/22/2023 - 11:23
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('76ab84e2-146d-4e2e-a100-91c1b0998285', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 1, 'This is cotent for session 1 of coure advance math', 'This is description for session 1 of coure advance math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('a8523e7c-b88c-4e36-b002-161af680e4e0', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 2, 'This is cotent for session 2 of coure advance math', 'This is description for session 2 of coure advance math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('f20510f6-a1b1-4894-a4d2-62d8094bc57b', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 3, 'This is cotent for session 3 of coure advance math', 'This is description for session 3 of coure advance math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('6a874dd6-ca56-4fde-adee-3dd47a17a430', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 4, 'This is cotent for session 4 of coure advance math', 'This is description for session 4 of coure advance math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('473ed4c8-bdff-47cf-bbd2-e5d8bc472554', 'a44d6a0a-8e7e-4fe4-804a-6ff195d94a32', 5, 'This is cotent for session 5 of coure advance math', 'This is description for session 5 of coure advance math');
-
-
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('6b591b11-5f7a-4102-809b-9c69e84eddc0', '9cbca0ad-7048-4777-a13f-8c34e92dea43', 1, 'This is cotent for session 1 of course normal math', 'This is description for session 1 of course normal math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('d3407e14-c7fc-49ff-ade3-438bedf415a8', '9cbca0ad-7048-4777-a13f-8c34e92dea43', 2, 'This is cotent for session 2 of course normal math', 'This is description for session 2 of course normal math');
-Insert into [Session] (Id, CourseId, NoSession, Content, [Description]) Values 
-('50a5f183-2b39-4bd9-ae59-ce99cd1d21ca', '9cbca0ad-7048-4777-a13f-8c34e92dea43', 3, 'This is cotent for session 3 of course normal math', 'This is description for session 3 of course normal math');
-
---- Student Class --- Create Time: 11/17/2023 - 3:28 PM
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'1f2f18ba-474e-45f7-9d09-019a8a606b1f', 6, N'a6e30ec5-b9d3-4d91-bb68-5d20ca9bd02b', N'Khoanh vào hình có số lượng bằng nhau', N'Khoanh vào hình có số lượng bằng nhau')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'c1b6499b-18d4-4799-89f9-08a0c20ef5da', 1, N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Học Hát Bài Bài Lời Chào Buổi Sáng', N'Học Hát Bài Lời Chào Buổi Sáng')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'4bfba5a5-8fc9-41ec-8269-0b5d5a2d7b8b', 8, N'd4b9fe7c-69b7-4002-9d75-608ce8112241', N'Listen and Track', N'Listen and Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ddcaa843-0e4f-4377-b9a8-1c7b1167e9d4', 5, N'd4b9fe7c-69b7-4002-9d75-608ce8112241', N'Listen and Sing', N'Listen and Sing')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'72d966fb-0192-4dc1-a3ee-1f88f2b82a6d', 14, N'80d8975b-31e8-4d4a-bc9e-41dfc3966c6c', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'b361b54b-aa02-47a3-85df-212c2880a6be', 2, N'debf2822-89d0-4815-b6a0-6bf2cbbd8274', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'10deee74-c0ec-4b78-9795-22ee0481b82e', 10, N'b23021e6-3e0d-4469-822f-31de8fd2919a', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'12bee708-de1b-47c3-b11f-26b0a701e64a', 11, N'7ace3eb6-cf0e-4dd4-8a2b-3fd8f7895acc', N'Vẽ Lão Nông Dân', N'Vẽ Lão Nông Dân')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'30da2596-61ad-4eba-9bd9-2e30b617f3f6', 7, N'397037f3-49e5-463e-9c78-d62adef17e8e', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'bb20f757-13b5-40ec-b2a9-2eb70a9ba711', 7, N'847ab6bd-e4b5-452d-ae9e-f86e2743a4b6', N'Nhận biết dài hơn, ngắn hơn', N'Nhận biết dài hơn, ngắn hơn')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'6d982815-a34f-422d-8132-351b9a6479e4', 4, N'debf2822-89d0-4815-b6a0-6bf2cbbd8274', N'Listen and Track', N'Listen and Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'fba8f50d-2d71-49a4-9e69-38f57e4d6ac4', 9, N'4ebb0515-4afe-4553-9ff4-31b395c15f39', N'Listen and Sing', N'Listen and Sing')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'cdb37ab6-3f3a-45cc-9b7a-3ac1ae45ca0c', 6, N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Học Hát Bài Hai Con Thằng Lằn Con', N'Học Hát Bài Hai Con Thằng Lằn Con')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'8ebabb4f-0878-442f-99e8-3baf80f22896', 8, N'847ab6bd-e4b5-452d-ae9e-f86e2743a4b6', N'Khoanh vào vật dài hơn, ngắn hơn', N'Khoanh vào vật dài hơn, ngắn hơn')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'c6b5f097-9298-4c4e-86f7-3d9783e0e55e', 14, N'689a5c7c-5681-4577-8511-6c343fb41534', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'f6a452d7-45c7-47ad-a841-442fa2192032', 3, N'debf2822-89d0-4815-b6a0-6bf2cbbd8274', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'0f8bbf55-ca70-4c84-911c-4614a2113367', 11, N'b23021e6-3e0d-4469-822f-31de8fd2919a', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'4d2da78f-218d-433d-9b2d-4636079aa5e5', 5, N'ebdeca5c-fbf3-4da3-80b4-82e86fbbe9af', N'Vẽ Xe Máy', N'Vẽ Xe Máy')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'e2b79dda-ea40-4e6c-a1cd-48130c2176b8', 13, N'689a5c7c-5681-4577-8511-6c343fb41534', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'817b82d5-4df5-48e2-9b97-4b98650a1f7b', 18, N'c21fefa9-01ef-4ee2-bdfb-bf65049d5eca', N'Vẽ Voi Mamut', N'Vẽ Voi Mamut')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ef69e8de-ef3c-4ddf-b056-4c55ada2fd1e', 17, N'db64d396-6302-46c6-abfa-11dbd07695be', N'Phép trừ', N'Phép trừ')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'4d15b953-5e2a-4c01-baf5-4da2f7d3cf8b', 6, N'397037f3-49e5-463e-9c78-d62adef17e8e', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'd791ccaa-56ff-4999-b3bc-53025da520c1', 20, N'c21fefa9-01ef-4ee2-bdfb-bf65049d5eca', N'Vẽ Người Tiền Sử', N'Vẽ Người Tiền Sử')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'5286792a-25cf-4506-9d5c-58767ef28d02', 9, N'7ace3eb6-cf0e-4dd4-8a2b-3fd8f7895acc', N'Vẽ Cô Tiên', N'Vẽ Cô Tiên')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ccd5b5a6-3be6-45f3-a128-5b45f63a9f1c', 8, N'ebdeca5c-fbf3-4da3-80b4-82e86fbbe9af', N'Vẽ Thuyền', N'Vẽ Thuyền')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'713e9ae4-bf50-4a4e-ad6b-65b6cd72bf8e', 4, N'2107d0d0-2c89-417d-a54f-b221328af9f0', N'Vẽ Bạch Tuộc', N'Vẽ Bạch Tuộc')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'0ab2ad8a-7c91-4ef2-bef2-6951889fbcc7', 10, N'7ace3eb6-cf0e-4dd4-8a2b-3fd8f7895acc', N'Vẽ Nhà Vua', N'Vẽ Nhà Vua')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'abd499cc-1b87-4d3a-996d-6caf9b3fb743', 19, N'c21fefa9-01ef-4ee2-bdfb-bf65049d5eca', N'Vẽ Hóa Thạch', N'Vẽ Hóa Thạch')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'6fcac28b-6d7a-4cf5-ad73-6f5fc57e8854', 4, N'5f4fe5ea-e048-4313-86be-61b1a064e763', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'd6585adf-2b0e-4a3f-a309-7317b56dca8f', 3, N'5f4fe5ea-e048-4313-86be-61b1a064e763', N'Listen and Trace', N'Listen and Trace')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'79baba20-39c1-4bc7-90bd-7bb3ff08ebb6', 4, N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Học Hát Bài Là Mèo Con', N'Học Hát Bài Là Mèo Con')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ccb65b53-2dd1-4161-a997-7bcb4e057a8b', 1, N'ea8cef5e-cd92-4dfa-a34f-91e7c7ebe706', N'Nhận Biết Nhiều Hơn ,Ít Hơn', N'Nhận Biết Nhiều Hơn ,Ít Hơn')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'0775ea33-ed97-4294-9fa0-7e1047e0800b', 9, N'b23021e6-3e0d-4469-822f-31de8fd2919a', N'Listen and Sing', N'Listen and Sing')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'7b64ae78-7214-4151-9adb-7ebdf61bc0bb', 7, N'd4b9fe7c-69b7-4002-9d75-608ce8112241', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'f75e3d41-b8e8-4220-ac0a-81a0d6a34c87', 4, N'ea8cef5e-cd92-4dfa-a34f-91e7c7ebe706', N'Nhiều hơn, ít hơn.', N'Nhiều hơn, ít hơn.')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'1bf20f75-2a36-4e1e-bc74-83c517160237', 14, N'c3d325e8-9eae-49ef-a689-5addb86cfd13', N'Vẽ Váy Cho Công Chúa', N'Vẽ Váy Cho Công Chúa')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'2a248635-adf5-4b85-97e2-8578c044388d', 15, N'689a5c7c-5681-4577-8511-6c343fb41534', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'4e18d787-0bcd-4ba8-b447-882bab39a387', 3, N'ea8cef5e-cd92-4dfa-a34f-91e7c7ebe706', N'Khoanh vào hình có số lượng ít hơn', N'Khoanh vào hình có số lượng ít hơn')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'7427b754-0797-423b-8a28-8a784301b24e', 2, N'5f4fe5ea-e048-4313-86be-61b1a064e763', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ce52087c-cd9a-43ac-8008-8c5b4943503f', 16, N'c3d325e8-9eae-49ef-a689-5addb86cfd13', N'Vẽ Ủng', N'Vẽ Ủng')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'26f9bde4-2ff9-4a26-b576-8c69a5873bf2', 12, N'b23021e6-3e0d-4469-822f-31de8fd2919a', N'Listen and Track', N'Listen and Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ea1c1515-985c-42bc-ab85-956431e2d874', 3, N'2107d0d0-2c89-417d-a54f-b221328af9f0', N'Vẽ Sóc', N'Vẽ Sóc')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'dd31dfa9-9283-4a55-8fed-973c6388ed9a', 6, N'd4b9fe7c-69b7-4002-9d75-608ce8112241', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'55ac335e-b7c2-4310-9493-9897692230ad', 17, N'c21fefa9-01ef-4ee2-bdfb-bf65049d5eca', N'Vẽ Khủng Long', N'Vẽ Khủng Long')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'7759e391-a0b3-425e-b01c-99126b914175', 5, N'a6e30ec5-b9d3-4d91-bb68-5d20ca9bd02b', N'Nhận biết bằng nhau', N'Nhận biết bằng nhau')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'16dc4aad-d163-457e-a9d0-998e588e1e49', 11, N'6a407190-8b0f-4686-a880-dbebadca413c', N'Phép cộng trong phạm vi 5', N'Phép cộng trong phạm vi 5')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'90eb4ce8-7f42-434d-ab98-9d9742e79aa2', 1, N'debf2822-89d0-4815-b6a0-6bf2cbbd8274', N'Listen and Sing', N'Listen And Sing')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'e776deb9-8d61-4812-9670-a6e9602113ba', 16, N'80d8975b-31e8-4d4a-bc9e-41dfc3966c6c', N'Listen And Track', N'Listen And Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ded0b7db-7a18-4cf8-baf0-a98a39871063', 10, N'9f88ad3d-94c7-4d28-aeea-86af99a42469', N'Tô màu ', N'Tô màu ')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'38496731-71cb-4d1e-8932-aa5a1ac225df', 11, N'4ebb0515-4afe-4553-9ff4-31b395c15f39', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'0957b895-f0a5-45a3-b291-ac6e4fc2951b', 16, N'689a5c7c-5681-4577-8511-6c343fb41534', N'Listen and Track', N'Listen and Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'9cc3b0c3-2c81-432b-aa62-af3d10a56eb8', 1, N'5f4fe5ea-e048-4313-86be-61b1a064e763', N'Listen and Sing.Move', N'Listen and Sing.Move')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'd88361b7-f3bd-497e-b835-aff0fef1220d', 12, N'6a407190-8b0f-4686-a880-dbebadca413c', N'Phép cộng trong phạm vi 5', N'Phép cộng trong phạm vi 5')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'f4c8db43-5cdf-4703-991b-b460c19972b6', 2, N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Học Hát Bài Gà Trống,Mèo Con Và Cún Con', N'Học Hát Bài Gà Trống ,Mèo Con và Cún Con')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'0d8aad50-f1c8-47da-85b0-b7c21a77cd4c', 2, N'ea8cef5e-cd92-4dfa-a34f-91e7c7ebe706', N'Khoanh vào hình có số lượng nhiều hơn .', N'Khoanh vào hình có số lượng nhiều hơn .')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'47cdfc11-ba80-440c-8c1b-bd0373474cd6', 5, N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Học Hát Bài Con Gà Trống', N'Học Hát Bài Con Gà Trống ')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'85bf8aa7-0804-45ac-9b2f-c5a36581a5a8', 9, N'9f88ad3d-94c7-4d28-aeea-86af99a42469', N'Nhận biết cao, thấp', N'Nhận biết cao, thấp')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'6053592f-cd1c-4e36-8c49-c660e4656412', 16, N'4fa8bbb2-b0bc-4e18-8521-a75c336721c1', N'Phép cộng trong phạm vi 10', N'Phép cộng trong phạm vi 10')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'a6f8c138-6810-4e09-aa20-cb3494463aba', 10, N'4ebb0515-4afe-4553-9ff4-31b395c15f39', N'Look and Listen', N'Look and Listen')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'60f71373-0c5f-439a-a326-d65402a47665', 12, N'7ace3eb6-cf0e-4dd4-8a2b-3fd8f7895acc', N'Vẽ Tiều Phu', N'Vẽ Tiều Phu')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'f5e1015e-c054-49a1-8cd5-d90f49adee45', 6, N'ebdeca5c-fbf3-4da3-80b4-82e86fbbe9af', N'Vẽ Ô Tô', N'Vẽ Ô Tô')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'fa0fcca0-3798-42ee-b5ac-dd107bbcf2a1', 15, N'c3d325e8-9eae-49ef-a689-5addb86cfd13', N'Vẽ Vest', N'Vẽ Vest')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'a908da14-3619-44d4-b7cd-df6f542d01b7', 8, N'397037f3-49e5-463e-9c78-d62adef17e8e', N'Listen and Track', N'Listen and Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'9243063a-5896-4d72-8fd1-e175e69ac111', 1, N'2107d0d0-2c89-417d-a54f-b221328af9f0', N'Vẽ Hươu Cao Cổ', N'Vẽ Hươu Cao Cổ')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'afe6b529-67ef-4f88-b2a6-e2015209e350', 3, N'ee6ad8d1-93e7-4b35-afce-7e568c28e462', N'Học Hát Bài Ếch Ộp', N'Học Hát Bài Ếch Ộp')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'3dd40992-e42d-4eb7-8168-e34d2f0e6019', 13, N'c3d325e8-9eae-49ef-a689-5addb86cfd13', N'Vẽ Công Chúa', N'Vẽ Công Chúa')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'6c182ea4-9143-4811-91c1-e6e38c1c29ca', 15, N'4fa8bbb2-b0bc-4e18-8521-a75c336721c1', N'Phép cộng trong phạm vi 10', N'Phép cộng trong phạm vi 10')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'505827b8-de3c-43ce-bdcb-e80b53342a82', 12, N'4ebb0515-4afe-4553-9ff4-31b395c15f39', N'Listen and Track', N'Listen and Track')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'3e930026-abe8-4073-aa2e-e81310c53bf2', 14, N'bababa9f-7838-4610-ba71-5f8c8d0b58f0', N'Phép trừ trong phạm vi 5', N'Phép trừ trong phạm vi 5')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'33ee9431-d94a-4d2a-b347-ebb10104091e', 13, N'bababa9f-7838-4610-ba71-5f8c8d0b58f0', N'Phép trừ trong phạm vi 5', N'Phép trừ trong phạm vi 5')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'c9ca2f9a-8c78-460f-9abd-ed7bc3bd836a', 2, N'2107d0d0-2c89-417d-a54f-b221328af9f0', N'Vẽ Voi', N'Vẽ Voi')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'48bce737-ee8c-497a-a7b2-f2a0459357ba', 15, N'80d8975b-31e8-4d4a-bc9e-41dfc3966c6c', N'Sing and Do', N'Sing and Do')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'3f21aa44-7f2b-4081-844b-f30684420450', 7, N'ebdeca5c-fbf3-4da3-80b4-82e86fbbe9af', N'Vẽ Máy Bay', N'Vẽ Máy Bay')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'ab4d1961-bc7d-47eb-a551-f599822814d7', 13, N'80d8975b-31e8-4d4a-bc9e-41dfc3966c6c', N'Listen and Sing', N'Listen and Sing')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'efcb3404-666e-4f9e-8efa-fbc4a29e6b55', 5, N'397037f3-49e5-463e-9c78-d62adef17e8e', N'Listen and Sing', N'Listen and Sing')
+INSERT [dbo].[Session] ([Id], [NoSession], [TopicId], [Content], [Description]) VALUES (N'3f579686-491e-46b5-8e03-feab8645c272', 18, N'db64d396-6302-46c6-abfa-11dbd07695be', N'Khoanh vào kết quả đúng', N'Khoanh vào kết quả đúng')
 GO
-Insert into StudentClass (Id, ClassId, StudentId, [Status]) Values
-('0b365b52-3718-47a7-8a03-96fc55a7868f', 'c6d70a5f-56ae-4de0-b441-c080da024524', '172c40fe-32e4-43fd-b982-c87afe8b54fa', 'NORMAL');
-Insert into StudentClass (Id, ClassId, StudentId, [Status]) Values
-('5c62c817-4b61-4a14-b240-a8b879b499a5', 'c6d70a5f-56ae-4de0-b441-c080da024524', '172c40fe-32e4-43fd-b982-c87afe8b54fa', 'NORMAL');
-Insert into StudentClass (Id, ClassId, StudentId, [Status]) Values
-('33ef53be-369f-4fce-a7ac-7064211735b5', 'c6d70a5f-56ae-4de0-b441-c080da024524', '172c40fe-32e4-43fd-b982-c87afe8b54fa', 'NORMAL');
+INSERT [dbo].[Student] ([Id], [ParentId], [FullName], [DateOfBirth], [Gender], [AvatarImage], [Email]) VALUES (N'cabcdd4d-deac-49ec-f778-08dc02e976ed', N'db94c309-90ed-46b2-8525-476058cce422', N'Heo Hồng', CAST(N'2018-12-22T00:00:00.0000000' AS DateTime2), N'Nam', N'heohong.png', N'heohong@gmail.com')
+INSERT [dbo].[Student] ([Id], [ParentId], [FullName], [DateOfBirth], [Gender], [AvatarImage], [Email]) VALUES (N'7c3829dd-5e9f-4737-f779-08dc02e976ed', N'db94c309-90ed-46b2-8525-476058cce422', N'Heo Đen', CAST(N'2019-12-22T00:00:00.0000000' AS DateTime2), N'Nam', N'heoden.png', N'heoden@gmail.com')
 
---- Schedule --- Create Time: 12/12/2023 - 11:24 AM
 GO
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('b09aaf22-5059-4635-bd15-a1d95eedb529', 2, '2023-12-05', 'c6d70a5f-56ae-4de0-b441-c080da024524', '417997ac-afd7-4363-bfe5-6cdd56d4713a', '99f6f043-3fee-435f-a8ae-1f55f13b3256')
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('b59317a3-1b59-4dff-aa26-fc7f7892ef3b', 8, '2023-12-07', 'c6d70a5f-56ae-4de0-b441-c080da024524', '417997ac-afd7-4363-bfe5-6cdd56d4713a', '99f6f043-3fee-435f-a8ae-1f55f13b3256')
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('7622b97c-d126-453a-aa8e-adc04b8edf74', 32, '2023-12-09', 'c6d70a5f-56ae-4de0-b441-c080da024524', '301efd4a-618e-4495-8e7e-daa223d3945e', '99f6f043-3fee-435f-a8ae-1f55f13b3256')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'Toán Tư Duy 1', CAST(N'2024-01-03T00:00:00.0000000' AS DateTime2), CAST(N'2024-02-03T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'OFFLINE', N'573cc370-aeab-4d9a-ba2c-42b28e4f70dc', 30, N'735616c5-b24a-4c16-a30a-a27a570cd6fe', N'img.png', N'vid.mp4', N'138 Lương Định Của', N'TTD1', 1, N'Hồ Chí Minh', N'Tân Bình')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'Toán Tư Duy 2', CAST(N'2024-01-03T00:00:00.0000000' AS DateTime2), CAST(N'2024-02-03T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'OFFLINE', N'573cc370-aeab-4d9a-ba2c-42b28e4f70dc', 30, N'735616c5-b24a-4c16-a30a-a27a570cd6fe', N'img.png', N'vid.mp4', N'138 Lương Định Của', N'TTD1', 1, N'Hồ Chí Minh', N'Tân Bình')
 
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('66089738-6350-4ae9-92aa-b9d71a3c82de', 1, '2023-12-05', '74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', '301efd4a-618e-4495-8e7e-daa223d3945e', '5cc8a8e9-d53e-46de-b177-c4fc7c1c84c4')
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('d920f2cb-a106-40d3-b661-400f8b3c4610', 4, '2023-12-07', '74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678', '6ab50a00-08ba-483c-bf5d-0d55b05a2ccc', '5cc8a8e9-d53e-46de-b177-c4fc7c1c84c4')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'Tiếng Anh Cơ Bản 1', CAST(N'2023-11-01T00:00:00.0000000' AS DateTime2), CAST(N'2023-12-01T00:00:00.0000000' AS DateTime2), N'COMPLETED', N'ONLINE', N'ca9680a5-729d-4f8b-ba91-0b9c587269a1', 30, N'06f5a898-e0db-4766-b0af-3340ec5d7b04', N'img.png', N'vid.mp4', N'Home', N'ENG101', 1, N'', N'')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'Tiếng Anh Cơ Bản 2', CAST(N'2023-11-30T00:00:00.0000000' AS DateTime2), CAST(N'2023-12-30T00:00:00.0000000' AS DateTime2), N'PROGRESSING ', N'ONLINE', N'ca9680a5-729d-4f8b-ba91-0b9c587269a1', 30, N'06f5a898-e0db-4766-b0af-3340ec5d7b04', N'img.png', N'vid.mp4', N'Home', N'ENG102', 1, N'', N'')
 
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'Tập Bé Hát 1', CAST(N'2023-12-31T00:00:00.0000000' AS DateTime2), CAST(N'2024-01-30T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'ONLINE', N'2a95e7fd-010a-4f73-870b-1a0610c7fefa', 30, N'f4f0b221-c583-4ca5-b26a-417889c2f9ad', N'img.png', N'vid.mp4', N'Home', N'MUC1', 1, N'', N'')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'Tập Bé Hát 2', CAST(N'2023-12-31T00:00:00.0000000' AS DateTime2), CAST(N'2024-01-30T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'ONLINE', N'2a95e7fd-010a-4f73-870b-1a0610c7fefa', 30, N'f4f0b221-c583-4ca5-b26a-417889c2f9ad', N'img.png', N'vid.mp4', N'Home', N'MUC2', 1, N'', N'')
 
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('1ed95198-13d8-4180-9194-e894d6047fa0', 4, '2023-12-05', '77a0a23f-5a3d-4447-8985-d7ed203d322f', '417997ac-afd7-4363-bfe5-6cdd56d4713a', '5cc8a8e9-d53e-46de-b177-c4fc7c1c84c4')
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('8e526f13-32cc-46c6-a557-270d1cf41c0b', 32, '2023-12-09', '77a0a23f-5a3d-4447-8985-d7ed203d322f', '301efd4a-618e-4495-8e7e-daa223d3945e', '5cc8a8e9-d53e-46de-b177-c4fc7c1c84c4')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'Vẽ Thế Giới 1', CAST(N'2024-02-01T00:00:00.0000000' AS DateTime2), CAST(N'2024-03-03T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'OFFLINE', N'0e5a97fc-b930-4536-9cef-e5a7d0023ad8', 30, N'871606a7-baa0-4c79-b685-1443502d02b3', N'img.png', N'vid.mp4', N'138 Lương Định Của', N'DAR01', 1, N'Hồ Chí Minh', N'Tân Bình')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'Vẽ Thế Giới 2', CAST(N'2024-02-01T00:00:00.0000000' AS DateTime2), CAST(N'2024-03-03T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'OFFLINE', N'0e5a97fc-b930-4536-9cef-e5a7d0023ad8', 30, N'871606a7-baa0-4c79-b685-1443502d02b3', N'img.png', N'vid.mp4', N'138 Lương Định Của', N'DAR02', 1, N'Hồ Chí Minh', N'Tân Bình')
 
-
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('63e41284-3c47-45e2-90c4-2decdbdaab05', 1, '2023-12-05', '592fd51c-e177-49c2-a2dd-a679d02a91c4', '417997ac-afd7-4363-bfe5-6cdd56d4713a', 'c4cf53be-440b-445f-b8f3-82d7f3af409c')
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('cf11d4ef-353b-4348-8ed1-c7cec87da153', 1, '2023-12-05', '592fd51c-e177-49c2-a2dd-a679d02a91c4', '301efd4a-618e-4495-8e7e-daa223d3945e', 'c4cf53be-440b-445f-b8f3-82d7f3af409c')
-Insert into Schedule (Id, [DayOfWeek], [Date], ClassId, SlotId, RoomId) Values 
-('d31368c8-2848-40bf-9bc0-93bda2342758', 1, '2023-12-05', '592fd51c-e177-49c2-a2dd-a679d02a91c4', '6ab50a00-08ba-483c-bf5d-0d55b05a2ccc', 'c4cf53be-440b-445f-b8f3-82d7f3af409c')
-
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'55ce1535-6a98-4660-a651-449c49e15f37', N'Tiếng Anh Nân Cao 1', CAST(N'2023-12-15T00:00:00.0000000' AS DateTime2), CAST(N'2024-01-14T00:00:00.0000000' AS DateTime2), N'PROGRESSING', N'ONLINE', N'66aa922d-4392-4958-bbef-fc9689c9779b', 30, N'856fe3a8-13bb-40e0-a413-a6cee33b7130', N'img.png', N'vid.mp4', N'Home', N'ENG201', 1, N'', N'')
+INSERT [dbo].[Class] ([Id], [Name], [StartDate], [EndDate], [Status], [Method], [LecturerId], [LimitNumberStudent], [CourseId], [Image], [Video], [Street], [ClassCode], [LeastNumberStudent], [City], [District]) VALUES (N'196080d9-0541-4e20-9577-3c37bc4395db', N'Tiếng Anh Nân Cao 2', CAST(N'2024-01-01T00:00:00.0000000' AS DateTime2), CAST(N'2024-01-31T00:00:00.0000000' AS DateTime2), N'UPCOMMING', N'OFFLINE', N'66aa922d-4392-4958-bbef-fc9689c9779b', 30, N'856fe3a8-13bb-40e0-a413-a6cee33b7130', N'img.png', N'vid.mp4', N'138 Lương Định Của', N'ENG202', 1, N'Hồ Chí Minh', N'Tân Bình')
+GO
+--- Toan Tu Duy 1 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'519b925a-d16a-4cd1-ad89-b5f1fbc8c58e', 32, CAST(N'2024-01-06T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f4c902c3-7c92-4206-afa8-d4f3b22b0859', 4, CAST(N'2024-01-03T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'2e63d32a-dc40-4ad2-bc2d-ef04e4edec4f', 32, CAST(N'2024-01-13T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'3176bc13-1e3d-4b41-b936-5e4b9029633a', 4, CAST(N'2024-01-10T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'70d3ed59-9a13-47ca-938d-4aa9770fbda2', 32, CAST(N'2024-01-20T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'151c67bb-78f3-4bf2-813a-b3dc015ea39a', 4, CAST(N'2024-01-17T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6b2be8b1-9419-499a-8831-133fa0f1294b', 32, CAST(N'2024-01-27T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'b487f1eb-8bc6-4cf2-bb40-79104e970850', 4, CAST(N'2024-01-24T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'e8201b55-3493-4020-8614-13178a8cdaeb', 32, CAST(N'2024-02-03T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'a98b5e8c-90a4-4e5c-a563-f6275c068962', 4, CAST(N'2024-01-31T00:00:00.0000000' AS DateTime2), N'94431289-f3db-4fe4-b10e-7cd36cbba1fe', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'40514ccc-b66b-4093-af5f-0445210f9deb')
+--- Toan Tu Duy 2 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'502f13d3-f947-4cff-9386-dd96f285d3ba', 32, CAST(N'2024-01-06T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'ab95ff16-24f5-4e9b-86ad-a91a585813b1', 4, CAST(N'2024-01-03T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'27ac390d-e48f-4605-bf0d-d7f03d988b0c', 32, CAST(N'2024-01-13T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'de51896d-bf1c-4bee-8afc-94a20c342e19', 4, CAST(N'2024-01-10T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f7cc8594-9805-4c24-a0c0-74963b84b9d1', 32, CAST(N'2024-01-20T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'c970bcd5-0057-4d48-9efe-10a91acd96e3', 4, CAST(N'2024-01-17T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'2ddc712a-664c-43be-91fb-1fb119a52aa4', 32, CAST(N'2024-01-27T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'95925dda-537a-4752-b392-8c589c15b429', 4, CAST(N'2024-01-24T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'75d3b5f0-5c44-4661-a489-311f1d1fb4d2', 32, CAST(N'2024-02-03T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'678f3dd0-ed2d-4fbc-8b49-c2fb7760cf1a', 4, CAST(N'2024-01-31T00:00:00.0000000' AS DateTime2), N'75aaf356-446c-4f82-8e9f-d62a3bf3bd8e', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'ea5b5f78-0223-4d7c-8950-4c7beb389e94')
+--- Tieng Anh Co Ban 1 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'acd3a5cd-ccc5-454c-aabf-8d62d6128496', 2, CAST(N'2023-11-01T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'5d4d6901-44a2-4961-a220-24bd07c42b56', 8, CAST(N'2023-11-03T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'03a41a38-452e-47e5-80c5-9e4cfe38631b', 32, CAST(N'2023-11-05T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'48eee057-6cca-42b8-bf06-28be4292ef26', 2, CAST(N'2023-11-08T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'9785aecb-8d39-42b3-a675-48d97eadc649', 8, CAST(N'2023-11-10T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'14623909-a073-40ff-8077-84751c640665', 32, CAST(N'2023-11-12T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'fe177075-28bc-4566-b5e5-63feb0da3037', 2, CAST(N'2023-11-15T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'2eb8eaed-af97-42cc-a344-fe6ddf6745e2', 8, CAST(N'2023-11-17T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'ca1254fb-2298-4dd5-9080-94e427da254b', 32, CAST(N'2023-11-19T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'873a41c0-daad-4545-8915-6dc4365c147d', 2, CAST(N'2023-11-22T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'a057d2f7-18d4-4650-a04e-525b34e05a42', 8, CAST(N'2023-11-24T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'06308e30-77d3-4784-852d-1c4bb755eb47', 32, CAST(N'2023-11-26T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'3224bde5-a638-40ac-a4e1-1908c8b4ccd8', 2, CAST(N'2023-11-29T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'7f8583d4-bbbc-4773-8bfd-033ea85dd2a3', 8, CAST(N'2023-12-01T00:00:00.0000000' AS DateTime2), N'47867b8c-2ac6-48b4-acb4-2b949726f7a3', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+--- Tieng Anh Co Ban 2 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'9d067ace-f295-4cc2-b2fb-3af59f8af8f4', 2, CAST(N'2023-11-30T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'9fc43636-8a77-4548-bed2-21afaf5ae13d', 8, CAST(N'2023-12-02T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'8e144e89-0f3e-4197-927f-6a171da23d67', 32, CAST(N'2023-12-04T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'7424581f-65a2-478b-9e48-ae205efdea8e', 2, CAST(N'2023-12-07T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'222528b6-2ef5-4031-ba8c-a2e008d24909', 8, CAST(N'2023-12-09T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'd43c45fd-13c4-4c07-af76-3ee0840df696', 32, CAST(N'2023-12-11T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'620cd0c2-511b-4365-ad75-6883b27a7d02', 2, CAST(N'2023-12-14T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'819f0226-8727-46f0-8e97-7a395232290d', 8, CAST(N'2023-12-16T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'659cf79d-9960-45c0-8d72-b7fc77302d37', 32, CAST(N'2023-12-18T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'1c5e3657-d314-437f-952e-c872fbf8a7ae', 2, CAST(N'2023-12-21T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'75ca1e30-a0d6-4a02-9c91-ce2340a9e211', 8, CAST(N'2023-12-23T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6e6629ea-3e35-4d65-aba3-0b464b5bc271', 32, CAST(N'2023-12-25T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'dd17dc12-9ddc-4a81-b0ee-161b90bb987d', 2, CAST(N'2023-12-28T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'2a798992-7e6c-45a8-9cb5-77f8365692fe', 8, CAST(N'2023-12-30T00:00:00.0000000' AS DateTime2), N'0a89c87d-b445-4fd8-bc56-88b91c10903f', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'21c2d354-1de5-4b67-950d-326ac832b4eb')
+--- Tap Be Hat 1 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6ababd08-35ed-4576-a214-e31d443fdbc6', 4, CAST(N'2023-12-31T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'22c045d2-2239-4e66-8fe0-1e9986126c84', 16, CAST(N'2024-01-02T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'31742a45-a633-4e46-98d4-a165891d6120', 64, CAST(N'2024-01-04T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6882ca04-106b-4036-be49-ff3481ab9bc1', 4, CAST(N'2024-01-07T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f897c63e-1af9-4389-95c4-4c1ad929346d', 16, CAST(N'2024-01-09T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'd2479962-be04-44e0-b8f3-1942449ed85b', 64, CAST(N'2024-01-11T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'5c648b4f-1c91-446d-a69a-36295693ba01', 4, CAST(N'2024-01-14T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'27707cee-10d4-4421-8aea-ff86e15bb3cc', 16, CAST(N'2024-01-16T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'20308238-f17e-4b25-9bbc-dfad28db6388', 64, CAST(N'2024-01-18T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'ba48d1b6-9ee6-48da-bb51-28dbfe5cdf7d', 4, CAST(N'2024-01-21T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6c317807-7d6a-426a-9822-4c579df8e2ac', 16, CAST(N'2024-01-23T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f4e8e917-b09d-4c04-812c-f8f78e8c0d57', 64, CAST(N'2024-01-25T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'fce5e721-5268-4d71-8da2-dec5e8f734ce', 4, CAST(N'2024-01-28T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'30b1604d-5d84-4205-9675-45a9c2b68301', 16, CAST(N'2024-01-30T00:00:00.0000000' AS DateTime2), N'e765a5cf-c51d-49d6-a361-17ed89a5923b', N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+--- Tap Be Hat 2 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f006bde5-c692-4eb3-9564-06491249bc20', 4, CAST(N'2023-12-31T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'a0fa9052-36e8-48c6-b1a3-fbde9022515c', 16, CAST(N'2024-01-02T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'c23190be-023d-40d4-928e-c82ea99b12a0', 64, CAST(N'2024-01-04T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'19dedeae-6be1-4fcc-a94b-f3d9abcc058b', 4, CAST(N'2024-01-07T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'612d5c42-e3d7-444a-b63b-0172c532f76f', 16, CAST(N'2024-01-09T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'e1802323-3ccc-4b6b-9ffc-fc32057cf083', 64, CAST(N'2024-01-11T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'0ecf1703-a1d8-46b2-96c7-9f28529b240e', 4, CAST(N'2024-01-14T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'0c7ebdf0-d342-4988-9566-1ccb34b59413', 16, CAST(N'2024-01-16T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'9b1c1a6b-c38b-4cc3-ac3a-5a940cd6cc4f', 64, CAST(N'2024-01-18T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'1b31dc09-35f9-46a0-b4ef-4386d8f43dbd', 4, CAST(N'2024-01-21T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'9d785e75-f49e-4608-994a-8d53d0f694a0', 16, CAST(N'2024-01-23T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'717810df-f24b-4978-ab52-87adc369ee92', 64, CAST(N'2024-01-25T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'116a50de-f926-4b3e-8a41-6f8c750f1fa0', 4, CAST(N'2024-01-28T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'931f2401-29be-48bb-ba27-bfa4a9a6971a', 16, CAST(N'2024-01-30T00:00:00.0000000' AS DateTime2), N'4448274b-4e31-426c-9b0b-3bfc59c08374', N'418704fb-fac8-4119-8795-c8fe5d348753', N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78')
+--- Ve The Gioi 1 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'62900a1b-2046-4c01-a806-82b418a76343', 2, CAST(N'2024-02-01T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'2afe5df2-b646-4a17-9c4c-28727f0b3210', 32, CAST(N'2024-02-05T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'463a7459-f0d1-4ec7-b55b-63ccdf186f7d', 2, CAST(N'2024-02-08T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'd6c3aa17-2d0f-4629-856a-2e80b5d087a4', 32, CAST(N'2024-02-12T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'ba665e11-c3d1-4b1e-9978-b1ef493b5d5f', 2, CAST(N'2024-02-15T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'c81ded06-89b7-4833-85b0-5e93aa95e45a', 32, CAST(N'2024-02-19T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'fc96b4df-a966-4e26-8e79-da6febe7835d', 2, CAST(N'2024-02-22T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'45ff3379-c1b6-4748-9c5a-19320e52cc9f', 32, CAST(N'2024-02-26T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'84883440-d888-412e-a4d6-a23d8e99734c', 2, CAST(N'2024-02-29T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'cf17dcda-c234-4a36-af7d-668c84abe61d', 32, CAST(N'2024-03-03T00:00:00.0000000' AS DateTime2), N'78ebe4df-b213-4e10-9fb9-a340374f1212', N'2291e53b-094b-493e-8132-c6494d2b18a8', N'64f37456-0b34-442e-a0f8-4a5149b68b85')
+--- Ve The Gioi 2 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'9b4d226a-46b4-41f4-b415-6dc90b87f1db', 2, CAST(N'2024-02-01T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'8cc67939-4a79-446a-9590-cd06a3bd8fc2', 32, CAST(N'2024-02-05T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'c22e9be8-467b-491d-8185-c50666577b88', 2, CAST(N'2024-02-08T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'7768487a-5996-4af3-8eef-b7c5beec6972', 32, CAST(N'2024-02-12T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f92bcd77-d856-44d5-a54b-a0552c0f5651', 2, CAST(N'2024-02-15T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'd5454a06-3f40-41cd-9321-97f56f4a1980', 32, CAST(N'2024-02-19T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'a10bfe9e-1526-490f-8b9a-121f5a7ebca5', 2, CAST(N'2024-02-22T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'bfe6df52-99a6-4c9b-b5a5-275469a68fec', 32, CAST(N'2024-02-26T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'd5d3dc5f-273e-4bc4-a0f5-63b2d03275c7', 2, CAST(N'2024-02-29T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'b6863122-34aa-4567-a59d-67d46896ade9', 32, CAST(N'2024-03-03T00:00:00.0000000' AS DateTime2), N'bdfa8fb8-0f13-40ee-93c3-b7b46d79d336', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'31064fbd-5979-489e-876f-840cf368d5c7')
+--- Tieng Anh Nan Cao 1 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6f39e3af-988a-477e-9b7b-867c884fd1a4', 4, CAST(N'2023-12-15T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'1c72a187-fec7-421c-801b-02761d877400', 16, CAST(N'2023-12-17T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'd93aefe6-c3e1-478d-9307-3359b7744c1a', 4, CAST(N'2023-12-22T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'ef70abd0-71d4-4118-8978-26a2013e9823', 16, CAST(N'2023-12-24T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'5c2b2a9e-3ff9-4bae-9169-051bf7bfb56f', 4, CAST(N'2023-12-29T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'f1ad7b3d-a0ff-43e0-941f-437832c404ac', 16, CAST(N'2023-12-31T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'780923c3-f035-41e4-8428-964ebedbb3bb', 4, CAST(N'2024-01-05T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'05661eef-438d-49ea-adec-fc590285ed94', 16, CAST(N'2024-01-07T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'0db02dec-fc5e-415b-85c1-58c64b7aa199', 4, CAST(N'2024-01-12T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6345ceff-9722-45ea-b39b-538072341b37', 16, CAST(N'2024-01-14T00:00:00.0000000' AS DateTime2), N'55ce1535-6a98-4660-a651-449c49e15f37', N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'e1482984-8995-4fcc-8d5b-6014762814e8')
+--- Tieng Anh Nan Cao 2 ---
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6e83210a-09d0-4867-8f85-9dfba71047fb', 4, CAST(N'2024-01-01T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'6073e308-26ad-4313-86ce-22f05d5d418f', 16, CAST(N'2024-01-03T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'7429e1a5-79f9-48a5-b8ed-0a53f963c13b', 4, CAST(N'2024-01-08T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'c6506fbb-95ed-49d3-8f9d-38c80d0b635b', 16, CAST(N'2024-01-10T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'81d27fb3-1acb-42b4-9dbe-700f23b754d7', 4, CAST(N'2024-01-15T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'1e6ed3b5-76a3-4a0b-a724-22f4e5d99da6', 16, CAST(N'2024-01-17T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'8fbed53a-48bf-4027-b339-207dda67795d', 4, CAST(N'2024-01-22T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'b9d2a416-238b-4b99-90e3-5a067d5c60f1', 16, CAST(N'2024-01-24T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'ec1365ca-311d-49b2-808a-869c197db3d5', 4, CAST(N'2024-01-29T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+INSERT [dbo].[Schedule] ([Id], [DayOfWeek], [Date], [ClassId], [SlotId], [RoomId]) VALUES (N'11f6aab8-04a1-47fb-b158-abc848762001', 16, CAST(N'2024-01-31T00:00:00.0000000' AS DateTime2), N'196080d9-0541-4e20-9577-3c37bc4395db', N'301efd4a-618e-4495-8e7e-daa223d3945e', N'51445be5-e706-443b-88ed-e33fbd1b9b06')
+GO
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'40514ccc-b66b-4093-af5f-0445210f9deb', N'LB1', 1, N'AVAILABLE', NULL, 120)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'db0c0da6-1a17-45a1-aeb6-091db19241fa', N'105', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'e6fc0f12-b135-4df4-bfe8-0ade3dcd2f1a', N'104', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'b2aa7714-11e5-4d54-bec9-136555c0534b', N'107', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'c2d5f218-2793-444c-a2d1-18fc81484c4f', N'210', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'a283c232-14d4-4641-9e93-1ac7b1391587', N'108', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'99f6f043-3fee-435f-a8ae-1f55f13b3256', N'101', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'c0434c38-eb33-4eae-98ff-2d5afc491330', N'207', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'21c2d354-1de5-4b67-950d-326ac832b4eb', N'GoogleMeet1', 3, N'AVAILABLE', NULL, 100)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'86363d37-69bd-4ef8-93f8-3760b21fe811', N'109', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'472d7b7a-22ce-4fcb-a436-3ea03fd29d78', N'GoogleMeet2', 3, N'AVAILABLE', NULL, 100)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'64f37456-0b34-442e-a0f8-4a5149b68b85', N'208', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'ea5b5f78-0223-4d7c-8950-4c7beb389e94', N'LB2', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'5659d6c9-e332-4e63-a31c-4f3f5760bc64', N'201', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'80cdbf9e-f20d-4a9d-9604-504078634f6a', N'110', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'cfddfd4d-f80b-4236-921c-599d812f1150', N'103', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'e1482984-8995-4fcc-8d5b-6014762814e8', N'GoogleMeet3', 3, N'AVAILABLE', NULL, 100)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'c4bbe8dd-5075-4cf2-b762-62bd54bc6e1a', N'202', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'833c47d4-af61-471a-98f4-684cd0762158', N'205', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'31064fbd-5979-489e-876f-840cf368d5c7', N'209', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'f9a4b210-a89f-4c88-ae4d-87e85f7d73c7', N'206', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'1959b9e0-6dbe-4010-966a-9caf769d7a53', N'106', 1, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'be0c6afa-e24f-4132-aaa7-bb6408cab5a9', N'204', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'51445be5-e706-443b-88ed-e33fbd1b9b06', N'203', 2, N'AVAILABLE', NULL, 35)
+INSERT [dbo].[Room] ([Id], [Name], [Floor], [Status], [LinkURL], [Capacity]) VALUES (N'f388a94d-d808-40bc-8fa8-ecebf64de0a4', N'102', 1, N'AVAILABLE', NULL, 35)
+GO
+INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'6ab50a00-08ba-483c-bf5d-0d55b05a2ccc', N'12:00', N'14:00')
+INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'417997ac-afd7-4363-bfe5-6cdd56d4713a', N'7:00', N'9:00')
+INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'2291e53b-094b-493e-8132-c6494d2b18a8', N'14:15', N'16:15')
+INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'418704fb-fac8-4119-8795-c8fe5d348753', N'19:00', N'21:00')
+INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'301efd4a-618e-4495-8e7e-daa223d3945e', N'9:15', N'11:15')
+INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'16:30', N'18:30')

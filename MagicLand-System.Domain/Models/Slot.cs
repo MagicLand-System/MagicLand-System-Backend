@@ -6,7 +6,6 @@
         public required string StartTime { get; set; }
         public required string EndTime { get; set; }
 
-
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
     }
 }

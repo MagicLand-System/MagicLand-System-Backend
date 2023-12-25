@@ -15,10 +15,11 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<CourseResponse>> FilterCourseAsync(int minYearsOld, int maxYearsOld, int? numberOfSession, double minPrice, double maxPrice, string? subject, int? rate)
+        public async Task<List<CourseResponse>> FilterCourseAsync(int minYearsOld, int maxYearsOld, int? numberOfSession, double minPrice, double? maxPrice, string? subject, int? rate)
         {
 
             var courses = await GetDefaultCourse();
+            maxPrice ??= double.MaxValue;
 
             var filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
              ? throw new BadHttpRequestException("Range Of Age Not Valid", StatusCodes.Status400BadRequest)
@@ -46,12 +47,13 @@ namespace MagicLand_System.Services.Implements
         public async Task<CourseResponse> GetCourseByIdAsync(Guid id)
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
-             .Include(x => x.CoursePrerequisites)
-             .Include(x => x.CourseCategory)
-             .Include(x => x.CourseDescriptions)
-             .Include(x => x.CourseSyllabus)
-             .ThenInclude(cs => cs!.Topics)
-             .ThenInclude(tp => tp.Sessions));
+            .Include(x => x.CoursePrerequisites)
+            .Include(x => x.CourseCategory)
+            .Include(x => x.SubDescriptionTitles)
+            .ThenInclude(sdt => sdt.SubDescriptionContents)
+            .Include(x => x.CourseSyllabus)
+            .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
+            .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
 
             var coursePrerequisites = course == null
                 ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
@@ -78,9 +80,12 @@ namespace MagicLand_System.Services.Implements
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
             .Include(x => x.CoursePrerequisites)
+            .Include(x => x.CourseCategory)
+            .Include(x => x.SubDescriptionTitles)
+            .ThenInclude(sdt => sdt.SubDescriptionContents)
             .Include(x => x.CourseSyllabus)
-            .ThenInclude(cs => cs!.Topics)
-            .ThenInclude(tp => tp.Sessions));
+            .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
+            .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
 
             Course[] coursePrerequisites = await GetCoursePrerequesites(courses);
 
@@ -110,10 +115,11 @@ namespace MagicLand_System.Services.Implements
                 .GetListAsync(include: x => x
                 .Include(x => x.CoursePrerequisites)
                 .Include(x => x.CourseCategory)
-                .Include(x => x.CourseDescriptions)
+                .Include(x => x.SubDescriptionTitles)
+                .ThenInclude(sdt => sdt.SubDescriptionContents)
                 .Include(x => x.CourseSyllabus)
-                .ThenInclude(cs => cs!.Topics)
-                .ThenInclude(tp => tp.Sessions));
+                .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
+                .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
         }
     }
 }

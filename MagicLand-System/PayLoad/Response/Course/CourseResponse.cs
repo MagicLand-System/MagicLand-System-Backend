@@ -14,8 +14,9 @@ namespace MagicLand_System.PayLoad.Response.Course
         public int? MaxAgeStudent { get; set; }
         public string? Image { get; set; }
         public decimal? Price { get; set; }
+        public string? MainDescription { get; set; }
 
-        public List<CourseDescriptionResponse>? Description { get; set; }
+        public List<SubDescriptionTitleResponse>? SubDescriptionTitle { get; set; }
         public List<CourseResponse>? CoursePrerequisites { get; set; }
         public SyllabusResponse Syllabus { get; set; } = new SyllabusResponse();
     }
