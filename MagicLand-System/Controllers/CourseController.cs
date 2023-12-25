@@ -1,8 +1,4 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Request;
-using MagicLand_System.PayLoad.Response.Course;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -118,7 +114,7 @@ namespace MagicLand_System.Controllers
             [FromQuery] int maxYearsOld = 120,
             [FromQuery] int? numberOfSession = null,
             [FromQuery] double minPrice = 0,
-            [FromQuery] double maxPrice = double.MaxValue,
+            [FromQuery] double? maxPrice = null,
             [FromQuery] int? rate = null)
         {
             var courses = await _courseService.FilterCourseAsync(minYearsOld, maxYearsOld, numberOfSession, minPrice, maxPrice, subject, rate);

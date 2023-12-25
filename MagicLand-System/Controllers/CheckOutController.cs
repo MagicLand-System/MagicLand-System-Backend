@@ -109,7 +109,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> CheckOutCart([FromBody] List<Guid> cartItemIds)
         {
 
-            var cart = await _cartService.GetCartOfCurrentParentAsync();
+            var cart = await _cartService.GetDetailCurrentParrentCart();
 
             var invalidItem = cartItemIds.Except(cart.CartItems.Select(s => s.Id)).ToList();
             if (invalidItem.Any())

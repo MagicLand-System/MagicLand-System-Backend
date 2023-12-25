@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
@@ -9,7 +8,6 @@ using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -28,17 +26,30 @@ namespace MagicLand_System.Services.Implements
             {
                 if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.ClassId == classId))
                 {
-                    var sameCurrentCartItem = currentParentCart.CartItems.SingleOrDefault(x => x.ClassId == classId);
+                    var currentCartItem = currentParentCart.CartItems.SingleOrDefault(x => x.ClassId == classId);
 
-                    _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(sameCurrentCartItem!.StudentInCarts);
+                    if (studentIds.Count() == 0 && currentCartItem!.StudentInCarts.Count() == 0)
+                    {
+                        throw new BadHttpRequestException("You are already add cart this class", StatusCodes.Status400BadRequest);
+                    }
 
-                    await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
-                        (
-                             RenderStudentInClass(studentIds, sameCurrentCartItem)
-                        );
+                    if (currentCartItem!.StudentInCarts.Select(sic => sic.StudentId).ToList().SequenceEqual(studentIds))
+                    {
+                        throw new BadHttpRequestException("You are already add registered all student request to this class", StatusCodes.Status400BadRequest);
+                    }
+
+                    _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(currentCartItem!.StudentInCarts);
+
+                    if(studentIds.Count() > 0)
+                    {
+                        await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
+                       (
+                            RenderStudentInClass(studentIds, currentCartItem)
+                       );
+                    }
 
                     cartReponse = await _unitOfWork.CommitAsync() > 0
-                        ? await GetCartOfCurrentParentAsync()
+                        ? await GetDetailCurrentParrentCart()
                         : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
                 }
                 else
@@ -52,13 +63,16 @@ namespace MagicLand_System.Services.Implements
 
                     await _unitOfWork.GetRepository<CartItem>().InsertAsync(newItem);
 
-                    await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
-                     (
-                          RenderStudentInClass(studentIds, newItem)
-                     );
+                    if (studentIds.Count > 0)
+                    {
+                        await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
+                        (
+                         RenderStudentInClass(studentIds, newItem)
+                        );
+                    }
 
-                    cartReponse = await _unitOfWork.CommitAsync() > 0
-                        ? await GetCartOfCurrentParentAsync()
+                   cartReponse = await _unitOfWork.CommitAsync() > 0
+                        ? await GetDetailCurrentParrentCart()
                         : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
                 }
 
@@ -70,24 +84,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        private async Task<Cart> FetchCurrentParentCart()
-        {
-            return await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
-                predicate: x => x.UserId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.CartItems).ThenInclude(cts => cts.StudentInCarts));
-        }
-
-        private List<StudentInCart> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
-        {
-            return studentIds.Select(s => new StudentInCart
-            {
-                Id = new Guid(),
-                CartItemId = cartItem.Id,
-                StudentId = s
-            }).ToList();
-        }
-
-        public async Task<CartResponse> GetCartOfCurrentParentAsync()
+        public async Task<CartResponse> GetDetailCurrentParrentCart()
         {
             try
             {
@@ -97,7 +94,13 @@ namespace MagicLand_System.Services.Implements
                 {
                     var classes = new List<ClassResponse>();
                     foreach (var task in currentParrentCart.CartItems.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
-                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId)))
+                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x
+                    .Include(x => x.Lecture!)
+                    .Include(x => x.StudentClasses)
+                    .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+                    .ThenInclude(s => s.Slot)!
+                    .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+                    .ThenInclude(s => s.Room)!)))
                     {
                         var cls = await task;
                         classes.Add(_mapper.Map<ClassResponse>(cls));
@@ -180,6 +183,22 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
+        private async Task<Cart> FetchCurrentParentCart()
+        {
+            return await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+                predicate: x => x.UserId == GetUserIdFromJwt(),
+                include: x => x.Include(x => x.CartItems).ThenInclude(cts => cts.StudentInCarts));
+        }
+
+        private List<StudentInCart> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
+        {
+            return studentIds.Select(s => new StudentInCart
+            {
+                Id = new Guid(),
+                CartItemId = cartItem.Id,
+                StudentId = s
+            }).ToList();
+        }
         public async Task<BillResponse> CheckOutCartAsync(List<CartItemResponse> cartItems)
         {
             double actualTotal = 0;
@@ -237,11 +256,12 @@ namespace MagicLand_System.Services.Implements
 
                 await _unitOfWork.CommitAsync();
 
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.InnerException!.ToString());
             }
-           
+
             var bill = new BillResponse
             {
                 Status = "Purchase Success",

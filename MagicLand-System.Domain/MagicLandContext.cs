@@ -28,8 +28,10 @@ namespace MagicLand_System.Domain
         public DbSet<Schedule> Sessions { get; set; }
         public DbSet<Room> Rooms { get; set; }
         public DbSet<CourseCategory> CourseCategories { get; set; }
-        public DbSet<CourseDescription> CourseDescriptions { get; set; }
         public DbSet<CourseSyllabus> CourseSyllabuses { get; set; }
+        public DbSet<SubDescriptionTitle> SubDescriptionTitles { get; set; }
+        public DbSet<SubDescriptionContent> SubDescriptionContents { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -160,11 +162,17 @@ namespace MagicLand_System.Domain
                 entity.ToTable("CourseCategory");
                 entity.HasKey(entity => entity.Id);
             });
-            modelBuilder.Entity<CourseDescription>(entity =>
+            modelBuilder.Entity<SubDescriptionTitle>(entity =>
             {
-                entity.ToTable("CourseDescription");
+                entity.ToTable("SubDescriptionTitle");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Course).WithMany(e => e.CourseDescriptions).HasForeignKey(e => e.CourseId);
+                entity.HasOne(e => e.Course).WithMany(e => e.SubDescriptionTitles).HasForeignKey(e => e.CourseId);
+            });
+            modelBuilder.Entity<SubDescriptionContent>(entity =>
+            {
+                entity.ToTable("SubDescriptionContent");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.SubDescriptionTitle).WithMany(e => e.SubDescriptionContents).HasForeignKey(e => e.SubDescriptionTitleId);
             });
             modelBuilder.Entity<CourseSyllabus>(entity =>
             {

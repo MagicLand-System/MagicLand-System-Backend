@@ -13,6 +13,6 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("PersonalWallet")]
         public Guid PersonalWalletId { get; set; }
-        public PersonalWallet PersonalWallet { get; set; }
+        public PersonalWallet PersonalWallet { get; set; } = new PersonalWallet();
     }
 }

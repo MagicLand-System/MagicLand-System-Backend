@@ -61,9 +61,9 @@ namespace MagicLand_System.Services.Implements
                .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
                .Include(x => x.Lecture!)
                .Include(x => x.StudentClasses)
-               .Include(x => x.Schedules)
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                .ThenInclude(s => s.Slot)!
-               .Include(x => x.Schedules)
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                .ThenInclude(s => s.Room)!);
 
             return _mapper.Map<ClassResponse>(cls);
@@ -78,13 +78,18 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassResponse>> GetClassesByCourseIdAsync(Guid id)
         {
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
-            .Include(x => x.Classes).ThenInclude(x => x.Schedules));
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id);
 
             var classes = course == null
                 ? throw new BadHttpRequestException("Course Id Not Exist", StatusCodes.Status400BadRequest)
                 : await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(predicate: x => x.CourseId == id);
+                .GetListAsync(predicate: x => x.CourseId == id, include: x => x
+                .Include(x => x.Lecture!)
+                .Include(x => x.StudentClasses)
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+                .ThenInclude(s => s.Slot)!
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+                .ThenInclude(s => s.Room)!);
 
             return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
         }
@@ -95,9 +100,11 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(include: x => x
                 .Include(x => x.Lecture!)
-                .Include(x => x.StudentClasses)
-                .Include(x => x.Schedules)
-              );
+               .Include(x => x.StudentClasses)
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+               .ThenInclude(s => s.Slot)!
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+               .ThenInclude(s => s.Room)!);
 
         }
     }

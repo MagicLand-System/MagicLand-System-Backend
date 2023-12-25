@@ -13,14 +13,18 @@ namespace MagicLand_System.Domain.Models
         public string? Status { get; set; }
         public string? Image { get; set; } = null;
         public double Price { get; set; }
+        public string? MainDescription { get; set; }
 
         [ForeignKey("CourseCategory")]
         public Guid CourseCategoryId { get; set; }
+        public CourseCategory CourseCategory { get; set; } = new CourseCategory();
+        [ForeignKey("CourseSyllabus")]
         public Guid? CourseSyllabusId { get; set; }
         public CourseSyllabus? CourseSyllabus { get; set; }
-        public CourseCategory CourseCategory { get; set; } = new CourseCategory();
+
         public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
-        public ICollection<CourseDescription> CourseDescriptions { get; set; } = new List<CourseDescription>();
+        public ICollection<SubDescriptionTitle> SubDescriptionTitles { get; set; } = new List<SubDescriptionTitle>();
+
     }
 }

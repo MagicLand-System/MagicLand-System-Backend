@@ -92,7 +92,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetCart()
         {
-            var cart = await _cartService.GetCartOfCurrentParentAsync();
+            var cart = await _cartService.GetDetailCurrentParrentCart();
             return Ok(cart);
         }
 

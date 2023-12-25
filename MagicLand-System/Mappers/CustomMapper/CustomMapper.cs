@@ -19,7 +19,7 @@ namespace MagicLand_System.Mappers.CustomMapper
         // Use to handel and support complicated mapping //
         public static CartResponse fromCartToCartResponse(Cart cart, List<Student> students, List<ClassResponse> cls)
         {
-            if (cart == null || cart.CartItems == null || students.Count == 0 || cls == null)
+            if (cart == null || cart.CartItems == null || cls == null)
             {
                 return new CartResponse();
             }
@@ -73,7 +73,9 @@ namespace MagicLand_System.Mappers.CustomMapper
             CartItemResponse response = new CartItemResponse
             {
                 Id = cartItemId,
-                Students = students.Select(s => fromStudentToStudentResponse(s)).ToList(),
+                Students = students.Count() == 0 
+                ? new List<StudentResponse>()
+                : students.Select(s => fromStudentToStudentResponse(s)).ToList(),
                 Class = cls
             };
 
@@ -91,9 +93,9 @@ namespace MagicLand_System.Mappers.CustomMapper
             StudentResponse response = new StudentResponse
             {
                 Id = student.Id,
-                FullName = student.FullName,
+                FullName = student.FullName ??= "Undefine",
                 Age = DateTime.Now.Year - student.DateOfBirth.Year,
-                Gender = student.Gender.ToString(),
+                Gender = student.Gender!.ToString(),
                 Avatar = student.AvatarImage ??= DefaultAvatarConstant.DefaultAvatar()
             };
             return response;
@@ -119,8 +121,10 @@ namespace MagicLand_System.Mappers.CustomMapper
                 CoursePrerequisites = coursePrerequisites != null
                 ? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
                 : new List<CourseResponse>(),
-                Description = course.CourseDescriptions.Select(cd => fromCourseDescriptionToCourseDescriptionResponse(cd)).ToList(),
                 Syllabus = fromSyllabusToSyllabusResponse(course.CourseSyllabus!),
+                MainDescription = course.MainDescription,
+                SubDescriptionTitle = course.SubDescriptionTitles
+                .Select(sdt => fromSubDescriptionTileToSubDescriptionTitleResponse(sdt)).ToList(),
             };
              return response;
         }
@@ -158,17 +162,31 @@ namespace MagicLand_System.Mappers.CustomMapper
 
             return response;
         }
-        public static CourseDescriptionResponse fromCourseDescriptionToCourseDescriptionResponse(CourseDescription courseDescription)
+        public static SubDescriptionTitleResponse fromSubDescriptionTileToSubDescriptionTitleResponse(SubDescriptionTitle subDescriptionTitle)
         {
-            if(courseDescription == null)
+            if(subDescriptionTitle == null)
             {
-                return new CourseDescriptionResponse();
+                return new SubDescriptionTitleResponse();
             }
-            CourseDescriptionResponse response = new CourseDescriptionResponse
+            SubDescriptionTitleResponse response = new SubDescriptionTitleResponse
             {
-                Title = courseDescription.Title,
-                Content = courseDescription.Content,
-                Order = courseDescription.Order,
+                Title = subDescriptionTitle.Title,
+                Contents = subDescriptionTitle.SubDescriptionContents
+                .Select(sdc => fromSubDescriptionContentToSubDescriptionContentResponse(sdc)).ToList(),
+            };
+            return response;
+        }
+
+        public static SubDescriptionContentResponse fromSubDescriptionContentToSubDescriptionContentResponse(SubDescriptionContent subDescriptionContent)
+        {
+            if (subDescriptionContent == null)
+            {
+                return new SubDescriptionContentResponse();
+            }
+            SubDescriptionContentResponse response = new SubDescriptionContentResponse
+            {
+                Content = subDescriptionContent.Content,
+                Description = subDescriptionContent.Description,
             };
             return response;
         }
