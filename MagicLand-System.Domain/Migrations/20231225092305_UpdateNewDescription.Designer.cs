@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    [Migration("20231225044047_updateCourseDescription")]
-    partial class updateCourseDescription
+    [Migration("20231225092305_UpdateNewDescription")]
+    partial class UpdateNewDescription
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
