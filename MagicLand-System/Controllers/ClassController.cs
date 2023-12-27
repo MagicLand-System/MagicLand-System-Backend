@@ -1,7 +1,9 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -120,5 +122,21 @@ namespace MagicLand_System.Controllers
             var classes = await _classService.FilterClassAsync(keyWords, leastNumberStudent, limitStudent);
             return Ok(classes);
         }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.AddClass)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
+        {
+            var isSuccess = await _classService.CreateNewClass(request);
+            if (!isSuccess) 
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Add Class is wrong",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            return Ok(new { Message = "Create Successfully" });
+        }
     }
-}
+}   
