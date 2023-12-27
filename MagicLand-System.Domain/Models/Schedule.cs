@@ -10,7 +10,7 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("Class")]
         public Guid ClassId { get; set; }
-        public Class Class { get; set; } = new Class();
+        public Class? Class { get; set; }
 
         [ForeignKey("Slot")]
         public Guid SlotId { get; set; }
