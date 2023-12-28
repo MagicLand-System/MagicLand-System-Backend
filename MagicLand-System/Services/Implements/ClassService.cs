@@ -61,6 +61,7 @@ namespace MagicLand_System.Services.Implements
                .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
                .Include(x => x.Lecture!)
                .Include(x => x.StudentClasses)
+               .Include(x => x.Course)
                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                .ThenInclude(s => s.Slot)!
                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
@@ -91,7 +92,13 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                 .ThenInclude(s => s.Room)!);
 
-            return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
+            var responses = classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
+            foreach(var res in responses)
+            {
+                res.CoursePrice = course.Price;
+            }
+
+            return responses;
         }
 
 
@@ -100,6 +107,7 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(include: x => x
                 .Include(x => x.Lecture!)
+                .Include(x => x.Course!)
                .Include(x => x.StudentClasses)
                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                .ThenInclude(s => s.Slot)!
