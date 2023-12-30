@@ -72,7 +72,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Wednesday);
                 }
-                if (dayOfWeek.ToLower().Equals(DayOfWeek.Thursday))
+                if (dayOfWeek.ToLower().Equals("thursday"))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Thursday);
                 }
@@ -94,17 +94,28 @@ namespace MagicLand_System.Services.Implements
             int scheduleAdded = 0;
             DateTime startDate = request.StartDate;
             List<Schedule> schedules = new List<Schedule>();
+            List<ScheduleRequest> sc = request.ScheduleRequests;
             while(scheduleAdded < numberOfSessions)
             {
                 if (convertedDateOfWeek.Contains(startDate.DayOfWeek))
                 {
+                    string dateString = startDate.DayOfWeek.ToString().ToLower();
+                    Guid slotId = Guid.NewGuid();
+                    foreach(var sq in sc)
+                    {
+                        if (sq.DateOfWeek.ToLower().Equals(dateString))
+                        {
+                            slotId = sq.SlotId;
+                        }
+                    }
+                    
                     schedules.Add(new Schedule
                     {
                         Id = Guid.NewGuid(),
                         ClassId = createdClass.Id,
                         Date = startDate,
                         RoomId = request.RoomId,
-                        SlotId = request.ScheduleRequests[0].SlotId, // để ý cái này
+                        SlotId = slotId,
                         DayOfWeek = (int) Math.Pow(2, (int) startDate.DayOfWeek),
                     });
                     scheduleAdded++;
