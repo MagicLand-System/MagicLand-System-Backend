@@ -30,7 +30,8 @@ namespace MagicLand_System.Mappers.Classes
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
                 .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.Lecture!)))
-                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules!));
+                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules!))
+                .ForMember(dest => dest.Name,opt => opt.MapFrom(src => src.Course.Name));
         }
     }
 }
