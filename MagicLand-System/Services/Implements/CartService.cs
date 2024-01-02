@@ -97,6 +97,7 @@ namespace MagicLand_System.Services.Implements
                     .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x
                     .Include(x => x.Lecture!)
                     .Include(x => x.StudentClasses)
+                    .Include(x => x.Course)
                     .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                     .ThenInclude(s => s.Slot)!
                     .Include(x => x.Schedules.OrderBy(sc => sc.Date))
