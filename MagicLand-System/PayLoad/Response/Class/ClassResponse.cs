@@ -23,6 +23,7 @@ namespace MagicLand_System.PayLoad.Response.Class
         public int NumberStudentRegistered { get; set; }
         public string? Image { get; set; }
         public string? Video { get; set; }
+        public string? ClassCode { get; set; }
 
         public UserResponse? Lecture { get; set; }
         public List<ScheduleResponse>? Schedules { get; set; }
