@@ -28,7 +28,6 @@ namespace MagicLand_System.Services.Implements
             {
                 Id = Guid.NewGuid(),
                 ClassCode = request.ClassCode,
-                Name = request.ClassName,
                 CourseId = request.CourseId,
                 StartDate = request.StartDate,
                 EndDate = DateTime.Now,

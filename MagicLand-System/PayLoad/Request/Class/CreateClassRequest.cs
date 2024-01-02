@@ -4,8 +4,6 @@ namespace MagicLand_System.PayLoad.Request.Class
 {
     public class CreateClassRequest
     {
-        [Required(ErrorMessage = "Class name is missing")]
-        public string ClassName {  get; set; }
         public Guid CourseId { get; set; }
         public Guid RoomId { get; set; }
         public Guid LecturerId { get; set; }
