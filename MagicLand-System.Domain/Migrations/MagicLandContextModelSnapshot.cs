@@ -22,6 +22,30 @@ namespace MagicLand_System.Domain.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Attendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool?>("IsPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScheduleId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("Attendance", (string)null);
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Cart", b =>
                 {
                     b.Property<Guid>("Id")
@@ -661,6 +685,25 @@ namespace MagicLand_System.Domain.Migrations
                     b.ToTable("WalletTransaction", (string)null);
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Attendance", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.Schedule", "Schedule")
+                        .WithMany("Attendances")
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MagicLand_System.Domain.Models.Student", "Student")
+                        .WithMany("Attendances")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Schedule");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.CartItem", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Cart", "Cart")
@@ -963,6 +1006,11 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Schedules");
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Schedule", b =>
+                {
+                    b.Navigation("Attendances");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Slot", b =>
                 {
                     b.Navigation("Schedules");
@@ -970,6 +1018,8 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Student", b =>
                 {
+                    b.Navigation("Attendances");
+
                     b.Navigation("StudentClasses");
                 });
 

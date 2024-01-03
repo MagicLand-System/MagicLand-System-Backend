@@ -186,6 +186,78 @@ namespace MagicLand_System.Services.Implements
             return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
         }
 
+        public async Task<List<MyClassResponse>> GetAllClass(string classCode = null)
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include : x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
+            List<MyClassResponse> result = new List<MyClassResponse>();
+            foreach (var c in classes)
+            {
+                List<string> schedules = new List<string>();
+                List<int> DaysOfWeek = c.Schedules.Select(c => c.DayOfWeek).Distinct().ToList();
+                foreach (var day in DaysOfWeek)
+                {
+                    if(day == 1)
+                    {
+                        schedules.Add("Chủ Nhật");
+                    }
+                    if (day == 2)
+                    {
+                        schedules.Add("Thứ 2");
+                    }
+                    if (day == 4)
+                    {
+                        schedules.Add("Thứ 3");
+                    }
+                    if (day == 8)
+                    {
+                        schedules.Add("Thứ 4");
+                    }
+                    if (day == 16)
+                    {
+                        schedules.Add("Thứ 5");
+                    }
+                    if (day == 32)
+                    {
+                        schedules.Add("Thứ 6");
+                    }
+                    if (day == 64)
+                    {
+                        schedules.Add("Thứ 7");
+                    }
+                   
+                }
+                MyClassResponse myClassResponse = new MyClassResponse
+                {
+                    Id = c.Id,
+                    LimitNumberStudent = c.LimitNumberStudent,  
+                    ClassCode = c.ClassCode,
+                    LecturerName = c.Lecture.FullName,
+                    CoursePrice = c.Course.Price,
+                    EndDate = c.EndDate,
+                    CourseId = c.Course.Id,
+                    Image = c.Image,
+                    LeastNumberStudent = c.LeastNumberStudent,
+                    Method = c.Method,
+                    Name = c.Name,  
+                    StartDate = c.StartDate,
+                    Status = c.Status,
+                    Video = c.Video,
+                    NumberStudentRegistered = c.StudentClasses.Count(),
+                    Schedules = schedules.OrderBy(str => str).ToList(),
+                };
+                result.Add(myClassResponse);
+            }
+            if (result.Count == 0)
+            {
+                return null;
+            }
+            if(classCode == null)
+            {
+                return result;
+            }
+            return (result.Where(x => x.ClassCode.ToLower().Contains(classCode.ToLower()))).ToList();
+        }
+
         public async Task<ClassResponse> GetClassByIdAsync(Guid id)
         {
 

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Net.Mail;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -17,5 +18,6 @@ namespace MagicLand_System.Domain.Models
 
 
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
+        public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
     }
 }

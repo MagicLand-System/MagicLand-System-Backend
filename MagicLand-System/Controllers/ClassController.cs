@@ -138,5 +138,12 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = "Create Successfully" });
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetStaffClass([FromQuery] string? classCode)
+        {
+            var courses = await _classService.GetAllClass(classCode);
+            return Ok(courses);
+        }
     }
 }   

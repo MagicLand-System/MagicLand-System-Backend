@@ -19,6 +19,8 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("Room")]
         public Guid RoomId { get; set; }
         public Room? Room { get; set; }
+        public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+
 
     }
 }
