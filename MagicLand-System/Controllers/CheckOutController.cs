@@ -150,7 +150,7 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
 
-        protected async Task<IActionResult> ValidRequest(Guid classId, List<Guid> studentIds)
+        private async Task<IActionResult> ValidRequest(Guid classId, List<Guid> studentIds)
         {
             if (await _classService.GetClassByIdAsync(classId) == null)
             {

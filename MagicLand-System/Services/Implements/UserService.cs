@@ -195,24 +195,28 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
         {
-            var course = await _unitOfWork.GetRepository<Course>()
-                .SingleOrDefaultAsync(predicate: x => x.Classes.Any(c => c.Id.Equals(classId)), include: x => x
-                .Include(x => x.Classes)
-                .ThenInclude(c => c.Schedules)
+            var cls = await _unitOfWork.GetRepository<Class>()
+                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(classId), include: x => x
+                .Include(x => x.Schedules)
                 .ThenInclude(s => s.Slot)
-                .Include(x => x.Classes)
-                .ThenInclude(c => c.StudentClasses));
+                .Include(x => x.Schedules)
+                .ThenInclude(s => s.Room)!
+                .Include(x => x.StudentClasses)
+                .Include(x => x.Course)!);
 
-            var cls = course.Classes.SingleOrDefault(c => c.Id.Equals(classId))!;
 
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
                 .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
-            var total = CalculateTotal(studentIds.Count(), course.Price);
+            var total = CalculateTotal(studentIds.Count(), cls.Course!.Price);
 
             if (allStudentSchedules != null && allStudentSchedules.Count() > 0)
             {
-                //Checking Schedule
+               //var isCoincideSchedule = allStudentSchedules
+               // if (isCoincideSchedule)
+               // {
+               //     throw new BadHttpRequestException($"Student {student.FullName} is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
+               // }
             }
 
             //Checking Course Prerequsite  ?
@@ -223,7 +227,7 @@ namespace MagicLand_System.Services.Implements
                 .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
 
                 var age = DateTime.Now.Year - student.DateOfBirth.Year;
-                if (age > course.MaxYearOldsStudent || age < course.MinYearOldsStudent)
+                if (age > cls.Course.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
                 {
                     throw new BadHttpRequestException($"Student {student.FullName} is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
                 }
