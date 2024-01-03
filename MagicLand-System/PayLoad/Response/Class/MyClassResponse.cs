@@ -20,7 +20,8 @@ namespace MagicLand_System.PayLoad.Response.Class
         public string? Video { get; set; }
         public string? ClassCode { get; set; }
 
-        public string LecturerName { get; set; }
-        public List<string>? Schedules { get; set; }
+        public string? LecturerName { get; set; }
+        public List<DailySchedule>? Schedules { get; set; }
+        public string? CourseName {  get; set; } 
     }
 }

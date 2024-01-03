@@ -5,6 +5,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Class;
+using MagicLand_System.PayLoad.Response.Schedule;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -190,39 +191,76 @@ namespace MagicLand_System.Services.Implements
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include : x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
             List<MyClassResponse> result = new List<MyClassResponse>();
+            var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
             {
-                List<string> schedules = new List<string>();
-                List<int> DaysOfWeek = c.Schedules.Select(c => c.DayOfWeek).Distinct().ToList();
+                List<DailySchedule> schedules = new List<DailySchedule>();
+                var DaysOfWeek = c.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
                 foreach (var day in DaysOfWeek)
                 {
-                    if(day == 1)
+                    var slot = slots.Where(x => x.Id.ToString().ToLower().Equals(day.SlotId.ToString().ToLower())).FirstOrDefault();
+                    if(day.DayOfWeek == 1)
                     {
-                        schedules.Add("Chủ Nhật");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Sunday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
-                    if (day == 2)
+                    if (day.DayOfWeek == 2)
                     {
-                        schedules.Add("Thứ 2");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Monday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
-                    if (day == 4)
+                    if (day.DayOfWeek == 4)
                     {
-                        schedules.Add("Thứ 3");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Tuesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
-                    if (day == 8)
+                    if (day.DayOfWeek == 8)
                     {
-                        schedules.Add("Thứ 4");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Wednesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
-                    if (day == 16)
+                    if (day.DayOfWeek == 16)
                     {
-                        schedules.Add("Thứ 5");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Thursday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
-                    if (day == 32)
+                    if (day.DayOfWeek == 32)
                     {
-                        schedules.Add("Thứ 6");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Friday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
-                    if (day == 64)
+                    if (day.DayOfWeek == 64)
                     {
-                        schedules.Add("Thứ 7");
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Saturday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
                     }
                    
                 }
@@ -243,7 +281,8 @@ namespace MagicLand_System.Services.Implements
                     Status = c.Status,
                     Video = c.Video,
                     NumberStudentRegistered = c.StudentClasses.Count(),
-                    Schedules = schedules.OrderBy(str => str).ToList(),
+                    CourseName = c.Course.Name,
+                    Schedules = schedules,
                 };
                 result.Add(myClassResponse);
             }
