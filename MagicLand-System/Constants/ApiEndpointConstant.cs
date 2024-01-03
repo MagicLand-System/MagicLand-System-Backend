@@ -33,6 +33,7 @@
             public const string ClassByCourseId = GetAll + "/course/{id}";
             public const string FilterClass = GetAll + "/filter";
             public const string AddClass = GetAll + "/add";
+            public const string GetAllV2 = ApiEndpoint + "/staff/classes";
         }
         public static class PromotionEnpoint
         {
