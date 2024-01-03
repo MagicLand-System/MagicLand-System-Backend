@@ -32,6 +32,8 @@
             public const string ClassById = GetAll + "/{id}";
             public const string ClassByCourseId = GetAll + "/course/{id}";
             public const string FilterClass = GetAll + "/filter";
+            public const string AddClass = GetAll + "/add";
+            public const string GetAllV2 = ApiEndpoint + "/staff/classes";
         }
         public static class PromotionEnpoint
         {
@@ -51,8 +53,9 @@
         {
             public const string GetAll = ApiEndpoint + "/courses";
             public const string SearchCourse = GetAll + "/search";
-            public const string CourseById = ApiEndpoint + "/{id}";
-            public const string FilterCourse = "/filter";
+            public const string CourseById = GetAll + "/{id}";
+            public const string FilterCourse = GetAll + "/filter";
+            public const string GetCourseCategory = GetAll + "/categories";
         }
         public static class StudentEndpoint
         {

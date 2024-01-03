@@ -62,6 +62,12 @@ namespace MagicLand_System.Services.Implements
             return CustomMapper.fromCourseToCourseResponse(course.ToList()[0], coursePrerequisites);
         }
 
+        public async Task<List<CourseCategory>> GetCourseCategories()
+        {
+            var categories = await _unitOfWork.GetRepository<CourseCategory>().GetListAsync();
+            return categories.ToList();
+        }
+
         public async Task<List<CourseResponse>> GetCoursesAsync()
         {
             ICollection<Course> courses = await GetDefaultCourse();

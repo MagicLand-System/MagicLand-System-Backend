@@ -120,5 +120,11 @@ namespace MagicLand_System.Controllers
             var courses = await _courseService.FilterCourseAsync(minYearsOld, maxYearsOld, numberOfSession, minPrice, maxPrice, subject, rate);
             return Ok(courses);
         }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseCategory)]
+        public async Task<IActionResult> GetCourseCategory()
+        {
+            var categories = await _courseService.GetCourseCategories();
+            return Ok(categories);
+        }
     }
 }

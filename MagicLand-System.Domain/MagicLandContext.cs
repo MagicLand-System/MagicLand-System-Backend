@@ -31,6 +31,7 @@ namespace MagicLand_System.Domain
         public DbSet<CourseSyllabus> CourseSyllabuses { get; set; }
         public DbSet<SubDescriptionTitle> SubDescriptionTitles { get; set; }
         public DbSet<SubDescriptionContent> SubDescriptionContents { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -190,6 +191,13 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Session");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Topic).WithMany(e => e.Sessions).HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<Attendance>(entity =>
+            {
+                entity.ToTable("Attendance");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Student).WithMany(e => e.Attendances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
