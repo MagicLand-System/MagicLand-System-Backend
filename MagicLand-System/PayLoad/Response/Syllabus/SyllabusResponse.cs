@@ -4,6 +4,7 @@ namespace MagicLand_System.PayLoad.Response.Syllabus
 {
     public class SyllabusResponse
     {
+        public Guid? Id { get; set; } = default;
         public string Name { get; set; } = string.Empty;
         public DateTime UpdateTime { get; set; } = default;
 

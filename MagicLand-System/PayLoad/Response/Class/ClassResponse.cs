@@ -1,11 +1,4 @@
-﻿using MagicLand_System.Domain.Models;
-using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Response.Address;
-using MagicLand_System.PayLoad.Response.Schedule;
-using MagicLand_System.PayLoad.Response.Session;
-using MagicLand_System.PayLoad.Response.User;
-
-namespace MagicLand_System.PayLoad.Response.Class
+﻿namespace MagicLand_System.PayLoad.Response.Class
 {
     public class ClassResponse
     {
@@ -24,9 +17,6 @@ namespace MagicLand_System.PayLoad.Response.Class
         public string? Image { get; set; }
         public string? Video { get; set; }
         public string? ClassCode { get; set; }
-
-        public UserResponse? Lecture { get; set; }
-        public List<ScheduleResponse>? Schedules { get; set; }
 
     }
 }

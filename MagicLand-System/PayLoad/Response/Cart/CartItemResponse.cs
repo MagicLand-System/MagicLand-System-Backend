@@ -7,7 +7,7 @@ namespace MagicLand_System.PayLoad.Response.Cart
     {
         public Guid Id { get; set; }
 
-        public required List<StudentResponse> Students { get; set; }
-        public required ClassResponse Class { get; set; }
+        public required List<StudentResponse> Students { get; set; } = new List<StudentResponse>();
+        public required ClassResponseV1 Class { get; set; }
     }
 }

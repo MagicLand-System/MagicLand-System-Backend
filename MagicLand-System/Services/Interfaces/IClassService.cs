@@ -6,11 +6,11 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IClassService
     {
-        Task<List<ClassResponse>> GetClassesAsync();
-        Task<List<ClassResponse>> GetClassesByCourseIdAsync(Guid id);
-        Task<List<ClassResponse>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent);
-        Task<ClassResponse> GetClassByIdAsync(Guid id);
+        Task<List<ClassResponseV1>> GetClassesAsync();
+        Task<List<ClassResponseV1>> GetClassesByCourseIdAsync(Guid id);
+        Task<List<ClassResponseV1>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent);
+        Task<ClassResponseV1> GetClassByIdAsync(Guid id);
         Task<bool> CreateNewClass(CreateClassRequest request);
-        Task<List<MyClassResponse>> GetAllClass(string classCode = null);
+        Task<List<ClassResponseV2>> GetAllClass(string classCode = null);
     }
 }

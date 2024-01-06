@@ -19,7 +19,7 @@ namespace MagicLand_System.Mappers.Classes
                .ForMember(des => des.Role, src => src.MapFrom(src => src.Role.Name));
 
 
-            CreateMap<Class, ClassResponse>()
+            CreateMap<Class, ClassResponseV1>()
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
                 .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
                 .ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
