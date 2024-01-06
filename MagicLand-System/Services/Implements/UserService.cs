@@ -100,7 +100,7 @@ namespace MagicLand_System.Services.Implements
                 RoleId = role,
                 District = registerRequest.District,
                 Street = registerRequest.Street,
-                City = registerRequest.City,    
+                City = registerRequest.City,
                 Id = Guid.NewGuid(),
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(user);
@@ -133,6 +133,36 @@ namespace MagicLand_System.Services.Implements
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return true; //isSuccess;
         }
+        public async Task<List<LecturerResponse>> GetLecturers()
+        {
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
+            if (users == null)
+            {
+                return null;
+            }
+            var lecturers = users.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
+            List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
+            foreach (var user in lecturers)
+            {
+                LecturerResponse response = new LecturerResponse
+                {
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    AvatarImage = user.AvatarImage,
+                    DateOfBirth = user.DateOfBirth,
+                    Gender = user.Gender,
+                    Phone = user.Phone,
+                    Id = user.Id,
+                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()
+                };
+                lecturerResponses.Add(response);
+            }
+            if (lecturerResponses.Count == 0)
+            {
+                return null;
+            }
+            return lecturerResponses;
+        }
 
         public async Task<BillResponse> CheckoutNowAsync(CheckoutRequest request)
         {
@@ -142,11 +172,29 @@ namespace MagicLand_System.Services.Implements
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
                 .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
+            double total = ValidateWallet(request.StudentsIdList.Count(), price, personalWallet.Balance);
+
+            await PurchaseProgress(request, personalWallet, total);
 
             var currentPayer = await GetCurrentUser();
 
-            var total = CalculateTotal(request.StudentsIdList.Count(), price);
+            var bill = new BillResponse
+            {
+                Status = "Purchase Success",
+                Message = "Students has been registered in class",
+                Cost = total,
+                Discount = 0.0,
+                MoneyPaid = total,
+                Date = DateTime.Now,
+                Method = CheckOutMethodEnum.SystemWallet.ToString(),
+                Payer = currentPayer.FullName!,              
+            };
 
+            return bill;
+        }
+
+        private async Task PurchaseProgress(CheckoutRequest request, PersonalWallet personalWallet, double total)
+        {
             try
             {
                 var newTransaction = new WalletTransaction
@@ -154,8 +202,10 @@ namespace MagicLand_System.Services.Implements
                     Id = new Guid(),
                     Money = total,
                     Type = CheckOutMethodEnum.SystemWallet.ToString(),
-                    Description = "Direct registered class",
+                    Description = $"Direct registered students into class: {request.ClassId}",
                     CreatedTime = DateTime.Now,
+                    PersonalWalletId = personalWallet.Id,
+                    PersonalWallet = personalWallet
                 };
 
                 var studentInClasses = request.StudentsIdList.Select(sil =>
@@ -179,19 +229,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new Exception(ex.InnerException!.ToString());
             }
-
-            var bill = new BillResponse
-            {
-                Status = "Purchase Success",
-                Date = DateTime.Now,
-                Method = CheckOutMethodEnum.SystemWallet,
-                Payer = currentPayer.FullName!,
-                MoneyPaid = total,
-            };
-
-            return bill;
         }
-
 
         public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
         {
@@ -204,37 +242,32 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.StudentClasses)
                 .Include(x => x.Course)!);
 
+            await ValidateSuitableClass(studentIds, cls);
 
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
-                .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+            ValidateSchedule(allStudentSchedules, cls);
 
-            var total = CalculateTotal(studentIds.Count(), cls.Course!.Price);
+            //Validate Course Prerequsite  ?
 
-            if (allStudentSchedules != null && allStudentSchedules.Count() > 0)
-            {
-               //var isCoincideSchedule = allStudentSchedules
-               // if (isCoincideSchedule)
-               // {
-               //     throw new BadHttpRequestException($"Student {student.FullName} is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
-               // }
-            }
+            return true;
+        }
 
-            //Checking Course Prerequsite  ?
-
-            foreach (var id in studentIds)
+        private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
+        {
+            foreach (Guid id in studentIds)
             {
                 var student = await _unitOfWork.GetRepository<Student>()
                 .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
 
-                var age = DateTime.Now.Year - student.DateOfBirth.Year;
-                if (age > cls.Course.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
+                if(cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
-                    throw new BadHttpRequestException($"Student {student.FullName} is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Student {student.FullName} already assigned to class {cls.Name}", StatusCodes.Status400BadRequest);
                 }
 
-                if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
+                int age = DateTime.Now.Year - student.DateOfBirth.Year;
+
+                if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
                 {
-                    throw new BadHttpRequestException($"Student {student.FullName} is already asign class {cls.Name}", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Student {student.FullName} age is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
                 }
             }
 
@@ -242,50 +275,37 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Class {cls.Name} has over student index", StatusCodes.Status400BadRequest);
             }
-
-            if (personalWallet.Balance < total)
-            {
-                throw new BadHttpRequestException("Your balance has not enough", StatusCodes.Status400BadRequest);
-            }
-            return true;
         }
 
-        protected double CalculateTotal(int numberStudent, double price)
+        private void ValidateSchedule(List<StudentScheduleResponse> allStudentSchedules, Class cls)
         {
-            var totalPrice = price * numberStudent;
-            var actualTotal = totalPrice; //Apply Promotion/Sales
-            return actualTotal;
-        }
-
-        public async Task<List<LecturerResponse>> GetLecturers()
-        {
-            var users = await _unitOfWork.GetRepository<User>().GetListAsync(include : x => x.Include(x => x.Role));
-            if (users == null)
+            if (allStudentSchedules != null && allStudentSchedules.Count() > 0)
             {
-                return null;
-            }
-            var lecturers = users.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
-            List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
-            foreach (var user in lecturers)
-            {
-                LecturerResponse response = new LecturerResponse
+                foreach (var ass in allStudentSchedules)
                 {
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    AvatarImage = user.AvatarImage,
-                    DateOfBirth = user.DateOfBirth,
-                    Gender = user.Gender,
-                    Phone = user.Phone,
-                    Id = user.Id,
-                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()
-                };
-                lecturerResponses.Add(response);
+                    foreach (var s in cls.Schedules)
+                    {
+                        if (ass.Date == s.Date && ass.StartTime == s.Slot!.StartTime)
+                        {
+                            throw new BadHttpRequestException($"Current class schedule of {ass.StudentName} is coincide start time {s.Slot.StartTime} with {cls.Name} schedule slot", StatusCodes.Status400BadRequest);
+                        }
+                    }
+                }
             }
-            if(lecturerResponses.Count == 0)
-            {
-                return null;
-            }
-            return lecturerResponses;
         }
+
+        private double ValidateWallet(int numberStudent, double price, double balance)
+        {
+            double totalPrice = price * numberStudent;
+
+            if (balance < totalPrice)
+            {
+                throw new BadHttpRequestException($"Your balance has not enough balance require greater than: {totalPrice}", StatusCodes.Status400BadRequest);
+            }
+
+            return totalPrice;
+        }
+
+
     }
 }

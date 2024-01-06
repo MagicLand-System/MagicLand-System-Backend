@@ -40,7 +40,7 @@ namespace MagicLand_System.Services.Implements
 
                     _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(currentCartItem!.StudentInCarts);
 
-                    if(studentIds.Count() > 0)
+                    if (studentIds.Count() > 0)
                     {
                         await _unitOfWork.GetRepository<StudentInCart>().InsertRangeAsync
                        (
@@ -58,7 +58,8 @@ namespace MagicLand_System.Services.Implements
                     {
                         Id = new Guid(),
                         CartId = currentParentCart.Id,
-                        ClassId = classId
+                        ClassId = classId,
+                        DateCreated = DateTime.Now,
                     };
 
                     await _unitOfWork.GetRepository<CartItem>().InsertAsync(newItem);
@@ -71,9 +72,9 @@ namespace MagicLand_System.Services.Implements
                         );
                     }
 
-                   cartReponse = await _unitOfWork.CommitAsync() > 0
-                        ? await GetDetailCurrentParrentCart()
-                        : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
+                    cartReponse = await _unitOfWork.CommitAsync() > 0
+                         ? await GetDetailCurrentParrentCart()
+                         : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
                 }
 
                 return cartReponse;
@@ -92,7 +93,8 @@ namespace MagicLand_System.Services.Implements
 
                 if (currentParrentCart != null && currentParrentCart.CartItems.Count() > 0)
                 {
-                    var classes = new List<ClassResponse>();
+                    var classes = new List<ClassResponseV1>();
+
                     foreach (var task in currentParrentCart.CartItems.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
                     .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x
                     .Include(x => x.Lecture!)
@@ -104,7 +106,7 @@ namespace MagicLand_System.Services.Implements
                     .ThenInclude(s => s.Room)!)))
                     {
                         var cls = await task;
-                        classes.Add(_mapper.Map<ClassResponse>(cls));
+                        classes.Add(_mapper.Map<ClassResponseV1>(cls));
                     }
 
                     var students = new List<Student>();
@@ -188,7 +190,7 @@ namespace MagicLand_System.Services.Implements
         {
             return await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
                 predicate: x => x.UserId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.CartItems).ThenInclude(cts => cts.StudentInCarts));
+                include: x => x.Include(x => x.CartItems.OrderByDescending(ci => ci.DateCreated)).ThenInclude(cts => cts.StudentInCarts));
         }
 
         private List<StudentInCart> RenderStudentInClass(List<Guid> studentIds, CartItem cartItem)
@@ -202,31 +204,15 @@ namespace MagicLand_System.Services.Implements
         }
         public async Task<BillResponse> CheckOutCartAsync(List<CartItemResponse> cartItems)
         {
-            double actualTotal = 0;
-            var newTransactions = new List<WalletTransaction>();
+            double total = 0;
+
             var newStudentInClass = new List<StudentClass>();
 
-            var currentPayer = await GetUserFromJwt();
-
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
-                   .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+            var classes = await ValidateScheduleOfEachItem(cartItems);
 
             foreach (var item in cartItems)
             {
-                var price = await _unitOfWork.GetRepository<Course>()
-                .SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Classes.Any(c => c.Id.Equals(item.Class.Id)));
-
-                double total = CalculateTotal(item.Students.Count(), price);
-                actualTotal += total;
-
-                var newTransaction = new WalletTransaction
-                {
-                    Id = new Guid(),
-                    Money = total,
-                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
-                    Description = $"Registered class {item.Class.Name} via cart",
-                    CreatedTime = DateTime.Now,
-                };
+                total += classes.Single(x => x.Id == item.Class.Id).Course!.Price * item.Students.Count();
 
                 var studentInClasses = item.Students.Select(stu =>
                 new StudentClass
@@ -234,26 +220,98 @@ namespace MagicLand_System.Services.Implements
                     Id = new Guid(),
                     Status = "NORMAL",
                     StudentId = stu.Id,
-                    ClassId = item.Id,
+                    ClassId = item.Class.Id,
                 }).ToList();
 
-
-                newTransactions.Add(newTransaction);
                 newStudentInClass.AddRange(studentInClasses);
+            }
+
+            await PurchaseProgress(cartItems, total, newStudentInClass);
+
+            var currentPayer = await GetUserFromJwt();
+
+            var bill = new BillResponse
+            {
+                Status = "Purchase Success",
+                Message = "All students has been registered to all class request",
+                Cost = total,
+                Discount = CaculateDiscount(total, cartItems.Count()),
+                MoneyPaid = total - CaculateDiscount(total, cartItems.Count()),
+                Date = DateTime.Now,
+                Method = CheckOutMethodEnum.SystemWallet.ToString(),
+                Payer = currentPayer.FullName!,
+            };
+
+            return bill;
+        }
+
+        private async Task<List<Class>> ValidateScheduleOfEachItem(List<CartItemResponse> cartItems)
+        {
+            var classes = new List<Class>();
+
+            foreach (var item in cartItems)
+            {
+                var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == item.Class.Id, include: x => x
+                .Include(x => x.Course)
+                .Include(x => x.Schedules)
+                .ThenInclude(s => s.Slot)!);
+
+                classes.Add(cls);
+            }
+
+            for (int i = 0; i < classes.Count - 1; i++)
+            {
+                var coincideSchedule = classes[i].Schedules.Where(sa => classes[i + 1].Schedules
+                .Any(sb => sa.Date == sb.Date && sa.Slot!.StartTime == sb.Slot!.StartTime)).FirstOrDefault();
+
+                if (coincideSchedule != null)
+                {
+                    throw new BadHttpRequestException($"We found that the class {classes[i].Name} is coincide slot start time " +
+                        $"{coincideSchedule.Slot!.StartTime} with class {classes[i + 1].Name} \n" +
+                        "it may cause an issue to your childs please chose one of two class you're prefer to assign to your childs",
+                      StatusCodes.Status400BadRequest);
+                }
+            }
+
+            return classes;
+        }
+
+        private async Task PurchaseProgress(List<CartItemResponse> cartItems, double total, List<StudentClass> newStudentInClass)
+        {
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
+                  .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+
+            double actualCost = total - CaculateDiscount(total, cartItems.Count());
+
+            if (personalWallet.Balance < actualCost)
+            {
+                throw new BadHttpRequestException("Your balance not enough for purchase all item selected balance require greater: " + actualCost + "đ",
+                    StatusCodes.Status400BadRequest);
             }
 
             try
             {
-                if (personalWallet.Balance < actualTotal)
+                var currentParrentCart = await FetchCurrentParentCart();
+
+                var newTransaction = new WalletTransaction
                 {
-                    throw new BadHttpRequestException("Your balance not enough for register all class selected", StatusCodes.Status400BadRequest);
-                }
+                    Id = new Guid(),
+                    Money = actualCost,
+                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
+                    Description = "Purchase items selected in cart: " + string.Join(" And ", cartItems.Select(x => x.Id).ToArray()),
+                    CreatedTime = DateTime.Now,
+                    PersonalWalletId = personalWallet.Id,
+                    PersonalWallet = personalWallet,
+                };
 
-                personalWallet.Balance = personalWallet.Balance - actualTotal;
+                personalWallet.Balance -= actualCost;
 
-                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
-                await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(newTransactions);
+                var itemDeleted = cartItems.Select(c => currentParrentCart.CartItems.SingleOrDefault(x => x.Id == c.Id)).ToList();
+
+                await _unitOfWork.GetRepository<WalletTransaction>().InsertAsync(newTransaction);
                 await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(newStudentInClass);
+                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
+                _unitOfWork.GetRepository<CartItem>().DeleteRangeAsync(itemDeleted!);
 
                 await _unitOfWork.CommitAsync();
 
@@ -262,22 +320,15 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new Exception(ex.InnerException!.ToString());
             }
-
-            var bill = new BillResponse
-            {
-                Status = "Purchase Success",
-                Date = DateTime.Now,
-                Method = CheckOutMethodEnum.SystemWallet,
-                Payer = currentPayer.FullName!,
-                MoneyPaid = actualTotal,
-            };
-
-            return bill;
         }
-        private double CalculateTotal(int numberStudents, double price)
+
+        private double CaculateDiscount(double total, int numberItem)
         {
-            return price * numberStudents;
-            //Apply promotion/sales
+            double discount = numberItem >= 2
+                   ? (total * 10) / 100
+                   : 0.0;
+            
+            return discount;
         }
 
 
