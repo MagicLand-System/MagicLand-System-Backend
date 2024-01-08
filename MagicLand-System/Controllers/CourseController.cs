@@ -83,9 +83,10 @@ namespace MagicLand_System.Controllers
         /// </summary>
         /// <param name="minYearsOld">for course age of student must bigger than this age</param>
         /// <param name="maxYearsOld">for course age of student must lower than this age</param>
-        /// <param name="numberOfSession">for course must have a sessions equal to this number</param>
+        /// <param name="minNumberSession">for course must have a sessions lower to this number</param>
+        /// <param name="maxNumberSession">for course must have a sessions greater to this number, if leave null then the value will be max int</param>
         /// <param name="minPrice">for course have price higher than this price</param>
-        /// <param name="maxPrice">for course have price lower than this price</param>
+        /// <param name="maxPrice">for course have price lower than this price,  if leave null then the value will be max double</param>
         /// <param name="subject">for all course belong subject</param>
         /// <param name="rate">for all course have euqal or higher than this rate</param>
         /// <remarks>
@@ -95,7 +96,8 @@ namespace MagicLand_System.Controllers
         ///        "subject": "Math",
         ///        "minYearsOld": 3,
         ///        "maxYearsOld": 7,
-        ///        "numberOfSession": 6,
+        ///        "minNumberSession": 10,
+        ///        "maxNumberSession": 20,
         ///        "minPrice": 2000000,
         ///        "maxPrice": 8000000,
         ///        "rate": 5
@@ -112,12 +114,13 @@ namespace MagicLand_System.Controllers
             [FromQuery] string subject,
             [FromQuery] int minYearsOld = 0,
             [FromQuery] int maxYearsOld = 120,
-            [FromQuery] int? numberOfSession = null,
+            [FromQuery] int? minNumberSession = 0,
+            [FromQuery] int? maxNumberSession = null,
             [FromQuery] double minPrice = 0,
             [FromQuery] double? maxPrice = null,
             [FromQuery] int? rate = null)
         {
-            var courses = await _courseService.FilterCourseAsync(minYearsOld, maxYearsOld, numberOfSession, minPrice, maxPrice, subject, rate);
+            var courses = await _courseService.FilterCourseAsync(minYearsOld, maxYearsOld, minNumberSession, maxNumberSession, minPrice, maxPrice, subject, rate);
             return Ok(courses);
         }
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseCategory)]

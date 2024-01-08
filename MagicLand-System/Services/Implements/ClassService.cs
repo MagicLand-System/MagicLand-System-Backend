@@ -147,10 +147,11 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<ClassResponse>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent)
+        public async Task<List<ClassResponseV1>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent)
         {
             var classes = await FetchClasses();
 
+            #region
             //For satisfy all key word
 
             //classes = keyWords == null || keyWords.Count() == 0
@@ -165,6 +166,7 @@ namespace MagicLand_System.Services.Implements
             //       (c.Address != null && (c.Address.City!.ToLower().Contains(k.ToLower()) || 
             //       c.Address.Street!.ToLower().Contains(k.ToLower()) || 
             //       c.Address.District!.ToLower().Contains(k.ToLower()))))).ToList();
+            #endregion
 
             //For satisfy just one key word
             classes = keyWords == null || keyWords.Count() == 0
@@ -184,13 +186,13 @@ namespace MagicLand_System.Services.Implements
 
             classes = classes.Where(c => c.LeastNumberStudent >= leastNumberStudent || c.LimitNumberStudent == limitStudent).ToList();
 
-            return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
+            return classes.Select(c => _mapper.Map<ClassResponseV1>(c)).ToList();
         }
 
-        public async Task<List<MyClassResponse>> GetAllClass(string classCode = null)
+        public async Task<List<ClassResponseV2>> GetAllClass(string classCode = null)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include : x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
-            List<MyClassResponse> result = new List<MyClassResponse>();
+            List<ClassResponseV2> result = new List<ClassResponseV2>();
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
             {
@@ -199,7 +201,7 @@ namespace MagicLand_System.Services.Implements
                 foreach (var day in DaysOfWeek)
                 {
                     var slot = slots.Where(x => x.Id.ToString().ToLower().Equals(day.SlotId.ToString().ToLower())).FirstOrDefault();
-                    if(day.DayOfWeek == 1)
+                    if (day.DayOfWeek == 1)
                     {
                         schedules.Add(new DailySchedule
                         {
@@ -262,9 +264,8 @@ namespace MagicLand_System.Services.Implements
                             StartTime = slot.StartTime,
                         });
                     }
-                   
                 }
-                MyClassResponse myClassResponse = new MyClassResponse
+                ClassResponseV2 myClassResponse = new ClassResponseV2
                 {
                     Id = c.Id,
                     LimitNumberStudent = c.LimitNumberStudent,  
@@ -281,8 +282,8 @@ namespace MagicLand_System.Services.Implements
                     Status = c.Status,
                     Video = c.Video,
                     NumberStudentRegistered = c.StudentClasses.Count(),
-                    CourseName = c.Course.Name,
                     Schedules = schedules,
+                    CourseName = c.Course.Name, 
                 };
                 result.Add(myClassResponse);
             }
@@ -297,7 +298,7 @@ namespace MagicLand_System.Services.Implements
             return (result.Where(x => x.ClassCode.ToLower().Contains(classCode.ToLower()))).ToList();
         }
 
-        public async Task<ClassResponse> GetClassByIdAsync(Guid id)
+        public async Task<ClassResponseV1> GetClassByIdAsync(Guid id)
         {
 
             var cls = await _unitOfWork.GetRepository<Class>()
@@ -310,17 +311,17 @@ namespace MagicLand_System.Services.Implements
                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                .ThenInclude(s => s.Room)!);
 
-            return _mapper.Map<ClassResponse>(cls);
+            return _mapper.Map<ClassResponseV1>(cls);
         }
 
-        public async Task<List<ClassResponse>> GetClassesAsync()
+        public async Task<List<ClassResponseV1>> GetClassesAsync()
         {
             var classes = await FetchClasses();
 
-            return classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
+            return classes.Select(c => _mapper.Map<ClassResponseV1>(c)).ToList();
         }
 
-        public async Task<List<ClassResponse>> GetClassesByCourseIdAsync(Guid id)
+        public async Task<List<ClassResponseV1>> GetClassesByCourseIdAsync(Guid id)
         {
             var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id);
 
@@ -336,7 +337,7 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                 .ThenInclude(s => s.Room)!);
 
-            var responses = classes.Select(c => _mapper.Map<ClassResponse>(c)).ToList();
+            var responses = classes.Select(c => _mapper.Map<ClassResponseV1>(c)).ToList();
             foreach(var res in responses)
             {
                 res.CoursePrice = course.Price;

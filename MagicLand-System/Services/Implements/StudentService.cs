@@ -117,7 +117,8 @@ namespace MagicLand_System.Services.Implements
             }
             if (sessionIds.Count == 0)
             {
-                throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
+                //throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
+                return new List<StudentScheduleResponse>();
             }
             var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class));
             var listStudentSchedule = new List<StudentScheduleResponse>();
@@ -133,6 +134,7 @@ namespace MagicLand_System.Services.Implements
                 var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class.LecturerId));
                 studentSchedule = new StudentScheduleResponse
                 {
+                    StudentName = student.FullName,
                     Date = schedule.Date,
                     DayOfWeek = schedule.DayOfWeek,
                     EndTime = schedule.Slot.EndTime,

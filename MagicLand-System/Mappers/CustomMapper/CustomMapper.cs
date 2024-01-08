@@ -1,9 +1,11 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response.Cart;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Course;
 using MagicLand_System.PayLoad.Response.Room;
+using MagicLand_System.PayLoad.Response.Schedule;
 using MagicLand_System.PayLoad.Response.Session;
 using MagicLand_System.PayLoad.Response.Slot;
 using MagicLand_System.PayLoad.Response.Student;
@@ -17,7 +19,7 @@ namespace MagicLand_System.Mappers.CustomMapper
     {
 
         // Use to handel and support complicated mapping //
-        public static CartResponse fromCartToCartResponse(Cart cart, List<Student> students, List<ClassResponse> cls)
+        public static CartResponse fromCartToCartResponse(Cart cart, List<Student> students, List<ClassResponseV1> cls)
         {
             if (cart == null || cart.CartItems == null || cls == null)
             {
@@ -26,6 +28,7 @@ namespace MagicLand_System.Mappers.CustomMapper
 
             // Leave Incase Error
 
+            #region
             // Way 1
             //var cartResponses = cart.Carts.Select(cts =>
             //{
@@ -54,7 +57,7 @@ namespace MagicLand_System.Mappers.CustomMapper
             //        return fromCartItemToCartItemResponse(cts.Id, classEntity, studentsForCartItem);
             //    }).ToList()
             //};
-
+            #endregion
 
             CartResponse response = new CartResponse
             {
@@ -68,12 +71,12 @@ namespace MagicLand_System.Mappers.CustomMapper
             return response;
         }
 
-        public static CartItemResponse fromCartItemToCartItemResponse(Guid cartItemId, ClassResponse cls, IEnumerable<Student> students)
+        public static CartItemResponse fromCartItemToCartItemResponse(Guid cartItemId, ClassResponseV1 cls, IEnumerable<Student> students)
         {
             CartItemResponse response = new CartItemResponse
             {
                 Id = cartItemId,
-                Students = students.Count() == 0 
+                Students = students.Count() == 0
                 ? new List<StudentResponse>()
                 : students.Select(s => fromStudentToStudentResponse(s)).ToList(),
                 Class = cls
@@ -100,38 +103,127 @@ namespace MagicLand_System.Mappers.CustomMapper
             };
             return response;
         }
-        public static CourseResponse fromCourseToCourseResponse(Course course, IEnumerable<Course>? coursePrerequisites)
+        public static CourseResponse fromCourseToCourseResponse(
+            Course course, 
+            IEnumerable<Course> coursePrerequisites,
+            ICollection<Course> coureSubsequents)
         {
             if (course == null)
             {
                 return new CourseResponse();
             }
 
-            
             CourseResponse response = new CourseResponse
             {
-                Id = course.Id,
-                Name = course.Name,
-                Subject = course.CourseCategory!.Name,
-                NumberOfSession = course.NumberOfSession,
-                MinAgeStudent = course.MinYearOldsStudent,
-                MaxAgeStudent = course.MaxYearOldsStudent,
+                CourseId = course.Id,
                 Image = course.Image,
                 Price = (decimal)course.Price,
-                CoursePrerequisites = coursePrerequisites != null
-                ? coursePrerequisites.Select(c => fromCourseToCourseResponse(c, null)).ToList()
-                : new List<CourseResponse>(),
-                Syllabus = fromSyllabusToSyllabusResponse(course.CourseSyllabus!),
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => fromSubDescriptionTileToSubDescriptionTitleResponse(sdt)).ToList(),
+                CourseDetail = fromCourseInformationToCourseDetailResponse(course, coursePrerequisites),
+                OpeningSchedules = course.Classes.Select(cls => fromClassInformationToOpeningScheduleResponse(cls)).ToList(),
+                RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
             };
-             return response;
+            return response;
+        }
+
+        public static OpeningScheduleResponse fromClassInformationToOpeningScheduleResponse(Class cls)
+        {
+            if (cls == null)
+            {
+                return new OpeningScheduleResponse();
+            }
+
+            var WeekdayNumbers = cls.Schedules.Select(s => s.DayOfWeek).Distinct().ToList().Order();
+
+            var slotInListString = cls.Schedules.Select(s => s.Slot!.StartTime.ToString() + "-" + s.Slot.EndTime.ToString()).Distinct().ToList();            
+
+            OpeningScheduleResponse response = new OpeningScheduleResponse
+            {
+                ClassId = cls.Id,
+                ClassName = cls.Name,
+                Schedule = "Weekdays " + string.Join("-",
+                WeekdayNumbers.Select(wdn => DateTimeHelper.ConvertDateNumberToDayweek(wdn)).ToList()),
+                Slot = string.Join(" / ", slotInListString),
+                OpeningDay = cls.StartDate,
+                Method = cls.Method,
+            };
+
+            return response;
+        }
+
+        public static CourseDetailResponse fromCourseInformationToCourseDetailResponse(Course course, IEnumerable<Course>? coursePrerequisites)
+        {
+            if (course == null)
+            {
+                return new CourseDetailResponse();
+            }
+
+            CourseDetailResponse response = new CourseDetailResponse
+            {
+                CourseName = course.Name,
+                RangeAge = course.MinYearOldsStudent + " To " + course.MaxYearOldsStudent,
+                Subject = course.CourseCategory.Name,
+                Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
+                NumberOfSession = course.NumberOfSession,
+                CoursePrerequisites = coursePrerequisites != null
+                ? coursePrerequisites.Select(cp => cp.Name).ToList()!
+                : new List<string>(),
+            };
+
+            return response;
+        }
+
+        public static List<RelatedCourseResponse> fromCourseInformationToRealtedCourseResponse(
+            IEnumerable<Course> coursePrerequisites,
+            IEnumerable<Course> coureSubsequents)
+        {
+            if(coursePrerequisites.Count() > 0 && coureSubsequents.Count() > 0)
+            {
+                return new List<RelatedCourseResponse>();
+            }
+
+            var response = new List<RelatedCourseResponse>();
+
+            if(coursePrerequisites.Count() > 0)
+            {
+                response.AddRange(ProgressRelatedCourse(coursePrerequisites));
+            }
+
+            if (coureSubsequents.Count() > 0)
+            {
+                response.AddRange(ProgressRelatedCourse(coureSubsequents));
+            }
+
+            return response;
+        }
+
+        private static List<RelatedCourseResponse> ProgressRelatedCourse(IEnumerable<Course> courses)
+        {
+            var relatedCourses = new List<RelatedCourseResponse>();
+            foreach (var course in courses)
+            {
+                var relatedCourseResponse = new RelatedCourseResponse
+                {
+                    Id = course.Id,
+                    Name = course.Name,
+                    Subject = course.CourseCategory.Name,
+                    Image = course.Image,
+                    Price = course.Price,
+                    MinAgeStudent = course.MinYearOldsStudent,
+                    MaxAgeStudent = course.MaxYearOldsStudent,
+                };
+
+                relatedCourses.Add(relatedCourseResponse);
+            }
+
+            return relatedCourses;
         }
 
         public static SyllabusResponse fromSyllabusToSyllabusResponse(CourseSyllabus courseSyllabus)
         {
-            if(courseSyllabus == null)
+            if (courseSyllabus == null)
             {
                 return new SyllabusResponse();
             }
@@ -145,10 +237,9 @@ namespace MagicLand_System.Mappers.CustomMapper
 
             return response;
         }
-
         public static TopicResponse fromTopicToTopicResponse(Topic topic)
         {
-            if(topic == null)
+            if (topic == null)
             {
                 return new TopicResponse();
             }
@@ -164,7 +255,7 @@ namespace MagicLand_System.Mappers.CustomMapper
         }
         public static SubDescriptionTitleResponse fromSubDescriptionTileToSubDescriptionTitleResponse(SubDescriptionTitle subDescriptionTitle)
         {
-            if(subDescriptionTitle == null)
+            if (subDescriptionTitle == null)
             {
                 return new SubDescriptionTitleResponse();
             }
@@ -176,7 +267,6 @@ namespace MagicLand_System.Mappers.CustomMapper
             };
             return response;
         }
-
         public static SubDescriptionContentResponse fromSubDescriptionContentToSubDescriptionContentResponse(SubDescriptionContent subDescriptionContent)
         {
             if (subDescriptionContent == null)
@@ -205,7 +295,6 @@ namespace MagicLand_System.Mappers.CustomMapper
             };
             return response;
         }
-
         public static SlotResponse fromSlotToSlotResponse(Slot slot)
         {
             if (slot == null)
@@ -219,7 +308,6 @@ namespace MagicLand_System.Mappers.CustomMapper
             };
             return response;
         }
-
         public static RoomResponse fromRoomToRoomResponse(Room room)
         {
             if (room == null)
