@@ -3,7 +3,8 @@
     public class CourseDetailResponse
     {
         public string? CourseName { get; set; } = "Undefined";
-        public string? RangeAge { get; set; } = "Undefined";
+        public string? MinAgeStudent { get; set; } = "Undefined";
+        public string? MaxAgeStudent { get; set; } = "Undefined";
         public string? Subject { get; set; } = "Undefined";
         public string? Method { get; set; } = "Online";
         public int? NumberOfSession { get; set; }
