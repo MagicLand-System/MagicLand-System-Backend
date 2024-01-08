@@ -137,13 +137,15 @@ namespace MagicLand_System.Mappers.CustomMapper
 
             var WeekdayNumbers = cls.Schedules.Select(s => s.DayOfWeek).Distinct().ToList().Order();
 
-            var slotInListString = cls.Schedules.Select(s => s.Slot!.StartTime.ToString() + "-" + s.Slot.EndTime.ToString()).Distinct().ToList();            
+            var slotInListString = cls.Schedules.Select(s => AddSuffixesTime(s.Slot!.StartTime) + " - " + AddSuffixesTime(s.Slot.EndTime))
+                .Distinct().ToList();            
 
+            
             OpeningScheduleResponse response = new OpeningScheduleResponse
             {
                 ClassId = cls.Id,
                 ClassName = cls.Name,
-                Schedule = "Weekdays " + string.Join("-",
+                Schedule =  string.Join("-",
                 WeekdayNumbers.Select(wdn => DateTimeHelper.ConvertDateNumberToDayweek(wdn)).ToList()),
                 Slot = string.Join(" / ", slotInListString),
                 OpeningDay = cls.StartDate,
@@ -163,7 +165,8 @@ namespace MagicLand_System.Mappers.CustomMapper
             CourseDetailResponse response = new CourseDetailResponse
             {
                 CourseName = course.Name,
-                RangeAge = course.MinYearOldsStudent + " To " + course.MaxYearOldsStudent,
+                MinAgeStudent = course.MinYearOldsStudent.ToString(),
+                MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
                 Subject = course.CourseCategory.Name,
                 Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
                 NumberOfSession = course.NumberOfSession,
@@ -199,6 +202,16 @@ namespace MagicLand_System.Mappers.CustomMapper
             return response;
         }
 
+        private static string AddSuffixesTime(string slotTime)
+        {
+            int hour = int.Parse(slotTime.Substring(0, slotTime.IndexOf(":")));
+            if(hour >= 1 && hour <= 12)
+            {
+                return slotTime + " AM";
+            }
+            return slotTime + " PM";
+        }
+           
         private static List<RelatedCourseResponse> ProgressRelatedCourse(IEnumerable<Course> courses)
         {
             var relatedCourses = new List<RelatedCourseResponse>();
