@@ -145,5 +145,28 @@ namespace MagicLand_System.Controllers
             var courses = await _classService.GetAllClass(searchString,status);
             return Ok(courses);
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByIdV2)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetDetailByStaff(string id)
+        {
+            var matchclass = await _classService.GetClassDetail(id);
+            return Ok(matchclass);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.StudentInClass)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetStudentInClass(string id)
+        {
+            var matchClass = await _classService.GetAllStudentInClass(id);
+            if (matchClass == null)
+            {
+                return NotFound(new ErrorResponse
+                {
+                    TimeStamp = DateTime.Now,
+                    Error = "Class not has any student",
+                    StatusCode = StatusCodes.Status404NotFound,
+                });
+            }
+            return Ok(matchClass);  
+        }
     }
 }   

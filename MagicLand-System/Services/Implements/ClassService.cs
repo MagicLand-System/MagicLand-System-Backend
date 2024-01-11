@@ -318,6 +318,30 @@ namespace MagicLand_System.Services.Implements
             return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower()))&& x.Status.ToLower().Equals(status.ToLower())))).ToList();
         }
 
+        public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
+        {
+            var studentIds = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.ClassId.ToString().Equals(id), selector : x => x.StudentId);
+            if(studentIds == null)
+            {
+                return null;
+            }
+            List<StudentInClass> result = new List<StudentInClass>();
+            foreach (var studentId in studentIds)
+            {
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().ToLower().Equals(studentId.ToString().ToLower()), include: x => x.Include(x => x.User));
+                StudentInClass studentInClass = new StudentInClass
+                {
+                    DateOfBirth = student.DateOfBirth,
+                    FullName = student.FullName,
+                    Gender = student.Gender,
+                    ParentName = student.User.FullName,
+                    ParentPhoneNumber = student.User.Phone,
+                };
+                result.Add(studentInClass);
+            }
+            return result;
+        }
+
         public async Task<ClassResponseV1> GetClassByIdAsync(Guid id)
         {
 
@@ -332,6 +356,17 @@ namespace MagicLand_System.Services.Implements
                .ThenInclude(s => s.Room)!);
 
             return _mapper.Map<ClassResponseV1>(cls);
+        }
+
+        public async Task<ClassResponseV2> GetClassDetail(string id)
+        {
+            var listClass = await GetAllClass();
+            if(listClass == null)
+            {
+                return null;
+            } 
+            var matchClass = listClass.SingleOrDefault(x => x.Id.ToString().Equals(id.ToString()));
+            return matchClass;
         }
 
         public async Task<List<ClassResponseV1>> GetClassesAsync()
