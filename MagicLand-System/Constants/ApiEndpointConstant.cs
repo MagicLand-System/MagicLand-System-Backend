@@ -34,6 +34,9 @@
             public const string FilterClass = GetAll + "/filter";
             public const string AddClass = GetAll + "/add";
             public const string GetAllV2 = ApiEndpoint + "/staff/classes";
+            public const string ClassByIdV2 = GetAllV2 + "/{id}";
+            public const string StudentInClass = GetAll + "/students/{id}";
+
         }
         public static class PromotionEnpoint
         {
