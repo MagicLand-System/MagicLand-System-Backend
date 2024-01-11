@@ -336,6 +336,7 @@ namespace MagicLand_System.Services.Implements
                     Gender = student.Gender,
                     ParentName = student.User.FullName,
                     ParentPhoneNumber = student.User.Phone,
+                    StudentId = student.Id,
                 };
                 result.Add(studentInClass);
             }
