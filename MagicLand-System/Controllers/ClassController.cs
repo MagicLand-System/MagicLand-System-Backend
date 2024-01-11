@@ -140,9 +140,9 @@ namespace MagicLand_System.Controllers
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetStaffClass([FromQuery] string? classCode)
+        public async Task<IActionResult> GetStaffClass([FromQuery] string? searchString , [FromQuery] string? status)
         {
-            var courses = await _classService.GetAllClass(classCode);
+            var courses = await _classService.GetAllClass(searchString,status);
             return Ok(courses);
         }
     }

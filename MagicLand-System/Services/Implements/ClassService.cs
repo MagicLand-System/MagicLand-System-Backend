@@ -10,6 +10,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -189,7 +190,7 @@ namespace MagicLand_System.Services.Implements
             return classes.Select(c => _mapper.Map<ClassResponseV1>(c)).ToList();
         }
 
-        public async Task<List<ClassResponseV2>> GetAllClass(string classCode = null)
+        public async Task<List<ClassResponseV2>> GetAllClass(string searchString = null , string status = null)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include : x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
             List<ClassResponseV2> result = new List<ClassResponseV2>();
@@ -291,11 +292,30 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-            if(classCode == null)
+            if(searchString == null && status == null)
             {
                 return result;
             }
-            return (result.Where(x => x.ClassCode.ToLower().Contains(classCode.ToLower()))).ToList();
+            if (searchString == null)
+            {   
+                return (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).ToList());     
+            }
+            if(status == null)
+            {
+                List<ClassResponseV2> res = new List<ClassResponseV2>();
+                var filter1 = result.Where(x => x.ClassCode.ToLower().Contains(searchString.ToLower()));
+                if(filter1 != null)
+                {
+                    res.AddRange(filter1);
+                }
+                var filter2 = result.Where(x => x.Name.ToLower().Contains((searchString.ToLower())));   
+                if(filter2 != null)
+                {
+                    res.AddRange(filter2);
+                }
+                return res;
+            }
+            return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.Name.ToLower().Contains(searchString.ToLower()))&& x.Status.ToLower().Equals(status.ToLower())))).ToList();
         }
 
         public async Task<ClassResponseV1> GetClassByIdAsync(Guid id)
