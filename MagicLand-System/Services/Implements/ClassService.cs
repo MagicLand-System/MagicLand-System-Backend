@@ -308,14 +308,14 @@ namespace MagicLand_System.Services.Implements
                 {
                     res.AddRange(filter1);
                 }
-                var filter2 = result.Where(x => x.Name.ToLower().Contains((searchString.ToLower())));   
+                var filter2 = result.Where(x => x.CourseName.ToLower().Contains((searchString.ToLower())));   
                 if(filter2 != null)
                 {
                     res.AddRange(filter2);
                 }
                 return res;
             }
-            return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.Name.ToLower().Contains(searchString.ToLower()))&& x.Status.ToLower().Equals(status.ToLower())))).ToList();
+            return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower()))&& x.Status.ToLower().Equals(status.ToLower())))).ToList();
         }
 
         public async Task<ClassResponseV1> GetClassByIdAsync(Guid id)
