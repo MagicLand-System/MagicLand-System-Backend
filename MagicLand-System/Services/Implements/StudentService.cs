@@ -44,7 +44,7 @@ namespace MagicLand_System.Services.Implements
             var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
             {
-                throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
+                return new List<StudentClassResponse>();
             }
             var classIds = (from classInstance in listClassInstance
                             group classInstance by classInstance.ClassId into grouped
@@ -108,7 +108,7 @@ namespace MagicLand_System.Services.Implements
             var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
             {
-                throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
+                return new List<StudentScheduleResponse>();
             }
             var sessionIds = new List<Guid>();
             foreach (var classInstance in listClassInstance)

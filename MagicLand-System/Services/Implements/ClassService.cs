@@ -5,7 +5,9 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Class;
+using MagicLand_System.PayLoad.Response.Room;
 using MagicLand_System.PayLoad.Response.Schedule;
+using MagicLand_System.PayLoad.Response.User;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -193,6 +195,30 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<ClassResponseV2>> GetAllClass(string searchString = null , string status = null)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include : x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
+            var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
+            var lecturerId = classes.First(x => x.Id == x.Id).LecturerId;
+            var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(roomId.ToString()));
+            var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(lecturerId.ToString()));
+            RoomResponse roomResponse = new RoomResponse
+            {
+                Floor = room.Floor.Value,
+                Capacity = room.Capacity,
+                Id = room.Id,
+                Name = room.Name,
+                Status = room.Status,
+                LinkUrl = room.LinkURL,
+
+            };
+            LecturerResponse lecturerResponse = new LecturerResponse
+            {
+                AvatarImage = lecturer.AvatarImage,
+                DateOfBirth = lecturer.DateOfBirth,
+                Email = lecturer.Email,
+                FullName = lecturer.FullName,
+                Gender = lecturer.Gender,
+                Id = lecturer.Id,
+                Phone = lecturer.Phone,
+            };
             List<ClassResponseV2> result = new List<ClassResponseV2>();
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
@@ -285,6 +311,8 @@ namespace MagicLand_System.Services.Implements
                     NumberStudentRegistered = c.StudentClasses.Count(),
                     Schedules = schedules,
                     CourseName = c.Course.Name, 
+                    LecturerResponse = lecturerResponse,
+                    RoomResponse = roomResponse,    
                 };
                 result.Add(myClassResponse);
             }
@@ -337,6 +365,7 @@ namespace MagicLand_System.Services.Implements
                     ParentName = student.User.FullName,
                     ParentPhoneNumber = student.User.Phone,
                     StudentId = student.Id,
+                    ImgAvatar = student.AvatarImage,
                 };
                 result.Add(studentInClass);
             }
