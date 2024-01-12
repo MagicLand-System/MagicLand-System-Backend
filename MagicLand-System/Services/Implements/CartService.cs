@@ -218,7 +218,6 @@ namespace MagicLand_System.Services.Implements
                 new StudentClass
                 {
                     Id = new Guid(),
-                    Status = "NORMAL",
                     StudentId = stu.Id,
                     ClassId = item.Class.Id,
                 }).ToList();

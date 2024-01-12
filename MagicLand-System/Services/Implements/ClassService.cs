@@ -431,6 +431,32 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
+        public async Task<bool> InsertAttandance()
+        {
+            var allStudentInClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(include : x => x.Include(x => x.Class));
+            List<Attendance> attendances = new List<Attendance>();
+            foreach (var studentClass in allStudentInClass)
+            {
+                var classId = studentClass.Class.Id;
+                var schedules = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()),selector : x => x.Schedules);
+                var studentId = studentClass.StudentId;
+                foreach(var schedule in schedules)
+                {
+                    Attendance attendance = new Attendance
+                    {
+                        Id = Guid.NewGuid(),
+                        IsPresent = null,
+                        ScheduleId = schedule.Id,
+                        StudentId = studentId,
+                    };
+                    attendances.Add(attendance);
+                }
+            }
+            await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(attendances);
+            bool success = await _unitOfWork.CommitAsync() > 0;
+            return success;
+            
+        }
 
         private async Task<ICollection<Class>> FetchClasses()
         {

@@ -13,6 +13,7 @@
         public string? Method { get; set; }
         public string? LecturerName { get; set; }
         public string? ClassName { get; set; }
+        public string? Status { get; set; }
 
     }
 }
