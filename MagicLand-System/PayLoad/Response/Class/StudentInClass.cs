@@ -8,5 +8,6 @@
         public string? Gender { get; set; }
         public string ParentName { get; set; }
         public string ParentPhoneNumber {  get; set; }  
+        public string ImgAvatar {  get; set; }  
     }
 }
