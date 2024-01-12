@@ -14,5 +14,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassResponseV2>> GetAllClass(string searchString = null , string status  = null);
         Task<ClassResponseV2> GetClassDetail(string id);
         Task<List<StudentInClass>> GetAllStudentInClass(string id);
+        Task<bool> InsertAttandance();
     }
 }

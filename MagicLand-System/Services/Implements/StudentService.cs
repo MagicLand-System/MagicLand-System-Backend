@@ -132,6 +132,21 @@ namespace MagicLand_System.Services.Implements
             foreach (var schedule in scheduleList)
             {
                 var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class.LecturerId));
+                var attandance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => (x.StudentId.ToString().Equals(student.Id.ToString()) && x.ScheduleId.ToString().Equals(schedule.Id.ToString())));
+                bool? attandanceStatus = attandance.IsPresent;
+                string? status = null; 
+                if(attandanceStatus == null)
+                {
+                    status = "Not Yet";
+                }
+                if(attandanceStatus == true) 
+                {
+                    status = "Attended";
+                }
+                if (attandanceStatus == false)
+                {
+                    status = "Absent";
+                }
                 studentSchedule = new StudentScheduleResponse
                 {
                     StudentName = student.FullName,
@@ -145,6 +160,8 @@ namespace MagicLand_System.Services.Implements
                     RoomName = schedule.Room.Name,
                     ClassName = schedule.Class.Name,
                     LecturerName = lecturerName,
+                    Status = status,
+                    
                 };
                 listStudentSchedule.Add(studentSchedule);
             }

@@ -36,6 +36,7 @@
             public const string GetAllV2 = ApiEndpoint + "/staff/classes";
             public const string ClassByIdV2 = GetAllV2 + "/{id}";
             public const string StudentInClass = GetAll + "/students/{id}";
+            public const string InsertAttandance = GetAll + "/insertAttandance";
 
         }
         public static class PromotionEnpoint

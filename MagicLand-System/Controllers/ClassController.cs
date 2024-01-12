@@ -168,5 +168,16 @@ namespace MagicLand_System.Controllers
             }
             return Ok(matchClass);  
         }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertAttandance)]
+        [AllowAnonymous]
+        public async Task<IActionResult> InsertAttandance()
+        {
+            var success = await _classService.InsertAttandance();
+            if (!success) 
+            {
+                return BadRequest();
+             }
+            return Ok(success);
+        }
     }
 }   
