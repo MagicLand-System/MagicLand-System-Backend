@@ -15,5 +15,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<ClassResponseV2> GetClassDetail(string id);
         Task<List<StudentInClass>> GetAllStudentInClass(string id);
         Task<bool> InsertAttandance();
+        Task<string> AutoCreateClassCode(string courseId);
     }
 }

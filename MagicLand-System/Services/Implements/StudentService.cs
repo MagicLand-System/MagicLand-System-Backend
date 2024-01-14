@@ -2,7 +2,9 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.User;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +36,7 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<StudentClassResponse>> GetClassOfStudent(string studentId,string status)
+        public async Task<List<ClassResponseV1>> GetClassOfStudent(string studentId,string status)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync( predicate : x => x.Id.ToString().Equals(studentId));  
             if(student == null)
@@ -44,7 +46,7 @@ namespace MagicLand_System.Services.Implements
             var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
             {
-                return new List<StudentClassResponse>();
+                return new List<ClassResponseV1>();
             }
             var classIds = (from classInstance in listClassInstance
                             group classInstance by classInstance.ClassId into grouped
@@ -53,8 +55,15 @@ namespace MagicLand_System.Services.Implements
             Class studentClass = null;
             List<Class> classes = new List<Class>();
             List<Class> allClass = new List<Class>();
-           
-            allClass = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Course).Include(x => x.Lecture))).ToList();
+
+            allClass = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x
+                .Include(x => x.Lecture!)
+                .Include(x => x.StudentClasses)
+                .Include(x => x.Course)
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+                .ThenInclude(s => s.Slot)!
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+                .ThenInclude(s => s.Room)!)).ToList();
             foreach (var classInstance in myx)
             {
                 if (status.IsNullOrEmpty()) 
@@ -63,7 +72,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 else
                 {
-                    studentClass = studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()) && status.Trim().Equals(x.Status.Trim()));
+                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()) && status.Trim().Equals(x.Status.Trim()));
                 }
                 if(studentClass != null)
                 {
@@ -73,28 +82,42 @@ namespace MagicLand_System.Services.Implements
             if (classes.Count == 0)
             {
 
-                throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
+                 return new List<ClassResponseV1>();
             }
-            List<StudentClassResponse> responses = new List<StudentClassResponse>();
-            StudentClassResponse response = null;
-            foreach (var classM in classes)
-            {
-                response = new StudentClassResponse
-                {
-                    ClassName = classM.Name,
-                    StatusClass = classM.Status,
-                    Method = classM.Method,
-                    CourseName = classM.Course.Name,
-                    EndTime = classM.EndDate,
-                    MaxYearOldsStudentOfCourse = classM.Course.MaxYearOldsStudent.Value,
-                    MinYearOldsStudentOfCourse = classM.Course.MinYearOldsStudent.Value,
-                    LecturerName = classM.Lecture.FullName,
-                    NumberOfSession = classM.Course.NumberOfSession,
-                    StartTime = classM.StartDate,
-                    Status = classM.Status
-                };
-                responses.Add(response);
-            }
+            List <ClassResponseV1> responses = new List<ClassResponseV1>();
+            responses = classes.Select(c => _mapper.Map<ClassResponseV1>(c)).ToList();
+            //ClassResponseV1 response = null;
+            //foreach (var classM in classes)
+            //{
+            //    response = new ClassResponseV1
+            //    {
+            //        ClassCode = classM.ClassCode,
+            //        CourseId = classM.CourseId,
+            //        CoursePrice = classM.Course.Price,
+            //        EndDate = classM.EndDate,
+            //        Id = classM.Id,
+            //        Image = classM.Image,
+            //        LeastNumberStudent = classM.LeastNumberStudent,
+            //        LimitNumberStudent = classM.LimitNumberStudent,
+            //        StartDate = classM.StartDate,
+            //        Method = classM.Method,
+            //        Status = classM.Status,
+            //        Video = classM.Video,
+            //        Name = classM.Name,
+            //        Lecture = new UserResponse
+            //        {
+            //            AvatarImage = classM.Lecture.AvatarImage,
+            //            DateOfBirth = classM.Lecture.DateOfBirth,
+            //            Email = classM.Lecture.Email,
+            //            FullName = classM.Lecture.FullName,
+            //            Gender = classM.Lecture.Gender,
+            //            Id = classM.Id,
+            //            Phone = classM.Lecture.Phone,
+            //        },
+
+            //    };
+            //    responses.Add(response);
+            //}
             return responses;//responses;   
         }
 
