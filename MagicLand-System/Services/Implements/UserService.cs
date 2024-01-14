@@ -27,6 +27,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<LoginResponse> Authentication(LoginRequest loginRequest)
         {
+            var date = DateTime.Now;
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()), include: u => u.Include(u => u.Role));
             if (user == null)
             {

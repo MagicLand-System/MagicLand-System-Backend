@@ -22,6 +22,12 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
+        public async Task<string> AutoCreateClassCode(string courseId)
+        {
+            return "success";
+            
+        }
+
         public async Task<bool> CreateNewClass(CreateClassRequest request)
         {
             if(request.StartDate <  DateTime.Now) 
