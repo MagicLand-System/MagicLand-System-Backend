@@ -16,7 +16,7 @@
             public const string UserEndPointExist = UsersEndpoint + "checkExist";
             public const string UserEndPointGetCurrentUser = UsersEndpoint + "/getcurrentuser";
             public const string UserEndPointRegister = UsersEndpoint + "/register";
-            public const string UserEndPointCheckoutNow = UsersEndpoint + "/checkoutnow";
+            public const string UserEndPointCheckout = UsersEndpoint + "/checkout";
             public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
         }
         public static class Authentication
@@ -45,8 +45,10 @@
         {
             public const string Origin = ApiEndpoint + "/cart";
             public const string ModifyCart = Origin + "/modify";
+            public const string AddCourseFavoriteList = Origin + "/favorite/add";
             public const string GetCart = Origin + "/view";
-            public const string DeleteCartItem = Origin + "/item/{id}/delete";
+            public const string GetFavorite = Origin + "/favorite/view";
+            public const string DeleteCartItem = Origin + "/item/delete";
             public const string CheckOutCart = Origin + "/item/checkout";
         }
         public static class CourseEnpoint

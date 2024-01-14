@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Address;
-using MagicLand_System.PayLoad.Response.Class;
-using MagicLand_System.PayLoad.Response.Session;
-using System.Net;
+using MagicLand_System.PayLoad.Response.Classes;
 
 namespace MagicLand_System.Mappers.Classes
 {
@@ -19,7 +16,8 @@ namespace MagicLand_System.Mappers.Classes
                .ForMember(des => des.Role, src => src.MapFrom(src => src.Role.Name));
 
 
-            CreateMap<Class, ClassResponseV1>()
+            CreateMap<Class, ClassResExtraInfor>()
+                .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
                 .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
                 .ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
@@ -29,8 +27,12 @@ namespace MagicLand_System.Mappers.Classes
                 .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
-                .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => CustomMapper.CustomMapper.fromUserToUserResponse(src.Lecture!)))
-                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules!));
+                .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
+                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromClassRelatedItemsToScheduleResWithTopic(
+                src.Schedules.ToList(), 
+                src.Course!.CourseSyllabus != null
+                ? src.Course.CourseSyllabus.Topics.ToList()
+                : new List<Topic>())));
         }
     }
 }

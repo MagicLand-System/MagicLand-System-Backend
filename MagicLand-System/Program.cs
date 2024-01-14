@@ -62,7 +62,9 @@ builder.Services.AddScoped<IUnitOfWork<MagicLandContext>, UnitOfWork<MagicLandCo
 builder.Services.AddControllers(opt => opt.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true).AddJsonOptions(opt =>
 {
     opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    opt.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -93,7 +95,7 @@ builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
-builder.Services.AddScoped<ISlotService,SlotService>();
+builder.Services.AddScoped<ISlotService, SlotService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

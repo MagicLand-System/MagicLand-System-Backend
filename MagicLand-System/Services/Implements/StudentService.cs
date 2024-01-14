@@ -2,7 +2,7 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Student;
-using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
