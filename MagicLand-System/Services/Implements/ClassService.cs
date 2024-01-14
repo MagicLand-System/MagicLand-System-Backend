@@ -24,8 +24,24 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> AutoCreateClassCode(string courseId)
         {
-            return "success";
-            
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId));
+            if(course == null)
+            {
+                return null;
+            }
+            var name = course.Name;
+            var words = name.Split(new[] {' '},StringSplitOptions.RemoveEmptyEntries);
+            string abbreviation = string.Join("", words.Select(word => word[0]));
+            var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)));
+            int numberOfClass = 0;
+            if(classes == null)
+            {
+                numberOfClass = 1;
+            }
+            numberOfClass = classes.Count + 1;
+            abbreviation = abbreviation +  "" + numberOfClass.ToString();
+            return abbreviation;
+
         }
 
         public async Task<bool> CreateNewClass(CreateClassRequest request)
