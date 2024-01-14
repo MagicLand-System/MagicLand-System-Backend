@@ -1,4 +1,4 @@
-﻿using MagicLand_System.Constants;
+﻿    using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Class;
@@ -178,6 +178,13 @@ namespace MagicLand_System.Controllers
                 return BadRequest();
              }
             return Ok(success);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.AutoCreateClassEndPoint)]
+        [AllowAnonymous]
+        public async Task<IActionResult> AutoCreate(string courseId)
+        {
+            var result = await _classService.AutoCreateClassCode(courseId);
+            return Ok(new {ClassCode = result});
         }
     }
 }   

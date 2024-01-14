@@ -37,6 +37,7 @@
             public const string ClassByIdV2 = GetAllV2 + "/{id}";
             public const string StudentInClass = GetAll + "/students/{id}";
             public const string InsertAttandance = GetAll + "/insertAttandance";
+            public const string AutoCreateClassEndPoint = GetAll + "/autoCreate";
 
         }
         public static class PromotionEnpoint
