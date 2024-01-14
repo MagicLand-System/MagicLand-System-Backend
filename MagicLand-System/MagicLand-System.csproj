@@ -40,7 +40,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="PayLoad\Response\Syllabus\" />
+	  <Folder Include="PayLoad\Response\Custom\" />
+	  <Folder Include="PayLoad\Response\Syllabuses\" />
 	</ItemGroup>
 
 </Project>

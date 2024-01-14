@@ -1,10 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Response.Cart;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers

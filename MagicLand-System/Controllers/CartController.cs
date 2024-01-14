@@ -1,7 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Cart;
+using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,35 +14,78 @@ namespace MagicLand_System.Controllers
         private readonly ICartService _cartService;
         private readonly IClassService _classService;
         private readonly IStudentService _studentService;
-        public CartController(ILogger<CartController> logger, ICartService cartService, IClassService classService, IStudentService studentService) : base(logger)
+        private readonly ICourseService _courseService;
+        public CartController(ILogger<CartController> logger, ICartService cartService, IClassService classService, IStudentService studentService, ICourseService courseService) : base(logger)
         {
             _cartService = cartService;
             _classService = classService;
             _studentService = studentService;
+            _courseService = courseService;
         }
 
 
-        #region document API modify cart
+        #region document API modify favorite
         /// <summary>
-        /// Add a class and students register in class to cart Or, update a student registered in current cart item
+        /// Allows adding Course into Favorite List 
         /// </summary>
-        /// <param name="cartRequest">Store all student id and class id register</param>
+        /// <param name="courseId">Store favorite Course Id </param>
         /// <returns>A cart after modify action</returns>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "studentIds": [ "3fa85f64-5717-4562-b3fc-2c963f66afa6" , "f9113f7e-ae51-4f65-a7b4-2348f666787d"],
-        ///        "classId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
-        ///     }
-        ///     Or
-        ///     {
-        ///        "studentIds": [],
-        ///        "classId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
+        ///        "CourseId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a cart after modify success</response>
+        /// <response code="200">Return a cart after Modify Success</response>
+        /// <response code="400">Invalid request</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="500">Unhandel database commit error</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.CartEnpoint.AddCourseFavoriteList)]
+        [ProducesErrorResponseType(typeof(ErrorResponse))]
+        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> AddCourseFavoriteList([FromQuery] Guid courseId)
+        {
+            if (await _courseService.GetCourseByIdAsync(courseId) == null)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Course Id Not Esxit",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
+            var result = await _cartService.AddCourseFavoriteOffCurrentParentAsync(courseId);
+
+            return Ok(result);
+        }
+
+
+        #region document API modify cart
+        /// <summary>
+        /// Allows adding Class with or without Students into Cart (Favorite Class)
+        /// </summary>
+        /// <param name="cartRequest">Store Class Id and Students Id</param>
+        /// <returns>A cart after modify action</returns>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "StudentIdList": [ "3fa85f64-5717-4562-b3fc-2c963f66afa6" , "f9113f7e-ae51-4f65-a7b4-2348f666787d"],
+        ///        "ClassId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
+        ///     }
+        ///     Or
+        ///     {
+        ///        "StudentIdList": [],
+        ///        "ClassId": "74b1eb4c-33ab-4882-9b6d-c0c6b4fd1678"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Return a Cart after modify success</response>
         /// <response code="400">Invalid request</response>
         /// <response code="403">Invalid role</response>
         /// <response code="500">Unhandel database commit error</response>
@@ -64,26 +107,27 @@ namespace MagicLand_System.Controllers
             }
 
             var students = await _studentService.GetStudentsOfCurrentParent();
-            var invalidStudentIds = cartRequest.StudentIds.Except(students.Select(s => s.Id)).ToList();
+            var invalidStudentIds = cartRequest.StudentIdList.Except(students.Select(s => s.Id)).ToList();
 
             if (invalidStudentIds.Any())
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Invalid Student Id or you are trying to sign someone else's student: " + invalidStudentIds.Select(x => x.ToString()),
+                    Error = "Invalid Student Id or you are trying to sign someone else's Student: [" 
+                    + string.Join(", ", invalidStudentIds.Select(x => x.ToString()).ToList()) + "]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
             }
-            var result = await _cartService.ModifyCartOffCurrentParentAsync(cartRequest.StudentIds, cartRequest.ClassId);
+            var result = await _cartService.ModifyCartOffCurrentParentAsync(cartRequest.StudentIdList, cartRequest.ClassId);
             return Ok(result);
         }
 
         #region document API get cart
         /// <summary>
-        ///  View Cart Of Current Parent
+        ///  View Cart of current Parent
         /// </summary>
-        /// <response code="200">Show a cart of current parent</response>
+        /// <response code="200">Show a Cart of current Parent</response>
         /// <response code="403">Invalid role</response>
         /// <response code="500">Unhandel database error</response>
         #endregion
@@ -96,11 +140,28 @@ namespace MagicLand_System.Controllers
             return Ok(cart);
         }
 
-        #region document API delete item in cart
+        #region document API get favorite
         /// <summary>
-        ///   Delete current item in cart
+        ///  View Favorite Course list of current Parent
         /// </summary>
-        /// <param name="id">Id of current item in cart </param>
+        /// <response code="200">Show a cart of current parent</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="500">Unhandel database error</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CartEnpoint.GetFavorite)]
+        [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetFavorite()
+        {
+            var cart = await _cartService.GetDetailCurrentParrentFavorite();
+            return Ok(cart);
+        }
+
+        #region document API delete item
+        /// <summary>
+        ///   Allow delete Single or Multiple item in cart, also delete Favorite item
+        /// </summary>
+        /// <param name="itemIdList">Id of all item want to delete </param>
         /// <remarks>
         /// Sample request:
         ///
@@ -109,25 +170,17 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Delete Success</response>
+        /// <response code="200">Delete success</response>
         /// <response code="403">Invalid role</response>
         /// <response code="500">Unhandel database error</response>
         #endregion
         [HttpDelete(ApiEndpointConstant.CartEnpoint.DeleteCartItem)]
-        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(String), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> DeleteCartItem(Guid id)
+        public async Task<IActionResult> DeleteCartItem([FromQuery] List<Guid> itemIdList)
         {
-            var result = await _cartService.DeleteItemInCartOfCurrentParentAsync(id);
-            if (!result)
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = "Cart Item Id Not Esxited",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
+            await _cartService.DeleteItemInCartOfCurrentParentAsync(itemIdList);
+
             return Ok("Delete Success");
         }
     }

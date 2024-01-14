@@ -1,8 +1,9 @@
-﻿using MagicLand_System.Constants;
+﻿using Azure.Core;
+using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Cart;
-using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.Carts;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,81 +26,87 @@ namespace MagicLand_System.Controllers
             _studentService = studentService;
         }
 
-        #region document API check-out cart
+        #region document API check-out now
         /// <summary>
-        ///  Fast check-out and register student into current class selected
+        ///  Check-out Single or Multiple register Students into current Classes selected
         /// </summary>
-        /// <param name="request">Store id of current register class and list id of student register</param>
+        /// <param name="requests">Store list of current register Classes and list Id of Student in class</param>
         /// <remarks>
         /// Sample request:
-        ///
+        ///[
         ///     {
-        ///        "classId": "c6d70a5f-56ae-4de0-b441-c080da024524"
-        ///        "StudentsIdList": {"172c40fe-32e4-43fd-b982-c87afe8b54fa", "f9113f7e-ae51-4f65-a7b4-2348f666787d"}
+        ///        "ClassId": "c6d70a5f-56ae-4de0-b441-c080da024524"
+        ///        "StudentIdList": {"3fa85f64-5717-4562-b3fc-2c963f66afa6"}
+        ///     },
+        ///     {
+        ///        "ClassId": "1c2ag2g5-kgae-ud3p-bf4a-aaaw1a023gaa"
+        ///        "StudentIdList": {"172c40fe-32e4-43fd-b982-c87afe8b54fa", "f9113f7e-ae51-4f65-a7b4-2348f666787d"}
         ///     }
-        ///
+        ///]
         /// </remarks>
-        /// <response code="200">Return a bill after progress success</response>
+        /// <response code="200">Return a bill after progress Success</response>
         /// <response code="400">Invalid some value request</response>
         /// <response code="403">Invalid role</response>
         /// <response code="500">Unhandel database error</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.User.UserEndPointCheckoutNow)]
+        [HttpPost(ApiEndpointConstant.User.UserEndPointCheckout)]
         [ProducesResponseType(typeof(BillResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> CheckoutNow(CheckoutRequest request)
+        public async Task<IActionResult> CheckoutV1(List<CheckoutRequest> requests)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
 
-            var result = await ValidRequest(request.ClassId, request.StudentsIdList);
-
-            if (result is not OkResult)
+            foreach(var request in requests)
             {
-                return result;
-            }
+                var result = await ValidRequest(request.ClassId, request.StudentIdList);
 
-            var allStudentSchedules = new List<StudentScheduleResponse>();
-            foreach (var task in request.StudentsIdList.Select(async stu => await _studentService
-            .GetScheduleOfStudent(stu.ToString())))
-            {
-                var schedules = await task;
-                allStudentSchedules.AddRange(schedules);
-
-            }
-
-            if (!await _userService.ValidRegisterAsync(allStudentSchedules, request.ClassId, request.StudentsIdList))
-            {
-                return BadRequest(new ErrorResponse
+                if (result is not OkResult)
                 {
-                    Error = "Request meet invalid class standard",
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    TimeStamp = DateTime.Now,
-                });
-            }
+                    return result;
+                }
 
-            var response = await _userService.CheckoutNowAsync(request);
+                var allStudentSchedules = new List<StudentScheduleResponse>();
+                foreach (var task in request.StudentIdList.Select(async stu => await _studentService
+                .GetScheduleOfStudent(stu.ToString())))
+                {
+                    var schedules = await task;
+                    allStudentSchedules.AddRange(schedules);
+
+                }
+
+                if (!await _userService.ValidRegisterAsync(allStudentSchedules, request.ClassId, request.StudentIdList))
+                {
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = "Request meet invalid class Standard",
+                        StatusCode = StatusCodes.Status500InternalServerError,
+                        TimeStamp = DateTime.Now,
+                    });
+                }
+            }
+            var response = await _userService.CheckoutAsync(requests);
 
             return Ok(response);
         }
 
         #region document API check-out cart
         /// <summary>
-        ///  Check-out all selected item in cart
+        ///  Check-out all selected item request from Cart
         /// </summary>
-        /// <param name="cartItemIds">Id of all item in cart want to check-out</param>
+        /// <param name="cartItemIdList">Id of all item in Cart want to check-out</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///       "cartItemIds" : {"d3407e14-c7fc-49ff-ade3-438bedf415a8", "g3d07e14-ccrc-49ff-ade3-438bedolpkms"}
+        ///       "CartItemIdList" : {"d3407e14-c7fc-49ff-ade3-438bedf415a8", "g3d07e14-ccrc-49ff-ade3-438bedolpkms"}
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a bill after progess</response>
+        /// <response code="200">Return a bill after progess Success</response>
         /// <response code="404">Invalid request</response>
         /// <response code="403">Invalid role</response>
         /// <response code="500">Unhandel database error</response>
@@ -107,41 +114,52 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.CartEnpoint.CheckOutCart)]
         [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> CheckOutCart([FromBody] List<Guid> cartItemIds)
+        public async Task<IActionResult> CheckoutV2([FromBody] List<Guid> cartItemIdList)
         {
-
-            var result = await ValidCartItem(cartItemIds);
-
+            var result = await ValidCartItem(cartItemIdList);
             var items = result as OkObjectResult;
-            
+
             if (items == null)
             {
                 return result;
             }
 
+            var requests = new List<CheckoutRequest>();
+
             foreach (var item in (List<CartItemResponse>)items.Value!)
             {
                 var allStudentSchedules = new List<StudentScheduleResponse>();
+
                 foreach (var task in item!.Students.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.Id.ToString())))
+                .GetScheduleOfStudent(stu.StudentId.ToString())))
                 {
                     var schedules = await task;
                     allStudentSchedules.AddRange(schedules);
 
                 }
 
-                if (!await _userService.ValidRegisterAsync(allStudentSchedules, item.Class.Id, item.Students.Select(stu => stu.Id).ToList()))
+                if (!await _userService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
                 {
                     return BadRequest(new ErrorResponse
                     {
-                        Error = "Request meet invalid class standard",
+                        Error = "Request meet invalid Class standard",
                         StatusCode = StatusCodes.Status500InternalServerError,
                         TimeStamp = DateTime.Now,
                     });
                 }
-            }
 
-            var response = await _cartService.CheckOutCartAsync((List<CartItemResponse>)items.Value!);
+                var request = new CheckoutRequest
+                {
+                    StudentIdList = item.Students.Select(s => s.StudentId).ToList(),
+                    ClassId = item.Class.ClassId,
+                };
+
+                requests.Add(request);
+
+            }
+           
+            var response = await _userService.CheckoutAsync(requests);
+            await _cartService.DeleteItemInCartOfCurrentParentAsync(cartItemIdList);
 
             return Ok(response);
         }
@@ -151,26 +169,26 @@ namespace MagicLand_System.Controllers
         {
             var cart = await _cartService.GetDetailCurrentParrentCart();
 
-            var invalidItem = cartItemIds.Except(cart.CartItems.Select(s => s.Id)).ToList();
+            var invalidItem = cartItemIds.Except(cart.CartItems.Select(s => s.ItemId)).ToList();
             if (invalidItem.Any())
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Cart items Id not esxit in cart: " + string.Join(" And ", invalidItem.ToArray()),
+                    Error = "Cart items Id not esxit in Cart: [" + string.Join(" And ", invalidItem.ToArray()) + "]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
             }
 
-            var items = cartItemIds.Select(ci => cart.CartItems.Single(c => c.Id == ci)).ToList();
+            var items = cartItemIds.Select(ci => cart.CartItems.Single(c => c.ItemId == ci)).ToList();
 
-            var emptyStudentItem = items.Where(x => x.Students.Count() == 0).ToList();
-            if(emptyStudentItem.Count() > 0)
+            var emptyStudentItem = items.Where(x => x.Students.Count() == 0 || x.Class == null).ToList();
+            if (emptyStudentItem.Count() > 0)
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "There are one or more cart item Ids without student registration: " + 
-                    string.Join(" And ", emptyStudentItem.Select(x => x.Id).ToArray()),
+                    Error = "There are one or more Cart item Ids without Class and Student registration: [" +
+                    string.Join(" And ", emptyStudentItem.Select(x => x.ItemId).ToArray()) + "]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -185,7 +203,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = $"Class Id: {classId} Not Esxit",
+                    Error = $"Class Id: [{classId}] Not Esxit",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -198,7 +216,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Invalid student Id or you are trying to sign someone else's student: " + invalidStudentIds.Select(x => x.ToString(" And ")),
+                    Error = "Invalid Student Id or you are trying to sign someone else's Student: [" + invalidStudentIds.Select(x => x.ToString(" And ")) + "]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -214,13 +232,12 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = $"Your are request assign student {students.Where(x => x.Id == duplicateStudentId).Single().FullName} " +
-                    "more than twice into class",
+                    Error = $"Your are request assign Student [{students.Where(x => x.Id == duplicateStudentId).Single().FullName}] " +
+                    "more than twice into Class",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
             }
-
 
             return Ok();
         }

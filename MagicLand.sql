@@ -371,5 +371,8 @@ INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'418704fb-fac8-4119-
 INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'301efd4a-618e-4495-8e7e-daa223d3945e', N'9:15', N'11:15')
 INSERT [dbo].[Slot] ([Id], [StartTime], [EndTime]) VALUES (N'688fe18c-5db1-40aa-a7f3-f47ccd9fd395', N'16:30', N'18:30')
 GO
-INSERT [dbo].[CoursePrerequisite]([Id], [CurrentCourseId], [PrerequisiteCourseId]) VALUES ('6ab50a00-08ba-483c-bf5d-0d55b05a2cc1', '735616c5-b24a-4c16-a30a-a27a570cd6fe', 'f4f0b221-c583-4ca5-b26a-417889c2f9ad');
-INSERT [dbo].[CoursePrerequisite]([Id], [CurrentCourseId], [PrerequisiteCourseId]) VALUES ('6ab50a00-08ba-483c-bf5d-0d55b05a2cc2', '856fe3a8-13bb-40e0-a413-a6cee33b7130', '735616c5-b24a-4c16-a30a-a27a570cd6fe');
+INSERT [dbo].[CoursePrerequisite]([Id], [CurrentCourseId], [PrerequisiteCourseId]) VALUES ('6ab50a00-08ba-483c-bf5d-0d55b05a2cc1', '856FE3A8-13BB-40E0-A413-A6CEE33B7130', '06F5A898-E0DB-4766-B0AF-3340EC5D7B04');
+INSERT [dbo].[CoursePrerequisite]([Id], [CurrentCourseId], [PrerequisiteCourseId]) VALUES ('6ab50a00-08ba-483c-bf5d-0d55b05a2cc3', '06F5A898-E0DB-4766-B0AF-3340EC5D7B04', '871606A7-BAA0-4C79-B685-1443502D02B3');
+INSERT [dbo].[StudentClass]([Id], [Status], [StudentId], [ClassId]) VALUES ('6ab50a00-08ba-483c-bf5d-0d55b05a2cc4', 'normal', 'cabcdd4d-deac-49ec-f778-08dc02e976ed', '78ebe4df-b213-4e10-9fb9-a340374f1212');
+INSERT [dbo].[StudentClass]([Id], [Status], [StudentId], [ClassId]) VALUES ('6ab50a00-08ba-483c-bf5d-0d55b05a2cc5', 'normal', 'cabcdd4d-deac-49ec-f778-08dc02e976ed', '47867b8c-2ac6-48b4-acb4-2b949726f7a3');
+
