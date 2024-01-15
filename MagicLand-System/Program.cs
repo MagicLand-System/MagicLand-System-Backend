@@ -62,7 +62,6 @@ builder.Services.AddScoped<IUnitOfWork<MagicLandContext>, UnitOfWork<MagicLandCo
 builder.Services.AddControllers(opt => opt.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true).AddJsonOptions(opt =>
 {
     opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    opt.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
 
 builder.Services.AddAuthentication(options =>
