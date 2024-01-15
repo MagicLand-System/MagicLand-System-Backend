@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
@@ -47,12 +48,7 @@ namespace MagicLand_System.Controllers
             var response = await _studentService.GetClassOfStudent(studentId, status);
             if (response == null || response.Count == 0)
             {
-                return NotFound(new ErrorResponse
-                {
-                    Error = "Not found any class",
-                    StatusCode = StatusCodes.Status404NotFound,
-                    TimeStamp = DateTime.Now,
-                });
+               return Ok(new List<ClassResExtraInfor>());
             }
             return Ok(response);
         }
