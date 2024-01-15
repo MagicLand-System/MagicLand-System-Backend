@@ -364,7 +364,7 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
         {
-            if (!cls.Status!.Equals("UPCOMMING"))
+            if (!cls.Status!.Equals("UPCOMING"))
             {
                 throw new BadHttpRequestException($"Sorry you are only can register into [Upcoming] class, this class is already [{cls.Status.ToString()}]",
                     StatusCodes.Status400BadRequest);
