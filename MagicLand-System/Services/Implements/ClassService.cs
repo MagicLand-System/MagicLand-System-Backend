@@ -376,14 +376,11 @@ namespace MagicLand_System.Services.Implements
                .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
                .Include(x => x.Lecture!)
                .Include(x => x.StudentClasses)
-               .Include(x => x.Course)
-               .ThenInclude(c => c.CourseSyllabus)
-               .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
+               .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+               .Include(x => x.Course).ThenInclude(c => c!.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-               .ThenInclude(s => s.Slot)!
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-               .ThenInclude(s => s.Room)!);
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
 
             return _mapper.Map<ClassResExtraInfor>(cls);
         }
@@ -405,14 +402,11 @@ namespace MagicLand_System.Services.Implements
                 .GetListAsync(predicate: x => x.CourseId == id, include: x => x
                 .Include(x => x.Lecture!)
                 .Include(x => x.StudentClasses)
-                .Include(x => x.Course)
-                .ThenInclude(c => c!.CourseSyllabus)
-                .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
+                .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+                .Include(x => x.Course).ThenInclude(c => c!.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                 .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-                .ThenInclude(s => s.Slot)!
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-                .ThenInclude(s => s.Room)!);
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
 
             var responses = classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
 
@@ -429,16 +423,12 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(include: x => x
                 .Include(x => x.Lecture)
-                .Include(x => x.Course!)
-                .ThenInclude(c => c.CourseSyllabus)
-                .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
+                .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+                .Include(x => x.Course!).ThenInclude(c => c.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                 .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                 .Include(x => x.StudentClasses)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-                .ThenInclude(s => s.Slot)!
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-                .ThenInclude(s => s.Room)!);
-
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
         }
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
