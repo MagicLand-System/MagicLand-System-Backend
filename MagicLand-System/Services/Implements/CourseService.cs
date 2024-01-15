@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
-using MagicLand_System.Mappers.CustomMapper;
-using MagicLand_System.PayLoad.Response.Course;
+using MagicLand_System.Mappers.Custom;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -15,9 +15,9 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<CourseResponse>> FilterCourseAsync(
-            int minYearsOld, 
-            int maxYearsOld, 
+        public async Task<List<CourseResExtraInfor>> FilterCourseAsync(
+            int minYearsOld,
+            int maxYearsOld,
             int? minNumberSession,
             int? maxNumberSession,
             double minPrice,
@@ -33,8 +33,8 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisitesFilter = await GetCoursePrerequesites(filteredCourses);
             var coureSubsequentsFilter = await GetCoureSubsequents(filteredCourses);
 
-            return filteredCourses.Select(fc => CustomMapper
-                   .fromCourseToCourseResponse(fc, coursePrerequisitesFilter
+            return filteredCourses.Select(fc => CourseCustomMapper
+                   .fromCourseToCourseResExtraInfor(fc, coursePrerequisitesFilter
                    .Where(cpf => fc.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == cpf.Id)),
                    coureSubsequentsFilter)).ToList();
         }
@@ -61,7 +61,7 @@ namespace MagicLand_System.Services.Implements
             return filteredCourses;
         }
 
-        public async Task<CourseResponse> GetCourseByIdAsync(Guid id)
+        public async Task<CourseResExtraInfor> GetCourseByIdAsync(Guid id)
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
             .Include(x => x.CoursePrerequisites)
@@ -75,13 +75,13 @@ namespace MagicLand_System.Services.Implements
             .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
             .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
 
-            var coursePrerequisites = course == null
+            var coursePrerequisites = !course.Any()
                 ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
                 : await GetCoursePrerequesites(course);
 
             var coureSubsequents = await GetCoureSubsequents(course);
 
-            return CustomMapper.fromCourseToCourseResponse(course.ToList()[0], coursePrerequisites, coureSubsequents);
+            return CourseCustomMapper.fromCourseToCourseResExtraInfor(course.ToList()[0], coursePrerequisites, coureSubsequents);
         }
 
         public async Task<List<CourseCategory>> GetCourseCategories()
@@ -90,21 +90,21 @@ namespace MagicLand_System.Services.Implements
             return categories.ToList();
         }
 
-        public async Task<List<CourseResponse>> GetCoursesAsync()
+        public async Task<List<CourseResExtraInfor>> GetCoursesAsync()
         {
             var courses = await GetDefaultCourse();
 
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return courses.Select(c => CustomMapper
-            .fromCourseToCourseResponse(c, coursePrerequisites
+            return courses.Select(c => CourseCustomMapper
+            .fromCourseToCourseResExtraInfor(c, coursePrerequisites
             .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
             coureSubsequents)).ToList();
         }
 
 
-        public async Task<List<CourseResponse>> SearchCourseByNameAsync(string keyWord)
+        public async Task<List<CourseResExtraInfor>> SearchCourseByNameAsync(string keyWord)
         {
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
@@ -123,8 +123,8 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return courses.Select(c => CustomMapper
-                  .fromCourseToCourseResponse(c, coursePrerequisites
+            return courses.Select(c => CourseCustomMapper
+                  .fromCourseToCourseResExtraInfor(c, coursePrerequisites
                   .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
                   coureSubsequents)).ToList();
         }
@@ -155,7 +155,7 @@ namespace MagicLand_System.Services.Implements
                     .SingleOrDefaultAsync(predicate: x => x.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == c.Id),
                     include: x => x.Include(x => x.CourseCategory));
 
-                if(course != null)
+                if (course != null)
                 {
                     coureSubsequents.Add(course);
                 }

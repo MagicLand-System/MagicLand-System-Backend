@@ -1,7 +1,7 @@
 ﻿    using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Class;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
@@ -22,20 +22,20 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Get all Class Existed
         /// </summary>
-        /// <response code="200">Return a list of Course statify request</response>
+        /// <response code="200">Return a list of class</response>
         /// <response code="500">Unhandel database error</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAll)]
         [AllowAnonymous]
         public async Task<IActionResult> GetClasses()
         {
-            var courses = await _classService.GetClassesAsync();
-            return Ok(courses);
+            var classes = await _classService.GetClassesAsync();
+            return Ok(classes);
         }
 
         #region document API Get Class By Course Id
         /// <summary>
-        ///  Get All Specific Class Base On Course Id
+        ///  Get All Specific Class base on Course Id
         /// </summary>
         /// <remarks>
         /// Sample request:
@@ -49,7 +49,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Id of course not esxist</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
-        [ProducesResponseType(typeof(List<ClassResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ClassResExtraInfor), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         public async Task<IActionResult> GetClassByCourseId(Guid id)
@@ -167,17 +167,6 @@ namespace MagicLand_System.Controllers
                 });
             }
             return Ok(matchClass);  
-        }
-        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertAttandance)]
-        [AllowAnonymous]
-        public async Task<IActionResult> InsertAttandance()
-        {
-            var success = await _classService.InsertAttandance();
-            if (!success) 
-            {
-                return BadRequest();
-             }
-            return Ok(success);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.AutoCreateClassEndPoint)]
         [AllowAnonymous]

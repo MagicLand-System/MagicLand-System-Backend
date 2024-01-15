@@ -1,0 +1,28 @@
+﻿using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Response.Students;
+
+namespace MagicLand_System.Mappers.Custom
+{
+    public class StudentCustomMapper
+    {
+        public static StudentResponse fromStudentToStudentResponse(Student student)
+        {
+            if (student == null)
+            {
+                throw new NullReferenceException();
+            }
+
+            StudentResponse response = new StudentResponse
+            {
+                StudentId = student.Id,
+                FullName = student.FullName ??= "Undefine",
+                Age = DateTime.Now.Year - student.DateOfBirth.Year,
+                Gender = student.Gender!.ToString(),
+                Avatar = student.AvatarImage ??= DefaultAvatarConstant.DefaultAvatar()
+            };
+
+            return response;
+        }
+    }
+}

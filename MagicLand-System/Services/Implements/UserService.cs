@@ -1,21 +1,17 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Cart;
-using MagicLand_System.PayLoad.Response.Student;
-using MagicLand_System.PayLoad.Response.User;
+using MagicLand_System.PayLoad.Response.Carts;
+using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Cryptography;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -153,7 +149,7 @@ namespace MagicLand_System.Services.Implements
                     DateOfBirth = user.DateOfBirth,
                     Gender = user.Gender,
                     Phone = user.Phone,
-                    Id = user.Id,
+                    LectureId = user.Id,
                     Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()
                 };
                 lecturerResponses.Add(response);
@@ -165,70 +161,187 @@ namespace MagicLand_System.Services.Implements
             return lecturerResponses;
         }
 
-        public async Task<BillResponse> CheckoutNowAsync(CheckoutRequest request)
+        public async Task<BillResponse> CheckoutAsync(List<CheckoutRequest> requests)
         {
-            var price = await _unitOfWork.GetRepository<Course>()
-                .SingleOrDefaultAsync(selector: x => x.Price, predicate: x => x.Classes.Any(c => c.Id.Equals(request.ClassId)));
-
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>()
-                .SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
-
-            double total = ValidateWallet(request.StudentsIdList.Count(), price, personalWallet.Balance);
-
-            await PurchaseProgress(request, personalWallet, total);
-
             var currentPayer = await GetCurrentUser();
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
+            await ValidateScheduleEachItem(requests.Select(r => r.ClassId).ToList());
+
+            double total = await ValidateBalance(requests, personalWallet.Balance);
+            double discountEachItem = CalculateDiscountEachItem(requests.Count(), total);
+
+            var messageList = await PurchaseProgress(requests, personalWallet, currentPayer, discountEachItem);
+
+            return RenderBill(currentPayer, messageList, total, discountEachItem * requests.Count());
+        }
+        private async Task<List<string>> PurchaseProgress(List<CheckoutRequest> requests, PersonalWallet personalWallet, User currentPayer, double discountEachItem)
+        {
+            var messageList = new List<string>();
+
+            foreach (var request in requests)
+            {
+                var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == request.ClassId,
+                    include: x => x.Include(x => x.Course!)
+                    .Include(x => x.Schedules)
+                    .Include(x => x.StudentClasses));
+
+                var currentRequestTotal = cls.Course!.Price * request.StudentIdList.Count() - discountEachItem;
+
+                string studentNameString = await RenderStudentNameString(request.StudentIdList);
+
+                var newStudentAttendanceList = await RenderStudentAttendanceList(cls, request.StudentIdList);
+
+                var newTransaction = new WalletTransaction
+                {
+                    Id = new Guid(),
+                    Money = currentRequestTotal,
+                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
+                    Description = $"[ClassCodes: {cls.ClassCode} ] [Parent: {currentPayer.FullName}] [StudentNames: {studentNameString}]",
+                    CreatedTime = DateTime.Now,
+                    PersonalWalletId = personalWallet.Id,
+                    PersonalWallet = personalWallet,
+                    IsProcessed = false,
+                };
+
+                var newStudentInClassList = request.StudentIdList.Select(sil =>
+                new StudentClass
+                {
+                    Id = new Guid(),
+                    StudentId = sil,
+                    ClassId = cls.Id,
+                }).ToList();
+
+                personalWallet.Balance = personalWallet.Balance - currentRequestTotal;
+
+                await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentAttendanceList);
+
+                string message = "Students: [" + studentNameString + $"] has been registered in Class: [{cls.Name}]";
+                messageList.Add(message);
+            }
+
+            return messageList;
+        }
+
+        private async Task SavePurchaseProgressed(
+            Class cls,
+            PersonalWallet personalWallet,
+            WalletTransaction newTransaction,
+            List<StudentClass> newStudentInClassList,
+            List<Attendance> newStudentAttendanceList)
+        {
+            try
+            {
+                if (cls.StudentClasses.Count() + newStudentInClassList.Count() >= cls.LeastNumberStudent)
+                {
+                    await UpdateTransaction(cls);
+
+                    await UpdateStudentAttendance(cls);
+
+                    newStudentAttendanceList.ForEach(attendance => attendance.IsPublic = true);
+                    newTransaction.IsProcessed = true;
+                }
+
+                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
+                await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(newStudentInClassList);
+                await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendanceList);
+                await _unitOfWork.GetRepository<WalletTransaction>().InsertAsync(newTransaction);
+
+                await _unitOfWork.CommitAsync();
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Progress register Class [{cls.Name}] meet the issue: " + ex.InnerException!.ToString());
+            }
+        }
+
+        private async Task UpdateStudentAttendance(Class cls)
+        {
+            try
+            {
+                foreach (var schedule in cls.Schedules)
+                {
+                    var presentAttendances = await _unitOfWork.GetRepository<Attendance>()
+                    .GetListAsync(predicate: x => x.ScheduleId == schedule.Id);
+
+                    if (presentAttendances.Any())
+                    {
+                        presentAttendances.ToList().ForEach(attendance => attendance.IsPublic = true);
+                        _unitOfWork.GetRepository<Attendance>().UpdateRange(presentAttendances);
+
+                        await _unitOfWork.CommitAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Progress register Class [{cls.Name}] meet the issue: " + ex.InnerException!.ToString());
+            }
+        }
+
+        private async Task UpdateTransaction(Class cls)
+        {
+            try
+            {
+                var oldTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
+                .GetListAsync(predicate: x => x.Description!.Contains(cls.ClassCode!));
+
+                if (oldTransactions.Any())
+                {
+                    oldTransactions.ToList().ForEach(transaction => transaction.IsProcessed = true);
+                    _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(oldTransactions);
+
+                    await _unitOfWork.CommitAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Progress register Class [{cls.Name}] meet the issue: " + ex.InnerException!.ToString());
+            }
+          
+        }
+
+        private BillResponse RenderBill(User currentPayer, List<string> messageList, double total, double discount)
+        {
             var bill = new BillResponse
             {
                 Status = "Purchase Success",
-                Message = "Students has been registered in class",
+                Message = string.Join(" And ", messageList),
                 Cost = total,
-                Discount = 0.0,
-                MoneyPaid = total,
+                Discount = discount,
+                MoneyPaid = total - discount,
                 Date = DateTime.Now,
                 Method = CheckOutMethodEnum.SystemWallet.ToString(),
-                Payer = currentPayer.FullName!,              
+                Payer = currentPayer.FullName!,
             };
 
             return bill;
         }
 
-        private async Task PurchaseProgress(CheckoutRequest request, PersonalWallet personalWallet, double total)
-        {
-            try
-            {
-                var newTransaction = new WalletTransaction
-                {
-                    Id = new Guid(),
-                    Money = total,
-                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
-                    Description = $"Direct registered students into class: {request.ClassId}",
-                    CreatedTime = DateTime.Now,
-                    PersonalWalletId = personalWallet.Id,
-                    PersonalWallet = personalWallet
-                };
 
-                var studentInClasses = request.StudentsIdList.Select(sil =>
-                new StudentClass
+        private async Task<List<Attendance>> RenderStudentAttendanceList(Class cls, List<Guid> studentIds)
+        {
+            var studentAttendanceList = new List<Attendance>();
+
+            var classSchedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Class!.Id == cls.Id);
+
+            foreach (var schedule in classSchedules)
+            {
+                var studentAttendance = studentIds.Select(si => new Attendance
                 {
                     Id = new Guid(),
-                    StudentId = sil,
-                    ClassId = request.ClassId,
+                    StudentId = si,
+                    ScheduleId = schedule.Id,
+                    IsPresent = null,
+                    IsPublic = false,
                 }).ToList();
 
-                personalWallet.Balance = personalWallet.Balance - total;
-
-                _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
-                await _unitOfWork.GetRepository<WalletTransaction>().InsertAsync(newTransaction);
-                await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentInClasses);
-
-                await _unitOfWork.CommitAsync();
+                studentAttendanceList.AddRange(studentAttendance);
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.InnerException!.ToString());
-            }
+
+            return studentAttendanceList;
         }
 
         public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
@@ -246,35 +359,140 @@ namespace MagicLand_System.Services.Implements
 
             ValidateSchedule(allStudentSchedules, cls);
 
-            //Validate Course Prerequsite  ?
-
             return true;
         }
 
         private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
         {
+            if (!cls.Status!.Equals("UPCOMMING"))
+            {
+                throw new BadHttpRequestException($"Sorry you are only can register into [Upcoming] class, this class is already [{cls.Status.ToString()}]",
+                    StatusCodes.Status400BadRequest);
+            }
+
             foreach (Guid id in studentIds)
             {
                 var student = await _unitOfWork.GetRepository<Student>()
                 .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
 
-                if(cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
+                if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
-                    throw new BadHttpRequestException($"Student {student.FullName} already assigned to class {cls.Name}", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Student [{student.FullName}] already assigned to class [{cls.Name}]", StatusCodes.Status400BadRequest);
                 }
 
                 int age = DateTime.Now.Year - student.DateOfBirth.Year;
 
                 if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
                 {
-                    throw new BadHttpRequestException($"Student {student.FullName} age is not suitable to asign class {cls.Name}", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Student [{student.FullName}] age is not suitable to asign class [{cls.Name}]", StatusCodes.Status400BadRequest);
                 }
+
+                await ValidateCoursePrerequisite(student, cls);
             }
 
             if (cls.StudentClasses.Count() + studentIds.Count() > cls.LimitNumberStudent)
             {
-                throw new BadHttpRequestException($"Class {cls.Name} has over student index", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Class [{cls.Name}] has over student index", StatusCodes.Status400BadRequest);
             }
+        }
+
+        private async Task ValidateCoursePrerequisite(Student student, Class cls)
+        {
+            var currentCourseIdPrerRequiredList = (List<Guid>)await _unitOfWork.GetRepository<Course>()
+                .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
+                predicate: x => x.Classes.Any(c => c.Id.Equals(cls.Id)),
+                include: x => x.Include(x => x.CoursePrerequisites));
+
+            var allCoursePrerIdRequired = new List<Guid>();
+
+            var allCoursePrerIdRequiredRender = await RenderAllCoursePrerRequired(currentCourseIdPrerRequiredList);
+            allCoursePrerIdRequired.AddRange(allCoursePrerIdRequiredRender);
+
+            if (allCoursePrerIdRequired?.Any() ?? false)
+            {
+                await ValidateCoursePrerProgress(student, cls, allCoursePrerIdRequired);
+            }
+        }
+
+        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allCoursePrerIdRequired)
+        {
+            var courseRequiredList = new List<Course>();
+
+            foreach (Guid id in allCoursePrerIdRequired)
+            {
+                var courseRequired = await _unitOfWork.GetRepository<Course>()
+                   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
+
+                courseRequiredList.Add(courseRequired);
+            }
+
+            var courseCompleted = await _unitOfWork.GetRepository<Course>()
+               .GetListAsync(predicate: x => x.Classes.Any(c => c.StudentClasses
+               .Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Equals("COMPLETED"))));
+
+            if (courseCompleted?.Any() ?? false)
+            {
+                var courseNotSatisfied = courseRequiredList.Where(cr => !courseCompleted.Any(c => cr.Id == c.Id)).ToList();
+                if (courseNotSatisfied?.Any() ?? false)
+                {
+                    throw new BadHttpRequestException($"Student {student.FullName} is not completed course prerequisites: " +
+                        $"[ {string.Join(", ", courseNotSatisfied.Select(c => c.Name))} ] to join class: [{cls.Name}]", StatusCodes.Status400BadRequest);
+                }
+            }
+            else
+            {
+                throw new BadHttpRequestException($"Student [{student.FullName}] is not satisfied course prerequisites: " +
+                       $"[ {string.Join(", ", courseRequiredList.Select(c => c.Name))} ] to join class: [{cls.Name}]", StatusCodes.Status400BadRequest);
+            }
+
+        }
+
+        private async Task<List<Guid>> RenderAllCoursePrerRequired(List<Guid> currentCourseIdPrerRequiredList)
+        {
+            var allCoursePrerIdRequired = new List<Guid>();
+
+            if (currentCourseIdPrerRequiredList?.Any() ?? false)
+            {
+                allCoursePrerIdRequired.AddRange(currentCourseIdPrerRequiredList);
+
+                currentCourseIdPrerRequiredList = await GetSubCoursePrerIdRequired(currentCourseIdPrerRequiredList);
+
+                allCoursePrerIdRequired.AddRange(currentCourseIdPrerRequiredList);
+            }
+
+            return allCoursePrerIdRequired;
+        }
+
+        private async Task<List<Guid>> GetSubCoursePrerIdRequired(List<Guid> courseIdRequiredList)
+        {
+            var subCoursePrerIdRequiredList = new List<Guid>();
+
+            bool isAll = false;
+
+            while (isAll == false)
+            {
+                var tempCourseIdRequiredList = new List<Guid>();
+
+                foreach (Guid id in courseIdRequiredList!)
+                {
+                    var coursePrerIdRequired = await _unitOfWork.GetRepository<Course>()
+                       .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
+                       predicate: x => x.CoursePrerequisites.Any(cp => cp.CurrentCourseId == id),
+                       include: x => x.Include(x => x.CoursePrerequisites));
+
+                    if (coursePrerIdRequired?.Any() ?? false)
+                    {
+                        tempCourseIdRequiredList.AddRange(coursePrerIdRequired);
+                    }
+                }
+                courseIdRequiredList = tempCourseIdRequiredList;
+
+                subCoursePrerIdRequiredList.AddRange(courseIdRequiredList);
+
+                isAll = courseIdRequiredList.Any() ? false : true;
+            }
+
+            return subCoursePrerIdRequiredList ??= new List<Guid>();
         }
 
         private void ValidateSchedule(List<StudentScheduleResponse> allStudentSchedules, Class cls)
@@ -287,25 +505,105 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (ass.Date == s.Date && ass.StartTime == s.Slot!.StartTime)
                         {
-                            throw new BadHttpRequestException($"Current class schedule of {ass.StudentName} is coincide start time {s.Slot.StartTime} with {cls.Name} schedule slot", StatusCodes.Status400BadRequest);
+                            throw new BadHttpRequestException($"Current registered Class [{ass.ClassName}] Schedule of Student [{ass.StudentName}] is coincide start time [{s.Slot.StartTime}]" +
+                                $" with [{cls.Name}] Schedule slot", StatusCodes.Status400BadRequest);
                         }
                     }
                 }
             }
         }
-
-        private double ValidateWallet(int numberStudent, double price, double balance)
+        private async Task ValidateScheduleEachItem(List<Guid> classIdList)
         {
-            double totalPrice = price * numberStudent;
+            var classes = new List<Class>();
 
-            if (balance < totalPrice)
+            foreach(var id in classIdList)
             {
-                throw new BadHttpRequestException($"Your balance has not enough balance require greater than: {totalPrice}", StatusCodes.Status400BadRequest);
-            }
+                var cls = await _unitOfWork.GetRepository<Class>()
+                   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
+                   .Include(x => x.Schedules)
+                   .ThenInclude(s => s.Slot)
+                   .Include(x => x.Schedules)
+                   .ThenInclude(s => s.Room)!);
 
-            return totalPrice;
+                classes.Add(cls);
+            }
+           
+            for(int i = 0; i < classes.Count - 1; i++)
+            {
+                for(int j = i + 1; j < classes.Count; j++)
+                {
+                    CheckConflictSchedule(classes, i, j);
+                }
+            }
         }
 
+        private static void CheckConflictSchedule(List<Class> classes, int defaultIndex, int browserIndex)
+        {
+            var defaultSchedules = classes[defaultIndex].Schedules;
+            var browserSchedules = classes[browserIndex].Schedules;
+
+            foreach (var ds in defaultSchedules)
+            {
+                foreach (var bs in browserSchedules)
+                {
+                    if (ds.Date == bs.Date && ds.Slot!.StartTime == bs.Slot!.StartTime)
+                    {
+                        if (classes[defaultIndex].Id == classes[browserIndex].Id)
+                        {
+                            throw new BadHttpRequestException($"You are trying to register Class [{classes[defaultIndex].Name}] two or more time", StatusCodes.Status400BadRequest);
+                        }
+
+                        throw new BadHttpRequestException($"Class [{classes[defaultIndex].Name}] Schedule is coincide Slot Start Time [{ds.Slot.StartTime}]" +
+                        $" with Class [{classes[browserIndex].Name}] please chose one of the two that you are most prefer to register", StatusCodes.Status400BadRequest);
+                    }
+                }
+            }
+        }
+
+        private async Task<double> ValidateBalance(List<CheckoutRequest> requests, double balance)
+        {
+
+            double total = 0.0;
+
+            foreach (var request in requests)
+            {
+                var price = await _unitOfWork.GetRepository<Class>()
+                .SingleOrDefaultAsync(selector: x => x.Course!.Price, predicate: x => x.Id.Equals(request.ClassId), include: x => x.Include(x => x.Course)!);
+
+                total += request.StudentIdList.Count() * price;
+            }
+
+            if (balance < total)
+            {
+                throw new BadHttpRequestException($"Your balance has not enough, balance require greater than: [{total} d]", StatusCodes.Status400BadRequest);
+            }
+
+            return total;
+        }
+
+        private double CalculateDiscountEachItem(int numberItem, double total)
+        {
+            double discount = numberItem >= 2
+                   ? double.Round((total * 10) / 100 / numberItem)
+                   : 0.0;
+
+            return discount;
+        }
+
+        private async Task<string> RenderStudentNameString(List<Guid> stundentIdList)
+        {
+            var studentNameList = new List<string>();
+
+            foreach (Guid id in stundentIdList)
+            {
+                var studentName = await _unitOfWork.GetRepository<Student>()
+                .SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(id));
+
+                studentNameList.Add(studentName!);
+            }
+
+            return string.Join(", ", studentNameList);
+        }
 
     }
 }

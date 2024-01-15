@@ -58,14 +58,14 @@ namespace MagicLand_System.Repository.Implement
         {
             IQueryable<T> query = _dbSet;
 
-            if (include != null) query = include(query);
+            if (include != null) query = include(query).IgnoreAutoIncludes();
 
             if (predicate != null) query = query.Where(predicate);
 
             if (orderBy != null) return await orderBy(query).AsNoTracking().ToListAsync();
 
             return await query.AsNoTracking().ToListAsync();
-        }
+        }   
 
         public virtual async Task<ICollection<TResult>> GetListAsync<TResult>(Expression<Func<T, TResult>> selector, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
         {

@@ -1,10 +1,9 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Student;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -13,7 +12,7 @@ namespace MagicLand_System.Controllers
     public class StudentController : BaseController<StudentController>
     {
         private readonly IStudentService _studentService;
-        public StudentController(ILogger<StudentController> logger,IStudentService studentService) : base(logger)
+        public StudentController(ILogger<StudentController> logger, IStudentService studentService) : base(logger)
         {
             _studentService = studentService;
         }
@@ -23,21 +22,21 @@ namespace MagicLand_System.Controllers
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> AddStudent(CreateStudentRequest request)
         {
-            if(!ModelState.IsValid) 
+            if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
             var isSuccess = await _studentService.AddStudent(request);
-            if(!isSuccess) 
+            if (!isSuccess)
             {
                 return BadRequest(new ErrorResponse
                 {
                     Error = "Insert to db failed",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
-                }) ;
+                });
             }
-            return Ok(new {Message = "Create Successfully"});
+            return Ok(new { Message = "Create Successfully" });
         }
         [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentEndpointGetClass)]
         [ProducesResponseType(typeof(StudentClassResponse), StatusCodes.Status200OK)]
@@ -45,15 +44,15 @@ namespace MagicLand_System.Controllers
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
         public async Task<IActionResult> GetClassFromStudent([FromQuery] string studentId, [FromQuery] string status = null)
         {
-            var response = await _studentService.GetClassOfStudent(studentId,status);
-            if(response == null || response.Count == 0)
+            var response = await _studentService.GetClassOfStudent(studentId, status);
+            if (response == null || response.Count == 0)
             {
                 return NotFound(new ErrorResponse
                 {
                     Error = "Not found any class",
                     StatusCode = StatusCodes.Status404NotFound,
                     TimeStamp = DateTime.Now,
-                }) ;
+                });
             }
             return Ok(response);
         }
