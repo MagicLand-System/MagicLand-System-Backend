@@ -3,8 +3,11 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
+using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +18,27 @@ namespace MagicLand_System.Services.Implements
     {
         public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+        }
+
+        public async Task<string> AutoCreateClassCode(string courseId)
+        {
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId));
+            if (course == null)
+            {
+                return null;
+            }
+            var name = course.Name;
+            var words = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string abbreviation = string.Join("", words.Select(word => word[0]));
+            var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)));
+            int numberOfClass = 0;
+            if (classes == null)
+            {
+                numberOfClass = 1;
+            }
+            numberOfClass = classes.Count + 1;
+            abbreviation = abbreviation + "" + numberOfClass.ToString();
+            return abbreviation;
         }
 
         public async Task<bool> CreateNewClass(CreateClassRequest request)
@@ -145,9 +169,34 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<MyClassResponse>> GetAllClass(string classCode = null)
+
+        public async Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include: x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
+            var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
+            var lecturerId = classes.First(x => x.Id == x.Id).LecturerId;
+            var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(roomId.ToString()));
+            var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(lecturerId.ToString()));
+            RoomResponse roomResponse = new RoomResponse
+            {
+                Floor = room.Floor.Value,
+                Capacity = room.Capacity,
+                RoomId = room.Id,
+                Name = room.Name,
+                Status = room.Status,
+                LinkUrl = room.LinkURL,
+
+            };
+            LecturerResponse lecturerResponse = new LecturerResponse
+            {
+                AvatarImage = lecturer.AvatarImage,
+                DateOfBirth = lecturer.DateOfBirth,
+                Email = lecturer.Email,
+                FullName = lecturer.FullName,
+                Gender = lecturer.Gender,
+                LectureId = lecturer.Id,
+                Phone = lecturer.Phone,
+            };
             List<MyClassResponse> result = new List<MyClassResponse>();
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
@@ -240,6 +289,8 @@ namespace MagicLand_System.Services.Implements
                     NumberStudentRegistered = c.StudentClasses.Count(),
                     Schedules = schedules,
                     CourseName = c.Course.Name,
+                    LecturerResponse = lecturerResponse,
+                    RoomResponse = roomResponse,
                 };
                 result.Add(myClassResponse);
             }
@@ -247,11 +298,30 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-            if (classCode == null)
+            if (searchString == null && status == null)
             {
                 return result;
             }
-            return (result.Where(x => x.ClassCode.ToLower().Contains(classCode.ToLower()))).ToList();
+            if (searchString == null)
+            {
+                return (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).ToList());
+            }
+            if (status == null)
+            {
+                List<MyClassResponse> res = new List<MyClassResponse>();
+                var filter1 = result.Where(x => x.ClassCode.ToLower().Contains(searchString.ToLower()));
+                if (filter1 != null)
+                {
+                    res.AddRange(filter1);
+                }
+                var filter2 = result.Where(x => x.CourseName.ToLower().Contains((searchString.ToLower())));
+                if (filter2 != null)
+                {
+                    res.AddRange(filter2);
+                }
+                return res;
+            }
+            return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).ToList();
         }
 
         public async Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent)
@@ -366,6 +436,44 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date))
                 .ThenInclude(s => s.Room)!);
 
+        }
+
+        public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
+        {
+            var studentIds = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id), selector: x => x.StudentId);
+            if (studentIds == null)
+            {
+                return null;
+            }
+            List<StudentInClass> result = new List<StudentInClass>();
+            foreach (var studentId in studentIds)
+            {
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().ToLower().Equals(studentId.ToString().ToLower()), include: x => x.Include(x => x.User));
+                StudentInClass studentInClass = new StudentInClass
+                {
+                    DateOfBirth = student.DateOfBirth,
+                    FullName = student.FullName,
+                    Gender = student.Gender,
+                    ParentName = student.User.FullName,
+                    ParentPhoneNumber = student.User.Phone,
+                    StudentId = student.Id,
+                    ImgAvatar = student.AvatarImage,
+                };
+                result.Add(studentInClass);
+            }
+            return result;
+
+        }
+
+        public async Task<MyClassResponse> GetClassDetail(string id)
+        {
+            var listClass = await GetAllClass();
+            if (listClass == null)
+            {
+                return null;
+            }
+            var matchClass = listClass.SingleOrDefault(x => x.ClassId.ToString().Equals(id.ToString()));
+            return matchClass;
         }
     }
 }
