@@ -72,10 +72,10 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("CartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ClassId")
+                    b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CourseId")
+                    b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateCreated")
@@ -93,6 +93,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AddedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
@@ -672,7 +675,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsProcessed")
+                    b.Property<bool?>("IsProcessed")
                         .HasColumnType("bit");
 
                     b.Property<double>("Money")

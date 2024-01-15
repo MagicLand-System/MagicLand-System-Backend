@@ -83,5 +83,10 @@
             public const string GetAll = ApiEndpoint + "/slots";
             public const string SlotById = GetAll + "/{id}";
         }
+        public static class WalletTransaction
+        {
+            public const string GetAll = ApiEndpoint + "/walletTransactions";
+            public const string TransactionById = GetAll + "/{id}";
+        }
     }
 }

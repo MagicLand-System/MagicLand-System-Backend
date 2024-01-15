@@ -18,6 +18,7 @@ namespace MagicLand_System.Domain.Models
         public int LeastNumberStudent { get; set; }
         public string? Image { get; set; } = null;
         public string? Video { get; set; } = null;
+        public DateTime? AddedDate { get; set; }
 
         [ForeignKey("Course")]
         public Guid CourseId { get; set; }

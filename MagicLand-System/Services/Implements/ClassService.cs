@@ -57,11 +57,12 @@ namespace MagicLand_System.Services.Implements
                 LeastNumberStudent = request.LeastNumberStudent,
                 LimitNumberStudent = request.LimitNumberStudent,
                 LecturerId = request.LecturerId,
-                Status = "UPCOMMING",
+                Status = "UPCOMING",
                 Method = request.Method,
                 District = "Tân Bình",
                 City = "Hồ Chí Minh",
                 Street = "138 Lương Định Của",
+                AddedDate = DateTime.Now,
             };
             await _unitOfWork.GetRepository<Class>().InsertAsync(createdClass);
             var isSuccessAtClass = await _unitOfWork.CommitAsync() > 0;
@@ -173,6 +174,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include: x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
+            classes = (classes.OrderByDescending(x => x.AddedDate)).ToList();
             var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
             var lecturerId = classes.First(x => x.Id == x.Id).LecturerId;
             var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(roomId.ToString()));
@@ -291,6 +293,7 @@ namespace MagicLand_System.Services.Implements
                     CourseName = c.Course.Name,
                     LecturerResponse = lecturerResponse,
                     RoomResponse = roomResponse,
+                    CreatedDate = c.AddedDate.Value,
                 };
                 result.Add(myClassResponse);
             }

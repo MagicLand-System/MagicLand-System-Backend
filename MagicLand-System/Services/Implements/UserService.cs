@@ -198,7 +198,7 @@ namespace MagicLand_System.Services.Implements
                     Id = new Guid(),
                     Money = currentRequestTotal,
                     Type = CheckOutMethodEnum.SystemWallet.ToString(),
-                    Description = $"[ClassCodes: {cls.ClassCode} ] [Parent: {currentPayer.FullName}-{currentPayer.Phone}] [StudentNames: {studentNameString}]",
+                    Description = $"[ClassCodes: {cls.ClassCode} ] [Parent: {currentPayer.FullName} ] [StudentNames: {studentNameString}]",
                     CreatedTime = DateTime.Now,
                     PersonalWalletId = personalWallet.Id,
                     PersonalWallet = personalWallet,
