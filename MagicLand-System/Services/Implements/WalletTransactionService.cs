@@ -46,7 +46,8 @@ namespace MagicLand_System.Services.Implements
                     names.Add(cleanParts[i]);
                 }
                 User user = transaction.PersonalWallet.User;
-                Class myclass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.ClassCode.ToLower().Equals(classCode.ToLower()));
+                Class myclass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.ClassCode.ToLower().Equals(classCode.Trim().ToLower()));
+                var coursename = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(myclass.CourseId.ToString()),selector : x => x.Name);
                 List<Student> students = new List<Student>();
                 foreach (var namex in names) 
                 {
@@ -71,7 +72,8 @@ namespace MagicLand_System.Services.Implements
                     Type = "SystemWallet",
                     TransactionId = transaction.Id,
                     MyClassResponse = myclass,
-                    Students = students
+                    Students = students,
+                    CourseName = coursename,
                 };
                 result.Add(response);
             }
