@@ -11,9 +11,9 @@ namespace MagicLand_System.Domain.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Status",
-                table: "StudentClass");
+            //migrationBuilder.DropColumn(
+            //    name: "Status",
+            //    table: "StudentClass");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "IsProcessed",

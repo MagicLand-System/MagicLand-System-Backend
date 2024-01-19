@@ -45,7 +45,7 @@ namespace MagicLand_System.Services.Implements
         {
             if (request.StartDate < DateTime.Now)
             {
-                throw new BadHttpRequestException("start date is wrong", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Ngày bắt đầu không hợp lệ", StatusCodes.Status400BadRequest);
             }
             Class createdClass = new Class
             {
@@ -68,7 +68,7 @@ namespace MagicLand_System.Services.Implements
             var isSuccessAtClass = await _unitOfWork.CommitAsync() > 0;
             if (!isSuccessAtClass)
             {
-                throw new BadHttpRequestException("insert class failed", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Thêm lớp thất bại", StatusCodes.Status400BadRequest);
             }
             List<ScheduleRequest> scheduleRequests = request.ScheduleRequests;
             List<string> daysOfWeek = new List<string>();
@@ -111,7 +111,7 @@ namespace MagicLand_System.Services.Implements
             var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()));
             if (course == null)
             {
-                throw new BadHttpRequestException("not found course matches", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("không thấy lớp hợp lệ", StatusCodes.Status400BadRequest);
             }
             int numberOfSessions = course.NumberOfSession;
             int scheduleAdded = 0;
@@ -151,7 +151,7 @@ namespace MagicLand_System.Services.Implements
                 var isSchedule = await _unitOfWork.CommitAsync() > 0;
                 if (!isSchedule)
                 {
-                    throw new BadHttpRequestException("insert schedule is failed", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException("thêm lịch thất bại", StatusCodes.Status400BadRequest);
                 }
             }
             catch (Exception ex)
@@ -165,7 +165,7 @@ namespace MagicLand_System.Services.Implements
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             if (!isSuccess)
             {
-                throw new BadHttpRequestException("updated class is failed");
+                throw new BadHttpRequestException("Cập nhật lớp thất bại");
             }
             return isSuccess;
         }

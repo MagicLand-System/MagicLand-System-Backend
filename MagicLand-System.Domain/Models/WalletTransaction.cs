@@ -7,11 +7,13 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public double Money { get; set; }
         public string? Type { get; set; }
-        public string? Description { get; set; }
+        public string?  SystemDescription { get; set; }
         public DateTime CreatedTime { get; set; }
         public DateTime? UpdateTime { get; set; }
         public bool? IsProcessed { get; set; }
-
+        public  string? Method {  get; set; } 
+        public string? Description {  get; set; }
+        public string? TransactionCode {  get; set; }    
 
         [ForeignKey("PersonalWallet")]
         public Guid PersonalWalletId { get; set; }

@@ -10,9 +10,11 @@ namespace MagicLand_System.Controllers
     public class WalletTransactionController : BaseController<WalletTransactionController>
     {
         private readonly IWalletTransactionService _walletTransactionService;
-        public WalletTransactionController(ILogger<WalletTransactionController> logger,IWalletTransactionService walletTransactionService) : base(logger)
+        private readonly IPersonalWalletService _personalWalletService;
+        public WalletTransactionController(ILogger<WalletTransactionController> logger,IWalletTransactionService walletTransactionService, IPersonalWalletService personalWalletService) : base(logger)
         {
             _walletTransactionService = walletTransactionService;
+            _personalWalletService = personalWalletService;
         }
         [HttpGet(ApiEndpointConstant.WalletTransaction.GetAll)]
         [AllowAnonymous]
@@ -26,6 +28,13 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetDetail(string id)
         {
             var result = await _walletTransactionService.GetWalletTransaction(id);
+            return Ok(result);
+        }
+        [HttpGet(ApiEndpointConstant.WalletTransaction.PersonalWallet)]
+        [Authorize]
+        public async Task<IActionResult> GetWallet()
+        {
+            var result = await _personalWalletService.GetWalletOfCurrentUser();
             return Ok(result);
         }
     }

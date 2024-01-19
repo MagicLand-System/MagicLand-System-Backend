@@ -15,5 +15,8 @@ namespace MagicLand_System.PayLoad.Response.WalletTransactions
         public DateTime CreatedTime { get; set; }
         public double Money { get; set; }
         public Domain.Models.Class MyClassResponse { get; set; }
+        public string CourseName {  get; set; } 
+        public string Method {  get; set; } 
+        public string? TransactionCode {  get; set; }    
     }
 }

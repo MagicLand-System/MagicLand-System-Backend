@@ -87,7 +87,7 @@ namespace MagicLand_System.Services.Implements
             var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()), selector: x => x.Id);
             if (registerRequest.DateOfBirth > DateTime.Now)
             {
-                throw new BadHttpRequestException("date of birth is previous now", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Ngày sinh phải trước ngày hiện tại", StatusCodes.Status400BadRequest);
             }
             User user = new User
             {
@@ -97,16 +97,14 @@ namespace MagicLand_System.Services.Implements
                 Gender = registerRequest.Gender,
                 Phone = registerRequest.Phone,
                 RoleId = role,
-                District = registerRequest.District,
-                Street = registerRequest.Street,
-                City = registerRequest.City,
+                Address = registerRequest.Address,
                 Id = Guid.NewGuid(),
             };
             await _unitOfWork.GetRepository<User>().InsertAsync(user);
             var isUserSuccess = await _unitOfWork.CommitAsync() > 0;
             if (!isUserSuccess)
             {
-                throw new BadHttpRequestException("user can't insert", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Không thể thêm user này", StatusCodes.Status400BadRequest);
             }
             Cart cart = new Cart
             {
@@ -117,7 +115,7 @@ namespace MagicLand_System.Services.Implements
             var isCartSuccess = await _unitOfWork.CommitAsync() > 0;
             if (!isCartSuccess)
             {
-                throw new BadHttpRequestException("cart can't insert", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Không thể thêm user này", StatusCodes.Status400BadRequest);
             }
             PersonalWallet personalWallet = new PersonalWallet
             {
@@ -199,8 +197,8 @@ namespace MagicLand_System.Services.Implements
                 {
                     Id = new Guid(),
                     Money = currentRequestTotal,
-                    Type = CheckOutMethodEnum.SystemWallet.ToString(),
-                    Description = $"[ClassCodes: {cls.ClassCode} ] [Parent: {currentPayer.FullName} ] [StudentNames: {studentNameString}]",
+                    Type = TransactionMethodEnum.SystemWallet.ToString(),
+                    SystemDescription = $"[ClassCodes: {cls.ClassCode} ] [Parent: {currentPayer.FullName} ] [StudentNames: {studentNameString}]",
                     CreatedTime = DateTime.Now,
                     PersonalWalletId = personalWallet.Id,
                     PersonalWallet = personalWallet,
@@ -288,7 +286,7 @@ namespace MagicLand_System.Services.Implements
             try
             {
                 var oldTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
-                .GetListAsync(predicate: x => x.Description!.Contains(cls.ClassCode!));
+                .GetListAsync(predicate: x => x.SystemDescription!.Contains(cls.ClassCode!));
 
                 if (oldTransactions.Any())
                 {
@@ -315,7 +313,7 @@ namespace MagicLand_System.Services.Implements
                 Discount = discount,
                 MoneyPaid = total - discount,
                 Date = DateTime.Now,
-                Method = CheckOutMethodEnum.SystemWallet.ToString(),
+                Method = TransactionMethodEnum.SystemWallet.ToString(),
                 Payer = currentPayer.FullName!,
             };
 
@@ -626,9 +624,7 @@ namespace MagicLand_System.Services.Implements
                 currentUser.Gender = request.Gender ?? currentUser.Gender;
                 currentUser.AvatarImage = request.AvatarImage ?? currentUser.AvatarImage;
                 currentUser.Email = request.Email ?? currentUser.Email;
-                currentUser.Street = request.Street ?? currentUser.Street;
-                currentUser.City = request.City ?? currentUser.City;
-                currentUser.District = request.District ?? currentUser.District;
+                currentUser.Address = request.Address;
 
                 _unitOfWork.GetRepository<User>().UpdateAsync(currentUser);
                 await _unitOfWork.CommitAsync();
@@ -651,9 +647,9 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var trans in oldTransactions)
             {
-                string description = trans.Description!;
+                string description = trans.SystemDescription!;
 
-                trans.Description = StringHelper.UpdatePartValueOfTransactionDescription(description, request.FullName!, TransactionDescriptionEnum.Parent.ToString());
+                trans.SystemDescription = StringHelper.UpdatePartValueOfTransactionDescription(description, request.FullName!, TransactionDescriptionEnum.Parent.ToString());
                 trans.PersonalWalletId = personalWallet.Id;
                 trans.PersonalWallet = personalWallet;
             }

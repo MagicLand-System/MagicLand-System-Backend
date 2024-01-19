@@ -16,7 +16,7 @@ namespace MagicLand_System.Mappers.Users
            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
            .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
            .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
-           .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street));
+           .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address));
         }
 
     }

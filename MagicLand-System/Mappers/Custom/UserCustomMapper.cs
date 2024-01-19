@@ -21,7 +21,7 @@ namespace MagicLand_System.Mappers.Custom
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
                 AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? DefaultAvatarConstant.DefaultAvatar() : user.AvatarImage,
-                Address = user.City + " " + user.District + " " + user.Street,
+                Address = user.Address,
             };
 
             return response;

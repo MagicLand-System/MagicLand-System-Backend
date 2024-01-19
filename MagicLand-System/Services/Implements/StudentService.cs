@@ -240,7 +240,7 @@ namespace MagicLand_System.Services.Implements
             {
                 foreach (var trans in oldTransactions)
                 {
-                    string description = trans.Description!;
+                    string description = trans.SystemDescription!;
                     var classCodes = StringHelper.ExtractValuesFromTransactionDescription(description, TransactionDescriptionEnum.ClassCodes.ToString(), true);
 
                     if (classCodes.Contains(cls.ClassCode!))
@@ -251,8 +251,8 @@ namespace MagicLand_System.Services.Implements
                         {
                             Id = new Guid(),
                             Money = trans.Money,
-                            Type = CheckOutMethodEnum.Refund.ToString(),
-                            Description = trans.Description,
+                            Type = TransactionTypeEnum.Refund.ToString(),
+                            SystemDescription = trans.SystemDescription,
                             CreatedTime = DateTime.Now,
                             PersonalWalletId = personalWallet.Id,
                             PersonalWallet = personalWallet,
