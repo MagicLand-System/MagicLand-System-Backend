@@ -9,7 +9,7 @@ namespace MagicLand_System.Mappers.Topics
         public TopicMapper()
         {
             CreateMap<MagicLand_System.Domain.Models.Topic, TopicResponse>()
-                .ForMember(dest => dest.Session, opt => opt.MapFrom(src => src.Sessions));
+                .ForMember(dest => dest.Sessions, opt => opt.MapFrom(src => src.Sessions));
 
         }
     }

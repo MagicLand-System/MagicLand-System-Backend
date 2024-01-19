@@ -12,7 +12,7 @@ namespace MagicLand_System.Services.Interfaces
     public interface IUserService
     {
         Task<List<User>> GetUsers();
-        Task<bool> CheckUserExistByPhone(string phone);
+        Task<UserExistRespone> CheckUserExistByPhone(string phone);
         Task<LoginResponse> Authentication(LoginRequest loginRequest);
         Task<User> GetCurrentUser();
         Task<NewTokenResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest);

@@ -30,7 +30,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> CheckUserExist([FromQuery] string phone)
         {
             var isExist = await _userService.CheckUserExistByPhone(phone);
-            if (!isExist)
+            if (!isExist.IsExist)
             {
                 return NotFound(new ErrorResponse
                 {
@@ -39,7 +39,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            return Ok(new { Message = "Phone has exist" });
+            return Ok(new { Message = "Phone has exist" , Role = isExist.Role});
         }
         [HttpGet(ApiEndpointConstant.User.UserEndPointGetCurrentUser)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]

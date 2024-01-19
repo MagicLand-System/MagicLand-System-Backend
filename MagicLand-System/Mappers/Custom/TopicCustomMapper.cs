@@ -13,16 +13,17 @@ namespace MagicLand_System.Mappers.Custom
                 return new TopicResponse();
             }
 
-            TopicResponse response = new TopicResponse
-            {
-                TopicName = topic!.Name ??= "Undefined",
-                OrderNumber = topic.OrderNumber,
-                Session = session != null && session != default
-                ? SessionCustomMapper.fromSessionToSessionResponse(session)
-                : new SessionResponse(),
-            };
+            //TopicResponse response = new TopicResponse
+            //{
+            //    TopicName = topic!.Name ??= "Undefined",
+            //    OrderNumber = topic.OrderNumber,
+            //    Sessions = session != null && session != default
+            //    ? SessionCustomMapper.fromSessionToSessionResponse(session)
+            //    : new SessionResponse(),
+            //};
 
-            return response;
+            //return response;
+            return null;
         }
     }
 }

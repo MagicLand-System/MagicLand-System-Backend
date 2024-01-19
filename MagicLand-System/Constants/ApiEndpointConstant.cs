@@ -92,6 +92,11 @@
             public const string TransactionById = GetAll + "/{id}";
             public const string PersonalWallet = GetAll + "/walletBalance";
         }
-       
+        public static class Syllabus
+        {
+            public const string GetAll = ApiEndpoint + "/Syllabus";
+            public const string GetByCourse = GetAll + "/getByCourse";
+        }
+
     }
 }

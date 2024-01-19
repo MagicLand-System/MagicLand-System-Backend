@@ -27,15 +27,16 @@ namespace MagicLand_System.Services.Implements
         {
             if (request.DateOfBirth > DateTime.Now.AddYears(-3))
             {
-                throw new BadHttpRequestException("student must be at least 3 yearolds", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Hoc sinh phải lớn hơn 3 tuổi", StatusCodes.Status400BadRequest);
             }
             var userId = (await GetUserFromJwt()).Id;
             if (request == null)
             {
-                throw new BadHttpRequestException("request is invalid", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("yêu cầu không hợp lệ", StatusCodes.Status400BadRequest);
             }
             var student = _mapper.Map<Student>(request);
             student.ParentId = userId;
+            student.IsActive = true;
             await _unitOfWork.GetRepository<Student>().InsertAsync(student);
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
@@ -46,7 +47,7 @@ namespace MagicLand_System.Services.Implements
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
             if (student == null)
             {
-                throw new BadHttpRequestException("StudentId is not exist", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Học sinh không tồn tại", StatusCodes.Status400BadRequest);
             }
             var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
@@ -106,7 +107,7 @@ namespace MagicLand_System.Services.Implements
             var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
             if (listClassInstance == null)
             {
-                throw new BadHttpRequestException("Student is in not any class", StatusCodes.Status400BadRequest);
+                return new List<StudentScheduleResponse>();
             }
             var sessionIds = new List<Guid>();
             foreach (var classInstance in listClassInstance)

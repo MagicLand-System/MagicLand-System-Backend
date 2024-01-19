@@ -47,14 +47,22 @@ namespace MagicLand_System.Services.Implements
             return loginResponse;
         }
 
-        public async Task<bool> CheckUserExistByPhone(string phone)
+        public async Task<UserExistRespone> CheckUserExistByPhone(string phone)
         {
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()));
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()), include : x => x.Include(x => x.Role));
             if (user == null)
             {
-                return false;
+                return new UserExistRespone
+                {
+                    IsExist = false,
+                    Role = user.Role.Name,
+                };
             }
-            return true;
+            return new UserExistRespone
+            {
+                IsExist = true,
+                Role = user.Role.Name,
+            };
         }
 
         public async Task<User> GetCurrentUser()
