@@ -20,10 +20,10 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Classes
         /// <summary>
-        ///  Get all Class Existed
+        ///  Truy Suất Toàn Bộ Lớp Học
         /// </summary>
-        /// <response code="200">Return a list of class</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Danh Sách Lớp Học</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAll)]
         [AllowAnonymous]
@@ -35,8 +35,9 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Class By Course Id
         /// <summary>
-        ///  Get All Specific Class base on Course Id
+        ///  Truy Suất Toàn Bộ Lớp Của Một Khóa
         /// </summary>
+        /// <param name="id">Id Của Khóa Học</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -45,8 +46,9 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a list of class statify request</response>
-        /// <response code="400">Id of course not esxist</response>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
         [ProducesResponseType(typeof(ClassResExtraInfor), StatusCodes.Status200OK)]
@@ -62,9 +64,10 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Class By Id
         /// <summary>
-        ///  Get Detail Specific Class By Id
+        ///  Truy Suất Lớp Thông Qua Id Của Lớp
         /// </summary>
         /// <remarks>
+        /// <param name="id">Id Của Lớp Học</param>
         /// Sample request:
         ///
         ///     {
@@ -72,8 +75,9 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return detail of class statify request</response>
-        /// <response code="400">Id of class not esxist</response>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassById)]
         [AllowAnonymous]
@@ -84,7 +88,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Id Of Class Not Existed",
+                    Error = $"Id [{id}] Của Lớp Không Tồn Tại",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -94,11 +98,11 @@ namespace MagicLand_System.Controllers
 
         #region document API Filter Class
         /// <summary>
-        ///  Search or Filter class by specific key word and option filter
+        ///  Tìm Kiếm Hoặc Lọc Lớp Theo Tiêu Chí
         /// </summary>
-        /// <param name="keyWords">for class field statifys one of keyword</param>
-        /// <param name="leastNumberStudent">for class must required at least number student</param>
-        /// <param name="limitStudent">for class have the limit student equal to this</param>
+        /// <param name="keyWords">Cho Các Lớp Thỏa Mãn Các Từ Khóa</param>
+        /// <param name="leastNumberStudent">Cho Lớp Có Giới Hạn Tối Thiểu Nhiều Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="limitStudent">Cho Lớp Có Giới Hạn Tối Đa Thấp Hơn Hoặc Bằng Gía Trị Này</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -109,8 +113,9 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a list of class statific request</response>
-        /// <response code="400">Some field request not valid</response>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.FilterClass)]
         [AllowAnonymous]

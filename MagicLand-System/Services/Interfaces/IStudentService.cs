@@ -11,5 +11,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassResExtraInfor>> GetClassOfStudent(String studentId,string status);
         Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId);
         Task<List<Student>> GetStudentsOfCurrentParent();
+        Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor, Student oldStudentInfor);
+        Task<String> DeleteStudentAsync(Student student);
     }
 }

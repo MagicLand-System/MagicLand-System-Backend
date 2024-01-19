@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var env = builder.Environment;
 
 // Add services to the container.
 
@@ -100,7 +101,18 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    if (env.IsDevelopment() || env.IsProduction())
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web API V1");
+    }
+    else
+    {
+        c.SwaggerEndpoint("/somee/swagger/v1/swagger.json", "Web API V1");
+    }
+
+});
 app.UseCors("MyDefaultPolicy");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();

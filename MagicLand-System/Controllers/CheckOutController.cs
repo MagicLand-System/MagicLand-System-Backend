@@ -28,9 +28,9 @@ namespace MagicLand_System.Controllers
 
         #region document API check-out now
         /// <summary>
-        ///  Check-out Single or Multiple register Students into current Classes selected
+        /// Thanh Toán Một Hoặc Nhiều Lớp
         /// </summary>
-        /// <param name="requests">Store list of current register Classes and list Id of Student in class</param>
+        /// <param name="requests">Chứa Id Của Các Lớp Muốn Thanh Toán Và Id Của Các Học Sinh Trong Đó</param>
         /// <remarks>
         /// Sample request:
         ///[
@@ -44,10 +44,10 @@ namespace MagicLand_System.Controllers
         ///     }
         ///]
         /// </remarks>
-        /// <response code="200">Return a bill after progress Success</response>
-        /// <response code="400">Invalid some value request</response>
-        /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Hóa Đơn Sau Khi Thanh Toán</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpPost(ApiEndpointConstant.User.UserEndPointCheckout)]
         [ProducesResponseType(typeof(BillResponse), StatusCodes.Status200OK)]
@@ -82,7 +82,7 @@ namespace MagicLand_System.Controllers
                 {
                     return BadRequest(new ErrorResponse
                     {
-                        Error = "Request meet invalid class Standard",
+                        Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
                         StatusCode = StatusCodes.Status500InternalServerError,
                         TimeStamp = DateTime.Now,
                     });
@@ -95,9 +95,9 @@ namespace MagicLand_System.Controllers
 
         #region document API check-out cart
         /// <summary>
-        ///  Check-out all selected item request from Cart
+        ///  Cho Phép Thanh Toán Toàn Bộ Item Được Chọn Trong Giỏ Hàng
         /// </summary>
-        /// <param name="cartItemIdList">Id of all item in Cart want to check-out</param>
+        /// <param name="cartItemIdList">Id Của Tất Cả Item Muốn Thanh Toán</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -106,10 +106,10 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a bill after progess Success</response>
-        /// <response code="404">Invalid request</response>
-        /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Hóa Đơn Sau Khi Thanh Toán</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpPost(ApiEndpointConstant.CartEnpoint.CheckOutCart)]
         [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
@@ -142,7 +142,7 @@ namespace MagicLand_System.Controllers
                 {
                     return BadRequest(new ErrorResponse
                     {
-                        Error = "Request meet invalid Class standard",
+                        Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
                         StatusCode = StatusCodes.Status500InternalServerError,
                         TimeStamp = DateTime.Now,
                     });
@@ -174,7 +174,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Cart items Id not esxit in Cart: [" + string.Join(" And ", invalidItem.ToArray()) + "]",
+                    Error = $"Id [{string.Join(", ", invalidItem.ToArray())}] Của Item Không Tồn Tại Trong Giỏ Hàng",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -187,8 +187,8 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "There are one or more Cart item Ids without Class and Student registration: [" +
-                    string.Join(" And ", emptyStudentItem.Select(x => x.ItemId).ToArray()) + "]",
+                    Error = "Có Một Hoặc Nhiều Item Của Giỏ Hàng Không Có Lớp Hoặc Học Sinh Đăng Ký " +
+                    $"[{string.Join(", ", emptyStudentItem.Select(x => x.ItemId).ToList())}]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -203,7 +203,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = $"Class Id: [{classId}] Not Esxit",
+                    Error = $"Id [{classId}] Của Lớp Học Không Tồn Tại",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -216,10 +216,26 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Invalid Student Id or you are trying to sign someone else's Student: [" + invalidStudentIds.Select(x => x.ToString(" And ")) + "]",
+                    Error = "Id Của Học Sinh Không Tồn Tại Hoặc Bạn Đăng Sử Dụng Id Của Học Sinh Khác Không Phải Con Bạn " +
+                    $"[{string.Join(", ", invalidStudentIds.Select(x => x.ToString()))}]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
+            }
+
+            var exsitStudents = students.Where(stu => studentIds.Any(id => id == stu.Id)).ToList();
+
+            foreach (var student in exsitStudents)
+            {
+                if (!student.IsActive!.Value)
+                {
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = $"Id [{student.Id}] Của Học Sinh Đã Ngưng Hoạt Động",
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        TimeStamp = DateTime.Now,
+                    });
+                }
             }
 
             Guid duplicateStudentId = studentIds.GroupBy(x => x)
@@ -232,8 +248,8 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = $"Your are request assign Student [{students.Where(x => x.Id == duplicateStudentId).Single().FullName}] " +
-                    "more than twice into Class",
+                    Error = $"Bạn Đang Đăng Ký Cho Học Sinh [{students.Where(x => x.Id == duplicateStudentId).Single().FullName}] " +
+                    "Nhiều Hơn Hai Lần Vào Một Lớp",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });

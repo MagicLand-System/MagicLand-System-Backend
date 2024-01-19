@@ -24,7 +24,7 @@ namespace MagicLand_System.Services.Implements
             {
                 if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.CourseId == courseId))
                 {
-                    throw new BadHttpRequestException("You are already add favorite this Course", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Id [{courseId}] Của Khóa Đã Có Trong Danh Sách Yêu Thích", StatusCodes.Status400BadRequest);
                 }
                 else
                 {
@@ -40,7 +40,7 @@ namespace MagicLand_System.Services.Implements
 
                     favoriteResponse = await _unitOfWork.CommitAsync() > 0
                          ? await GetDetailCurrentParrentFavorite()
-                         : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
+                         : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
                 }
 
                 return favoriteResponse;
@@ -64,12 +64,12 @@ namespace MagicLand_System.Services.Implements
 
                     if (studentIds.Count() == 0 && currentCartItem!.StudentInCarts.Count() == 0)
                     {
-                        throw new BadHttpRequestException("You are already add cart this class", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Id [{classId}] Của Lớp Đã Có Trong Giỏ Hàng", StatusCodes.Status400BadRequest);
                     }
 
                     if (currentCartItem!.StudentInCarts.Select(sic => sic.StudentId).ToList().SequenceEqual(studentIds))
                     {
-                        throw new BadHttpRequestException("You are already registered all student request to this class", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Bạn Đã Có Id [{string.Join(", ", studentIds)}] Trong Lớp [{classId}] Ở Giỏ Hàng", StatusCodes.Status400BadRequest);
                     }
 
                     _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(currentCartItem!.StudentInCarts);
@@ -84,7 +84,7 @@ namespace MagicLand_System.Services.Implements
 
                     cartReponse = await _unitOfWork.CommitAsync() > 0
                         ? await GetDetailCurrentParrentCart()
-                        : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
+                        : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
                 }
                 else
                 {
@@ -108,7 +108,7 @@ namespace MagicLand_System.Services.Implements
 
                     cartReponse = await _unitOfWork.CommitAsync() > 0
                          ? await GetDetailCurrentParrentCart()
-                         : throw new BadHttpRequestException("Uncatch Exception In Commit Database", StatusCodes.Status500InternalServerError);
+                         : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
                 }
 
                 return cartReponse;
@@ -249,7 +249,7 @@ namespace MagicLand_System.Services.Implements
                     var cartItemDelete = currentParentCart.CartItems.SingleOrDefault(x => x.Id == id);
                     if (cartItemDelete == null)
                     {
-                        throw new BadHttpRequestException($"Item Id [{id}] not esxit", StatusCodes.Status500InternalServerError);
+                        throw new BadHttpRequestException($"Item Id [{id}] Của Giỏ Hàng Không Tồn Tại", StatusCodes.Status500InternalServerError);
                     }
 
                     cartItemDeleteList.Add(cartItemDelete);
