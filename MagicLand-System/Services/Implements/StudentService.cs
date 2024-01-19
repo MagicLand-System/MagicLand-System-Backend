@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
+using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -288,6 +289,57 @@ namespace MagicLand_System.Services.Implements
             {
                 _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(studentInCart);
             }
+        }
+
+        public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == request.ClassId,
+                include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!);
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{request.ClassId}] Của Lớp Học Không Tồn Tại Hoặc Lớp Học Không Có Lịch Học", StatusCodes.Status400BadRequest);
+            }
+
+            if(cls.Lecture!.Id != GetUserIdFromJwt())
+            {
+                throw new BadHttpRequestException($"Id [{request.ClassId}] Lớp Học Này Không Được Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
+            }
+
+            var schedules = cls.Schedules;
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date == DateTime.Now);
+
+            if (currentSchedule == null)
+            {
+                throw new BadHttpRequestException($"Lớp Học [{cls.Name}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
+            }
+
+            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id, include: x => x.Include(x => x.Student)!);
+            var studentAttendanceRequest = request.StudentAttendanceRequests;
+            var studentNotHaveAttendance = new List<string>();
+
+            foreach (var attendance in attendances)
+            {
+                foreach (var stuAttReq in studentAttendanceRequest)
+                {
+                    if (stuAttReq.StudentId == attendance.StudentId)
+                    {
+                        attendance.IsPresent = stuAttReq.IsAttendance;
+                        studentAttendanceRequest.Remove(stuAttReq);
+                        continue;
+                    }
+
+                    studentNotHaveAttendance.Add(attendance.Student!.FullName!);
+                    attendance.IsPresent = false;
+                }
+            }
+
+            if(studentNotHaveAttendance.Count() > 0)
+            {
+                return $"Điểm Danh Hoàn Tất, Một Số Học Sinh [{string.Join(", ", studentNotHaveAttendance)}] Không Được Điểm Danh Sẽ Được Hệ Thống Tự Động Đánh Vắn";
+            }
+
+            return "Điểm Danh Hoàn Tất";
         }
     }
 }

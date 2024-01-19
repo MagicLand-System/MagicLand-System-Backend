@@ -91,5 +91,12 @@
             public const string GetAll = ApiEndpoint + "/walletTransactions";
             public const string TransactionById = GetAll + "/{id}";
         }
+
+        public static class LectureEndPoint
+        {
+            public const string EndPointBase = ApiEndpoint + "/lectures";
+            public const string TakeStudentAttendance = EndPointBase + "/takeattendance";
+            public const string GetStudentAttendance = EndPointBase + "/student/attendance";
+        }
     }
 }
