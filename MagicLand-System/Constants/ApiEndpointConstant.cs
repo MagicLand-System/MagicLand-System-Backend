@@ -92,21 +92,16 @@
             public const string TransactionById = GetAll + "/{id}";
             public const string PersonalWallet = GetAll + "/walletBalance";
         }
-<<<<<<< HEAD
         public static class Syllabus
         {
             public const string GetAll = ApiEndpoint + "/Syllabus";
             public const string GetByCourse = GetAll + "/getByCourse";
         }
-
-=======
-
         public static class LectureEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/lectures";
             public const string TakeStudentAttendance = EndPointBase + "/takeStudentAttendance";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
         }
->>>>>>> 00e7f06ddc5155cddff3ef95c5d3a64de96f858d
     }
 }
