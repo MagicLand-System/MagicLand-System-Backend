@@ -5,6 +5,6 @@ namespace MagicLand_System.PayLoad.Request.Attendance
     public class StudentAttendanceRequest
     {
         public required Guid StudentId { get; set; }
-        public required bool IsAttendance { get; set; } = false;
+        public required bool IsPresent { get; set; } = false;
     }
 }

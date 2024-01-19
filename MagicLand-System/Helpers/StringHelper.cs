@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using MagicLand_System.Enums;
+using System.Text.RegularExpressions;
 
 namespace MagicLand_System.Helpers
 {
@@ -14,7 +15,7 @@ namespace MagicLand_System.Helpers
                 string values = match.Groups[1].Value.Trim();
                 if (noSpace)
                 {
-                   return values.Split(',').Select(s => TrimStringAndNoSpace(s)).ToList();
+                    return values.Split(',').Select(s => TrimStringAndNoSpace(s)).ToList();
                 }
                 return values.Split(',').Select(s => s.Trim()).ToList();
             }
@@ -23,8 +24,34 @@ namespace MagicLand_System.Helpers
         }
 
         public static string TrimStringAndNoSpace(string input)
-        {         
+        {
             return input.Trim().Replace(" ", "");
+        }
+
+        public static string GenerateRadomTransactionCode(TransactionTypeEnum type)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            Random random = new Random();
+
+            string randomCode = "";
+
+            switch (type)
+            {
+                case TransactionTypeEnum.Refund:
+                    randomCode += "RF ";
+                    break;
+
+                case TransactionTypeEnum.Payment:
+                    randomCode += "PM ";
+                    break;
+
+                case TransactionTypeEnum.TopUp:
+                    randomCode += "TU ";
+                    break;
+            }
+            randomCode += new string(Enumerable.Repeat(chars, 11).Select(s => s[random.Next(s.Length)]).ToArray());
+
+            return randomCode;
         }
 
         public static string UpdatePartValueOfTransactionDescription(string input, string value, string key)
@@ -50,7 +77,7 @@ namespace MagicLand_System.Helpers
                         return updatedString;
                     }
                 }
-            }   
+            }
             return "";
         }
     }

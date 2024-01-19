@@ -90,12 +90,13 @@
         {
             public const string GetAll = ApiEndpoint + "/walletTransactions";
             public const string TransactionById = GetAll + "/{id}";
+            public const string PersonalWallet = GetAll + "/walletBalance";
         }
 
         public static class LectureEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/lectures";
-            public const string TakeStudentAttendance = EndPointBase + "/takeattendance";
+            public const string TakeStudentAttendance = EndPointBase + "/takeStudentAttendance";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
         }
     }

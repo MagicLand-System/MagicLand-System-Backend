@@ -6,6 +6,8 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
@@ -250,8 +252,11 @@ namespace MagicLand_System.Services.Implements
                         var transaction = new WalletTransaction
                         {
                             Id = new Guid(),
+                            TransactionCode = StringHelper.GenerateRadomTransactionCode(TransactionTypeEnum.Refund),
                             Money = trans.Money,
                             Type = TransactionTypeEnum.Refund.ToString(),
+                            Method = TransactionMethodEnum.SystemWallet.ToString(),
+                            Description = $"Hoàn Tiền Lớp Học {cls.Name} Từ Hệ Thống",
                             SystemDescription = trans.SystemDescription,
                             CreatedTime = DateTime.Now,
                             PersonalWalletId = personalWallet.Id,
@@ -293,53 +298,118 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request)
         {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == request.ClassId,
-                include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!);
-
-            if (cls == null)
-            {
-                throw new BadHttpRequestException($"Id [{request.ClassId}] Của Lớp Học Không Tồn Tại Hoặc Lớp Học Không Có Lịch Học", StatusCodes.Status400BadRequest);
-            }
-
-            if(cls.Lecture!.Id != GetUserIdFromJwt())
-            {
-                throw new BadHttpRequestException($"Id [{request.ClassId}] Lớp Học Này Không Được Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
-            }
+            var cls = await CheckingCurrentClass(request.ClassId);
 
             var schedules = cls.Schedules;
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date == DateTime.Now);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
 
+            var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
+
+            if (studentNotHaveAttendance.Count() > 0)
+            {
+                return $"Điểm Danh Hoàn Tất, Một Số Học Sinh [{string.Join(", ", studentNotHaveAttendance)}] Không Được Điểm Danh Sẽ Được Hệ Thống Tự Động Đánh Vắng";
+            }
+
+            return "Điểm Danh Hoàn Tất";
+        }
+
+        public async Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId)
+        {
+            var cls = await CheckingCurrentClass(classId);
+
+            var schedules = cls.Schedules;
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
+
+            var responses = await GetStudentAttendanceProgress(cls, currentSchedule);
+
+            return responses;
+        }
+
+        private async Task<List<AttendanceResponse>> GetStudentAttendanceProgress(Class cls, Schedule? currentSchedule)
+        {
             if (currentSchedule == null)
             {
                 throw new BadHttpRequestException($"Lớp Học [{cls.Name}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
             }
 
-            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id, include: x => x.Include(x => x.Student)!);
-            var studentAttendanceRequest = request.StudentAttendanceRequests;
-            var studentNotHaveAttendance = new List<string>();
+            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id,
+                include: x => x.Include(x => x.Student)!.Include(x => x.Schedule)!);
+
+            var responses = new List<AttendanceResponse>();
 
             foreach (var attendance in attendances)
             {
-                foreach (var stuAttReq in studentAttendanceRequest)
-                {
-                    if (stuAttReq.StudentId == attendance.StudentId)
-                    {
-                        attendance.IsPresent = stuAttReq.IsAttendance;
-                        studentAttendanceRequest.Remove(stuAttReq);
-                        continue;
-                    }
-
-                    studentNotHaveAttendance.Add(attendance.Student!.FullName!);
-                    attendance.IsPresent = false;
-                }
+                responses.Add(_mapper.Map<AttendanceResponse>(attendance));
             }
 
-            if(studentNotHaveAttendance.Count() > 0)
-            {
-                return $"Điểm Danh Hoàn Tất, Một Số Học Sinh [{string.Join(", ", studentNotHaveAttendance)}] Không Được Điểm Danh Sẽ Được Hệ Thống Tự Động Đánh Vắn";
-            }
-
-            return "Điểm Danh Hoàn Tất";
+            return responses;
         }
+
+        private async Task<Class> CheckingCurrentClass(Guid classId)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
+                include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!);
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Không Tồn Tại Hoặc Lớp Học Không Có Lịch Học", StatusCodes.Status400BadRequest);
+            }
+
+            if (cls.Status!.ToString().Trim() != ClassStatusEnum.PROGRESSING.ToString())
+            {
+                string statusError = cls.Status!.ToString().Trim() == ClassStatusEnum.UPCOMING.ToString() ? "Sắp Diễn Ra" : "Đã Hoàn Thành";
+
+                throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.Name}] [{statusError}]", StatusCodes.Status400BadRequest);
+            }
+
+            if (cls.Lecture!.Id != GetUserIdFromJwt())
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Này Không Được Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
+            }
+
+            return cls;
+        }
+
+        private async Task<List<string>> TakeAttenDanceProgress(AttendanceRequest request, Class cls, Schedule? currentSchedule)
+        {
+            if (currentSchedule == null)
+            {
+                throw new BadHttpRequestException($"Lớp Học [{cls.Name}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
+            }
+
+            var studentNotHaveAttendance = new List<string>();
+
+            try
+            {
+                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id,
+                   include: x => x.Include(x => x.Student)!);
+                var studentAttendanceRequest = request.StudentAttendanceRequests;
+
+                foreach (var attendance in attendances)
+                {
+                    foreach (var stuAttReq in studentAttendanceRequest)
+                    {
+                        if (stuAttReq.StudentId == attendance.StudentId)
+                        {
+                            attendance.IsPresent = stuAttReq.IsPresent;
+                            continue;
+                        }
+
+                        studentNotHaveAttendance.Add(attendance.Student!.FullName!);
+                        attendance.IsPresent = false;
+                    }
+                }
+
+                _unitOfWork.GetRepository<Attendance>().UpdateRange(attendances);
+                 await _unitOfWork.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi Hễ Thống Phát Sinh: [{ex}]");
+            }
+
+            return studentNotHaveAttendance;
+        }
+
     }
 }

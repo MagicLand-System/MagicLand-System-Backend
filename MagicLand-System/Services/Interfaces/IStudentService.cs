@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Students;
 
@@ -15,5 +16,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor, Student oldStudentInfor);
         Task<string> DeleteStudentAsync(Student student);
         Task<string> TakeStudentAttendanceAsync(AttendanceRequest request);
+        Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId);
     }
 }

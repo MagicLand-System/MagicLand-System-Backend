@@ -196,8 +196,11 @@ namespace MagicLand_System.Services.Implements
                 var newTransaction = new WalletTransaction
                 {
                     Id = new Guid(),
+                    TransactionCode = StringHelper.GenerateRadomTransactionCode(TransactionTypeEnum.Payment),
                     Money = currentRequestTotal,
-                    Type = TransactionMethodEnum.SystemWallet.ToString(),
+                    Type = TransactionTypeEnum.Payment.ToString(),
+                    Method = TransactionMethodEnum.SystemWallet.ToString(),
+                    Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.Name}",
                     SystemDescription = $"[ClassCodes: {cls.ClassCode} ] [Parent: {currentPayer.FullName} ] [StudentNames: {studentNameString}]",
                     CreatedTime = DateTime.Now,
                     PersonalWalletId = personalWallet.Id,
@@ -364,9 +367,9 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
         {
-            string status = cls.Status!.Equals(ClassStatusEnum.COMPLETED) ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
+            string status = cls.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()) ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
 
-            if (!cls.Status!.Equals("UPCOMING"))
+            if (!cls.Status!.Trim().Equals("UPCOMING"))
             {
                 throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thê Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
                     StatusCodes.Status400BadRequest);
@@ -647,11 +650,13 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var trans in oldTransactions)
             {
-                string description = trans.SystemDescription!;
-
-                trans.SystemDescription = StringHelper.UpdatePartValueOfTransactionDescription(description, request.FullName!, TransactionDescriptionEnum.Parent.ToString());
-                trans.PersonalWalletId = personalWallet.Id;
-                trans.PersonalWallet = personalWallet;
+                var description = trans.SystemDescription!;
+                if(description != null)
+                {
+                    trans.SystemDescription = StringHelper.UpdatePartValueOfTransactionDescription(description, request.FullName!, TransactionDescriptionEnum.Parent.ToString());
+                    trans.PersonalWalletId = personalWallet.Id;
+                    trans.PersonalWallet = personalWallet;
+                }
             }
 
             _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(oldTransactions);

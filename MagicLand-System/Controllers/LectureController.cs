@@ -8,17 +8,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MagicLand_System.PayLoad.Request.Attendance;
+using MagicLand_System.PayLoad.Response.Attendances;
 
 namespace MagicLand_System.Controllers
 {
     [ApiController]
     public class LectureController : BaseController<LectureController>
     {
-        private readonly IUserService _userService;
         private readonly IStudentService _studentService;
-        public LectureController(ILogger<LectureController> logger, IUserService userService, IStudentService studentService) : base(logger)
+        public LectureController(ILogger<LectureController> logger, IStudentService studentService) : base(logger)
         {
-            _userService = userService;
             _studentService = studentService;
         }
 
@@ -44,7 +43,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.StudentEndpoint.UpdateStudent)]
+        [HttpPut(ApiEndpointConstant.LectureEndPoint.TakeStudentAttendance)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -59,32 +58,25 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Truy Suất Danh Sách Điểm Danh Của Học Sinh Của Một Lớp Ở Ngày Hiện Tại
         /// </summary>
-        /// <param name="request">Chứa Id Của Lớp Học Hiện Tại, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
+        /// <param name="classId">Chứa Id Của Lớp Học Hiện Tại Cần Lấy Danh Sách</param>
         /// <remarks>
         /// Sample request:
         ///{     
-        ///    "ClassId":"3c1849af-400c-43ca-979e-58c71ce9301d"
-        ///    [
-        ///       {
-        ///          "StudentId":"3c1849af-400c-43ca-979e-58c71ce9301d",
-        ///          "IsAttendance": "true"
-        ///        }
-        ///    ]
+        ///   "classId":"3c1849af-400c-43ca-979e-58c71ce9301d"
         ///}
         /// </remarks>
-        /// <response code="200">Trả Về Thông Báo Sau Khi Điểm Danh</response>
+        /// <response code="200">Trả Về Danh Sách Điểm Danh</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.StudentEndpoint.UpdateStudent)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentAttendance)]
+        [ProducesResponseType(typeof(AttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetStudentAttendance([FromBody] AttendanceRequest request)
+        public async Task<IActionResult> GetStudentAttendance([FromQuery] Guid classId)
         {
-            var response = await _studentService.TakeStudentAttendanceAsync(request);
-
+            var response = await _studentService.GetStudentAttendanceFromClassInNow(classId);
             return Ok(response);
         }
     }
