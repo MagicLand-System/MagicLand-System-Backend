@@ -2,8 +2,10 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
+using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.PayLoad.Response.Students;
@@ -217,7 +219,7 @@ namespace MagicLand_System.Services.Implements
 
                 await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentAttendanceList);
 
-                string message = "Students: [" + studentNameString + $"] has been registered in Class: [{cls.Name}]";
+                string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.Name}]";
                 messageList.Add(message);
             }
 
@@ -253,7 +255,7 @@ namespace MagicLand_System.Services.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception($"Progress register Class [{cls.Name}] meet the issue: " + ex.InnerException!.ToString());
+                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.Name}]" + ex.InnerException!.ToString());
             }
         }
 
@@ -277,7 +279,7 @@ namespace MagicLand_System.Services.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception($"Progress register Class [{cls.Name}] meet the issue: " + ex.InnerException!.ToString());
+                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.Name}]" + ex.InnerException!.ToString());
             }
         }
 
@@ -298,7 +300,7 @@ namespace MagicLand_System.Services.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception($"Progress register Class [{cls.Name}] meet the issue: " + ex.InnerException!.ToString());
+                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.Name}]" + ex.InnerException!.ToString());
             }
           
         }
@@ -307,8 +309,8 @@ namespace MagicLand_System.Services.Implements
         {
             var bill = new BillResponse
             {
-                Status = "Purchase Success",
-                Message = string.Join(" And ", messageList),
+                Status = "Thanh Toán Thành Công",
+                Message = string.Join(" , ", messageList),
                 Cost = total,
                 Discount = discount,
                 MoneyPaid = total - discount,
@@ -364,9 +366,11 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
         {
+            string status = cls.Status!.Equals(ClassStatusEnum.COMPLETED) ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
+
             if (!cls.Status!.Equals("UPCOMING"))
             {
-                throw new BadHttpRequestException($"Sorry you are only can register into [Upcoming] class, this class is already [{cls.Status.ToString()}]",
+                throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thê Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
                     StatusCodes.Status400BadRequest);
             }
 
@@ -377,14 +381,14 @@ namespace MagicLand_System.Services.Implements
 
                 if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
-                    throw new BadHttpRequestException($"Student [{student.FullName}] already assigned to class [{cls.Name}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
                 }
 
                 int age = DateTime.Now.Year - student.DateOfBirth.Year;
 
                 if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
                 {
-                    throw new BadHttpRequestException($"Student [{student.FullName}] age is not suitable to asign class [{cls.Name}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
                 }
 
                 await ValidateCoursePrerequisite(student, cls);
@@ -392,7 +396,7 @@ namespace MagicLand_System.Services.Implements
 
             if (cls.StudentClasses.Count() + studentIds.Count() > cls.LimitNumberStudent)
             {
-                throw new BadHttpRequestException($"Class [{cls.Name}] has over student index", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lớp [{cls.Name}] Đã Đủ Chỉ Số", StatusCodes.Status400BadRequest);
             }
         }
 
@@ -435,14 +439,14 @@ namespace MagicLand_System.Services.Implements
                 var courseNotSatisfied = courseRequiredList.Where(cr => !courseCompleted.Any(c => cr.Id == c.Id)).ToList();
                 if (courseNotSatisfied?.Any() ?? false)
                 {
-                    throw new BadHttpRequestException($"Student {student.FullName} is not completed course prerequisites: " +
-                        $"[ {string.Join(", ", courseNotSatisfied.Select(c => c.Name))} ] to join class: [{cls.Name}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
+                        $"[ {string.Join(", ", courseNotSatisfied.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
                 }
             }
             else
             {
-                throw new BadHttpRequestException($"Student [{student.FullName}] is not satisfied course prerequisites: " +
-                       $"[ {string.Join(", ", courseRequiredList.Select(c => c.Name))} ] to join class: [{cls.Name}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
+                       $"[ {string.Join(", ", courseRequiredList.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
             }
 
         }
@@ -505,8 +509,8 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (ass.Date == s.Date && ass.StartTime == s.Slot!.StartTime)
                         {
-                            throw new BadHttpRequestException($"Current registered Class [{ass.ClassName}] Schedule of Student [{ass.StudentName}] is coincide start time [{s.Slot.StartTime}]" +
-                                $" with [{cls.Name}] Schedule slot", StatusCodes.Status400BadRequest);
+                            throw new BadHttpRequestException($"Lịch Lớp Đang Học Hiên Tại [{ass.ClassName}] Của Học Sinh [{ass.StudentName}] Bị Trùng Thời Gian Bắt Đầu [{s.Slot.StartTime}]" +
+                                $" Với Lịch Của Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
                         }
                     }
                 }
@@ -550,11 +554,11 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (classes[defaultIndex].Id == classes[browserIndex].Id)
                         {
-                            throw new BadHttpRequestException($"You are trying to register Class [{classes[defaultIndex].Name}] two or more time", StatusCodes.Status400BadRequest);
+                            throw new BadHttpRequestException($"Bạn Đang Đăng Ký Lớp [{classes[defaultIndex].Name}] Nhiều Hơn 2 Lần", StatusCodes.Status400BadRequest);
                         }
 
-                        throw new BadHttpRequestException($"Class [{classes[defaultIndex].Name}] Schedule is coincide Slot Start Time [{ds.Slot.StartTime}]" +
-                        $" with Class [{classes[browserIndex].Name}] please chose one of the two that you are most prefer to register", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Lịch Của Lớp [{classes[defaultIndex].Name}] Bị Trùng Thời Gian Bắt Đầu [{ds.Slot.StartTime}]" +
+                        $" Với Lớp [{classes[browserIndex].Name}] Hãy Chọn Lớp Bạn Mong Muốn Đăng Ký Nhất", StatusCodes.Status400BadRequest);
                     }
                 }
             }
@@ -575,7 +579,7 @@ namespace MagicLand_System.Services.Implements
 
             if (balance < total)
             {
-                throw new BadHttpRequestException($"Your balance has not enough, balance require greater than: [{total} d]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Số Dư Không Đủ, Yều Cầu Tài Khoản Có Ít Nhất: [{total} d]", StatusCodes.Status400BadRequest);
             }
 
             return total;
@@ -605,5 +609,56 @@ namespace MagicLand_System.Services.Implements
             return string.Join(", ", studentNameList);
         }
 
+        public async Task<UserResponse> UpdateUserAsync(UserRequest request)
+        {
+            try
+            {
+                var currentUser = await GetUserFromJwt();
+
+                if (request.FullName != null)
+                {
+                    await UpdateCurrentUserTransaction(request, currentUser);
+
+                    currentUser.FullName = request.FullName!;
+                }
+
+                currentUser.DateOfBirth = request.DateOfBirth != default ? request.DateOfBirth : currentUser.DateOfBirth;
+                currentUser.Gender = request.Gender ?? currentUser.Gender;
+                currentUser.AvatarImage = request.AvatarImage ?? currentUser.AvatarImage;
+                currentUser.Email = request.Email ?? currentUser.Email;
+                currentUser.Street = request.Street ?? currentUser.Street;
+                currentUser.City = request.City ?? currentUser.City;
+                currentUser.District = request.District ?? currentUser.District;
+
+                _unitOfWork.GetRepository<User>().UpdateAsync(currentUser);
+                await _unitOfWork.CommitAsync();
+
+                return _mapper.Map<UserResponse>(currentUser);
+
+            }
+            catch(Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex}]", StatusCodes.Status400BadRequest);
+            }
+        }
+
+        private async Task UpdateCurrentUserTransaction(UserRequest request, User currentUser)
+        {
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId == currentUser.Id);
+
+            var oldTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
+               .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id);
+
+            foreach (var trans in oldTransactions)
+            {
+                string description = trans.Description!;
+
+                trans.Description = StringHelper.UpdatePartValueOfTransactionDescription(description, request.FullName!, TransactionDescriptionEnum.Parent.ToString());
+                trans.PersonalWalletId = personalWallet.Id;
+                trans.PersonalWallet = personalWallet;
+            }
+
+            _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(oldTransactions);
+        }
     }
 }

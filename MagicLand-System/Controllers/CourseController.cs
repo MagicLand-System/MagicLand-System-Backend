@@ -16,10 +16,10 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Courses
         /// <summary>
-        ///  Get All Courses Existed
+        ///  Truy Suất Toàn Bộ Khóa Học
         /// </summary>
-        /// <response code="200">Return a list of Course statify request</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAll)]
         [AllowAnonymous]
@@ -31,8 +31,9 @@ namespace MagicLand_System.Controllers
 
         #region document API Search Courses
         /// <summary>
-        ///  Get all courses contain Name key word
+        ///  Truy Suất Khóa Học Theo Tên
         /// </summary>
+        /// <param name="keyWord">Từ Khóa</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -41,8 +42,9 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a list of class statific request</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.SearchCourse)]
         [AllowAnonymous]
@@ -55,19 +57,20 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Course By Id
         /// <summary>
-        ///  Get Specific Detail Course By Id
+        ///  Truy Suất Khóa Học Theo Id Của Khóa Học
         /// </summary>
+        /// <param name="id">Id Của Khóa Học</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "id": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///        "Id": "c6d70a5f-56ae-4de0-b441-c080da024524"
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a detail of course</response>
-        /// <response code="400">Id of course not esxist</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Khóa Học</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.CourseById)]
         [AllowAnonymous]
@@ -79,16 +82,16 @@ namespace MagicLand_System.Controllers
 
         #region document API Filter Courses
         /// <summary>
-        ///  Get Specific List Of Course By KeyWord And Filter Options
+        /// Tìm Kiếm Hoạc Lọc Các Khóa Học Theo Tiêu Chí
         /// </summary>
-        /// <param name="minYearsOld">for course age of student must bigger than this age</param>
-        /// <param name="maxYearsOld">for course age of student must lower than this age</param>
-        /// <param name="minNumberSession">for course must have a sessions lower to this number</param>
-        /// <param name="maxNumberSession">for course must have a sessions greater to this number, if leave null then the value will be max int</param>
-        /// <param name="minPrice">for course have price higher than this price</param>
-        /// <param name="maxPrice">for course have price lower than this price,  if leave null then the value will be max double</param>
-        /// <param name="subject">for all course belong subject</param>
-        /// <param name="rate">for all course have euqal or higher than this rate</param>
+        /// <param name="minYearsOld">Cho Khóa Học Có Độ Tuổi Lớn Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="maxYearsOld">Cho Khóa Học Có Độ Tuổi Nhỏ Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="minNumberSession">Cho Khóa Học Có Số Buổi Học Lớn Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="maxNumberSession">Cho Khóa Học Có Số Buổi Học Nhỏ Hơn Hoặc Bằng Gía Trị Này, Nếu Để Trống Mặc Định Gía Trị Lớn Nhất</param>
+        /// <param name="minPrice">Cho Khóa Học Gía Lớn Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="maxPrice">Cho Khóa Học Gía Nhỏ Hơn Hoặc Bằng Gía Trị Này, Nếu Để Trống Mặc Định Gía Trị Lớn Nhất</param>
+        /// <param name="subject">Cho Khóa Học Thuộc Lịch Vực Này</param>
+        /// <param name="rate">Cho Khóa Học Có Đánh Gía Cao Hơn Hoặc Bằng Gía Trị Này</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -104,9 +107,9 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a detail of course statify request</response>
-        /// <response code="400">Some Field Is Not Valid</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Khóa Học Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.FilterCourse)]
         [AllowAnonymous]

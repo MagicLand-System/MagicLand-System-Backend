@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
+using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Services.Interfaces;
@@ -95,6 +96,40 @@ namespace MagicLand_System.Controllers
                 });
             }
             return Ok(users);
+        }
+
+        #region document API update User
+        /// <summary>
+        ///  Cho Phép Phụ Huynh Cập Nhập Thông Tin Của Mình
+        /// </summary>
+        /// <param name="request">Chứa Thông Tin Cần Cập Nhập</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "FullName":"Nguyen Van A",
+        ///    "DateOfBirth":"2024/1/19",
+        ///    "Gender":"Name",
+        ///    "AvatarImage":"url",
+        ///    "Email":"avannguyen@gmail.com",
+        ///    "City":"Ho Chi Minh",
+        ///    "District":"9",
+        ///    "Street":"D7"  
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Tin Người Dùng Sau Khi Cập Nhập</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPut(ApiEndpointConstant.User.UpdateUser)]
+        [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> UpdateStudent([FromBody] UserRequest request)
+        {
+            var response = await _userService.UpdateUserAsync(request);
+
+            return Ok(response);
         }
     }
 }

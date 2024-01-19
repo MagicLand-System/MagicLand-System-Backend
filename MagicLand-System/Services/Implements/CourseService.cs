@@ -45,11 +45,11 @@ namespace MagicLand_System.Services.Implements
             maxPrice ??= double.MaxValue;
 
             var filteredCourses = minYearsOld > maxYearsOld || minYearsOld < 0 || maxYearsOld < 0
-             ? throw new BadHttpRequestException("Range Of Age Not Valid", StatusCodes.Status400BadRequest)
+             ? throw new BadHttpRequestException("Độ Tuổi Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
              : courses.Where(x => x.MinYearOldsStudent >= minYearsOld && x.MaxYearOldsStudent <= maxYearsOld).ToList();
 
             filteredCourses = minPrice > maxPrice || minPrice < 0 || maxPrice < 0
-            ? throw new BadHttpRequestException("Range Of Price Not Valid", StatusCodes.Status400BadRequest)
+            ? throw new BadHttpRequestException("Gía Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
             : filteredCourses.Where(x => x.Price >= minPrice && x.Price <= maxPrice).ToList();
 
             filteredCourses = filteredCourses.Where(x => x.NumberOfSession >= minNumberSession && x.NumberOfSession <= maxNumberSession).ToList();
@@ -76,7 +76,7 @@ namespace MagicLand_System.Services.Implements
             .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
 
             var coursePrerequisites = !course.Any()
-                ? throw new BadHttpRequestException("Id Not Exist", StatusCodes.Status400BadRequest)
+                ? throw new BadHttpRequestException($"Id [{id}] Khóa Hoc Không Tồn Tại", StatusCodes.Status400BadRequest)
                 : await GetCoursePrerequesites(course);
 
             var coureSubsequents = await GetCoureSubsequents(course);

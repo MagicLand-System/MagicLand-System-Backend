@@ -11,6 +11,7 @@ namespace MagicLand_System.Domain.Models
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? AvatarImage { get; set; }
+        public bool? IsActive { get; set; } = true;
 
         [ForeignKey("User")]
         public Guid ParentId { get; set; }

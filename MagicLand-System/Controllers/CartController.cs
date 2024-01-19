@@ -26,10 +26,9 @@ namespace MagicLand_System.Controllers
 
         #region document API modify favorite
         /// <summary>
-        /// Allows adding Course into Favorite List 
+        /// Cho Phép Thêm Khóa Học Vào Danh Sách Quan Tâm
         /// </summary>
-        /// <param name="courseId">Store favorite Course Id </param>
-        /// <returns>A cart after modify action</returns>
+        /// <param name="courseId">Id Của Khóa Học </param>
         /// <remarks>
         /// Sample request:
         ///
@@ -38,10 +37,10 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a cart after Modify Success</response>
-        /// <response code="400">Invalid request</response>
-        /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database commit error</response>
+        /// <response code="200">Trả Về Danh Sách Quan Tâm Sau Khi Thêm</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpPost(ApiEndpointConstant.CartEnpoint.AddCourseFavoriteList)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
@@ -53,7 +52,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Course Id Not Esxit",
+                    Error = $"Id [{courseId}] Khóa Học Không Tồn Tại",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -67,10 +66,9 @@ namespace MagicLand_System.Controllers
 
         #region document API modify cart
         /// <summary>
-        /// Allows adding Class with or without Students into Cart (Favorite Class)
+        /// Cho Phép Thêm Lớp Có Hoặc Không Có Học Sinh Vào Giỏ Hàng
         /// </summary>
-        /// <param name="cartRequest">Store Class Id and Students Id</param>
-        /// <returns>A cart after modify action</returns>
+        /// <param name="cartRequest">Chứa Id Của Lớp Và Id Của Học Sinh Nếu Có</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -85,10 +83,10 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Return a Cart after modify success</response>
-        /// <response code="400">Invalid request</response>
-        /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database commit error</response>
+        /// <response code="200">Trả Về Giỏ Hàng Sau Khi Thêm</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpPost(ApiEndpointConstant.CartEnpoint.ModifyCart)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
@@ -100,7 +98,7 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Class Id Not Esxit",
+                    Error = $"Id [{cartRequest.ClassId}] Của Lớp Học Không Tồn Tại",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
@@ -113,23 +111,39 @@ namespace MagicLand_System.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Invalid Student Id or you are trying to sign someone else's Student: [" 
+                    Error = $"Id Của Học Sinh Không Tồn Tại Hoặc Bạn Đang Sử Dụng Id Của Học Sinh Khác Không Phải Con Bạn ["
                     + string.Join(", ", invalidStudentIds.Select(x => x.ToString()).ToList()) + "]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
             }
+
+            var exsitStudents = students.Where(stu => cartRequest.StudentIdList.Any(id => id == stu.Id)).ToList();
+
+            foreach (var student in exsitStudents)
+            {
+                if (!student.IsActive!.Value)
+                {
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = $"Id [{student.Id}] Của Học Sinh Đã Ngưng Hoạt Động",
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        TimeStamp = DateTime.Now,
+                    });
+                }
+            }
+
             var result = await _cartService.ModifyCartOffCurrentParentAsync(cartRequest.StudentIdList, cartRequest.ClassId);
             return Ok(result);
         }
 
         #region document API get cart
         /// <summary>
-        ///  View Cart of current Parent
+        ///  Truy Suất Giỏ Của Người Dùng Hiện Tại
         /// </summary>
-        /// <response code="200">Show a Cart of current Parent</response>
-        /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Giỏ Hàng</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CartEnpoint.GetCart)]
         [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
@@ -142,11 +156,11 @@ namespace MagicLand_System.Controllers
 
         #region document API get favorite
         /// <summary>
-        ///  View Favorite Course list of current Parent
+        ///  Truy Suất Danh Sách Quan Tâm Của Nguời Dùng Hiện Tại
         /// </summary>
-        /// <response code="200">Show a cart of current parent</response>
-        /// <response code="403">Invalid role</response>
-        /// <response code="500">Unhandel database error</response>
+        /// <response code="200">Trả Về Danh Sách Quan Tâm</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CartEnpoint.GetFavorite)]
         [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
@@ -159,9 +173,9 @@ namespace MagicLand_System.Controllers
 
         #region document API delete item
         /// <summary>
-        ///   Allow delete Single or Multiple item in cart, also delete Favorite item
+        ///   Cho Phép Xóa Một Hoặc Nhiều Item Trong Giỏ Hàng Hoặc Item Của Danh Sách Quan Tâm
         /// </summary>
-        /// <param name="itemIdList">Id of all item want to delete </param>
+        /// <param name="itemIdList">Id Của Tất Cả Item Càn Xóa </param>
         /// <remarks>
         /// Sample request:
         ///
@@ -181,7 +195,7 @@ namespace MagicLand_System.Controllers
         {
             await _cartService.DeleteItemInCartOfCurrentParentAsync(itemIdList);
 
-            return Ok("Delete Success");
+            return Ok("Xóa Thành Công");
         }
     }
 }

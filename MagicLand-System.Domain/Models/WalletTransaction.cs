@@ -9,6 +9,7 @@ namespace MagicLand_System.Domain.Models
         public string? Type { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedTime { get; set; }
+        public DateTime? UpdateTime { get; set; }
         public bool? IsProcessed { get; set; }
 
 

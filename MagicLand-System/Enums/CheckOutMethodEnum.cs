@@ -3,6 +3,7 @@
     public enum CheckOutMethodEnum
     {
         SystemWallet,
-        Cash
+        Cash,
+        Refund
     }
 }

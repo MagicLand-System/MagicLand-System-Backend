@@ -397,7 +397,7 @@ namespace MagicLand_System.Services.Implements
             var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id);
 
             var classes = course == null
-                ? throw new BadHttpRequestException("Course Id Not Exist", StatusCodes.Status400BadRequest)
+                ? throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest)
                 : await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(predicate: x => x.CourseId == id, include: x => x
                 .Include(x => x.Lecture!)
