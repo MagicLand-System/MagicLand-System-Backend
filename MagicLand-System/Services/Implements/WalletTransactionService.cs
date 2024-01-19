@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Repository.Interfaces;
@@ -35,49 +38,72 @@ namespace MagicLand_System.Services.Implements
             List<WalletTransactionResponse> result = new List<WalletTransactionResponse>();
             foreach(var transaction in transactions)
             {
-                var description = transaction.Description;
-                var parts = description.Split('[', ']', ':', ',');
-                var cleanParts = parts.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
-                var classCode = cleanParts[1];
-                var studentName = cleanParts[5];
-                List<string> names = new List<string>();    
-                for(int i = 5;i <= cleanParts.Length - 1; i++)
+                var description = transaction.SystemDescription;
+                WalletTransactionResponse response = new WalletTransactionResponse();
+                if(description != null)
                 {
-                    names.Add(cleanParts[i]);
-                }
-                User user = transaction.PersonalWallet.User;
-                Class myclass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.ClassCode.ToLower().Equals(classCode.Trim().ToLower()));
-                var coursename = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(myclass.CourseId.ToString()),selector : x => x.Name);
-                List<Student> students = new List<Student>();
-                foreach (var namex in names) 
-                {
-                    var studentMatch = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => (x.ParentId.ToString().Equals(user.Id.ToString()) && x.FullName.Trim().ToLower().Equals(namex.Trim().ToLower())));
-                    students.Add(studentMatch);
-                }
-                WalletTransactionResponse response = new WalletTransactionResponse
-                {
-                    Description = description,
-                    CreatedTime = transaction.CreatedTime,
-                    Money = transaction.Money,
-                    Parent = new PayLoad.Response.Users.UserResponse
+                    var parts = description.Split('[', ']', ':', ',');
+                    var cleanParts = parts.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+                    var classCode = cleanParts[1];
+                    var studentName = cleanParts[5];
+                    List<string> names = new List<string>();
+                    for (int i = 5; i <= cleanParts.Length - 1; i++)
                     {
-                        AvatarImage = user.AvatarImage,
-                        DateOfBirth = user.DateOfBirth,
-                        Email = user.Email,
-                        FullName = user.FullName,
-                        Gender = user.Gender,
-                        Id = transaction.Id,
-                        Phone = user.Phone,
-                    },
-                    Type = "SystemWallet",
-                    TransactionId = transaction.Id,
-                    MyClassResponse = myclass,
-                    Students = students,
-                    CourseName = coursename,
-                };
+                        names.Add(cleanParts[i]);
+                    }
+                    User user = transaction.PersonalWallet.User;
+                    Class myclass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.ClassCode.ToLower().Equals(classCode.Trim().ToLower()));
+                    var coursename = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(myclass.CourseId.ToString()), selector: x => x.Name);
+                    List<Student> students = new List<Student>();
+                    foreach (var namex in names)
+                    {
+                        var studentMatch = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => (x.ParentId.ToString().Equals(user.Id.ToString()) && x.FullName.Trim().ToLower().Equals(namex.Trim().ToLower())));
+                        students.Add(studentMatch);
+                    }
+                     response = new WalletTransactionResponse
+                    {
+                        Description = transaction.Description,
+                        CreatedTime = transaction.CreatedTime,
+                        Money = transaction.Money,
+                        Parent = new PayLoad.Response.Users.UserResponse
+                        {
+                            AvatarImage = user.AvatarImage,
+                            DateOfBirth = user.DateOfBirth,
+                            Email = user.Email,
+                            FullName = user.FullName,
+                            Gender = user.Gender,
+                            Id = transaction.Id,
+                            Phone = user.Phone,
+                        },
+                        Type = transaction.Type,
+                        TransactionId = transaction.Id,
+                        MyClassResponse = myclass,
+                        Students = students,
+                        CourseName = coursename,
+                        Method = transaction.Method,
+                        TransactionCode = transaction.TransactionCode,
+                    };
+                } else
+                {
+                    response = new WalletTransactionResponse
+                    {
+                        Description = transaction.Description,
+                        CreatedTime = transaction.CreatedTime,
+                        Money = transaction.Money,
+                        Method = TransactionMethodEnum.SystemWallet.ToString(),
+                        CourseName = string.Empty,
+                        Parent = null,
+                        MyClassResponse = null,
+                        Students = null,
+                        TransactionId = transaction.Id,
+                        Type = TransactionTypeEnum.TopUp.ToString(),
+                        TransactionCode = transaction.TransactionCode,
+                    };
+                }
+
                 result.Add(response);
             }
-            if(endDate != null) { endDate = endDate.Value.AddHours(23).AddMinutes(59); }
+            if (endDate != null) { endDate = endDate.Value.AddHours(23).AddMinutes(59); }
             result = (result.OrderByDescending(x => x.CreatedTime)).ToList();
             if (phone == null && startDate == null && endDate == null)
             {

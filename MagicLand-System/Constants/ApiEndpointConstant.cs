@@ -90,6 +90,8 @@
         {
             public const string GetAll = ApiEndpoint + "/walletTransactions";
             public const string TransactionById = GetAll + "/{id}";
+            public const string PersonalWallet = GetAll + "/walletBalance";
         }
+       
     }
 }

@@ -16,11 +16,8 @@ namespace MagicLand_System.PayLoad.Request
         public string Gender { get; set; }
         public DateTime? DateOfBirth { get; set; } = null;
         [Required(ErrorMessage = "Street is missing")]
-        public string Street { get; set; }
-        [Required(ErrorMessage = "District is missing")]
-        public string District { get; set; }
-        [Required(ErrorMessage = "City is missing")]
-        public string City { get; set; }
+   
+        public string? Address {  get; set; }   
 
     }
 }
