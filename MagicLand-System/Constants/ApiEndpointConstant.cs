@@ -72,6 +72,7 @@
             public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
             public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
             public const string StudentGetCurrentChildren = StudentsEndpoint + "/currentuser";
+            public const string UpdateStudent = StudentsEndpoint + "/update";
         }
         public static class RoomEnpoint
         {
