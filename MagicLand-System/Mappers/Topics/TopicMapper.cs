@@ -5,7 +5,6 @@ namespace MagicLand_System.Mappers.Topics
 {
     public class TopicMapper : Profile
     {
-
         public TopicMapper()
         {
             CreateMap<MagicLand_System.Domain.Models.Topic, TopicResponse>()

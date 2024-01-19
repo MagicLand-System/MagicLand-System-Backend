@@ -5,8 +5,9 @@ namespace MagicLand_System.PayLoad.Request.Student
     public class UpdateStudentRequest 
     {
         public required Guid StudentId { get; set; }
-        [RegularExpression("^[A-Z][a-z]*(\\s[A-Z][a-z]*)*$", ErrorMessage = "FullName Cần Phải Viết Hoa Đầu Mỗi Ký Chữ Và Không Chứa Ký Tự Đặc Biệt ")]
+        [RegularExpression("^[A-Z][a-z]*( [A-Z][a-z]*)*$", ErrorMessage = "FullName Cần Phải Viết Hoa Đầu Mỗi Ký Chữ")]
         public string? FullName { get; set; }
+        [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; } = default;
         public string? Gender { get; set; }
         public string? AvatarImage { get; set; }
