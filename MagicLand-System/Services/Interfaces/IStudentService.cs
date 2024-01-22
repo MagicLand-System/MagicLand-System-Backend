@@ -3,6 +3,7 @@ using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
 
 namespace MagicLand_System.Services.Interfaces
@@ -17,5 +18,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> DeleteStudentAsync(Student student);
         Task<string> TakeStudentAttendanceAsync(AttendanceRequest request);
         Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId);
+        Task<StudentResponse> GetStudentById(Guid id);
     }
 }

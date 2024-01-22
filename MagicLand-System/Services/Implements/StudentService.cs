@@ -402,7 +402,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 _unitOfWork.GetRepository<Attendance>().UpdateRange(attendances);
-                 await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch (Exception ex)
             {
@@ -412,5 +412,15 @@ namespace MagicLand_System.Services.Implements
             return studentNotHaveAttendance;
         }
 
+        public async Task<StudentResponse> GetStudentById(Guid id)
+        {
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            return _mapper.Map<StudentResponse>(student);
+        }
     }
 }

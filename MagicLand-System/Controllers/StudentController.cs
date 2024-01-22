@@ -1,14 +1,18 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Carts;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml.Packaging.Ionic.Zip;
 using System.Linq;
 
 namespace MagicLand_System.Controllers
@@ -17,9 +21,11 @@ namespace MagicLand_System.Controllers
     public class StudentController : BaseController<StudentController>
     {
         private readonly IStudentService _studentService;
-        public StudentController(ILogger<StudentController> logger, IStudentService studentService) : base(logger)
+        private readonly ICourseService _courseService;
+        public StudentController(ILogger<StudentController> logger, IStudentService studentService, ICourseService courseService) : base(logger)
         {
             _studentService = studentService;
+            _courseService = courseService;
         }
         [HttpPost(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate)]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
@@ -200,6 +206,57 @@ namespace MagicLand_System.Controllers
                 });
             }
             var response = await _studentService.DeleteStudentAsync(student);
+
+            return Ok(response);
+        }
+
+        #region document API Get Student Course Registered By Id
+        /// <summary>
+        ///  Truy Suất Các Khóa Học Đã Đăng Ký Của Học Sinh Thông Qua Id Của Học Sinh
+        /// </summary>
+        /// <param name="id">Id Của Học Sinh</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Danh Sách Các Lớp Đã Đăng Ký</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.GetStudentCourseRegistered)]
+        [ProducesResponseType(typeof(CourseResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetStudentCourseRegistered([FromRoute] Guid id)
+        {
+            var response = await _courseService.GetCoursesOfStudentByIdAsync(id);
+            return Ok(response);
+        }
+
+        #region document API Get Student By Id
+        /// <summary>
+        ///  Truy Suất Thông Tin Của Học Sinh Thông Qua Id Của Học Sinh
+        /// </summary>
+        /// <param name="id">Id Của Học Sinh</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Tin Của Học Sinh</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentEndpointGet)]
+        [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadHttpRequestException))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetStudentById([FromRoute] Guid id)
+        {
+            var response = await _studentService.GetStudentById(id);
 
             return Ok(response);
         }

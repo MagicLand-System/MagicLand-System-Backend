@@ -181,5 +181,27 @@ namespace MagicLand_System.Services.Implements
 
             return coursePrerequesites.ToArray();
         }
+
+        public async Task<List<CourseResExtraInfor>> GetCoursesOfStudentByIdAsync(Guid studentId)
+        {
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId);
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id [{studentId}] Học sinh không tồn tại", StatusCodes.Status400BadRequest);
+            }
+            var courseRegisteredIdList = await _unitOfWork.GetRepository<Course>().GetListAsync(selector: x => x.Id, predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId == studentId)));
+            if (courseRegisteredIdList == null)
+            {
+                return new List<CourseResExtraInfor>();
+            }
+
+            var listCourseResExtraInfror = new List<CourseResExtraInfor>();
+            foreach (Guid id in courseRegisteredIdList)
+            {
+                listCourseResExtraInfror.Add(await GetCourseByIdAsync(id));
+            }
+
+            return listCourseResExtraInfror;
+        }
     }
 }

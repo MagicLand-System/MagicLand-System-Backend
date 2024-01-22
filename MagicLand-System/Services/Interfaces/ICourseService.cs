@@ -11,5 +11,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<CourseResExtraInfor>> FilterCourseAsync(int minYearsOld, int maxYearsOld, int? minNumberSession,
             int? maxNumberSession, double minPrice, double? maxPrice, string? subject, int? rate);
         Task<List<CourseCategory>> GetCourseCategories();
+        Task<List<CourseResExtraInfor>> GetCoursesOfStudentByIdAsync(Guid studentId);
     }
 }
