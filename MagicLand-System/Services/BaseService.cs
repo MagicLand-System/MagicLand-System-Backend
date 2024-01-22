@@ -22,6 +22,11 @@ namespace MagicLand_System.Services
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
+        protected string GetCurrentUserIpAdress()
+        {
+            string ipAdrr = _httpContextAccessor?.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            return ipAdrr;
+        }
         protected string GetPhoneFromJwt()
         {
             string phone = _httpContextAccessor?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);

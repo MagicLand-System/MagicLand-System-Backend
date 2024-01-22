@@ -235,6 +235,7 @@ namespace MagicLand_System.Services.Implements
         private async Task<double> AddRefundTransaction(List<ClassResExtraInfor> classes, PersonalWallet personalWallet)
         {
             var oldTransactions = (await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id)).ToList();
+            var payer = await GetUserFromJwt();
             var refundTransactions = new List<WalletTransaction>();
             double refundAmount = 0.0;
 
@@ -242,26 +243,27 @@ namespace MagicLand_System.Services.Implements
             {
                 foreach (var trans in oldTransactions)
                 {
-                    string description = trans.SystemDescription!;
-                    var classCodes = StringHelper.ExtractValuesFromTransactionDescription(description, TransactionDescriptionEnum.ClassCodes.ToString(), true);
+                    string txnRefCode = trans.Signature!;
+                    var classCodes = StringHelper.GetAttachValueFromTxnRefCode(txnRefCode);
 
-                    if (classCodes.Contains(cls.ClassCode!))
+                    if (classCodes == cls.ClassCode!)
                     {
-                        refundAmount += trans.Money;
+                        refundAmount += trans.Money - trans.Discount;
 
                         var transaction = new WalletTransaction
                         {
                             Id = new Guid(),
-                            TransactionCode = StringHelper.GenerateRadomTransactionCode(TransactionTypeEnum.Refund),
-                            Money = trans.Money,
+                            TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Refund),
+                            Money = refundAmount,
                             Type = TransactionTypeEnum.Refund.ToString(),
                             Method = TransactionMethodEnum.SystemWallet.ToString(),
                             Description = $"Hoàn Tiền Lớp Học {cls.Name} Từ Hệ Thống",
-                            SystemDescription = trans.SystemDescription,
-                            CreatedTime = DateTime.Now,
+                            CreateTime = DateTime.Now,                        
                             PersonalWalletId = personalWallet.Id,
                             PersonalWallet = personalWallet,
-                            IsProcessed = true,
+                            Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund, string.Empty),
+                            Status = TransactionStatusEnum.Success.ToString(),
+                            CreateBy = payer.FullName,
                         };
 
                         refundTransactions.Add(transaction);

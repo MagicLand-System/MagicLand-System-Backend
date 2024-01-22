@@ -666,14 +666,21 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedTime")
+                    b.Property<string>("CreateBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreateTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool?>("IsProcessed")
-                        .HasColumnType("bit");
+                    b.Property<double>("Discount")
+                        .HasColumnType("float");
 
                     b.Property<string>("Method")
                         .HasColumnType("nvarchar(max)");
@@ -684,7 +691,10 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("PersonalWalletId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("SystemDescription")
+                    b.Property<string>("Signature")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TransactionCode")

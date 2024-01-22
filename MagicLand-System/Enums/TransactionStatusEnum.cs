@@ -2,7 +2,8 @@
 {
     public enum TransactionStatusEnum
     {
-       PROCESSING, 
-       PROCESSED
+       Success, 
+       Failed,
+       Processing
     }
 }
