@@ -112,11 +112,15 @@ namespace MagicLand_System.Services.Implements
 
         private SortedList<string, string> MakeRequestVnpayData(double amount, string txnRefCode, string orderInfor)
         {
+            DateTime utcNow = DateTime.UtcNow;
+            TimeZoneInfo targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            DateTime targetTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, targetTimeZone);
+
             var requestData = new SortedList<string, string>(new CompareHelper())
             {
                 { "vnp_Amount", (amount * 100).ToString() },
-                { "vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss")},
-                { "vnp_ExpireDate", DateTime.Now.AddMinutes(5).ToString("yyyyMMddHHmmss")},
+                { "vnp_CreateDate", targetTime.ToString("yyyyMMddHHmmss")},
+                { "vnp_ExpireDate", targetTime.AddMinutes(5).ToString("yyyyMMddHHmmss")},
                 { "vnp_Command", VnpayTransactionConstant.vnp_Command},
                 { "vnp_CurrCode", VnpayTransactionConstant.vnp_CurrCode},
                 { "vnp_Locale", VnpayTransactionConstant.vnp_Locale},
@@ -130,7 +134,7 @@ namespace MagicLand_System.Services.Implements
 
             var vnp_IpAddr = GetCurrentUserIpAdress();
             if (vnp_IpAddr != null)
-                requestData.Add("vnp_IpAddr", vnp_IpAddr);
+                requestData.Add("vnp_IpAddr", "vnp_IpAddr");
 
             return requestData;
         }
