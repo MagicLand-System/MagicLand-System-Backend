@@ -16,7 +16,8 @@
             public const string UserEndPointExist = UsersEndpoint + "checkExist";
             public const string UserEndPointGetCurrentUser = UsersEndpoint + "/getcurrentuser";
             public const string UserEndPointRegister = UsersEndpoint + "/register";
-            public const string UserEndPointCheckout = UsersEndpoint + "/checkout";
+            public const string CheckoutClass = UsersEndpoint + "/checkout";
+            public const string CheckOutClassByVnpay = UsersEndpoint + "/vnpay/checkout";
             public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
             public const string UpdateUser = UsersEndpoint + "/update";
 
@@ -58,7 +59,8 @@
             public const string GetCart = Origin + "/view";
             public const string GetFavorite = Origin + "/favorite/view";
             public const string DeleteCartItem = Origin + "/item/delete";
-            public const string CheckOutCart = Origin + "/item/checkout";
+            public const string CheckOutCartItem = Origin + "/item/checkout";
+            public const string CheckOutCartItemByVnpay = Origin + "/vnpay/item/checkout";
         }
         public static class CourseEnpoint
         {
@@ -95,6 +97,7 @@
             public const string GetAll = ApiEndpoint + "/walletTransactions";
             public const string TransactionById = GetAll + "/{id}";
             public const string PersonalWallet = GetAll + "/walletBalance";
+            public const string GetBillTransactionById = GetAll + "/{id}/bill/status";
         }
         public static class Syllabus
         {
@@ -106,6 +109,12 @@
             public const string EndPointBase = ApiEndpoint + "/lectures";
             public const string TakeStudentAttendance = EndPointBase + "/takeStudentAttendance";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
+        }
+
+        public static class WalletEndPoint
+        {
+            public const string EndPointBase = ApiEndpoint + "/wallet";
+            public const string TopUpWallet = EndPointBase + "/topup";
         }
     }
 }

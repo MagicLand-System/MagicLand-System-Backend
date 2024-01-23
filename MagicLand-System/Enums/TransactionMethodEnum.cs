@@ -3,6 +3,6 @@
     public enum TransactionMethodEnum
     {
         SystemWallet,
-        VNPAY,
+        Vnpay,
     }
 }

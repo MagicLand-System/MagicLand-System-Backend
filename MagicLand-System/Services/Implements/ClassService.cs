@@ -177,6 +177,8 @@ namespace MagicLand_System.Services.Implements
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include: x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
             classes = (classes.OrderByDescending(x => x.AddedDate)).ToList();
+            var cls = classes.First();
+
             var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
             var lecturerId = classes.First(x => x.Id == x.Id).LecturerId;
             var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(roomId.ToString()));
@@ -597,6 +599,54 @@ namespace MagicLand_System.Services.Implements
             }
             responses = responses.OrderByDescending(x => x.Date).ToList();
             return responses;
+        }
+
+        public async Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList)
+        {
+            var classes = new List<Class>();
+
+            foreach (var id in classIdList)
+            {
+                var cls = await _unitOfWork.GetRepository<Class>()
+                   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
+                   .Include(x => x.Schedules)
+                   .ThenInclude(s => s.Slot)
+                   .Include(x => x.Schedules)
+                   .ThenInclude(s => s.Room)!);
+
+                classes.Add(cls);
+            }
+
+            for (int i = 0; i < classes.Count - 1; i++)
+            {
+                for (int j = i + 1; j < classes.Count; j++)
+                {
+                    CheckConflictSchedule(classes, i, j);
+                }
+            }
+        }
+
+        private void CheckConflictSchedule(List<Class> classes, int defaultIndex, int browserIndex)
+        {
+            var defaultSchedules = classes[defaultIndex].Schedules;
+            var browserSchedules = classes[browserIndex].Schedules;
+
+            foreach (var ds in defaultSchedules)
+            {
+                foreach (var bs in browserSchedules)
+                {
+                    if (ds.Date == bs.Date && ds.Slot!.StartTime == bs.Slot!.StartTime)
+                    {
+                        if (classes[defaultIndex].Id == classes[browserIndex].Id)
+                        {
+                            throw new BadHttpRequestException($"Bạn Đang Đăng Ký Lớp [{classes[defaultIndex].Name}] Nhiều Hơn 2 Lần", StatusCodes.Status400BadRequest);
+                        }
+
+                        throw new BadHttpRequestException($"Lịch Của Lớp [{classes[defaultIndex].Name}] Bị Trùng Thời Gian Bắt Đầu [{ds.Slot.StartTime}]" +
+                        $" Với Lớp [{classes[browserIndex].Name}] Hãy Chọn Lớp Bạn Mong Muốn Đăng Ký Nhất", StatusCodes.Status400BadRequest);
+                    }
+                }
+            }
         }
     }
 }

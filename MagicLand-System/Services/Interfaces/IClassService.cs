@@ -20,5 +20,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> AutoCreateClassCode(string courseId);
         Task<bool> UpdateClass(string classId, UpdateClassRequest request);
         Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
+        Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList);
     }
 }
