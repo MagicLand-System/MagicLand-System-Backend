@@ -1,7 +1,9 @@
 ﻿using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MagicLand_System.Helpers
 {
@@ -37,70 +39,90 @@ namespace MagicLand_System.Helpers
 
             return randomCode;
         }
-        public static string GenerateTransactionTxnRefCode(TransactionTypeEnum type, string valueAttach)
+        public static string GenerateTransactionTxnRefCode(TransactionTypeEnum type)
         {
-
             string txnRefCode = string.Empty;
+            string uniqueId = Guid.NewGuid().ToString("N");
+
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Random random = new Random();
+
+            StringBuilder interleavedString = new StringBuilder();
+            int minLength = Math.Min(uniqueId.Length, chars.Length);
+
+            for (int i = 0; i < minLength; i++)
+            {
+                interleavedString.Append(uniqueId[i]);
+                interleavedString.Append(chars[i]);
+            }
+
+            interleavedString.Append(uniqueId.Substring(minLength));
+            interleavedString.Append(chars.Substring(minLength));
+
+            string shuffledString = new string(interleavedString.ToString().ToCharArray().OrderBy(c => random.Next()).ToArray());
+
+            string extraPart = shuffledString.Substring(0, Math.Min(5, shuffledString.Length));
 
             switch (type)
             {
                 case TransactionTypeEnum.Refund:
-                    txnRefCode = "RF"  + valueAttach;
+                    txnRefCode = "RF" + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
 
                 case TransactionTypeEnum.Payment:
-                    txnRefCode = "PM"  + valueAttach;
+                    txnRefCode = "PM" + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
 
                 case TransactionTypeEnum.TopUp:
-                    txnRefCode = "TU" + valueAttach;
+                    txnRefCode = "TU" + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
             }
 
             return txnRefCode;
         }
 
-        public static string GenerateValueAttachForPayment(List<CheckoutRequest> requests, List<Guid> cartItems)
+        public static string GenerateAttachValueForTxnRefCode(ItemGenerate item)
         {
-            var listValue = new List<string>();
-            foreach (var request in requests)
+            string attachValue = $"[{TransactionAttachValueEnum.ClassId}:{item.ClassId}][{TransactionAttachValueEnum.StudentId}:{string.Join(", ", item.StudentIdList)}]";
+
+            if (item.CartItemId != default)
             {
-                listValue.Add($"[{TransactionAttachValueEnum.ClassId}:{request.ClassId}][{TransactionAttachValueEnum.StudentId}:{string.Join(", ", request.StudentIdList)}]");
-            }
-            if(cartItems != null && cartItems.Count > 0)
-            {
-                listValue.Add($"[{TransactionAttachValueEnum.CartItemId}:{string.Join(", ", cartItems)}]");
+                attachValue += $"[{TransactionAttachValueEnum.CartItemId}:{item.CartItemId}]";
             }
 
-            return string.Join(" | ", listValue) + GenerateUniqueOrderCode(requests.Count());
+            return EncodeAttachValue(attachValue);
         }
 
-        private static string GenerateUniqueOrderCode(int numberItem)
+        public static Dictionary<string, List<string>> ExtractAttachValueFromSignature(string signature)
         {
-            if (numberItem == 1)
+            string attachValue = DecodeAttachValue(signature.Substring(11));
+
+            Dictionary<string, List<string>> values = new Dictionary<string, List<string>>();
+            Regex pattern = new Regex(@"\[(\w+):([^[\]]+)\]");
+
+            MatchCollection matches = pattern.Matches(attachValue);
+            foreach (Match match in matches)
             {
-                return string.Empty;
+                string key = match.Groups[1].Value;
+                string[] rawValues = match.Groups[2].Value.Split(',').Select(v => v.Trim()).ToArray();
+
+                if (!values.ContainsKey(key))
+                {
+                    values[key] = new List<string>();
+                }
+
+                values[key].AddRange(rawValues);
             }
 
-            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            Random random = new Random();
-            return "?UniqueCode=" + new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
+            return values;
         }
-
-        public static string GetAttachValueFromTxnRefCode(string txnRefCode)
-        {
-            string value = DecodeString(txnRefCode);
-            return value.Substring(7);
-        }
-
-
-        public static string EncodeString(string input)
+        private static string EncodeAttachValue(string input)
         {
             byte[] stringBytes = Encoding.UTF8.GetBytes(input);
             return Convert.ToBase64String(stringBytes);
         }
 
-        public static string DecodeString(string input)
+        public static string DecodeAttachValue(string input)
         {
             byte[] stringBytes = Convert.FromBase64String(input);
             return Encoding.UTF8.GetString(stringBytes);

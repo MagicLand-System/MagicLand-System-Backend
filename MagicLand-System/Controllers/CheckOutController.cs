@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using MagicLand_System.Constants;
 using MagicLand_System.Helpers;
+using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Bills;
@@ -131,6 +132,8 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> CheckOutClassByVnpay(List<CheckoutRequest> requests)
         {
+            var itemGenerates = new List<ItemGenerate>();
+
             foreach (var request in requests)
             {
                 var result = await ValidRequest(request.ClassId, request.StudentIdList);
@@ -158,10 +161,16 @@ namespace MagicLand_System.Controllers
                         TimeStamp = DateTime.Now,
                     });
                 }
+
+                itemGenerates.Add(new ItemGenerate
+                {
+                    ClassId = request.ClassId,
+                    StudentIdList = request.StudentIdList,
+                });
             }
             await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
 
-            var transResult = await _walletTransactionService.GeneratePaymentTransAsync(requests, default);
+            var transResult = await _walletTransactionService.GeneratePaymentTransAsync(itemGenerates);
             var linkResult = _gatewayService.GetLinkGateway(transResult.Item2, transResult.Item1, "Register Students Into Classes");
 
             var response = new GatewayResponseTxnCode
@@ -198,6 +207,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> CheckOutCartItemByVnpay([FromBody] List<Guid> cartItemIdList)
         {
+
             var result = await ValidCartItem(cartItemIdList);
             var items = result as OkObjectResult;
 
@@ -206,7 +216,7 @@ namespace MagicLand_System.Controllers
                 return result;
             }
 
-            var requests = new List<CheckoutRequest>();
+            var itemGenerates = new List<ItemGenerate>();
 
             foreach (var item in (List<CartItemResponse>)items.Value!)
             {
@@ -230,18 +240,17 @@ namespace MagicLand_System.Controllers
                     });
                 }
 
-                var request = new CheckoutRequest
+                itemGenerates.Add(new ItemGenerate
                 {
-                    StudentIdList = item.Students.Select(s => s.StudentId).ToList(),
+                    CartItemId = item.ItemId,
                     ClassId = item.Class.ClassId,
-                };
-
-                requests.Add(request);
+                    StudentIdList = item.Students.Select(stu => stu.StudentId).ToList(),
+                });
 
             }
-            await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
+            await _classService.ValidateScheduleAmongClassesAsync(itemGenerates.Select(ig => ig.ClassId).ToList());
 
-            var transResult = await _walletTransactionService.GeneratePaymentTransAsync(requests, cartItemIdList);
+            var transResult = await _walletTransactionService.GeneratePaymentTransAsync(itemGenerates);
             var linkResult = _gatewayService.GetLinkGateway(transResult.Item2, transResult.Item1, "Register Students Into Classes From Cart");
 
             var response = new GatewayResponseTxnCode

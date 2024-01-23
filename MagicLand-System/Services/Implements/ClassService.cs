@@ -175,6 +175,8 @@ namespace MagicLand_System.Services.Implements
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include: x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
             classes = (classes.OrderByDescending(x => x.AddedDate)).ToList();
+            var cls = classes.First();
+
             var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
             var lecturerId = classes.First(x => x.Id == x.Id).LecturerId;
             var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(roomId.ToString()));

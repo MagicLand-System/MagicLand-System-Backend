@@ -5,6 +5,7 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Attendance;
+using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Class;
@@ -17,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.Transactions;
+
 
 namespace MagicLand_System.Services.Implements
 {
@@ -234,8 +236,11 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<double> AddRefundTransaction(List<ClassResExtraInfor> classes, PersonalWallet personalWallet)
         {
-            var oldTransactions = (await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id)).ToList();
-            var payer = await GetUserFromJwt();
+            var oldTransactions = (await _unitOfWork.GetRepository<WalletTransaction>()
+               .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id && x.Status == TransactionTypeEnum.Payment.ToString())).ToList();
+
+            var currentUser = await GetUserFromJwt();
+
             var refundTransactions = new List<WalletTransaction>();
             double refundAmount = 0.0;
 
@@ -243,37 +248,42 @@ namespace MagicLand_System.Services.Implements
             {
                 foreach (var trans in oldTransactions)
                 {
-                    string txnRefCode = trans.Signature!;
-                    var classCodes = StringHelper.GetAttachValueFromTxnRefCode(txnRefCode);
+                    var result = StringHelper.ExtractAttachValueFromSignature(trans.Signature!);
 
-                    if (classCodes == cls.ClassCode!)
+                    foreach (var pair in result)
                     {
-                        refundAmount += trans.Money - trans.Discount;
-
-                        var transaction = new WalletTransaction
+                        if (pair.Key == TransactionAttachValueEnum.ClassId.ToString() && pair.Value[0] == cls.ClassId.ToString())
                         {
-                            Id = new Guid(),
-                            TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Refund),
-                            Money = refundAmount,
-                            Type = TransactionTypeEnum.Refund.ToString(),
-                            Method = TransactionMethodEnum.SystemWallet.ToString(),
-                            Description = $"Hoàn Tiền Lớp Học {cls.Name} Từ Hệ Thống",
-                            CreateTime = DateTime.Now,                        
-                            PersonalWalletId = personalWallet.Id,
-                            PersonalWallet = personalWallet,
-                            Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund, string.Empty),
-                            Status = TransactionStatusEnum.Success.ToString(),
-                            CreateBy = payer.FullName,
-                        };
-
-                        refundTransactions.Add(transaction);
+                            refundAmount += trans.Money - trans.Discount;
+                            refundTransactions.Add(GenerateRefundTransaction(personalWallet, currentUser.FullName!, refundAmount, cls.Name!, trans.Signature!));
+                        }
                     }
                 }
             }
-
             await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(refundTransactions);
 
             return refundAmount;
+        }
+
+        private WalletTransaction GenerateRefundTransaction(PersonalWallet personalWallet, string payer, double refundAmount, string className, string signature)
+        {
+            var transaction = new WalletTransaction
+            {
+                Id = new Guid(),
+                TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Refund),
+                Money = refundAmount,
+                Type = TransactionTypeEnum.Refund.ToString(),
+                Method = TransactionMethodEnum.SystemWallet.ToString(),
+                Description = $"Hoàn Tiền Lớp Học {className} Từ Hệ Thống",
+                CreateTime = DateTime.Now,
+                PersonalWalletId = personalWallet.Id,
+                PersonalWallet = personalWallet,
+                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund) + signature.Substring(11),
+                Status = TransactionStatusEnum.Success.ToString(),
+                CreateBy = payer,
+            };
+
+            return transaction;
         }
 
         private async Task DeleteRelatedStudentInfor(Student student)
@@ -403,7 +413,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 _unitOfWork.GetRepository<Attendance>().UpdateRange(attendances);
-                 await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch (Exception ex)
             {
