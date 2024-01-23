@@ -34,6 +34,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null)
         {
+
             var transactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(include: x => x.Include(x => x.PersonalWallet).ThenInclude(x => x.User).ThenInclude(x => x.Students));
             if (transactions == null || transactions.Count == 0)
             {
@@ -42,69 +43,59 @@ namespace MagicLand_System.Services.Implements
             List<WalletTransactionResponse> result = new List<WalletTransactionResponse>();
             foreach (var transaction in transactions)
             {
-                var description = string.Empty;// transaction.SystemDescription;
-                WalletTransactionResponse response = new WalletTransactionResponse();
-                if (description != null)
+                var rs = StringHelper.ExtractAttachValueFromSignature(transaction.Signature);
+
+                Guid classId = default;
+                List<Guid> studentIdList = new List<Guid>();
+
+                foreach (var pair in rs)
                 {
-                    var parts = description.Split('[', ']', ':', ',');
-                    var cleanParts = parts.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
-                    var classCode = cleanParts[1];
-                    var studentName = cleanParts[5];
-                    List<string> names = new List<string>();
-                    for (int i = 5; i <= cleanParts.Length - 1; i++)
+                    if (pair.Key == TransactionAttachValueEnum.ClassId.ToString())
                     {
-                        names.Add(cleanParts[i]);
+                        classId = Guid.Parse(pair.Value[0]);
+                        continue;
                     }
-                    User user = transaction.PersonalWallet.User;
-                    Class myclass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.ClassCode.ToLower().Equals(classCode.Trim().ToLower()));
-                    var coursename = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(myclass.CourseId.ToString()), selector: x => x.Name);
-                    List<Student> students = new List<Student>();
-                    foreach (var namex in names)
+                    if (pair.Key == TransactionAttachValueEnum.StudentId.ToString())
                     {
-                        var studentMatch = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => (x.ParentId.ToString().Equals(user.Id.ToString()) && x.FullName.Trim().ToLower().Equals(namex.Trim().ToLower())));
-                        students.Add(studentMatch);
+                        studentIdList = pair.Value.Select(v => Guid.Parse(v)).ToList();
+                        continue;
                     }
-                    response = new WalletTransactionResponse
-                    {
-                        Description = transaction.Description,
-                        CreatedTime = transaction.CreateTime,
-                        Money = transaction.Money,
-                        Parent = new PayLoad.Response.Users.UserResponse
-                        {
-                            AvatarImage = user.AvatarImage,
-                            DateOfBirth = user.DateOfBirth,
-                            Email = user.Email,
-                            FullName = user.FullName,
-                            Gender = user.Gender,
-                            Id = transaction.Id,
-                            Phone = user.Phone,
-                        },
-                        Type = transaction.Type,
-                        TransactionId = transaction.Id,
-                        MyClassResponse = myclass,
-                        Students = students,
-                        CourseName = coursename,
-                        Method = transaction.Method,
-                        TransactionCode = transaction.TransactionCode,
-                    };
                 }
-                else
+                List<Student> students = new List<Student>();
+                foreach (var student in studentIdList)
                 {
-                    response = new WalletTransactionResponse
-                    {
-                        Description = transaction.Description,
-                        CreatedTime = transaction.CreateTime,
-                        Money = transaction.Money,
-                        Method = TransactionMethodEnum.SystemWallet.ToString(),
-                        CourseName = string.Empty,
-                        Parent = null,
-                        MyClassResponse = null,
-                        Students = null,
-                        TransactionId = transaction.Id,
-                        Type = TransactionTypeEnum.TopUp.ToString(),
-                        TransactionCode = transaction.TransactionCode,
-                    };
+                    var studentx = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(student.ToString()));
+                    students.Add(studentx);
                 }
+                var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(transaction.PersonalWalletId.ToString()));
+                var user  = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(personalWallet.UserId.ToString()));
+                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
+                var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId),selector : x => x.CourseId);
+                var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()), selector : x => x.Name);
+                WalletTransactionResponse response = new WalletTransactionResponse
+                {
+                    CourseName = courseName,
+                    CreatedTime = transaction.CreateTime,
+                    Description = transaction.Description,
+                    Method = transaction.Method,
+                    Money = transaction.Money,
+                    Parent = new PayLoad.Response.Users.UserResponse
+                    {
+                        Address = user.Address,
+                        AvatarImage = user.AvatarImage,
+                        DateOfBirth = user.DateOfBirth,
+                        Email = user.Email,
+                        FullName = user.FullName,
+                        Gender = user.Gender,
+                        Id = user.Id,
+                        Phone = user.Phone
+                    },
+                    MyClassResponse = classx,
+                    TransactionCode = transaction.TransactionCode,
+                    Type = transaction.Type,
+                    TransactionId = transaction.Id,
+                    Students = students,
+                };
 
                 result.Add(response);
             }

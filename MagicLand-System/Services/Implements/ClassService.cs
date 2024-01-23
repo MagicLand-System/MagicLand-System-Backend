@@ -563,7 +563,8 @@ namespace MagicLand_System.Services.Implements
                 SlotResponse slotResponse = new SlotResponse
                 {
                     EndTime = TimeOnly.Parse(schedule.Slot.EndTime),
-                    StartTime = TimeOnly.Parse(schedule.Slot.StartTime)
+                    StartTime = TimeOnly.Parse(schedule.Slot.StartTime),
+                    SlotId = schedule.SlotId,
                 };
                 var status = "completed";
                 if(schedule.Date > DateTime.Now.AddHours(-23))
