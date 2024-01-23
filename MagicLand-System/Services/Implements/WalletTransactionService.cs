@@ -12,9 +12,6 @@ using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using System.Security.Cryptography.Xml;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -677,10 +674,13 @@ namespace MagicLand_System.Services.Implements
                         transaction.Status = TransactionStatusEnum.Success.ToString();
                         transaction.TransactionCode = "11" + transactionCode;
                         transaction.UpdateTime = DateTime.Now;
+
                     }
+                    _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(gatewayTransactions);
                 }
 
-                await _unitOfWork.CommitAsync();
+
+                _unitOfWork.Commit();
                 return (string.Empty, true);
             }
             catch (Exception ex)
@@ -689,32 +689,36 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<(string, bool)> HandelFailedReturnDataVnpayAsync(string transactionCode, string signature, TransactionTypeEnum type)
+        public async Task<(string, bool)> HandelFailedReturnDataVnpayAsync(string transactionCode, string txnRefCode, TransactionTypeEnum type)
         {
             try
             {
-                var gatewayTransaction = await _unitOfWork.GetRepository<WalletTransaction>().SingleOrDefaultAsync(predicate: x => x.Signature == signature);
-                if (gatewayTransaction == null)
+                var gatewayTransactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
+
+                gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(12, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim()));
+
+                if (gatewayTransactions == null)
                 {
                     return ("Giao Dịch Sử Lý Không Tồn Tại Trong Hệ Thống Vui Lòng Thực Hiện Lại", false);
                 }
 
                 if (type == TransactionTypeEnum.Payment)
                 {
-                    gatewayTransaction.TransactionCode = "11" + transactionCode;
+                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "11" + transactionCode);
                 }
 
 
                 if (type == TransactionTypeEnum.TopUp)
                 {
-                    gatewayTransaction.TransactionCode = "12" + transactionCode;
+                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "12" + transactionCode);
                 }
- 
-                gatewayTransaction.Status = TransactionStatusEnum.Failed.ToString();
-                gatewayTransaction.UpdateTime = DateTime.Now;
 
-                _unitOfWork.GetRepository<WalletTransaction>().UpdateAsync(gatewayTransaction);
-                await _unitOfWork.CommitAsync();
+                gatewayTransactions.ToList().ForEach(gt => gt.Status = TransactionStatusEnum.Failed.ToString());
+                gatewayTransactions.ToList().ForEach(gt => gt.UpdateTime = DateTime.Now);
+
+                _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(gatewayTransactions);
+
+                _unitOfWork.Commit();
 
                 return (string.Empty, true);
             }
@@ -747,7 +751,7 @@ namespace MagicLand_System.Services.Implements
                     string signature = txnRefCode + StringHelper.GenerateAttachValueForTxnRefCode(item);
 
                     var currentRequestTotal = cls.Course!.Price * item.StudentIdList.Count();
-                    var studentNameString = GenerateStudentNameString(item.StudentIdList);
+                    var studentNameString = await GenerateStudentNameString(item.StudentIdList);
 
                     var newTransaction = new WalletTransaction
                     {
@@ -769,7 +773,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(transactions);
-                await _unitOfWork.CommitAsync();
+                _unitOfWork.Commit();
 
                 return (txnRefCode, total);
             }
