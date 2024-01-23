@@ -180,5 +180,21 @@ namespace MagicLand_System.Controllers
             var result = await _classService.AutoCreateClassCode(courseId);
             return Ok(new {ClassCode = result});
         }
+        [HttpPut(ApiEndpointConstant.ClassEnpoint.UpdateClass)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        public async Task<IActionResult> UpdateStudent([FromRoute] string id,[FromBody] UpdateClassRequest request)
+        {
+            var isSuccess = await _classService.UpdateClass(id, request);   
+            if (!isSuccess)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    TimeStamp = DateTime.Now,
+                    Error = "không thể insert",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                });
+            }
+            return Ok("success");
+        }
     }
 }   

@@ -3,6 +3,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
+using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Rooms;
@@ -468,5 +469,59 @@ namespace MagicLand_System.Services.Implements
             var matchClass = listClass.SingleOrDefault(x => x.ClassId.ToString().Equals(id.ToString()));
             return matchClass;
         }
+
+        public async Task<bool> UpdateClass(string classId, UpdateClassRequest request)
+        {
+            var classFound = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()));
+            if (classFound == null)
+            {
+                return false;
+            }
+            if(request.LecturerId != null)
+            {
+                classFound.LecturerId = request.LecturerId.Value;
+            }
+            if(request.LeastNumberStudent != null) {
+                classFound.LeastNumberStudent = request.LeastNumberStudent.Value;
+            }
+            if(request.LimitNumberStudent != null)
+            {
+                classFound.LimitNumberStudent = request.LimitNumberStudent.Value;
+            }
+            if(request.Method != null)
+            {
+                classFound.Method = request.Method;
+            }
+            if(request.CourseId != null)
+            {
+                classFound.CourseId = request.CourseId.Value;
+            }
+            classFound.Status = "UPCOMING";
+            _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+            if (!isSuccess) 
+            {
+                return false;
+            }
+            if(request.RoomId != null)
+            {
+                var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classFound.Id.ToString()));
+                var filterSchedule = schedules.Where(x => x.Date >= DateTime.Now.AddHours(-23));
+                if (filterSchedule != null)
+                {
+                    foreach (var schedule in filterSchedule)
+                    {
+                        schedule.RoomId = request.RoomId.Value;
+                        _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
+                        var isSuccessful =  await _unitOfWork.CommitAsync() > 0 ;
+                        if (!isSuccess)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+         }
     }
 }

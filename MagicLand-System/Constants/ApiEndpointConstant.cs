@@ -40,6 +40,7 @@
             public const string StudentInClass = GetAll + "/students/{id}";
             public const string InsertAttandance = GetAll + "/insertAttandance";
             public const string AutoCreateClassEndPoint = GetAll + "/autoCreate";
+            public const string UpdateClass = ClassById + "/update";
 
         }
         public static class PromotionEnpoint

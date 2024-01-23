@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Class;
+using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 
@@ -16,5 +17,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<MyClassResponse> GetClassDetail(string id);
         Task<List<StudentInClass>> GetAllStudentInClass(string id);
         Task<string> AutoCreateClassCode(string courseId);
+        Task<bool> UpdateClass(string classId, UpdateClassRequest request);
     }
 }
