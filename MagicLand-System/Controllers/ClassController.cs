@@ -196,5 +196,11 @@ namespace MagicLand_System.Controllers
             }
             return Ok("success");
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.SessionLoad)]
+        public async Task<IActionResult> LoadSession(string classId)
+        {
+            var result = await _classService.GetClassProgressResponsesAsync(classId);
+            return Ok(result);
+        }
     }
 }   

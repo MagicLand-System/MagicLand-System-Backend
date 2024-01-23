@@ -8,6 +8,7 @@ using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Slots;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -472,38 +473,39 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> UpdateClass(string classId, UpdateClassRequest request)
         {
-            var classFound = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()));
+            var classFound = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()));
             if (classFound == null)
             {
                 return false;
             }
-            if(request.LecturerId != null)
+            if (request.LecturerId != null)
             {
                 classFound.LecturerId = request.LecturerId.Value;
             }
-            if(request.LeastNumberStudent != null) {
+            if (request.LeastNumberStudent != null)
+            {
                 classFound.LeastNumberStudent = request.LeastNumberStudent.Value;
             }
-            if(request.LimitNumberStudent != null)
+            if (request.LimitNumberStudent != null)
             {
                 classFound.LimitNumberStudent = request.LimitNumberStudent.Value;
             }
-            if(request.Method != null)
+            if (request.Method != null)
             {
                 classFound.Method = request.Method;
             }
-            if(request.CourseId != null)
+            if (request.CourseId != null)
             {
                 classFound.CourseId = request.CourseId.Value;
             }
             classFound.Status = "UPCOMING";
             _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccess) 
+            if (!isSuccess)
             {
                 return false;
             }
-            if(request.RoomId != null)
+            if (request.RoomId != null)
             {
                 var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classFound.Id.ToString()));
                 var filterSchedule = schedules.Where(x => x.Date >= DateTime.Now.AddHours(-23));
@@ -513,7 +515,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedule.RoomId = request.RoomId.Value;
                         _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
-                        var isSuccessful =  await _unitOfWork.CommitAsync() > 0 ;
+                        var isSuccessful = await _unitOfWork.CommitAsync() > 0;
                         if (!isSuccess)
                         {
                             return false;
@@ -522,6 +524,79 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             return true;
-         }
+        }
+
+        public async Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId)
+        {
+            var scheduleFounds = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId), include: x => x.Include(x => x.Room).Include(x => x.Slot));
+            if (scheduleFounds == null)
+            {
+                return new List<ClassProgressResponse>();
+            }
+            List<ClassProgressResponse> responses = new List<ClassProgressResponse>();
+            foreach (var schedule in scheduleFounds)
+            {
+                RoomResponse roomResponse = new RoomResponse
+                {
+                    Capacity = schedule.Room.Capacity,
+                    Floor = schedule.Room.Floor.Value,
+                    LinkUrl = schedule.Room.LinkURL,
+                    Name = schedule.Room.Name,
+                    RoomId = schedule.RoomId,
+                    Status = schedule.Room.Status,
+                };
+                SlotResponse slotResponse = new SlotResponse
+                {
+                    EndTime = TimeOnly.Parse(schedule.Slot.EndTime),
+                    StartTime = TimeOnly.Parse(schedule.Slot.StartTime)
+                };
+                var status = "completed";
+                if(schedule.Date > DateTime.Now.AddHours(-23))
+                {
+                    status = "future";
+                }
+                var dateOfWeek = "monday";
+                if(schedule.DayOfWeek == 1)
+                {
+                    dateOfWeek = "sunday";
+                }
+                if (schedule.DayOfWeek == 2)
+                {
+                    dateOfWeek = "monday";
+                }
+                if (schedule.DayOfWeek == 4)
+                {
+                    dateOfWeek = "tuesday";
+                }
+                if (schedule.DayOfWeek == 8)
+                {
+                    dateOfWeek = "=wednesday";
+                }
+                if (schedule.DayOfWeek == 16)
+                {
+                    dateOfWeek = "thursday";
+                }
+                if (schedule.DayOfWeek == 32)
+                {
+                    dateOfWeek = "friday";
+                }
+                if (schedule.DayOfWeek == 64)
+                {
+                    dateOfWeek = "saturday";
+                }
+                ClassProgressResponse progressResponse = new ClassProgressResponse
+                {
+                    Date = schedule.Date,
+                    DayOfWeeks = dateOfWeek,
+                    Id = schedule.Id,
+                    Room = roomResponse,
+                    Slot = slotResponse,
+                    Status = status,
+                };
+                responses.Add(progressResponse);
+            }
+            responses = responses.OrderByDescending(x => x.Date).ToList();
+            return responses;
+        }
     }
 }

@@ -41,6 +41,7 @@
             public const string InsertAttandance = GetAll + "/insertAttandance";
             public const string AutoCreateClassEndPoint = GetAll + "/autoCreate";
             public const string UpdateClass = ClassById + "/update";
+            public const string SessionLoad = GetAll + "/loadSession";
 
         }
         public static class PromotionEnpoint

@@ -3,6 +3,7 @@ using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Schedules;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -18,5 +19,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StudentInClass>> GetAllStudentInClass(string id);
         Task<string> AutoCreateClassCode(string courseId);
         Task<bool> UpdateClass(string classId, UpdateClassRequest request);
+        Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
     }
 }
