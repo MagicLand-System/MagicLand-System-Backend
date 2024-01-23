@@ -35,7 +35,7 @@ namespace MagicLand_System.Helpers
                     randomCode += "12";
                     break;
             }
-            randomCode += new string(Enumerable.Repeat(chars, 14).Select(s => s[random.Next(s.Length)]).ToArray());
+            randomCode += new string(Enumerable.Repeat(chars, 11).Select(s => s[random.Next(s.Length)]).ToArray());
 
             return randomCode;
         }
@@ -61,20 +61,20 @@ namespace MagicLand_System.Helpers
 
             string shuffledString = new string(interleavedString.ToString().ToCharArray().OrderBy(c => random.Next()).ToArray());
 
-            string extraPart = shuffledString.Substring(0, Math.Min(5, shuffledString.Length));
+            string extraPart = shuffledString.Substring(0, Math.Min(30, shuffledString.Length));
 
             switch (type)
             {
                 case TransactionTypeEnum.Refund:
-                    txnRefCode = TransactionTypeCodeEnum.RF.ToString() + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
+                    txnRefCode = TransactionTypeCodeEnum.RF.ToString() + new string(Enumerable.Repeat(chars, 4).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
 
                 case TransactionTypeEnum.Payment:
-                    txnRefCode = TransactionTypeCodeEnum.PM.ToString() + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
+                    txnRefCode = TransactionTypeCodeEnum.PM.ToString() + new string(Enumerable.Repeat(chars, 4).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
 
                 case TransactionTypeEnum.TopUp:
-                    txnRefCode = TransactionTypeCodeEnum.TU + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
+                    txnRefCode = TransactionTypeCodeEnum.TU + new string(Enumerable.Repeat(chars, 4).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
             }
 
@@ -95,7 +95,7 @@ namespace MagicLand_System.Helpers
 
         public static Dictionary<string, List<string>> ExtractAttachValueFromSignature(string signature)
         {
-            string attachValue = DecodeAttachValue(signature.Substring(12));
+            string attachValue = DecodeAttachValue(signature.Substring(36));
 
             Dictionary<string, List<string>> values = new Dictionary<string, List<string>>();
             Regex pattern = new Regex(@"\[(\w+):([^[\]]+)\]");

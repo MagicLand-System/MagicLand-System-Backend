@@ -67,7 +67,36 @@ namespace MagicLand_System.Controllers
         [ProducesErrorResponseType(typeof(BadRequest))]
         public async Task<IActionResult> GetBillTransactionById([FromRoute] Guid id)
         {
-            var response = await _walletTransactionService.GenerateBillTransactionAsync(id);
+            var response = await _walletTransactionService.GenerateBillTopUpTransactionAsync(id);
+            if (response == default)
+            {
+                return Ok();
+            }
+            return Ok(response);
+        }
+
+        #region document API Get Transaction By TxnRefCode
+        /// <summary>
+        ///  Trả Về Hóa Đơn Các Đơn Hàng Thuộc TxnRefCode
+        /// </summary>
+        /// <param name="txnRefCode">TxnRefCode</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "txnRefCode":"PM7sikpS9IfeEuPgdv95T07OcR554GnoAhJsW"
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Hóa Đơn | Trả Về Rỗng Khi Đơn Hàng Đang Sử Lý</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.WalletTransaction.GetBillTransactionByTxnRefCode)]
+        [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        public async Task<IActionResult> GetBillTransactionById([FromRoute] string txnRefCode)
+        {
+            var response = await _walletTransactionService.GenerateBillPaymentTransactionAssync(txnRefCode);
             if (response == default)
             {
                 return Ok();

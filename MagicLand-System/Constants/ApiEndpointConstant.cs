@@ -94,6 +94,7 @@
             public const string TransactionById = GetAll + "/{id}";
             public const string PersonalWallet = GetAll + "/walletBalance";
             public const string GetBillTransactionById = GetAll + "/{id}/bill/status";
+            public const string GetBillTransactionByTxnRefCode = GetAll + "/{txnRefCode}/bills/status";
         }
 
         public static class LectureEndPoint

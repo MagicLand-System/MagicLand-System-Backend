@@ -11,7 +11,8 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null);
         Task<WalletTransactionResponse> GetWalletTransaction(string id);
-        Task<BillTopUpResponse?> GenerateBillTransactionAsync(Guid id);
+        Task<BillTopUpResponse?> GenerateBillTopUpTransactionAsync(Guid id);
+        Task<BillPaymentResponse?> GenerateBillPaymentTransactionAssync(string txnRefCode);
         Task<(Guid, string)> GenerateTopUpTransAsync(double money);
         Task<(string, double)> GeneratePaymentTransAsync(List<ItemGenerate> items);
         Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds);
