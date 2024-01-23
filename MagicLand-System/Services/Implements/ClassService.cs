@@ -664,5 +664,42 @@ namespace MagicLand_System.Services.Implements
                 }
             }
         }
+
+        public async Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime)
+        {
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate : x => ( (x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)) , include : x => x.Include(x => x.Class).ThenInclude(x => x.Course).ThenInclude(x => x.CourseCategory));  
+            if(schedules.Count == 0 || schedules == null)
+            {
+                return new List<ClassForAttendance>();
+            }
+            List<ClassForAttendance> classForAttendances = new List<ClassForAttendance>(); 
+            foreach (var schedule in schedules)
+            {
+                ClassForAttendance classForAttendance = new ClassForAttendance
+                {
+                    ClassCode = schedule.Class.ClassCode,
+                    ClassId = schedule.Class.Id,
+                    ClassSubject = schedule.Class.Course.CourseCategory.Name,
+                    Method = schedule.Class.Method,
+                    Image = schedule.Class.Image,
+                    EndDate = schedule.Class.EndDate,   
+                    CoursePrice = schedule.Class.Course.Price,
+                    CourseId = schedule.Class.Course.Id,
+                    CourseName = schedule.Class.Course.Name,
+                    LeastNumberStudent = schedule.Class.LeastNumberStudent,
+                    LimitNumberStudent = schedule.Class.LimitNumberStudent,
+                    StartDate = schedule.Class.StartDate,
+                    Status = schedule.Class.Status,
+                    Video = schedule.Class.Video,
+                    Schedule = schedule,
+                };
+                classForAttendances.Add(classForAttendance);
+            }
+            if(searchString != null)
+            {
+                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Equals(searchString.Trim().ToLower()) )).ToList();
+            }
+            return classForAttendances; 
+        }
     }
 }

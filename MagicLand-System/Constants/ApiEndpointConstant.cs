@@ -43,6 +43,7 @@
             public const string AutoCreateClassEndPoint = GetAll + "/autoCreate";
             public const string UpdateClass = ClassById + "/update";
             public const string SessionLoad = GetAll + "/loadSession";
+            public const string LoadClassForAttandance = GetAll + "/loadClassForAttedance";
 
         }
         public static class PromotionEnpoint
@@ -121,6 +122,7 @@
         {
             public const string EndPointBase = ApiEndpoint + "/attandance";
             public const string LoadAttandance = EndPointBase + "/staff/load";
+            public const string TakeAttandance = EndPointBase + "/staff/takeAttandance";
         }
     }
 }

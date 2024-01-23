@@ -10,5 +10,6 @@ namespace MagicLand_System.PayLoad.Response.Schedules
         public DateTime? Day { get; set; }
         public string IsPresent { get; set; }
         public ClassResponse Class { get; set; }
+
     }
 }

@@ -202,5 +202,11 @@ namespace MagicLand_System.Controllers
             var result = await _classService.GetClassProgressResponsesAsync(classId);
             return Ok(result);
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.LoadClassForAttandance)]
+        public async Task<IActionResult> LoadClasForAttandance(string? searchString ,DateTime dateTime )
+        {
+            var result = await _classService.GetAllClassForAttandance(searchString,dateTime);
+            return Ok(result);
+        }
     }
 }   
