@@ -117,5 +117,10 @@
             public const string EndPointBase = ApiEndpoint + "/wallet";
             public const string TopUpWallet = EndPointBase + "/topup";
         }
+        public static class AttandanceEndpoint
+        {
+            public const string EndPointBase = ApiEndpoint + "/attandance";
+            public const string LoadAttandance = EndPointBase + "/staff/load";
+        }
     }
 }

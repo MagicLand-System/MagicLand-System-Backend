@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\CAPSTONE-240124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {}
+    "D:\\Capstone-260124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {}
   },
   "projects": {
-    "D:\\CAPSTONE-240124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+    "D:\\Capstone-260124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\CAPSTONE-240124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
+        "projectUniqueName": "D:\\Capstone-260124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
         "projectName": "MagicLand-System.Domain",
-        "projectPath": "D:\\CAPSTONE-240124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
+        "projectPath": "D:\\Capstone-260124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
         "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-        "outputPath": "D:\\CAPSTONE-240124\\MagicLand-System-Backend\\MagicLand-System.Domain\\obj\\",
+        "outputPath": "D:\\Capstone-260124\\MagicLand-System-Backend\\MagicLand-System.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

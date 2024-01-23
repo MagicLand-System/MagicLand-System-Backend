@@ -102,6 +102,7 @@ builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>();
 builder.Services.AddScoped<IPersonalWalletService, PersonalWalletService>();
 builder.Services.AddScoped<ISyllabusService, SyllabusService>();
+builder.Services.AddScoped<IAttandanceService, AttandanceService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
