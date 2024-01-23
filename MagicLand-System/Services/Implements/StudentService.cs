@@ -163,7 +163,6 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor, Student oldStudentInfor)
         {
-
             if (newStudentInfor.DateOfBirth != default)
             {
                 int age = DateTime.Now.Year - newStudentInfor.DateOfBirth.Year;
@@ -179,6 +178,7 @@ namespace MagicLand_System.Services.Implements
                 oldStudentInfor.FullName = newStudentInfor.FullName ?? oldStudentInfor.FullName;
                 oldStudentInfor.Gender = newStudentInfor.Gender ?? oldStudentInfor.Gender;
                 oldStudentInfor.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
+                oldStudentInfor.AvatarImage = newStudentInfor.AvatarImage ?? oldStudentInfor.AvatarImage;
 
                 _unitOfWork.GetRepository<Student>().UpdateAsync(oldStudentInfor);
                 await _unitOfWork.CommitAsync();
