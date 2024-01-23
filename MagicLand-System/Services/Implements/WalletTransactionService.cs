@@ -12,6 +12,7 @@ using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -527,7 +528,7 @@ namespace MagicLand_System.Services.Implements
 
             return string.Join(", ", studentNameList);
         }
-        public async Task<BillTopUpResponse?> GenerateBillTransactionAsync(Guid id)
+        public async Task<BillTopUpResponse?> GenerateBillTopUpTransactionAsync(Guid id)
         {
             var transaction = await _unitOfWork.GetRepository<WalletTransaction>().SingleOrDefaultAsync(predicate: x => x.Id == id);
             if (transaction == null)
@@ -615,7 +616,8 @@ namespace MagicLand_System.Services.Implements
                 {
                     var gatewayTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
                         .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
-                    gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(12, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim()));
+
+                    gatewayTransactions = gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(36, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim())).ToList();
 
                     if (gatewayTransactions == null)
                     {
@@ -663,7 +665,9 @@ namespace MagicLand_System.Services.Implements
                             }
                         }
                         transaction.Status = TransactionStatusEnum.Success.ToString();
-                        transaction.TransactionCode = "11" + transactionCode;
+                        Random random = new Random();
+
+                        transaction.TransactionCode = "11" + random.Next(0, 10).ToString() + transactionCode;
                         transaction.UpdateTime = DateTime.Now;
 
                     }
@@ -695,7 +699,8 @@ namespace MagicLand_System.Services.Implements
 
                 if (type == TransactionTypeEnum.Payment)
                 {
-                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "11" + transactionCode);
+                    Random random = new Random();
+                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "11" + random.Next(0, 10).ToString() + transactionCode);
                 }
 
 
@@ -747,7 +752,7 @@ namespace MagicLand_System.Services.Implements
                     var newTransaction = new WalletTransaction
                     {
                         Id = new Guid(),
-                        TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Payment),
+                        TransactionCode = string.Empty,
                         Money = currentRequestTotal,
                         Discount = discountEachItem,
                         Type = TransactionTypeEnum.Payment.ToString(),
@@ -790,6 +795,44 @@ namespace MagicLand_System.Services.Implements
             }
 
             return total;
+        }
+
+        public async Task<BillPaymentResponse?> GenerateBillPaymentTransactionAssync(string txnRefCode)
+        {
+            var transactions = (await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync()).ToList();
+            transactions = transactions.Where(gt => gt.Signature!.Substring(0, Math.Min(36, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim())).ToList();
+
+            if (transactions == null || transactions.Count() == 0)
+            {
+                throw new BadHttpRequestException($"TxnRefCode [{txnRefCode}] Không Tồn Tại Trong Hệ Thống", StatusCodes.Status400BadRequest);
+            }
+            if(transactions.Any(trans => trans.Status == TransactionStatusEnum.Processing.ToString()))
+            {
+                return default;
+            }
+
+            string status = transactions.Any(trans => trans.Status == TransactionStatusEnum.Failed.ToString()) ? TransactionStatusMessageConstant.Failed : TransactionStatusMessageConstant.Success;
+            double totalAmount = 0.0, totalDiscount = 0.0;
+            foreach(var trans in transactions)
+            {
+                totalAmount += trans.Money;
+                totalDiscount += trans.Discount;
+            }
+
+            var response = new BillPaymentResponse
+            {
+                Status = status,
+                Message = string.Join(", ", transactions.Select(trans => trans.Description).ToList()),
+                MoneyAmount = totalAmount,
+                Discount = totalDiscount,
+                MoneyPaid = totalAmount - totalDiscount,
+                Date = DateTime.Now,
+                Method = TransactionMethodEnum.Vnpay.ToString(),
+                Type = TransactionTypeEnum.Payment.ToString(),
+                Payer = transactions[0].CreateBy!,
+            };
+
+            return response;
         }
     }
 }
