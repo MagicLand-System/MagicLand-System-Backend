@@ -91,6 +91,7 @@ namespace MagicLand_System.Services.Implements
                         Id = user.Id,
                         Phone = user.Phone
                     },
+                    Discount = transaction.Discount,
                     MyClassResponse = classx,
                     TransactionCode = transaction.TransactionCode,
                     Type = transaction.Type,
@@ -100,6 +101,7 @@ namespace MagicLand_System.Services.Implements
                     Currency = transaction.Currency,
                     CreateBy = transaction.CreateBy,
                     Signature = transaction.Signature
+                    
                 };
 
                 result.Add(response);

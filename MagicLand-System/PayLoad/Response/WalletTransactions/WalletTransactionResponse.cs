@@ -22,7 +22,7 @@ namespace MagicLand_System.PayLoad.Response.WalletTransactions
         public string Currency { get; set; }
         public string? CreateBy { get; set; }
         public string? Signature { get; set; }
-
+        public double Discount { get; set; } = 0.0;
 
     }
 }
