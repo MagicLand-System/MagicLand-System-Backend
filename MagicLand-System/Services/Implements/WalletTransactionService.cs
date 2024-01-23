@@ -96,6 +96,10 @@ namespace MagicLand_System.Services.Implements
                     Type = transaction.Type,
                     TransactionId = transaction.Id,
                     Students = students,
+                    Status = transaction.Status,
+                    Currency = transaction.Currency,
+                    CreateBy = transaction.CreateBy,
+                    Signature = transaction.Signature
                 };
 
                 result.Add(response);
