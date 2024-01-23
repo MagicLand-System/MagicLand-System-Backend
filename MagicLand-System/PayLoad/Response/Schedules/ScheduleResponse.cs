@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Slots;
+using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.PayLoad.Response.Schedules
 {

@@ -13,6 +13,7 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Net.WebSockets;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -528,7 +529,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId)
         {
-            var scheduleFounds = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId), include: x => x.Include(x => x.Room).Include(x => x.Slot));
+            var scheduleFounds = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId), include: x => x.Include(x => x.Room).Include(x => x.Slot).Include(x => x.Class));
             if (scheduleFounds == null)
             {
                 return new List<ClassProgressResponse>();
@@ -536,6 +537,18 @@ namespace MagicLand_System.Services.Implements
             List<ClassProgressResponse> responses = new List<ClassProgressResponse>();
             foreach (var schedule in scheduleFounds)
             {
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
+                UserResponse userResponse = new UserResponse
+                {
+                    Email = lecturer.Email,
+                    Address = lecturer.Address,
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    Id = lecturer.Id,
+                    Phone = lecturer.Phone,
+                };
                 RoomResponse roomResponse = new RoomResponse
                 {
                     Capacity = schedule.Room.Capacity,
@@ -592,6 +605,8 @@ namespace MagicLand_System.Services.Implements
                     Room = roomResponse,
                     Slot = slotResponse,
                     Status = status,
+                    Lecturer = userResponse,
+                    
                 };
                 responses.Add(progressResponse);
             }
