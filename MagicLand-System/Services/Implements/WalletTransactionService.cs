@@ -13,6 +13,8 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Security.Cryptography.Xml;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -623,7 +625,10 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (type == TransactionTypeEnum.Payment)
                 {
-                    var gatewayTransactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.Signature == txnRefCode.Substring(0, Math.Min(11, txnRefCode.Length)));
+                    var gatewayTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
+                        .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
+                    gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(12, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim()));
+
                     if (gatewayTransactions == null)
                     {
                         return ("Giao Dịch Sử Lý Không Tồn Tại Trong Hệ Thống Vui Lòng Thực Hiện Lại", false);
@@ -641,6 +646,7 @@ namespace MagicLand_System.Services.Implements
                             if (pair.Key == TransactionAttachValueEnum.ClassId.ToString())
                             {
                                 classId = Guid.Parse(pair.Value[0]);
+                                continue;
                             }
                             if (pair.Key == TransactionAttachValueEnum.StudentId.ToString())
                             {
@@ -655,15 +661,17 @@ namespace MagicLand_System.Services.Implements
 
                                 await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList);
                                 await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentsClass);
-
+                                continue;
                             }
                             if (pair.Key == TransactionAttachValueEnum.CartItemId.ToString())
                             {
                                 var cartItemId = pair.Value.Select(v => Guid.Parse(v)).ToList();
+
                                 foreach (Guid id in cartItemId)
                                 {
                                     _unitOfWork.GetRepository<CartItem>().DeleteAsync(await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(predicate: x => x.Id == id));
                                 }
+                                continue;
                             }
                         }
                         transaction.Status = TransactionStatusEnum.Success.ToString();

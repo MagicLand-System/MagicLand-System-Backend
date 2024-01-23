@@ -66,15 +66,15 @@ namespace MagicLand_System.Helpers
             switch (type)
             {
                 case TransactionTypeEnum.Refund:
-                    txnRefCode = "RF" + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
+                    txnRefCode = TransactionTypeCodeEnum.RF.ToString() + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
 
                 case TransactionTypeEnum.Payment:
-                    txnRefCode = "PM" + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
+                    txnRefCode = TransactionTypeCodeEnum.PM.ToString() + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
 
                 case TransactionTypeEnum.TopUp:
-                    txnRefCode = "TU" + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
+                    txnRefCode = TransactionTypeCodeEnum.TU + new string(Enumerable.Repeat(chars, 5).Select(s => s[random.Next(s.Length)]).ToArray()) + extraPart;
                     break;
             }
 
@@ -95,7 +95,7 @@ namespace MagicLand_System.Helpers
 
         public static Dictionary<string, List<string>> ExtractAttachValueFromSignature(string signature)
         {
-            string attachValue = DecodeAttachValue(signature.Substring(11));
+            string attachValue = DecodeAttachValue(signature.Substring(12));
 
             Dictionary<string, List<string>> values = new Dictionary<string, List<string>>();
             Regex pattern = new Regex(@"\[(\w+):([^[\]]+)\]");

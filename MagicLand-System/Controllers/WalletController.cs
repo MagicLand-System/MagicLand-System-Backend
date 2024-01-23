@@ -80,9 +80,15 @@ namespace MagicLand_System.Controllers
             var checkingStatus = _gatewayService.HandelReturnStatusVnpay(request);
 
             string message = checkingStatus.Item1;
+            var type = request.vnp_TxnRef.Substring(0, Math.Min(2, request.vnp_TxnRef.Length)) == TransactionTypeCodeEnum.TU.ToString()
+                ? TransactionTypeEnum.TopUp
+                : request.vnp_TxnRef.Substring(0, Math.Min(2, request.vnp_TxnRef.Length)) == TransactionTypeCodeEnum.PM.ToString()
+                ? TransactionTypeEnum.Payment
+                : TransactionTypeEnum.Refund;
+
             if (checkingStatus.Item2)
             {
-                var response = await _walletTransactionService.HandelSuccessReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, TransactionTypeEnum.TopUp);
+                var response = await _walletTransactionService.HandelSuccessReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, type);
                 if (!response.Item2)
                 {
                     message = response.Item1;
@@ -90,7 +96,7 @@ namespace MagicLand_System.Controllers
             }
             else
             {
-                var response = await _walletTransactionService.HandelFailedReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, TransactionTypeEnum.TopUp);
+                var response = await _walletTransactionService.HandelFailedReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, type);
                 if (!response.Item2)
                 {
                     message += ", " + response.Item1;
