@@ -665,16 +665,40 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime)
+        public async Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime, string? attendanceStatusInput = null)
         {
-            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate : x => ( (x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)) , include : x => x.Include(x => x.Class).ThenInclude(x => x.Course).ThenInclude(x => x.CourseCategory));  
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate : x => ( (x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)) , include : x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course).ThenInclude(x => x.CourseCategory));  
             if(schedules.Count == 0 || schedules == null)
             {
                 return new List<ClassForAttendance>();
             }
-            List<ClassForAttendance> classForAttendances = new List<ClassForAttendance>(); 
+            List<ClassForAttendance> classForAttendances = new List<ClassForAttendance>();
             foreach (var schedule in schedules)
             {
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
+                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()));
+                if (attendances == null || attendances.Count == 0)
+                {
+                    return new List<ClassForAttendance>();
+                }
+                var attendanceStatus = "NTA";
+                foreach (var attendance in attendances)
+                {
+                    if(attendance.IsPresent != null)
+                    {
+                        attendanceStatus = "TA";
+                    }
+                }
+                LecturerResponse response = new LecturerResponse
+                {
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    Email = lecturer.Email,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    LectureId = lecturer.Id,
+                    Phone = lecturer.Phone,
+                };
                 ClassForAttendance classForAttendance = new ClassForAttendance
                 {
                     ClassCode = schedule.Class.ClassCode,
@@ -692,12 +716,18 @@ namespace MagicLand_System.Services.Implements
                     Status = schedule.Class.Status,
                     Video = schedule.Class.Video,
                     Schedule = schedule,
+                    Lecturer = response,
+                    AttandanceStatus = attendanceStatus
                 };
                 classForAttendances.Add(classForAttendance);
             }
             if(searchString != null)
             {
                 classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Equals(searchString.Trim().ToLower()) )).ToList();
+            }
+            if(attendanceStatusInput != null)
+            {
+                classForAttendances = classForAttendances.Where(x => x.AttandanceStatus.ToLower().Equals(attendanceStatusInput.ToLower())).ToList();
             }
             return classForAttendances; 
         }

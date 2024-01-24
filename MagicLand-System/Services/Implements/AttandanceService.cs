@@ -15,7 +15,7 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<StaffAttandaceResponse>> LoadAttandance(string scheduleId)
+        public async Task<List<StaffAttandaceResponse>> LoadAttandance(string scheduleId,string? searchString)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId),include : x => x.Include(x => x.Class));
             if (schedule == null)
@@ -28,18 +28,22 @@ namespace MagicLand_System.Services.Implements
                 return new List<StaffAttandaceResponse>();
             }
             List<StaffAttandaceResponse> responses = new List<StaffAttandaceResponse>();
-             var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()), include: x => x.Include(x => x.Student));
+             var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()), include: x => x.Include(x => x.Student).ThenInclude(x => x.User));
                 foreach (var attendance in attandances)
                 {
-                    var isPresent = "Not Yet";
+                    var isPresent = false;
                     if (attendance.IsPresent != null)
                     {
                         if (attendance.IsPresent.Value == true)
                         {
-                            isPresent = "Attended";
+                            isPresent = true;
                         }
-                        isPresent = "Absent";
-                    }
+                        if(attendance.IsPresent.Value == false)
+                        {
+                        isPresent = false;
+
+                         }
+                     }
                     StaffAttandaceResponse att = new StaffAttandaceResponse
                     {
                         Id = attendance.Id,
@@ -67,6 +71,10 @@ namespace MagicLand_System.Services.Implements
                     };
                     responses.Add(att);
                 }
+            if(searchString != null)
+            {
+                responses = responses.Where(x => (x.Student.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim()) || x.Student.User.Phone.Trim().Equals(searchString))).ToList();
+            }
             
             return responses;
         }

@@ -203,9 +203,9 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.LoadClassForAttandance)]
-        public async Task<IActionResult> LoadClasForAttandance(string? searchString ,DateTime dateTime )
+        public async Task<IActionResult> LoadClasForAttandance(string? searchString ,DateTime dateTime,string? attendanceStatus)
         {
-            var result = await _classService.GetAllClassForAttandance(searchString,dateTime);
+            var result = await _classService.GetAllClassForAttandance(searchString,dateTime,attendanceStatus);
             return Ok(result);
         }
     }

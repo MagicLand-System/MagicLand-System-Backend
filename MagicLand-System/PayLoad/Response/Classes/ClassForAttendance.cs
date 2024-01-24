@@ -1,4 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Response.Rooms;
+using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.PayLoad.Response.Classes
 {
@@ -21,5 +23,7 @@ namespace MagicLand_System.PayLoad.Response.Classes
         public string? Video { get; set; }
         public string? ClassCode { get; set; }
         public Schedule Schedule { get; set; }
+        public LecturerResponse Lecturer { get; set; }
+        public string AttandanceStatus { get; set; }  
     }
 }

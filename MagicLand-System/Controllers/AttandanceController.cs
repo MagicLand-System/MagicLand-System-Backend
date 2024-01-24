@@ -18,9 +18,9 @@ namespace MagicLand_System.Controllers
         }
         [HttpGet(ApiEndpointConstant.AttandanceEndpoint.LoadAttandance)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
-        public async Task<IActionResult> LoadAttandance(string scheduleId)
+        public async Task<IActionResult> LoadAttandance(string scheduleId, string? searchString)
         {
-            var result = await _attandanceService.LoadAttandance(scheduleId);
+            var result = await _attandanceService.LoadAttandance(scheduleId,searchString);
             return Ok(result);
         }
         [HttpPost(ApiEndpointConstant.AttandanceEndpoint.TakeAttandance)]

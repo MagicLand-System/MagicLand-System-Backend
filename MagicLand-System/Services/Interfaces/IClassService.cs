@@ -21,6 +21,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<bool> UpdateClass(string classId, UpdateClassRequest request);
         Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
         Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList);
-        Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime);
+        Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime,string? attendanceStatus);
     }
 }

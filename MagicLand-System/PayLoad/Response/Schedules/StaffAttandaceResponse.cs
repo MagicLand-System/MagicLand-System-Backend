@@ -8,7 +8,7 @@ namespace MagicLand_System.PayLoad.Response.Schedules
         public Guid Id { get; set; }
         public Student Student { get; set; }
         public DateTime? Day { get; set; }
-        public string IsPresent { get; set; }
+        public bool IsPresent { get; set; }
         public ClassResponse Class { get; set; }
 
     }

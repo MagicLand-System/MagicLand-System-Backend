@@ -5,7 +5,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IAttandanceService
     {
-        Task<List<StaffAttandaceResponse>> LoadAttandance(string scheduleId);
+        Task<List<StaffAttandaceResponse>> LoadAttandance(string scheduleId,string? searchString);
         Task<bool> TakeAttandance(List<StaffClassAttandanceRequest> requests);
     }
 }
