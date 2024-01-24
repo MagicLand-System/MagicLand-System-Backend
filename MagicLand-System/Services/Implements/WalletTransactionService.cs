@@ -623,7 +623,9 @@ namespace MagicLand_System.Services.Implements
                     {
                         return ("Giao Dịch Sử Lý Không Tồn Tại Trong Hệ Thống Vui Lòng Thực Hiện Lại", false);
                     }
+
                     var studentAttendanceList = new List<Attendance>();
+              
 
                     foreach (var transaction in gatewayTransactions)
                     {
@@ -664,10 +666,9 @@ namespace MagicLand_System.Services.Implements
                                 continue;
                             }
                         }
-                        transaction.Status = TransactionStatusEnum.Success.ToString();
-                        Random random = new Random();
 
-                        transaction.TransactionCode = "11" + random.Next(0, 10).ToString() + transactionCode;
+                        transaction.TransactionCode = "11" + GenerateExtraCode(type, true) + transactionCode;
+                        transaction.Status = TransactionStatusEnum.Success.ToString();
                         transaction.UpdateTime = DateTime.Now;
 
                     }
@@ -681,6 +682,30 @@ namespace MagicLand_System.Services.Implements
             catch (Exception ex)
             {
                 return ($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", false);
+            }
+        }
+
+        private (List<string>, string) GenerateExtraCode(TransactionTypeEnum type, bool isSuccess, int numberTransaction)
+        {
+            var storedCode = new List<string>();
+            Random random = new Random();
+            string extraCode = string.Empty;
+
+            string chars = "0123456789";
+            int numberDigit = isSuccess == true ? 1 : 8; 
+
+            for (int i = 0; i < numberTransaction; i++)
+            {
+                do
+                {
+                    extraCode = new string(Enumerable.Repeat(chars, numberDigit).Select(s => s[random.Next(s.Length)]).ToArray());
+                } while (storedCode.Any(sno => sno == extraCode));
+                storedCode.Add(extraCode);
+            }
+
+            if(type == TransactionTypeEnum.TopUp)
+            {
+                return (storedCode)
             }
         }
 
@@ -699,8 +724,22 @@ namespace MagicLand_System.Services.Implements
 
                 if (type == TransactionTypeEnum.Payment)
                 {
+                    var storedNumberOrder = new List<string>();
                     Random random = new Random();
-                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "11" + random.Next(0, 10).ToString() + transactionCode);
+                    string numberOrder;
+
+                    do
+                    {
+                        string chars = "0123456789";
+
+                        numberOrder = new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
+                    } while (storedNumberOrder.Any(sno => sno.Trim() == numberOrder.Trim()));
+                    storedNumberOrder.Add(numberOrder);
+
+                    foreach(var transaction in gatewayTransactions)
+                    {
+                        transaction.TransactionCode = "11" + numberOrder + transactionCode;
+                    }
                 }
 
 

@@ -123,7 +123,7 @@ namespace MagicLand_System.Helpers
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .Build();
 
-            string EncryptionKey = configuration.GetSection("AppSettings:EncryptionKey").Value!;
+            string EncryptionKey = configuration.GetSection("Encryption:Key").Value!;
 
             using (Aes aesAlg = Aes.Create())
             {
