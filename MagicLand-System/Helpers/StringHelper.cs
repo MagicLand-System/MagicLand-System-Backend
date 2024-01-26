@@ -90,12 +90,12 @@ namespace MagicLand_System.Helpers
                 attachValue += $"[{TransactionAttachValueEnum.CartItemId}:{item.CartItemId}]";
             }
 
-            return EncodeAttachValue(attachValue);
+            return Encrypt(attachValue);
         }
 
         public static Dictionary<string, List<string>> ExtractAttachValueFromSignature(string signature)
         {
-            string attachValue = DecodeAttachValue(signature.Substring(36));
+            string attachValue = Decrypt(signature.Substring(36));
 
             Dictionary<string, List<string>> values = new Dictionary<string, List<string>>();
             Regex pattern = new Regex(@"\[(\w+):([^[\]]+)\]");
@@ -116,16 +116,64 @@ namespace MagicLand_System.Helpers
 
             return values;
         }
-        private static string EncodeAttachValue(string input)
+        private static string Encrypt(string input)
         {
-            byte[] stringBytes = Encoding.UTF8.GetBytes(input);
-            return Convert.ToBase64String(stringBytes);
+            var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+
+            string EncryptionKey = configuration.GetSection("Encryption:Key").Value!;
+
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Encoding.UTF8.GetBytes(EncryptionKey);
+                aesAlg.IV = new byte[16];
+
+                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                using (MemoryStream msEncrypt = new MemoryStream())
+                {
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(input);
+                        }
+                    }
+
+                    return Convert.ToBase64String(msEncrypt.ToArray());
+                }
+            }
         }
 
-        public static string DecodeAttachValue(string input)
+        public static string Decrypt(string input)
         {
-            byte[] stringBytes = Convert.FromBase64String(input);
-            return Encoding.UTF8.GetString(stringBytes);
+            var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+
+            string EncryptionKey = configuration.GetSection("Encryption:Key").Value!;
+
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Encoding.UTF8.GetBytes(EncryptionKey);
+                aesAlg.IV = new byte[16];
+
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                using (MemoryStream msDecrypt = new MemoryStream(Convert.FromBase64String(input)))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+                            return srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+            }
         }
 
         public static string HmacSHA512(string key, string inputData)
@@ -143,6 +191,28 @@ namespace MagicLand_System.Helpers
             }
 
             return hash.ToString();
+        }
+
+
+        public static string ConvertIntToStringStarTime(int number)
+        {
+            switch (number)
+            {
+                case 1:
+                    return "7:00";
+                case 2:
+                    return "9:15";
+                case 3:
+                    return "12:00";
+                case 4:
+                    return "14:15";
+                case 5:
+                    return "16:30";
+                case 6:
+                    return "19:00";
+                default:
+                    return "";
+            }
         }
     }
 }

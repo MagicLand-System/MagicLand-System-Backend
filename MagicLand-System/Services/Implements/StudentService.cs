@@ -311,9 +311,9 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request)
         {
-            var cls = await CheckingCurrentClass(request.ClassId);
+            var cls = await CheckingCurrentClass(request.ClassId, request.Slot);
 
-            var schedules = cls.Schedules;
+            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime == StringHelper.ConvertIntToStringStarTime(request.Slot));
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
 
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
@@ -328,7 +328,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId)
         {
-            var cls = await CheckingCurrentClass(classId);
+            var cls = await CheckingCurrentClass(classId, 0);
 
             var schedules = cls.Schedules;
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
@@ -358,10 +358,21 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task<Class> CheckingCurrentClass(Guid classId)
+        private async Task<Class> CheckingCurrentClass(Guid classId, int slot)
         {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-                include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!);
+            var cls = new Class();
+            if (slot != 0)
+            {
+                cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
+                include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!
+                .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!.StartTime));
+            }
+            else
+            {
+                 cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
+                 include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!);
+            }
+
 
             if (cls == null)
             {
@@ -373,6 +384,11 @@ namespace MagicLand_System.Services.Implements
                 string statusError = cls.Status!.ToString().Trim() == ClassStatusEnum.UPCOMING.ToString() ? "Sắp Diễn Ra" : "Đã Hoàn Thành";
 
                 throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.Name}] [{statusError}]", StatusCodes.Status400BadRequest);
+            }
+
+            if (slot != 0 && !cls.Schedules.Any(sc => sc.Slot!.StartTime == StringHelper.ConvertIntToStringStarTime(slot)))
+            {
+                throw new BadHttpRequestException($"Lớp Học Không Có Lịch Điểm Danh Slot [{slot}] ", StatusCodes.Status400BadRequest);
             }
 
             if (cls.Lecture!.Id != GetUserIdFromJwt())

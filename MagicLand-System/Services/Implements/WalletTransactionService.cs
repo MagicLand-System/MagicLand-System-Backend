@@ -13,6 +13,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Transactions;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -68,11 +69,11 @@ namespace MagicLand_System.Services.Implements
                     var studentx = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(student.ToString()));
                     students.Add(studentx);
                 }
-                var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(transaction.PersonalWalletId.ToString()));
-                var user  = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(personalWallet.UserId.ToString()));
-                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()));
-                var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId),selector : x => x.CourseId);
-                var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()), selector : x => x.Name);
+                var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(transaction.PersonalWalletId.ToString()));
+                var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(personalWallet.UserId.ToString()));
+                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
+                var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.CourseId);
+                var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()), selector: x => x.Name);
                 WalletTransactionResponse response = new WalletTransactionResponse
                 {
                     CourseName = courseName,
@@ -91,17 +92,11 @@ namespace MagicLand_System.Services.Implements
                         Id = user.Id,
                         Phone = user.Phone
                     },
-                    Discount = transaction.Discount,
                     MyClassResponse = classx,
                     TransactionCode = transaction.TransactionCode,
                     Type = transaction.Type,
                     TransactionId = transaction.Id,
                     Students = students,
-                    Status = transaction.Status,
-                    Currency = transaction.Currency,
-                    CreateBy = transaction.CreateBy,
-                    Signature = transaction.Signature
-                    
                 };
 
                 result.Add(response);
@@ -601,27 +596,28 @@ namespace MagicLand_System.Services.Implements
         {
             try
             {
+                var gatewayTransactions = new List<WalletTransaction>();
                 if (type == TransactionTypeEnum.TopUp)
                 {
-                    var gatewayTransaction = await _unitOfWork.GetRepository<WalletTransaction>().SingleOrDefaultAsync(predicate: x => x.Signature == txnRefCode);
-                    if (gatewayTransaction == null)
+                    gatewayTransactions = (await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.Signature == txnRefCode)).ToList();
+                    if (gatewayTransactions == null)
                     {
                         return ("Giao Dịch Sử Lý Không Tồn Tại Trong Hệ Thống Vui Lòng Thực Hiện Lại", false);
                     }
 
-                    var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.Id == gatewayTransaction.PersonalWalletId);
-                    gatewayTransaction.Status = TransactionStatusEnum.Success.ToString();
-                    personalWallet.Balance += gatewayTransaction.Money;
-                    gatewayTransaction.TransactionCode = "12" + transactionCode;
-                    gatewayTransaction.UpdateTime = DateTime.Now;
+                    var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.Id == gatewayTransactions[0].PersonalWalletId);
 
-                    _unitOfWork.GetRepository<WalletTransaction>().UpdateAsync(gatewayTransaction);
+                    foreach (var trans in gatewayTransactions)
+                    {
+                        personalWallet.Balance += trans.Money;
+                    }
+
                     _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
                 }
                 if (type == TransactionTypeEnum.Payment)
                 {
-                    var gatewayTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
-                        .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
+                    gatewayTransactions = (await _unitOfWork.GetRepository<WalletTransaction>()
+                        .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString())).ToList();
 
                     gatewayTransactions = gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(36, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim())).ToList();
 
@@ -629,57 +625,15 @@ namespace MagicLand_System.Services.Implements
                     {
                         return ("Giao Dịch Sử Lý Không Tồn Tại Trong Hệ Thống Vui Lòng Thực Hiện Lại", false);
                     }
-                    var studentAttendanceList = new List<Attendance>();
 
                     foreach (var transaction in gatewayTransactions)
                     {
                         var result = StringHelper.ExtractAttachValueFromSignature(transaction.Signature!);
 
-                        Guid classId = default;
-
-                        foreach (var pair in result)
-                        {
-                            if (pair.Key == TransactionAttachValueEnum.ClassId.ToString())
-                            {
-                                classId = Guid.Parse(pair.Value[0]);
-                                continue;
-                            }
-                            if (pair.Key == TransactionAttachValueEnum.StudentId.ToString())
-                            {
-                                studentAttendanceList.AddRange(await RenderStudentAttendanceList(classId, pair.Value.Select(v => Guid.Parse(v)).ToList()));
-                                var studentsClass = pair.Value.Select(v => Guid.Parse(v)).ToList().Select(id =>
-                                new StudentClass
-                                {
-                                    Id = new Guid(),
-                                    StudentId = id,
-                                    ClassId = classId,
-                                }).ToList();
-
-                                await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList);
-                                await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentsClass);
-                                continue;
-                            }
-                            if (pair.Key == TransactionAttachValueEnum.CartItemId.ToString())
-                            {
-                                var cartItemId = pair.Value.Select(v => Guid.Parse(v)).ToList();
-
-                                foreach (Guid id in cartItemId)
-                                {
-                                    _unitOfWork.GetRepository<CartItem>().DeleteAsync(await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(predicate: x => x.Id == id));
-                                }
-                                continue;
-                            }
-                        }
-                        transaction.Status = TransactionStatusEnum.Success.ToString();
-                        Random random = new Random();
-
-                        transaction.TransactionCode = "11" + random.Next(0, 10).ToString() + transactionCode;
-                        transaction.UpdateTime = DateTime.Now;
-
+                        await InsertAttachValue(result);
                     }
-                    _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(gatewayTransactions);
                 }
-
+                UpdateTransaction(gatewayTransactions, type, transactionCode, true);
 
                 _unitOfWork.Commit();
                 return (string.Empty, true);
@@ -690,35 +644,86 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
+        private async Task InsertAttachValue(Dictionary<string, List<string>> result)
+        {
+            Guid classId = default;
+
+            foreach (var pair in result)
+            {
+                if (pair.Key == TransactionAttachValueEnum.ClassId.ToString())
+                {
+                    classId = Guid.Parse(pair.Value[0]);
+                    continue;
+                }
+                if (pair.Key == TransactionAttachValueEnum.StudentId.ToString())
+                {
+                    var studentAttendanceList = await RenderStudentAttendanceList(classId, pair.Value.Select(v => Guid.Parse(v)).ToList());
+                    var studentClassList = pair.Value.Select(v => Guid.Parse(v)).ToList().Select(id =>
+                    new StudentClass
+                    {
+                        Id = new Guid(),
+                        StudentId = id,
+                        ClassId = classId,
+                    }).ToList();
+
+                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList);
+                    await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentClassList);
+                    continue;
+                }
+                if (pair.Key == TransactionAttachValueEnum.CartItemId.ToString())
+                {
+                    var cartItemId = pair.Value.Select(v => Guid.Parse(v)).ToList();
+
+                    foreach (Guid id in cartItemId)
+                    {
+                        _unitOfWork.GetRepository<CartItem>().DeleteAsync(await _unitOfWork.GetRepository<CartItem>().SingleOrDefaultAsync(predicate: x => x.Id == id));
+                    }
+                    continue;
+                }
+            }
+        }
+
+        private void UpdateTransaction(List<WalletTransaction> transactions, TransactionTypeEnum type, string transactionCodeReturn, bool isSuccess)
+        {
+            var storedCode = new List<string>();
+            Random random = new Random();
+            string extraCode = string.Empty;
+
+            string chars = "0123456789";
+            int numberDigit = isSuccess == true ? 1 : 8;
+            string startCode = type == TransactionTypeEnum.TopUp ? "12" : type == TransactionTypeEnum.Payment ? "11" : "10";
+
+            foreach (var trans in transactions)
+            {
+                do
+                {
+                    extraCode = new string(Enumerable.Repeat(chars, numberDigit).Select(s => s[random.Next(s.Length)]).ToArray());
+                } while (storedCode.Any(sno => sno == extraCode));
+                storedCode.Add(extraCode);
+
+                trans.TransactionCode = startCode + extraCode + transactionCodeReturn;
+                trans.Status = isSuccess == true ? TransactionStatusEnum.Success.ToString() : TransactionStatusEnum.Failed.ToString();
+                trans.UpdateTime = DateTime.Now;
+            }
+            _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(transactions);
+
+        }
+
         public async Task<(string, bool)> HandelFailedReturnDataVnpayAsync(string transactionCode, string txnRefCode, TransactionTypeEnum type)
         {
             try
             {
-                var gatewayTransactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
+                var gatewayTransactions = (await _unitOfWork.GetRepository<WalletTransaction>()
+                   .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString())).ToList();
 
-                gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(12, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim()));
+                gatewayTransactions.Where(gt => gt.Signature!.Substring(0, Math.Min(36, gt.Signature.Length)).Trim().Equals(txnRefCode.Trim()));
 
                 if (gatewayTransactions == null)
                 {
                     return ("Giao Dịch Sử Lý Không Tồn Tại Trong Hệ Thống Vui Lòng Thực Hiện Lại", false);
                 }
 
-                if (type == TransactionTypeEnum.Payment)
-                {
-                    Random random = new Random();
-                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "11" + random.Next(0, 10).ToString() + transactionCode);
-                }
-
-
-                if (type == TransactionTypeEnum.TopUp)
-                {
-                    gatewayTransactions.ToList().ForEach(gt => gt.TransactionCode = "12" + transactionCode);
-                }
-
-                gatewayTransactions.ToList().ForEach(gt => gt.Status = TransactionStatusEnum.Failed.ToString());
-                gatewayTransactions.ToList().ForEach(gt => gt.UpdateTime = DateTime.Now);
-
-                _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(gatewayTransactions);
+                UpdateTransaction(gatewayTransactions, type, transactionCode, false);
 
                 _unitOfWork.Commit();
 
@@ -812,14 +817,14 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"TxnRefCode [{txnRefCode}] Không Tồn Tại Trong Hệ Thống", StatusCodes.Status400BadRequest);
             }
-            if(transactions.Any(trans => trans.Status == TransactionStatusEnum.Processing.ToString()))
+            if (transactions.Any(trans => trans.Status == TransactionStatusEnum.Processing.ToString()))
             {
                 return default;
             }
 
             string status = transactions.Any(trans => trans.Status == TransactionStatusEnum.Failed.ToString()) ? TransactionStatusMessageConstant.Failed : TransactionStatusMessageConstant.Success;
             double totalAmount = 0.0, totalDiscount = 0.0;
-            foreach(var trans in transactions)
+            foreach (var trans in transactions)
             {
                 totalAmount += trans.Money;
                 totalDiscount += trans.Discount;
