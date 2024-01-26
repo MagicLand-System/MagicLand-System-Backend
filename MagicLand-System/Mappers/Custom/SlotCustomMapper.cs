@@ -14,6 +14,7 @@ namespace MagicLand_System.Mappers.Custom
 
             SlotResponse response = new SlotResponse
             {
+                SlotId = slot.Id,
                 StartTime = TimeOnly.Parse(slot.StartTime),
                 EndTime = TimeOnly.Parse(slot.EndTime)
             };

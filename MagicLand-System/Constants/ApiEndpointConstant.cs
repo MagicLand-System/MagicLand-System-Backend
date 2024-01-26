@@ -108,8 +108,17 @@
         public static class LectureEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/lectures";
-            public const string TakeStudentAttendance = EndPointBase + "/takeStudentAttendance";
+            public const string TakeStudentAttendance = EndPointBase + "/students/takeAttendance";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
+            public const string GetStudentAttendanceOfAllClass = EndPointBase + "/student/classes/attendance";
+        }
+
+        public static class AttendanceEnpoint
+        {
+            public const string EndPointBase = ApiEndpoint + "/attendance";
+            public const string GetAttendanceOfClass = EndPointBase + "/class/{id}";
+            public const string GetAttendanceOfClasses = EndPointBase + "/classes";
+            public const string GetAttendanceOfStudent = EndPointBase + "/student/{id}";
         }
 
         public static class WalletEndPoint

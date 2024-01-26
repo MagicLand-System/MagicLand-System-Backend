@@ -16,20 +16,23 @@ namespace MagicLand_System.Controllers
     public class LectureController : BaseController<LectureController>
     {
         private readonly IStudentService _studentService;
-        public LectureController(ILogger<LectureController> logger, IStudentService studentService) : base(logger)
+        private readonly IAttendanceService _attendanceService;
+        public LectureController(ILogger<LectureController> logger, IStudentService studentService, IAttendanceService attendanceService) : base(logger)
         {
             _studentService = studentService;
+            _attendanceService = attendanceService;
         }
 
         #region document API Take Student Attendance
         /// <summary>
-        ///  Cho Phép Giảng Viên Điểm Danh Học Sinh
+        ///  Cho Phép Giảng Viên Điểm Danh Các Học Sinh Của Một Lớp Ở Ngày Hiện Tại Thông Qua Id Của Lớp Và Slot Học
         /// </summary>
-        /// <param name="request">Chứa Id Của Lớp Học Hiện Tại, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
+        /// <param name="request">Chứa Id Của Lớp Học, Slot Điểm Danh, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
         /// <remarks>
         /// Sample request:
         ///{     
         ///    "ClassId":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///    "SlotTime": "1" ( 1: "7:00 - 9:00", 2: "9:15 - 11:15", 3: "12:00 - 14:00", 4: "14:15 - 16:15", 5: "16:30 - 18:30", 6: "19:00 - 21:00")
         ///    [
         ///       {
         ///          "StudentId":"3c1849af-400c-43ca-979e-58c71ce9301d",
@@ -77,6 +80,24 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetStudentAttendance([FromQuery] Guid classId)
         {
             var response = await _studentService.GetStudentAttendanceFromClassInNow(classId);
+            return Ok(response);
+        }
+
+        #region document API Get Student Attendance Of All Class
+        /// <summary>
+        ///  Truy Suất Danh Sách Điểm Danh Các Lớp Của Giáo Viên Hiện Tại
+        /// </summary>
+        /// <response code="200">Trả Về Danh Sách Điểm Danh</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentAttendanceOfAllClass)]
+        [ProducesResponseType(typeof(AttendanceWithClassResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> GetStudentAttendanceOfAllClass()
+        {
+            var response = await _attendanceService.GetAttendanceOfClassesOfCurrentUserAsync();
             return Ok(response);
         }
     }

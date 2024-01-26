@@ -1,5 +1,8 @@
-﻿using MagicLand_System.Domain.Models;
+﻿using AutoMapper;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.Helpers;
+using MagicLand_System.Mappers.Attendances;
+using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Schedules;
 
 namespace MagicLand_System.Mappers.Custom
@@ -91,6 +94,32 @@ namespace MagicLand_System.Mappers.Custom
 
             return response;
         }
+
+        public static ScheduleWithAttendanceResponse fromClassScheduleToScheduleWithAttendanceResponse(Schedule schedule)
+        {
+            if (schedule == null)
+            {
+                return new ScheduleWithAttendanceResponse();
+            }
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AllowNullCollections = true;
+                cfg.AddProfile<AttendancesMapper>();
+            });
+            var mapper = new Mapper(config);
+
+            var response = new ScheduleWithAttendanceResponse
+            {
+                DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                Date = schedule.Date,
+                Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
+                Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
+                AttendanceInformation = schedule.Attendances.Select(att => mapper.Map<AttendanceResponse>(att)).ToList()
+            };
+
+            return response;
+        }
+
 
         private static string AddSuffixesTime(string slotTime)
         {

@@ -1,5 +1,7 @@
+using AutoMapper;
 using MagicLand_System.Config;
 using MagicLand_System.Domain;
+using MagicLand_System.Mappers.Schedules;
 using MagicLand_System.Middlewares;
 using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
@@ -91,6 +93,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IGatewayService, GatewayService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
