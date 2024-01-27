@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
 using MagicLand_System.PayLoad.Response.Bills;
+using MagicLand_System.PayLoad.Response.WalletTransactions;
+using MagicLand_System.Enums;
 
 namespace MagicLand_System.Controllers
 {
@@ -65,6 +67,7 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.WalletTransaction.GetBillTransactionById)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
         public async Task<IActionResult> GetBillTransactionById([FromRoute] Guid id)
         {
             var response = await _walletTransactionService.GenerateBillTopUpTransactionAsync(id);
@@ -94,6 +97,7 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.WalletTransaction.GetBillTransactionByTxnRefCode)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
         public async Task<IActionResult> GetBillTransactionById([FromRoute] string txnRefCode)
         {
             var response = await _walletTransactionService.GenerateBillPaymentTransactionAssync(txnRefCode);
@@ -101,6 +105,26 @@ namespace MagicLand_System.Controllers
             {
                 return Ok();
             }
+            return Ok(response);
+        }
+
+        #region document API Get Total Revenue
+        /// <summary>
+        ///  Truy Suất Tổng Kết Doanh Thu Theo Thời Gian
+        /// </summary>
+        /// <param name="time">Truy Suất Tổng Doanh Thu Sắp Xếp Theo Thời Gian Đã Chọn, Mặc Định Là Theo Tuần</param>
+        /// <response code="200">Trả Về Danh Sách Doanh Thu Theo Thời Gian | Trả Về Rỗng Khi Không Có Giao Dịch</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.WalletTransaction.GetRevenueTransactionByTime)]
+        [ProducesResponseType(typeof(RevenueResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRevenueTransactionByTime([FromQuery] RevenueTimeEnum time)
+        {
+            var response = await _walletTransactionService.GetRevenueTransactionByTimeAsync(time);
             return Ok(response);
         }
     }

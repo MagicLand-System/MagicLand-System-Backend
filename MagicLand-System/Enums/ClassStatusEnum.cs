@@ -1,6 +1,6 @@
 ﻿namespace MagicLand_System.Enums
 {
-    public enum ClassStatusEnum
+    public enum ClassStatusEnum 
     {
         UPCOMING,
         COMPLETED,

@@ -192,27 +192,5 @@ namespace MagicLand_System.Helpers
 
             return hash.ToString();
         }
-
-
-        public static string ConvertIntToStringStarTime(int number)
-        {
-            switch (number)
-            {
-                case 1:
-                    return "7:00";
-                case 2:
-                    return "9:15";
-                case 3:
-                    return "12:00";
-                case 4:
-                    return "14:15";
-                case 5:
-                    return "16:30";
-                case 6:
-                    return "19:00";
-                default:
-                    return "";
-            }
-        }
     }
 }

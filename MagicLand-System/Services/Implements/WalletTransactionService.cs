@@ -13,7 +13,9 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Globalization;
 using System.Transactions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -333,7 +335,7 @@ namespace MagicLand_System.Services.Implements
 
             if (!cls.Status!.Trim().Equals("UPCOMING"))
             {
-                throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thê Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
+                throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
                     StatusCodes.Status400BadRequest);
             }
 
@@ -844,6 +846,45 @@ namespace MagicLand_System.Services.Implements
             };
 
             return response;
+        }
+
+        public async Task<List<RevenueResponse>> GetRevenueTransactionByTimeAsync(RevenueTimeEnum time)
+        {
+            var transactions = await _unitOfWork.GetRepository<WalletTransaction>()
+                .GetListAsync(predicate: x => x.Type != TransactionTypeEnum.TopUp.ToString(), orderBy: x => x.OrderBy(x => x.CreateTime));
+
+            var transactionGroupTimes = GetTransactionGroupTimes(transactions, time);
+
+            var revenueGroupTimes = transactionGroupTimes!.Select((group, index) => new RevenueResponse
+            {
+                Number = index + 1,
+                Start = group.First().CreateTime,
+                End = group.Last().CreateTime,
+                TotalMoneyEarn = group.Sum(t => t.Type == TransactionTypeEnum.Payment.ToString() ? t.Money : 0),
+                TotalMoneyDiscount = group.Sum(t => t.Discount),
+                TotalMoneyRefund = group.Sum(t => t.Type == TransactionTypeEnum.Refund.ToString() ? t.Money : 0),
+                TotalRevenue = group.Sum(t => t.Type == TransactionTypeEnum.Payment.ToString() ? t.Money : -t.Money) - group.Sum(t => t.Discount),
+            }).ToList();
+
+            return revenueGroupTimes;
+        }
+
+        private IEnumerable<IGrouping<int, WalletTransaction>>? GetTransactionGroupTimes(ICollection<WalletTransaction> transactions, RevenueTimeEnum time)
+        {
+            switch (time)
+            {
+                case RevenueTimeEnum.Week:
+                    return transactions.GroupBy(trans => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(trans.CreateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday));
+                case RevenueTimeEnum.Month:
+                    return transactions.GroupBy(trans => trans.CreateTime.Month);
+                case RevenueTimeEnum.Quarter:
+                    return transactions.ToLookup(trans => (trans.CreateTime.Month - 1) / 3 + 1, trans => trans).OrderBy(group => group.Key);
+                case RevenueTimeEnum.Year:
+                    return transactions.GroupBy(trans => trans.CreateTime.Year);
+                default:
+                    break;
+            }
+            return default;
         }
     }
 }

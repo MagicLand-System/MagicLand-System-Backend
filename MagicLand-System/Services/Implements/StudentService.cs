@@ -14,6 +14,7 @@ using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
@@ -313,7 +314,7 @@ namespace MagicLand_System.Services.Implements
         {
             var cls = await CheckingCurrentClass(request.ClassId, request.Slot);
 
-            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime == StringHelper.ConvertIntToStringStarTime(request.Slot));
+            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(request.Slot).Trim());
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
 
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
@@ -358,20 +359,13 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task<Class> CheckingCurrentClass(Guid classId, int slot)
+        private async Task<Class> CheckingCurrentClass(Guid classId, SlotEnum slot)
         {
-            var cls = new Class();
-            if (slot != 0)
-            {
-                cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-                include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!
-                .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!.StartTime));
-            }
-            else
-            {
-                 cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-                 include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!);
-            }
+
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
+            include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!
+            .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!.StartTime));
+
 
 
             if (cls == null)
@@ -386,7 +380,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.Name}] [{statusError}]", StatusCodes.Status400BadRequest);
             }
 
-            if (slot != 0 && !cls.Schedules.Any(sc => sc.Slot!.StartTime == StringHelper.ConvertIntToStringStarTime(slot)))
+            if (!cls.Schedules.Any(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()))
             {
                 throw new BadHttpRequestException($"Lớp Học Không Có Lịch Điểm Danh Slot [{slot}] ", StatusCodes.Status400BadRequest);
             }

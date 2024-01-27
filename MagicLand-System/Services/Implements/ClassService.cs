@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.Student;
@@ -334,7 +335,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent)
         {
-            var classes = await FetchClasses();
+            var classes = await FetchClasses(PeriodTimeEnum.Default);
 
             #region
             //For satisfy all key word
@@ -390,9 +391,9 @@ namespace MagicLand_System.Services.Implements
             return _mapper.Map<ClassResExtraInfor>(cls);
         }
 
-        public async Task<List<ClassResExtraInfor>> GetClassesAsync()
+        public async Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time)
         {
-            var classes = await FetchClasses();
+            var classes = await FetchClasses(time);
 
             return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
         }
@@ -423,8 +424,21 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task<ICollection<Class>> FetchClasses()
+        private async Task<ICollection<Class>> FetchClasses(PeriodTimeEnum time)
         {
+            if (time != default)
+            {
+                return await _unitOfWork.GetRepository<Class>()
+                    .GetListAsync(predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time),include: x => x
+                    .Include(x => x.Lecture)
+                    .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+                    .Include(x => x.Course!).ThenInclude(c => c.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
+                    .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
+                    .Include(x => x.StudentClasses)
+                    .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+                    .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
+            }
+
             return await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(include: x => x
                 .Include(x => x.Lecture)
@@ -567,12 +581,12 @@ namespace MagicLand_System.Services.Implements
                     SlotId = schedule.SlotId,
                 };
                 var status = "completed";
-                if(schedule.Date > DateTime.Now.AddHours(-23))
+                if (schedule.Date > DateTime.Now.AddHours(-23))
                 {
                     status = "future";
                 }
                 var dateOfWeek = "monday";
-                if(schedule.DayOfWeek == 1)
+                if (schedule.DayOfWeek == 1)
                 {
                     dateOfWeek = "sunday";
                 }
@@ -609,7 +623,7 @@ namespace MagicLand_System.Services.Implements
                     Slot = slotResponse,
                     Status = status,
                     Lecturer = userResponse,
-                    
+
                 };
                 responses.Add(progressResponse);
             }
@@ -667,8 +681,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime, string? attendanceStatusInput = null)
         {
-            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate : x => ( (x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)) , include : x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course).ThenInclude(x => x.CourseCategory));  
-            if(schedules.Count == 0 || schedules == null)
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => ((x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)), include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course).ThenInclude(x => x.CourseCategory));
+            if (schedules.Count == 0 || schedules == null)
             {
                 return new List<ClassForAttendance>();
             }
@@ -684,7 +698,7 @@ namespace MagicLand_System.Services.Implements
                 var attendanceStatus = "NTA";
                 foreach (var attendance in attendances)
                 {
-                    if(attendance.IsPresent != null)
+                    if (attendance.IsPresent != null)
                     {
                         attendanceStatus = "TA";
                     }
@@ -706,7 +720,7 @@ namespace MagicLand_System.Services.Implements
                     ClassSubject = schedule.Class.Course.CourseCategory.Name,
                     Method = schedule.Class.Method,
                     Image = schedule.Class.Image,
-                    EndDate = schedule.Class.EndDate,   
+                    EndDate = schedule.Class.EndDate,
                     CoursePrice = schedule.Class.Course.Price,
                     CourseId = schedule.Class.Course.Id,
                     CourseName = schedule.Class.Course.Name,
@@ -721,15 +735,15 @@ namespace MagicLand_System.Services.Implements
                 };
                 classForAttendances.Add(classForAttendance);
             }
-            if(searchString != null)
+            if (searchString != null)
             {
-                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Equals(searchString.Trim().ToLower()) )).ToList();
+                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Equals(searchString.Trim().ToLower()))).ToList();
             }
-            if(attendanceStatusInput != null)
+            if (attendanceStatusInput != null)
             {
                 classForAttendances = classForAttendances.Where(x => x.AttandanceStatus.ToLower().Equals(attendanceStatusInput.ToLower())).ToList();
             }
-            return classForAttendances; 
+            return classForAttendances;
         }
     }
 }

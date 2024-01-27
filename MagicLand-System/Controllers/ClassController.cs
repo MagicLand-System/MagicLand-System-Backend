@@ -1,4 +1,5 @@
 ﻿    using MagicLand_System.Constants;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
@@ -22,14 +23,15 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Truy Suất Toàn Bộ Lớp Học
         /// </summary>
+        /// <param name="time">Nếu Có Giá Trị Khác [Default] Truy Suất Toàn Bộ Lớp Có Thời Gian Bắt Đầu Trong 1 Tuần/Tháng Tới</param>
         /// <response code="200">Trả Về Danh Sách Lớp Học</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAll)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetClasses()
+        public async Task<IActionResult> GetClasses([FromQuery] PeriodTimeEnum time)
         {
-            var classes = await _classService.GetClassesAsync();
+            var classes = await _classService.GetClassesAsync(time);
             return Ok(classes);
         }
 

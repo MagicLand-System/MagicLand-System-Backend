@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Class;
@@ -9,7 +10,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IClassService
     {
-        Task<List<ClassResExtraInfor>> GetClassesAsync();
+        Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time);
         Task<List<ClassResExtraInfor>> GetClassesByCourseIdAsync(Guid id);
         Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);

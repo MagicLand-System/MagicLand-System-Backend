@@ -100,6 +100,7 @@
             public const string PersonalWallet = GetAll + "/walletBalance";
             public const string GetBillTransactionById = GetAll + "/{id}/bill/status";
             public const string GetBillTransactionByTxnRefCode = GetAll + "/{txnRefCode}/bills/status";
+            public const string GetRevenueTransactionByTime = GetAll + "/bills/revenue";
         }
         public static class Syllabus
         {
