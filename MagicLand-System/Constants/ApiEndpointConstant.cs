@@ -120,18 +120,14 @@
             public const string GetAttendanceOfClass = EndPointBase + "/class/{id}";
             public const string GetAttendanceOfClasses = EndPointBase + "/classes";
             public const string GetAttendanceOfStudent = EndPointBase + "/student/{id}";
+            public const string LoadAttandance = EndPointBase + "/staff/load";
+            public const string TakeAttandance = EndPointBase + "/staff/takeAttandance";
         }
 
         public static class WalletEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/wallet";
             public const string TopUpWallet = EndPointBase + "/topup";
-        }
-        public static class AttandanceEndpoint
-        {
-            public const string EndPointBase = ApiEndpoint + "/attandance";
-            public const string LoadAttandance = EndPointBase + "/staff/load";
-            public const string TakeAttandance = EndPointBase + "/staff/takeAttandance";
         }
     }
 }

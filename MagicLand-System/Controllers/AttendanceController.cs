@@ -1,7 +1,10 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Attendance;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +18,24 @@ namespace MagicLand_System.Controllers
         public AttendanceController(ILogger<AttendanceController> logger, IAttendanceService attendanceService) : base(logger)
         {
             _attendanceService = attendanceService;
+        }
+        [HttpGet(ApiEndpointConstant.AttendanceEnpoint.LoadAttandance)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        public async Task<IActionResult> LoadAttandance(string scheduleId, string? searchString)
+        {
+            var result = await _attendanceService.LoadAttandance(scheduleId, searchString);
+            return Ok(result);
+        }
+        [HttpPost(ApiEndpointConstant.AttendanceEnpoint.TakeAttandance)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        public async Task<IActionResult> TakeAttandace([FromBody] List<StaffClassAttandanceRequest> requests)
+        {
+            var isSuccess = await _attendanceService.TakeAttandance(requests);
+            if (!isSuccess)
+            {
+                return BadRequest(new ErrorResponse { Error = "không thể lưu điểm danh ", StatusCode = StatusCodes.Status400BadRequest, TimeStamp = DateTime.Now });
+            }
+            return Ok("successfully");
         }
 
         #region document API Get Attendance Of Class By Class Id
