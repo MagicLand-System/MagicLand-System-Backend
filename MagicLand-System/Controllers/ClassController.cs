@@ -105,6 +105,7 @@ namespace MagicLand_System.Controllers
         /// <param name="keyWords">Cho Các Lớp Thỏa Mãn Các Từ Khóa</param>
         /// <param name="leastNumberStudent">Cho Lớp Có Giới Hạn Tối Thiểu Nhiều Hơn Hoặc Bằng Gía Trị Này</param>
         /// <param name="limitStudent">Cho Lớp Có Giới Hạn Tối Đa Thấp Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="time">Cho Các Lớp Có Thời Gian Bắt Đầu Trong Tuần/Tháng Tới</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -124,9 +125,10 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> FilterClass(
             [FromQuery] List<string>? keyWords,
             [FromQuery] int? leastNumberStudent,
-            [FromQuery] int? limitStudent)
+            [FromQuery] int? limitStudent,
+            [FromQuery] PeriodTimeEnum time)
         {
-            var classes = await _classService.FilterClassAsync(keyWords, leastNumberStudent, limitStudent);
+            var classes = await _classService.FilterClassAsync(keyWords, leastNumberStudent, limitStudent, time);
             return Ok(classes);
         }
         [HttpPost(ApiEndpointConstant.ClassEnpoint.AddClass)]

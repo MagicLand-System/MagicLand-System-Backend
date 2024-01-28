@@ -12,7 +12,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time);
         Task<List<ClassResExtraInfor>> GetClassesByCourseIdAsync(Guid id);
-        Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent);
+        Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);
         Task<bool> CreateNewClass(CreateClassRequest request);
         Task<List<MyClassResponse>> GetAllClass(string searchString = null,string status = null);

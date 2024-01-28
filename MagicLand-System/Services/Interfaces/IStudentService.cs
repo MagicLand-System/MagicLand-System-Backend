@@ -20,6 +20,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> TakeStudentAttendanceAsync(AttendanceRequest request);
         Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId);
         Task<StudentResponse> GetStudentById(Guid id);
-        Task<List<StudentResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time);
+        Task<List<StudentStatisticResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time);
     }
 }
