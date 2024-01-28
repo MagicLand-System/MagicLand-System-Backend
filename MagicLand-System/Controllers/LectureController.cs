@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.Enums;
 
 namespace MagicLand_System.Controllers
 {
@@ -27,12 +28,13 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Cho Phép Giảng Viên Điểm Danh Các Học Sinh Của Một Lớp Ở Ngày Hiện Tại Thông Qua Id Của Lớp Và Slot Học
         /// </summary>
-        /// <param name="request">Chứa Id Của Lớp Học, Slot Điểm Danh, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
+        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
+        /// <param name="slot">Slot Điểm Danh</param>
         /// <remarks>
         /// Sample request:
         ///{     
         ///    "ClassId":"3c1849af-400c-43ca-979e-58c71ce9301d"
-        ///    "SlotTime": "1" ( 1: "7:00 - 9:00", 2: "9:15 - 11:15", 3: "12:00 - 14:00", 4: "14:15 - 16:15", 5: "16:30 - 18:30", 6: "19:00 - 21:00")
+        ///    "SlotTime": "Slot1" ( Slot1: "7:00 - 9:00", Slot2: "9:15 - 11:15", Slot3: "12:00 - 14:00", Slot4: "14:15 - 16:15", Slot5: "16:30 - 18:30", Slot6: "19:00 - 21:00")
         ///    [
         ///       {
         ///          "StudentId":"3c1849af-400c-43ca-979e-58c71ce9301d",
@@ -49,10 +51,10 @@ namespace MagicLand_System.Controllers
         [HttpPut(ApiEndpointConstant.LectureEndPoint.TakeStudentAttendance)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
-        [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> TakeStudentAttendance([FromBody] AttendanceRequest request)
+        //[Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> TakeStudentAttendance([FromBody] AttendanceRequest request, [FromQuery] SlotEnum slot)
         {
-            var response = await _studentService.TakeStudentAttendanceAsync(request);
+            var response = await _studentService.TakeStudentAttendanceAsync(request, slot);
 
             return Ok(response);
         }

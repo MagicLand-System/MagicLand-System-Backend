@@ -137,6 +137,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var schedule in scheduleList)
             {
                 var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class.LecturerId));
+                var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id);
                 studentSchedule = new StudentScheduleResponse
                 {
                     StudentName = student.FullName,
@@ -148,6 +149,7 @@ namespace MagicLand_System.Services.Implements
                     Method = schedule.Class.Method,
                     RoomInFloor = schedule.Room.Floor,
                     RoomName = schedule.Room.Name,
+                    AttendanceStatus = IsPresent == true ? "Có Mặt" : IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
                     ClassName = schedule.Class.Name,
                     LecturerName = lecturerName,
                 };
@@ -310,11 +312,11 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request)
+        public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request, SlotEnum slot)
         {
-            var cls = await CheckingCurrentClass(request.ClassId, request.Slot);
+            var cls = await CheckingCurrentClass(request.ClassId, slot);
 
-            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(request.Slot).Trim());
+            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim());
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
 
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
@@ -364,7 +366,7 @@ namespace MagicLand_System.Services.Implements
 
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
             include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!
-            .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!.StartTime));
+            .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
 
 
