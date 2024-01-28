@@ -333,9 +333,9 @@ namespace MagicLand_System.Services.Implements
             return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).ToList();
         }
 
-        public async Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent)
+        public async Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time)
         {
-            var classes = await FetchClasses(PeriodTimeEnum.Default);
+            var classes = await FetchClasses(time);
 
             #region
             //For satisfy all key word

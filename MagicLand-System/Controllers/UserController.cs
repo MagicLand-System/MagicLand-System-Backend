@@ -125,7 +125,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> UpdateStudent([FromBody] UserRequest request)
+        public async Task<IActionResult> UpdateUser([FromBody] UserRequest request)
         {
             var response = await _userService.UpdateUserAsync(request);
 

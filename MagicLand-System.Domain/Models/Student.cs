@@ -11,6 +11,7 @@ namespace MagicLand_System.Domain.Models
         public string? Email { get; set; }
         public string? Gender { get; set; }
         public string? AvatarImage { get; set; }
+        public DateTime AddedTime { get; set; } = DateTime.Now;
         public bool? IsActive { get; set; } = true;
 
         [ForeignKey("User")]

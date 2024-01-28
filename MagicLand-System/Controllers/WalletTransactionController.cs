@@ -1,17 +1,11 @@
-﻿using MagicLand_System.Config;
-using MagicLand_System.Constants;
-using MagicLand_System.PayLoad.Request.Vnpay;
-using MagicLand_System.PayLoad.Response.Vnpay;
-using MagicLand_System.PayLoad.Response;
-using MagicLand_System.Services.Implements;
-using MagicLand_System.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using MagicLand_System.Constants;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
-using MagicLand_System.Enums;
+using MagicLand_System.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
 {
@@ -118,7 +112,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.WalletTransaction.GetRevenueTransactionByTime)]
+        [HttpGet(ApiEndpointConstant.WalletTransaction.GetRevenueTransactionByTime)]
         [ProducesResponseType(typeof(RevenueResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [AllowAnonymous]

@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
@@ -19,5 +20,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> TakeStudentAttendanceAsync(AttendanceRequest request);
         Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId);
         Task<StudentResponse> GetStudentById(Guid id);
+        Task<List<StudentResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time);
     }
 }

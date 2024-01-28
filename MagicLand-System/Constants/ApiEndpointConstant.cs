@@ -82,6 +82,7 @@
             public const string UpdateStudent = StudentsEndpoint + "/update";
             public const string DeleteStudent = StudentsEndpoint + "/{id}/delete";
             public const string GetStudentCourseRegistered = StudentsEndpoint + "/{id}/getcourses";
+            public const string GetStatisticRegisterStudent= StudentsEndpoint + "/register/statistic";
         }
         public static class RoomEnpoint
         {

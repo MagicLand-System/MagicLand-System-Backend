@@ -2,7 +2,7 @@
 {
     public enum PeriodTimeEnum
     {
-        Default = 0,
+        Default = 7,
         Week = 7,
         Month = 30,
     }

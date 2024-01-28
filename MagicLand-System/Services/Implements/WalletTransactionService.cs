@@ -858,8 +858,8 @@ namespace MagicLand_System.Services.Implements
             var revenueGroupTimes = transactionGroupTimes!.Select((group, index) => new RevenueResponse
             {
                 Number = index + 1,
-                Start = group.First().CreateTime,
-                End = group.Last().CreateTime,
+                StartFrom = group.First().CreateTime,
+                EndAt = group.Last().CreateTime,
                 TotalMoneyEarn = group.Sum(t => t.Type == TransactionTypeEnum.Payment.ToString() ? t.Money : 0),
                 TotalMoneyDiscount = group.Sum(t => t.Discount),
                 TotalMoneyRefund = group.Sum(t => t.Type == TransactionTypeEnum.Refund.ToString() ? t.Money : 0),

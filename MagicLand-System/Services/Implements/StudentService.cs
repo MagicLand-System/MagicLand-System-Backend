@@ -444,5 +444,13 @@ namespace MagicLand_System.Services.Implements
 
             return _mapper.Map<StudentResponse>(student);
         }
+
+        public async Task<List<StudentStatisticResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time)
+        {
+            var students = await _unitOfWork.GetRepository<Student>()
+               .GetListAsync(predicate: x => x.AddedTime >= DateTime.Now.AddDays((int)time), include: x => x.Include(x => x.User));
+
+            return students.Select(stu => _mapper.Map<StudentStatisticResponse>(stu)).ToList();
+        }
     }
 }

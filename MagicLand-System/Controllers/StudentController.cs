@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Request.User;
@@ -258,6 +259,27 @@ namespace MagicLand_System.Controllers
         {
             var response = await _studentService.GetStudentById(id);
 
+            return Ok(response);
+        }
+
+
+        #region document API Get Student Register Statistic
+        /// <summary>
+        ///  Truy Suất Danh Sách Học Sinh Mới Đã Thêm Vào Hệ Thống Theo Thời Gian Hiện Tại
+        /// </summary>
+        /// <param name="time">Truy Suất Doanh Sách Học Sinh Mới Thêm Vào Hệ Thống Theo Thời Gian Đã Chọn, Mặc Định Là Theo Tuần Hiện Tại</param>
+        /// <response code="200">Trả Về Danh Sách Học Sinh Theo Thời Gian | Trả Về Rỗng Khi Không Có Học Sinh Mới Nào Được Thêm Trong Thời Gian Đã Chọn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.GetStatisticRegisterStudent)]
+        [ProducesResponseType(typeof(StudentStatisticResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadHttpRequestException))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRevenueTransactionByTime([FromQuery] PeriodTimeEnum time)
+        {
+            var response = await _studentService.GetStatisticNewStudentRegisterAsync(time);
             return Ok(response);
         }
     }
