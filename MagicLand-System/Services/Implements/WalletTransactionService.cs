@@ -39,7 +39,8 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null)
         {
 
-            var transactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(include: x => x.Include(x => x.PersonalWallet).ThenInclude(x => x.User).ThenInclude(x => x.Students));
+            var transactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync( predicate: x => x.Type != TransactionTypeEnum.TopUp.ToString(),
+                include: x => x.Include(x => x.PersonalWallet).ThenInclude(x => x.User).ThenInclude(x => x.Students));
             if (transactions == null || transactions.Count == 0)
             {
                 return new List<WalletTransactionResponse>();
@@ -47,7 +48,7 @@ namespace MagicLand_System.Services.Implements
             List<WalletTransactionResponse> result = new List<WalletTransactionResponse>();
             foreach (var transaction in transactions)
             {
-                var rs = StringHelper.ExtractAttachValueFromSignature(transaction.Signature);
+                var rs = StringHelper.ExtractAttachValueFromSignature(transaction.Signature!);
 
                 Guid classId = default;
                 List<Guid> studentIdList = new List<Guid>();

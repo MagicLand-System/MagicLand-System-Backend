@@ -16,6 +16,19 @@ namespace MagicLand_System.Mappers.Classes
                .ForMember(des => des.Role, src => src.MapFrom(src => src.Role!.Name));
 
 
+            CreateMap<Class, ClassResponse>()
+                .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
+                .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.CourseCategory.Name))
+                .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
+                .ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
+                .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassEnum.ONLINE.ToString())
+                ? ClassEnum.ONLINE.ToString()
+                : ClassEnum.OFFLINE.ToString()))
+                .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()));
+
             CreateMap<Class, ClassResExtraInfor>()
                 .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))

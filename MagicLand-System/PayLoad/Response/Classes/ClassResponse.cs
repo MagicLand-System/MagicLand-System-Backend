@@ -4,6 +4,7 @@
     {
         public Guid ClassId { get; set; }
         public string? Name { get; set; }
+        public string? ClassCode { get; set; }
         public string? ClassSubject { get; set; }
         public Guid CourseId { get; set; }
         public double? CoursePrice { get; set; }
@@ -17,7 +18,5 @@
         public int NumberStudentRegistered { get; set; }
         public string? Image { get; set; }
         public string? Video { get; set; }
-        public string? ClassCode { get; set; }
-
     }
 }

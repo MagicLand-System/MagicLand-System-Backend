@@ -449,6 +449,11 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentStatisticResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time)
         {
+            if(time == PeriodTimeEnum.Default)
+            {
+                time = PeriodTimeEnum.Week;
+            }
+
             var students = await _unitOfWork.GetRepository<Student>()
                .GetListAsync(predicate: x => x.AddedTime >= DateTime.Now.AddDays((int)time), include: x => x.Include(x => x.User));
 

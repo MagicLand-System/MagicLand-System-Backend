@@ -7,6 +7,7 @@ namespace MagicLand_System.Domain.Models
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
+        public DateTime? AddedDate { get; set; } = default;
         public int NumberOfSession { get; set; }
         public int? MinYearOldsStudent { get; set; } = 3;
         public int? MaxYearOldsStudent { get; set; } = 120;

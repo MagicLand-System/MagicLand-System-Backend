@@ -1,15 +1,12 @@
 ﻿using AutoMapper;
-using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
-using MagicLand_System.Helpers;
+using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request;
-using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Bills;
-using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -50,7 +47,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<UserExistRespone> CheckUserExistByPhone(string phone)
         {
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()), include : x => x.Include(x => x.Role));
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()), include: x => x.Include(x => x.Role));
             if (user == null)
             {
                 return new UserExistRespone
@@ -217,6 +214,26 @@ namespace MagicLand_System.Services.Implements
             }
 
             _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(oldTransactions);
+        }
+
+        public async Task<List<LectureScheduleResponse>> GetLectureScheduleAsync()
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!)
+                .Include(x => x.Schedules).ThenInclude(sc => sc.Room!));
+
+            if (!classes.Any())
+            {
+                throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);
+            }
+
+            var responses = new List<LectureScheduleResponse>();
+            foreach(var cls in classes)
+            {
+                responses.AddRange(ScheduleCustomMapper.fromClassToListLectureScheduleResponse(cls));
+            }
+
+            return responses;
         }
     }
 }

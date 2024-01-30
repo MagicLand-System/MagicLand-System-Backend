@@ -44,6 +44,8 @@
             public const string UpdateClass = ClassById + "/update";
             public const string SessionLoad = GetAll + "/loadSession";
             public const string LoadClassForAttandance = GetAll + "/loadClassForAttedance";
+            public const string GetStuitableClass = GetAll + "/staff/change/suitable";
+            public const string ChangeClass = GetAll + "/staff/change";
 
         }
         public static class PromotionEnpoint
@@ -114,6 +116,9 @@
             public const string TakeStudentAttendance = EndPointBase + "/students/takeAttendance";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
             public const string GetStudentAttendanceOfAllClass = EndPointBase + "/student/classes/attendance";
+            public const string GetCurrentClass = EndPointBase + "/current/classes";
+            public const string GetClassesAttendanceWithDate = EndPointBase + "/classes/date/attendances";
+            public const string GetLectureSchedule = EndPointBase + "/schedules";
         }
 
         public static class AttendanceEnpoint

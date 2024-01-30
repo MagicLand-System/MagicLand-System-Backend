@@ -10,7 +10,7 @@ namespace MagicLand_System.Domain.Models
     public class Attendance
     {
         public Guid Id { get; set; }
-        public bool? IsPresent { get; set; } = false;
+        public bool? IsPresent { get; set; } = default;
         public bool? IsPublic { get; set; } = false;
 
 

@@ -4,6 +4,7 @@
     {
         UPCOMING,
         COMPLETED,
-        PROGRESSING
+        PROGRESSING,
+        CANCELED,
     }
 }

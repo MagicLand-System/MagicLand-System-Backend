@@ -22,6 +22,7 @@ namespace MagicLand_System.Mappers.Schedules
                   .ForMember(dest => dest.Slot, opt => opt.MapFrom(src => SlotCustomMapper.fromSlotToSlotResponse(src.Slot!)))
                   .ForMember(dest => dest.Room, opt => opt.MapFrom(src => RoomCustomMapper.fromRoomToRoomResponse(src.Room!)))
                   .ForMember(dest => dest.DayOfWeeks, opt => opt.MapFrom(src => DateTimeHelper.GetDatesFromDateFilter(src.DayOfWeek)[0].ToString()));
+
         }
     }
 }

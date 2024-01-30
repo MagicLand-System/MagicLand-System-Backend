@@ -6,6 +6,7 @@ using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -131,6 +132,68 @@ namespace MagicLand_System.Controllers
             var classes = await _classService.FilterClassAsync(keyWords, leastNumberStudent, limitStudent, time);
             return Ok(classes);
         }
+
+        #region document API Find Suitable Class
+        /// <summary>
+        ///  Tìm Kiếm Các Lớp Học Phù Hợp Với Id Lớp Học Hiện Tại Và Id Các Học Sinh Trong Lớp Cần Chuyển
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học Cần Kiểm Tra</param>
+        /// <param name="studentIdList">Id Của Các Học Sinh Trong Lớp Cần Chuyển</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "classId": "c6d70a5f-56ae-7e0-b441-c080da024524"
+        ///        "studentIdList": ["1a2ff-afgf-h6ae-4890-b9441-a80sa034aa4", "g3h70ao-5d2e-11e3-j441-cjk0da92aad9"]
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Các Lớp Học Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetStuitableClass)]
+        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [Authorize(Roles = "STAFF")]
+        public async Task<IActionResult> FindSuitableClass([FromQuery] Guid classId, [FromQuery] List<Guid> studentIdList)
+        {
+            var classes = await _classService.GetSuitableClassAsync(classId, studentIdList);
+            return Ok(classes);
+        }
+
+        #region document API Change Class
+        /// <summary>
+        ///  Cho Phép Chuyển Lớp Các Học Sinh Dựa Vào Id Lớp Và Id Của Các Học Sinh Cần Chuyển
+        /// </summary>
+        /// <param name="fromClassId">Id Của Lớp Cần Phải Chuyển</param>
+        /// <param name="toClassId">Id Của Lớp Sẽ Chuyển Học Sinh Qua</param>
+        /// <param name="studentIdList">Id Của Các Học Sinh Sẽ Chuyển Lớp</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "classId": "c6d70a5f-56ae-7e0-b441-c080da024524"
+        ///        "studentIdList": ["1a2ff-afgf-h6ae-4890-b9441-a80sa034aa4", "g3h70ao-5d2e-11e3-j441-cjk0da92aad9"]
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Chuyển Lớp Thành Công</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.ChangeClass)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+       [Authorize(Roles = "STAFF")]
+        public async Task<IActionResult> ChangeStudentClass([FromQuery] Guid fromClassId, [FromQuery] Guid toClassId, [FromQuery] List<Guid> studentIdList)
+        {
+            var classes = await _classService.ChangeStudentClassAsync(fromClassId, toClassId, studentIdList);
+            return Ok(classes);
+        }
+
         [HttpPost(ApiEndpointConstant.ClassEnpoint.AddClass)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
         public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
@@ -147,6 +210,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = "Create Successfully" });
         }
+
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]
         [AllowAnonymous]
         public async Task<IActionResult> GetStaffClass([FromQuery] string? searchString , [FromQuery] string? status)
@@ -177,6 +241,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(matchClass);  
         }
+
         [HttpGet(ApiEndpointConstant.ClassEnpoint.AutoCreateClassEndPoint)]
         [AllowAnonymous]
         public async Task<IActionResult> AutoCreate(string courseId)

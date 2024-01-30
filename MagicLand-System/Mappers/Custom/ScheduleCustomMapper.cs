@@ -4,11 +4,35 @@ using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Attendances;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Schedules;
+using System.Dynamic;
 
 namespace MagicLand_System.Mappers.Custom
 {
     public class ScheduleCustomMapper
     {
+        public static List<LectureScheduleResponse> fromClassToListLectureScheduleResponse(Class cls)
+        {
+            var responses = new List<LectureScheduleResponse>();
+          
+            foreach (var schedule in cls.Schedules)
+            {
+                var response = new LectureScheduleResponse
+                {
+                    ClassId = cls.Id,
+                    ClassName = cls.Name!,
+                    ClassCode = cls.ClassCode!,
+                    Method = cls.Method!,
+                    DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                    Date = schedule.Date,
+                    Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
+                    Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
+                };
+                responses.Add(response);
+            }
+
+            return responses;
+        }
+
         public static List<ScheduleResWithTopic> fromClassRelatedItemsToScheduleResWithTopic(List<Schedule> schedules, List<Topic> topics)
         {
             if (!schedules.Any())

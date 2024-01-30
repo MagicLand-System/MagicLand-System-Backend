@@ -2,6 +2,7 @@
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Schedules;
@@ -23,5 +24,9 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
         Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList);
         Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime,string? attendanceStatus);
+        Task<List<ClassResponse>> GetCurrentLectureClassesAsync();
+        Task<List<AttendanceWithClassResponse>> GetAttendanceOfClassesInDateAsync(List<Guid> classIdList, DateTime date);
+        Task<List<ClassResponse>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);
+        Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList);
     }
 }
