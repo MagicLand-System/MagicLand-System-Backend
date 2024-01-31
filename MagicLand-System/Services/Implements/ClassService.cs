@@ -692,49 +692,53 @@ namespace MagicLand_System.Services.Implements
             {
                 var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
                 var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()));
-                if (attendances == null || attendances.Count == 0)
+                if(attendances != null && attendances.Count > 0)
                 {
-                    return new List<ClassForAttendance>();
-                }
-                var attendanceStatus = "NTA";
-                foreach (var attendance in attendances)
-                {
-                    if (attendance.IsPresent != null)
+                    var attendanceStatus = "NTA";
+                    foreach (var attendance in attendances)
                     {
-                        attendanceStatus = "TA";
+                        if (attendance == null)
+                        {
+                            attendanceStatus = "Not found";
+                        }
+                        if (attendance.IsPresent != null)
+                        {
+                            attendanceStatus = "TA";
+                        }
                     }
-                }
-                LecturerResponse response = new LecturerResponse
-                {
-                    AvatarImage = lecturer.AvatarImage,
-                    DateOfBirth = lecturer.DateOfBirth,
-                    Email = lecturer.Email,
-                    FullName = lecturer.FullName,
-                    Gender = lecturer.Gender,
-                    LectureId = lecturer.Id,
-                    Phone = lecturer.Phone,
-                };
-                ClassForAttendance classForAttendance = new ClassForAttendance
-                {
-                    ClassCode = schedule.Class.ClassCode,
-                    ClassId = schedule.Class.Id,
-                    ClassSubject = schedule.Class.Course.CourseCategory.Name,
-                    Method = schedule.Class.Method,
-                    Image = schedule.Class.Image,
-                    EndDate = schedule.Class.EndDate,
-                    CoursePrice = schedule.Class.Course.Price,
-                    CourseId = schedule.Class.Course.Id,
-                    CourseName = schedule.Class.Course.Name,
-                    LeastNumberStudent = schedule.Class.LeastNumberStudent,
-                    LimitNumberStudent = schedule.Class.LimitNumberStudent,
-                    StartDate = schedule.Class.StartDate,
-                    Status = schedule.Class.Status,
-                    Video = schedule.Class.Video,
-                    Schedule = schedule,
-                    Lecturer = response,
-                    AttandanceStatus = attendanceStatus
-                };
-                classForAttendances.Add(classForAttendance);
+                    LecturerResponse response = new LecturerResponse
+                    {
+                        AvatarImage = lecturer.AvatarImage,
+                        DateOfBirth = lecturer.DateOfBirth,
+                        Email = lecturer.Email,
+                        FullName = lecturer.FullName,
+                        Gender = lecturer.Gender,
+                        LectureId = lecturer.Id,
+                        Phone = lecturer.Phone,
+                    };
+                    ClassForAttendance classForAttendance = new ClassForAttendance
+                    {
+                        ClassCode = schedule.Class.ClassCode,
+                        ClassId = schedule.Class.Id,
+                        ClassSubject = schedule.Class.Course.CourseCategory.Name,
+                        Method = schedule.Class.Method,
+                        Image = schedule.Class.Image,
+                        EndDate = schedule.Class.EndDate,
+                        CoursePrice = schedule.Class.Course.Price,
+                        CourseId = schedule.Class.Course.Id,
+                        CourseName = schedule.Class.Course.Name,
+                        LeastNumberStudent = schedule.Class.LeastNumberStudent,
+                        LimitNumberStudent = schedule.Class.LimitNumberStudent,
+                        StartDate = schedule.Class.StartDate,
+                        Status = schedule.Class.Status,
+                        Video = schedule.Class.Video,
+                        Schedule = schedule,
+                        Lecturer = response,
+                        AttandanceStatus = attendanceStatus
+                    };
+                    classForAttendances.Add(classForAttendance);
+                }     
+              
             }
             if (searchString != null)
             {
@@ -940,6 +944,23 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex}]", StatusCodes.Status400BadRequest);
             }
+        }
+
+        public async Task<bool> CancelClass(string classId)
+        {
+            var classFound = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()));    
+            if (classFound == null) 
+            {
+                throw new BadHttpRequestException("không thể tìm ra lớp có id như vậy", StatusCodes.Status400BadRequest);
+            }
+            if(!classFound.Status.Equals(ClassStatusEnum.UPCOMING.ToString())) 
+            {
+                throw new BadHttpRequestException("chỉ có thể hủy class với status là upcoming", StatusCodes.Status400BadRequest);
+            }
+            classFound.Status = ClassStatusEnum.CANCELED.ToString();
+            _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
+            var isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return isSuccess;
         }
     }
 }
