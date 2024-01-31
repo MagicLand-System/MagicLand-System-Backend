@@ -3,7 +3,6 @@
     public class ClassResponse
     {
         public Guid ClassId { get; set; }
-        public string? Name { get; set; }
         public string? ClassCode { get; set; }
         public string? ClassSubject { get; set; }
         public Guid CourseId { get; set; }

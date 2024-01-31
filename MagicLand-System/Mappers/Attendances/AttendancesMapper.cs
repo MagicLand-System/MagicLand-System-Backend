@@ -16,7 +16,6 @@ namespace MagicLand_System.Mappers.Attendances
             CreateMap<Class, AttendanceWithClassResponse>()
               .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
               .ForMember(dest => dest.ClassCode, opt => opt.MapFrom(src => src.ClassCode))
-              .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Name))
               .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
               .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => src.Schedules.Select(sc => 
               ScheduleCustomMapper.fromClassScheduleToScheduleWithAttendanceResponse(sc)).ToList()));

@@ -2,6 +2,7 @@
 public class StudentScheduleResponse
 {
     public required string StudentName { get; set; }
+    public required string ClassCode { get; set; }
     public int DayOfWeek { get; set; }
     public DateTime Date { get; set; }
     public string? StartTime { get; set; }
@@ -12,7 +13,6 @@ public class StudentScheduleResponse
     public string? Method { get; set; }
     public string? AttendanceStatus { get; set; }
     public string? LecturerName { get; set; }
-    public string? ClassName { get; set; }
     public string? Status { get; set; }
 
 }

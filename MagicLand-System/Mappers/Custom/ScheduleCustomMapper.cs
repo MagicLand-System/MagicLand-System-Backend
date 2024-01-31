@@ -10,6 +10,28 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class ScheduleCustomMapper
     {
+
+        public static List<DailySchedule> fromScheduleToDailyScheduleList (List<Schedule> schedules)
+        {
+            if (schedules == null)
+            {
+                return new List<DailySchedule>();
+            }
+
+            var responses = new List<DailySchedule>();
+            foreach(var schedule in schedules )
+            {
+                responses.Add(new DailySchedule
+                {
+                    DayOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                    StartTime = schedule.Slot!.StartTime,
+                    EndTime = schedule.Slot!.EndTime,
+                });
+            }
+
+            return responses;
+        }
+
         public static List<LectureScheduleResponse> fromClassToListLectureScheduleResponse(Class cls)
         {
             var responses = new List<LectureScheduleResponse>();
@@ -19,7 +41,6 @@ namespace MagicLand_System.Mappers.Custom
                 var response = new LectureScheduleResponse
                 {
                     ClassId = cls.Id,
-                    ClassName = cls.Name!,
                     ClassCode = cls.ClassCode!,
                     Method = cls.Method!,
                     DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
@@ -108,7 +129,6 @@ namespace MagicLand_System.Mappers.Custom
             OpeningScheduleResponse response = new OpeningScheduleResponse
             {
                 ClassId = cls.Id,
-                ClassName = cls.Name,
                 Schedule = string.Join("-",
                 WeekdayNumbers.Select(wdn => DateTimeHelper.ConvertDateNumberToDayweek(wdn)).ToList()),
                 Slot = string.Join(" / ", slotInListString),

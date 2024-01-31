@@ -58,7 +58,6 @@ namespace MagicLand_System.Services.Implements
                         LeastNumberStudent = classx.LeastNumberStudent,
                         LimitNumberStudent = classx.LimitNumberStudent,
                         Image = classx.Image,
-                        Name = classx.Name,
                         EndDate = classx.EndDate,
                         Method = classx.Method,
                         StartDate = classx.StartDate,

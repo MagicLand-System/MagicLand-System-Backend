@@ -3,8 +3,9 @@
     public enum ClassStatusEnum 
     {
         UPCOMING,
-        COMPLETED,
+        LOCKED,
         PROGRESSING,
+        COMPLETED,
         CANCELED,
     }
 }

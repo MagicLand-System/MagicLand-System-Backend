@@ -47,6 +47,30 @@ namespace MagicLand_System.Mappers.Classes
                 src.Course!.CourseSyllabus != null
                 ? src.Course.CourseSyllabus.Topics.ToList()
                 : new List<Topic>())));
+
+
+            CreateMap<Class, ClassWithDailyScheduleRes>()
+               .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
+               .ForMember(dest => dest.ClassCode, opt => opt.MapFrom(src => src.ClassCode))
+               .ForMember(dest => dest.CourseId, opt => opt.MapFrom(src => src.CourseId))
+               .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
+               .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate))
+               .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image))
+               .ForMember(dest => dest.Video, opt => opt.MapFrom(src => src.Video))
+               .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
+               .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.CourseCategory.Name))
+               .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
+               .ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
+               .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassEnum.ONLINE.ToString())
+               ? ClassEnum.ONLINE.ToString()
+               : ClassEnum.OFFLINE.ToString()))
+               .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
+               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
+               .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
+               .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToDailyScheduleList(src.Schedules.ToList())));
+
+
         }
     }
 }

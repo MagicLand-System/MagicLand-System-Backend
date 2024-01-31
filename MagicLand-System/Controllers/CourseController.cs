@@ -32,10 +32,9 @@ namespace MagicLand_System.Controllers
 
         #region document API Search Courses
         /// <summary>
-        ///  Truy Suất Khóa Học Theo Tên Hoặc Ngày Khởi Tạo
+        ///  Truy Suất Khóa Học Theo Tên
         /// </summary>
         /// <param name="keyWord">Từ Khóa</param>
-        /// <param name="addedDate">Ngày Khởi Tạo</param>
         /// <remarks>
         /// Sample request:
         ///
@@ -50,9 +49,9 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.SearchCourse)]
         [AllowAnonymous]
-        public async Task<IActionResult> SearchCourse([FromQuery] string keyWord, [FromQuery] DateTime? addedDate)
+        public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
-            List<PayLoad.Response.Courses.CourseResExtraInfor> courseResExtraInfors = await _courseService.SearchCourseByNameOrAddedDateAsync(keyWord, addedDate);
+            List<PayLoad.Response.Courses.CourseResExtraInfor> courseResExtraInfors = await _courseService.SearchCourseByNameOrAddedDateAsync(keyWord);
             var courses = courseResExtraInfors;
             return Ok(courses);
         }

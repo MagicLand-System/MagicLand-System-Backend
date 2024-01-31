@@ -186,7 +186,7 @@ namespace MagicLand_System.Services.Implements
                     Discount = discountEachItem,
                     Type = TransactionTypeEnum.Payment.ToString(),
                     Method = TransactionMethodEnum.SystemWallet.ToString(),
-                    Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.Name}",
+                    Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
                     CreateTime = DateTime.Now,
                     PersonalWalletId = personalWallet.Id,
                     PersonalWallet = personalWallet,
@@ -211,7 +211,7 @@ namespace MagicLand_System.Services.Implements
 
                 await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentAttendanceList);
 
-                string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.Name}]";
+                string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.ClassCode}]";
                 messageList.Add(message);
             }
 
@@ -243,7 +243,7 @@ namespace MagicLand_System.Services.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.Name}]" + ex.InnerException!.ToString());
+                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.ClassCode}]" + ex.InnerException!.ToString());
             }
         }
 
@@ -267,7 +267,7 @@ namespace MagicLand_System.Services.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.Name}]" + ex.InnerException!.ToString());
+                throw new Exception($"Lỗi Hệ Thống Phát Sinh Khi Sử Lý Thanh Toán Lớp [{cls.ClassCode}]" + ex.InnerException!.ToString());
             }
         }
 
@@ -347,14 +347,14 @@ namespace MagicLand_System.Services.Implements
 
                 if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
-                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
                 }
 
                 int age = DateTime.Now.Year - student.DateOfBirth.Year;
 
                 if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
                 {
-                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
                 }
 
                 await ValidateCoursePrerequisite(student, cls);
@@ -362,7 +362,7 @@ namespace MagicLand_System.Services.Implements
 
             if (cls.StudentClasses.Count() + studentIds.Count() > cls.LimitNumberStudent)
             {
-                throw new BadHttpRequestException($"Lớp [{cls.Name}] Đã Đủ Chỉ Số", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lớp [{cls.ClassCode}] Đã Đủ Chỉ Số", StatusCodes.Status400BadRequest);
             }
         }
 
@@ -406,13 +406,13 @@ namespace MagicLand_System.Services.Implements
                 if (courseNotSatisfied?.Any() ?? false)
                 {
                     throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
-                        $"[ {string.Join(", ", courseNotSatisfied.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
+                        $"[ {string.Join(", ", courseNotSatisfied.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
                 }
             }
             else
             {
                 throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
-                       $"[ {string.Join(", ", courseRequiredList.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
+                       $"[ {string.Join(", ", courseRequiredList.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
             }
 
         }
@@ -475,8 +475,8 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (ass.Date == s.Date && ass.StartTime == s.Slot!.StartTime)
                         {
-                            throw new BadHttpRequestException($"Lịch Lớp Đang Học Hiên Tại [{ass.ClassName}] Của Học Sinh [{ass.StudentName}] Bị Trùng Thời Gian Bắt Đầu [{s.Slot.StartTime}]" +
-                                $" Với Lịch Của Lớp [{cls.Name}]", StatusCodes.Status400BadRequest);
+                            throw new BadHttpRequestException($"Lịch Lớp Đang Học Hiên Tại [{ass.ClassCode}] Của Học Sinh [{ass.StudentName}] Bị Trùng Thời Gian Bắt Đầu [{s.Slot.StartTime}]" +
+                                $" Với Lịch Của Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
                         }
                     }
                 }
@@ -771,7 +771,7 @@ namespace MagicLand_System.Services.Implements
                         Discount = discountEachItem,
                         Type = TransactionTypeEnum.Payment.ToString(),
                         Method = TransactionMethodEnum.Vnpay.ToString(),
-                        Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.Name}",
+                        Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
                         CreateTime = DateTime.Now,
                         PersonalWalletId = currentPayer.PersonalWalletId!.Value,
                         CreateBy = currentPayer.FullName,

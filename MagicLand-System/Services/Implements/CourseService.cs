@@ -104,7 +104,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        public async Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord, DateTime? addedDate)
+        public async Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord)
         {
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
@@ -119,11 +119,6 @@ namespace MagicLand_System.Services.Implements
             .Include(x => x.CourseSyllabus)
             .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
             .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
-
-            if(addedDate != null || addedDate != default)
-            {
-                courses = courses.Where(c => c.AddedDate == addedDate).ToList();
-            }
 
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);

@@ -63,6 +63,7 @@ namespace MagicLand_System.Mappers.Custom
                 CourseName = course.Name,
                 MinAgeStudent = course.MinYearOldsStudent.ToString(),
                 MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
+                AddedDate = course.AddedDate,
                 Subject = course.CourseCategory.Name,
                 Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
                 NumberOfSession = course.NumberOfSession,

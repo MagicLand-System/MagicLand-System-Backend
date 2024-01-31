@@ -291,7 +291,6 @@ namespace MagicLand_System.Services.Implements
                     Image = c.Image,
                     LeastNumberStudent = c.LeastNumberStudent,
                     Method = c.Method,
-                    Name = c.Name,
                     StartDate = c.StartDate,
                     Status = c.Status,
                     Video = c.Video,
@@ -360,8 +359,7 @@ namespace MagicLand_System.Services.Implements
                     ? classes
                     : classes.Where(c => keyWords.Any(k =>
                     (k != null) &&
-                    (c.Name!.ToLower().Contains(k.ToLower()) ||
-                    c.ClassCode!.ToLower().Contains(k.ToLower()) ||
+                    (c.ClassCode!.ToLower().Contains(k.ToLower()) ||
                     c.StartDate.ToString().ToLower().Contains(k.ToLower()) ||
                     c.EndDate.ToString().ToLower().Contains(k.ToLower()) ||
                     c.Method!.ToString().ToLower().Contains(k.ToLower()) ||
@@ -670,11 +668,11 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (classes[defaultIndex].Id == classes[browserIndex].Id)
                         {
-                            throw new BadHttpRequestException($"Bạn Đang Đăng Ký Lớp [{classes[defaultIndex].Name}] Nhiều Hơn 2 Lần", StatusCodes.Status400BadRequest);
+                            throw new BadHttpRequestException($"Bạn Đang Đăng Ký Lớp [{classes[defaultIndex].ClassCode}] Nhiều Hơn 2 Lần", StatusCodes.Status400BadRequest);
                         }
 
-                        throw new BadHttpRequestException($"Lịch Của Lớp [{classes[defaultIndex].Name}] Bị Trùng Thời Gian Bắt Đầu [{ds.Slot.StartTime}]" +
-                        $" Với Lớp [{classes[browserIndex].Name}] Hãy Chọn Lớp Bạn Mong Muốn Đăng Ký Nhất", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Lịch Của Lớp [{classes[defaultIndex].ClassCode}] Bị Trùng Thời Gian Bắt Đầu [{ds.Slot.StartTime}]" +
+                        $" Với Lớp [{classes[browserIndex].ClassCode}] Hãy Chọn Lớp Bạn Mong Muốn Đăng Ký Nhất", StatusCodes.Status400BadRequest);
                     }
                 }
             }
@@ -779,9 +777,9 @@ namespace MagicLand_System.Services.Implements
 
                 if (cls.Status!.Trim() != ClassStatusEnum.PROGRESSING.ToString())
                 {
-                    string errorMessage = cls.Status == ClassStatusEnum.COMPLETED.ToString() ? "Đã Hoàn Thành" : "Sắp Diễn Ra";
+                    string errorMessage = cls.Status == ClassStatusEnum.COMPLETED.ToString() ? "Đã Hoàn Thành" : cls.Status == ClassStatusEnum.CANCELED.ToString() ? "Đã Hủy" : "Sắp Diễn Ra";
 
-                    throw new BadHttpRequestException($"Chỉ Có Thể Truy Suất Danh Sách Điểm Danh Của Các Lớp Học Đang Diễn Ra, Lớp [{cls.Name}] [{errorMessage}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Chỉ Có Thể Truy Suất Danh Sách Điểm Danh Của Các Lớp Học Đang Diễn Ra, Lớp [{cls.ClassCode}] [{errorMessage}]", StatusCodes.Status400BadRequest);
                 }
 
                 cls.Schedules = cls.Schedules.Where(sc => sc.Date == date).ToList();
@@ -791,10 +789,10 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        public async Task<List<ClassResponse>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList)
+        public async Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList)
         {
             var currentClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses));
+               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).Include(x => x.Lecture)!);
 
             if (currentClass == null)
             {
@@ -803,12 +801,18 @@ namespace MagicLand_System.Services.Implements
 
             if (!studentIdList.All(stu => currentClass.StudentClasses.Any(sc => sc.StudentId == stu)))
             {
-                throw new BadHttpRequestException($"Id [{string.Join(", ", studentIdList)}] Của Các Học Sinh Không Thuộc Về Lớp [{currentClass.Name}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{string.Join(", ", studentIdList)}] Của Các Học Sinh Không Thuộc Về Lớp [{currentClass.ClassCode}]", StatusCodes.Status400BadRequest);
             }
 
-            if (currentClass.StudentClasses.Count() >= currentClass.LeastNumberStudent)
+            if (currentClass.Status != ClassStatusEnum.UPCOMING.ToString() && currentClass.Status != ClassStatusEnum.CANCELED.ToString())
             {
-                throw new BadHttpRequestException($"Các Id Yêu Cầu Chuyển Lớp Của Học Sinh Trong Lớp [{currentClass.Name}] Đã Đủ Điều Kiện Để Lớp Bắt Đầu, Không Thể Chuyển Lớp", StatusCodes.Status400BadRequest);
+                string errorMessage = currentClass.Status == ClassStatusEnum.LOCKED.ToString() 
+                    ? "Đã Chốt Số Lượng Học Sinh" 
+                    : currentClass.Status == ClassStatusEnum.COMPLETED.ToString() 
+                    ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
+
+                throw new BadHttpRequestException($"Chỉ Có Thể Chuyển Học Sinh Thuộc Lớp Sắp Bắt Đầu Hoặc Đã Hủy, Lớp [{currentClass.ClassCode}] [{errorMessage}], Không Thể Chuyển Lớp",
+                      StatusCodes.Status400BadRequest);
             }
 
             var classes = new List<Class>();
@@ -834,10 +838,10 @@ namespace MagicLand_System.Services.Implements
 
 
             allCourseClass = allCourseClass
-           .Where(cls => cls.StudentClasses.Count + studentIdList.Count() >= cls.LeastNumberStudent || cls.StudentClasses.Count + studentIdList.Count <= cls.LimitNumberStudent)
+           .Where(cls => cls.StudentClasses.Count + studentIdList.Count <= cls.LimitNumberStudent)
            .Where(cls => cls.Id != currentClass.Id).ToList();
 
-            return allCourseClass.Select(cls => _mapper.Map<ClassResponse>(cls)).ToList();
+            return allCourseClass.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
         }
 
         public async Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList)
@@ -860,6 +864,16 @@ namespace MagicLand_System.Services.Implements
                     throw new BadHttpRequestException($"Id [{toClassId}] Lớp Học Sẽ Chuyển Không Tồn Tại", StatusCodes.Status400BadRequest);
                 }
 
+                if (fromClass.Status == ClassStatusEnum.LOCKED.ToString())
+                {
+                    throw new BadHttpRequestException($"Id [{fromClass}] Lớp Học Cần Chuyển Đã Chốt Danh Sách Học Sinh", StatusCodes.Status400BadRequest);
+                }
+
+                if (toClass.Status == ClassStatusEnum.LOCKED.ToString())
+                {
+                    throw new BadHttpRequestException($"Id [{toClassId}] Lớp Học Sẽ Chuyển Đã Chốt Danh Sách Học Sinh", StatusCodes.Status400BadRequest);
+                }
+
                 if (studentIdList.Any(id => toClass.StudentClasses.Any(sc => sc.StudentId == id)))
                 {
                     throw new BadHttpRequestException($"Yêu Cầu Chuyển Lớp Không Hợp Lệ Một Số Id Của Học Sinh Đã Có Trong Lớp Sẽ Chuyển", StatusCodes.Status400BadRequest);
@@ -877,12 +891,13 @@ namespace MagicLand_System.Services.Implements
 
                     if (toClass.Course!.Id != fromClass.Course!.Id || toClass.Status != ClassStatusEnum.UPCOMING.ToString())
                     {
-                        throw new BadHttpRequestException($"Id [{toClassId}] Lớp Sẽ Chuyển Không Phù Hợp", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Id [{toClassId}] Lớp Sẽ Chuyển Không Thuộc Cùng 1 Khóa Với Lớp Cần Chuyển Hoặc Không Phải Là Lớp Sắp Diễn Ra",
+                            StatusCodes.Status400BadRequest);
                     }
 
-                    if (toClass.StudentClasses.Count + studentIdList.Count < toClass.LeastNumberStudent || toClass.StudentClasses.Count + studentIdList.Count > toClass.LimitNumberStudent)
+                    if (toClass.StudentClasses.Count + studentIdList.Count > toClass.LimitNumberStudent)
                     {
-                        throw new BadHttpRequestException($"Chỉ Số Học Sinh Của Lớp [{toClass.Name}] Không Phù Hợp Để Chuyển", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Số Lượng Học Sinh Của Lớp [{toClass.ClassCode}] Đã Đủ Số Lượng Tối Đa Không Thể Chuyển ", StatusCodes.Status400BadRequest);
                     }
 
                     var currentStudentClasses = student.StudentClasses.Select(sc => sc.Class).ToList();
@@ -898,7 +913,6 @@ namespace MagicLand_System.Services.Implements
                             }
                         }
                     }
-
 
                     var oldAttendances = new List<Attendance>();
                     foreach (var schedule in fromClass.Schedules)
@@ -928,7 +942,10 @@ namespace MagicLand_System.Services.Implements
                     }
 
                     await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendance);
-                    _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAttendances);
+                    if (oldAttendances.Any())
+                    {
+                        _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAttendances);
+                    }
                     _unitOfWork.GetRepository<StudentClass>().UpdateRange(studentClass);
                 }
 

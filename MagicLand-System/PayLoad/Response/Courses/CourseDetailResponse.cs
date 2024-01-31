@@ -8,6 +8,7 @@
         public string? Subject { get; set; } = "Undefined";
         public string? Method { get; set; } = "Online";
         public int? NumberOfSession { get; set; }
+        public DateTime? AddedDate { get; set; }
 
         public List<string>? CoursePrerequisites { get; set; } = new List<string>();
 

@@ -26,7 +26,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime,string? attendanceStatus);
         Task<List<ClassResponse>> GetCurrentLectureClassesAsync();
         Task<List<AttendanceWithClassResponse>> GetAttendanceOfClassesInDateAsync(List<Guid> classIdList, DateTime date);
-        Task<List<ClassResponse>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);
+        Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);
         Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList);
     }
 }

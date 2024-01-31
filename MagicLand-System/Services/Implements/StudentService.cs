@@ -142,6 +142,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     StudentName = student.FullName,
                     Date = schedule.Date,
+                    ClassCode = schedule.Class.ClassCode,
                     DayOfWeek = schedule.DayOfWeek,
                     EndTime = schedule.Slot.EndTime,
                     StartTime = schedule.Slot.StartTime,
@@ -150,7 +151,6 @@ namespace MagicLand_System.Services.Implements
                     RoomInFloor = schedule.Room.Floor,
                     RoomName = schedule.Room.Name,
                     AttendanceStatus = IsPresent == true ? "Có Mặt" : IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
-                    ClassName = schedule.Class.Name,
                     LecturerName = lecturerName,
                 };
                 listStudentSchedule.Add(studentSchedule);
@@ -209,14 +209,14 @@ namespace MagicLand_System.Services.Implements
                 if (classes.Any())
                 {
                     message = $"Xóa Bé [{student.FullName}] Thành Công, " +
-                              $"Hệ Thống Không Hoàn Tiền Lớp [{string.Join(", ", classes.Select(cls => cls.Name).ToList())}] Do Lớp Đã Bắt Đầu";
+                              $"Hệ Thống Không Hoàn Tiền Lớp [{string.Join(", ", classes.Select(cls => cls.ClassCode).ToList())}] Do Lớp Đã Bắt Đầu";
                 }
 
                 classes = await GetClassOfStudent(student.Id.ToString(), ClassStatusEnum.UPCOMING.ToString());
                 if (classes.Any())
                 {
                     message = $"Xóa Bé [{student.FullName}] Thành Công, " +
-                              $"Hệ Thống Đã Hoàn Tiền Lớp [{string.Join(", ", classes.Select(cls => cls.Name).ToList())}] Do Lớp Chưa Bắt Đầu";
+                              $"Hệ Thống Đã Hoàn Tiền Lớp [{string.Join(", ", classes.Select(cls => cls.ClassCode).ToList())}] Do Lớp Chưa Bắt Đầu";
 
                     refundAmount = await AddRefundTransaction(classes, personalWallet);
                 }
@@ -259,7 +259,7 @@ namespace MagicLand_System.Services.Implements
                         if (pair.Key == TransactionAttachValueEnum.ClassId.ToString() && pair.Value[0] == cls.ClassId.ToString())
                         {
                             refundAmount += trans.Money - trans.Discount;
-                            refundTransactions.Add(GenerateRefundTransaction(personalWallet, currentUser.FullName!, refundAmount, cls.Name!, trans.Signature!));
+                            refundTransactions.Add(GenerateRefundTransaction(personalWallet, currentUser.FullName!, refundAmount, cls.ClassCode!, trans.Signature!));
                         }
                     }
                 }
@@ -345,7 +345,7 @@ namespace MagicLand_System.Services.Implements
         {
             if (currentSchedule == null)
             {
-                throw new BadHttpRequestException($"Lớp Học [{cls.Name}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lớp Học [{cls.ClassCode}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
             }
 
             var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id,
@@ -379,7 +379,7 @@ namespace MagicLand_System.Services.Implements
             {
                 string statusError = cls.Status!.ToString().Trim() == ClassStatusEnum.UPCOMING.ToString() ? "Sắp Diễn Ra" : "Đã Hoàn Thành";
 
-                throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.Name}] [{statusError}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.ClassCode}] [{statusError}]", StatusCodes.Status400BadRequest);
             }
 
             if (!cls.Schedules.Any(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()))
@@ -399,7 +399,7 @@ namespace MagicLand_System.Services.Implements
         {
             if (currentSchedule == null)
             {
-                throw new BadHttpRequestException($"Lớp Học [{cls.Name}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lớp Học [{cls.ClassCode}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
             }
 
             var studentNotHaveAttendance = new List<string>();
