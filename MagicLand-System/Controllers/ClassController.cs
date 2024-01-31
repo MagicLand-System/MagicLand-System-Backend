@@ -277,5 +277,20 @@ namespace MagicLand_System.Controllers
             var result = await _classService.GetAllClassForAttandance(searchString,dateTime,attendanceStatus);
             return Ok(result);
         }
+        [HttpPut(ApiEndpointConstant.ClassEnpoint.CancelClass)]
+        public async Task<IActionResult> CancelClass([FromRoute] string classId)
+        {
+            var result = await _classService.CancelClass(classId);
+            if (!result)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "update lỗi",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.UtcNow,
+                });
+            }
+            return Ok("successfully");
+        }
     }
 }   

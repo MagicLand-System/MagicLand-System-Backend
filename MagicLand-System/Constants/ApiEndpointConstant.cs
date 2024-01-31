@@ -46,6 +46,7 @@
             public const string LoadClassForAttandance = GetAll + "/loadClassForAttedance";
             public const string GetStuitableClass = GetAll + "/staff/change/suitable";
             public const string ChangeClass = GetAll + "/staff/change";
+            public const string CancelClass = GetAll + "/cancel/{classId}";
 
         }
         public static class PromotionEnpoint
