@@ -494,10 +494,6 @@ namespace MagicLand_System.Services.Implements
             {
                 return false;
             }
-            if (request.LecturerId != null)
-            {
-                classFound.LecturerId = request.LecturerId.Value;
-            }
             if (request.LeastNumberStudent != null)
             {
                 classFound.LeastNumberStudent = request.LeastNumberStudent.Value;
@@ -514,6 +510,10 @@ namespace MagicLand_System.Services.Implements
             {
                 classFound.CourseId = request.CourseId.Value;
             }
+            if(request.LeastNumberStudent <= request.LimitNumberStudent)
+            {
+                throw new BadHttpRequestException("số lượng tối thiểu phải nhỏ hơn số lượng tối đa",StatusCodes.Status400BadRequest);
+            }
             classFound.Status = "UPCOMING";
             _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
@@ -521,7 +521,7 @@ namespace MagicLand_System.Services.Implements
             {
                 return false;
             }
-            if (request.RoomId != null)
+            if (request.RoomId != null || request.LecturerId != null)
             {
                 var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classFound.Id.ToString()));
                 var filterSchedule = schedules.Where(x => x.Date >= DateTime.Now.AddHours(-23));
@@ -529,7 +529,14 @@ namespace MagicLand_System.Services.Implements
                 {
                     foreach (var schedule in filterSchedule)
                     {
-                        schedule.RoomId = request.RoomId.Value;
+                        if(request.RoomId != null)
+                        {
+                            schedule.RoomId = request.RoomId.Value;
+                        }
+                        if(request.LecturerId != null)
+                        {
+                            schedule.SubLecturerId = request.LecturerId.Value;
+                        }
                         _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
                         var isSuccessful = await _unitOfWork.CommitAsync() > 0;
                         if (!isSuccess)
@@ -552,7 +559,14 @@ namespace MagicLand_System.Services.Implements
             List<ClassProgressResponse> responses = new List<ClassProgressResponse>();
             foreach (var schedule in scheduleFounds)
             {
-                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
+                User lecturer = null;
+                if(schedule.SubLecturerId != null)
+                {
+                     lecturer =  await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.SubLecturerId.ToString()));
+                } else
+                {
+                    lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
+                }
                 UserResponse userResponse = new UserResponse
                 {
                     Email = lecturer.Email,
@@ -977,6 +991,30 @@ namespace MagicLand_System.Services.Implements
             classFound.Status = ClassStatusEnum.CANCELED.ToString();
             _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return isSuccess;
+        }
+
+        public async Task<bool> UpdateSession(string sessionId, UpdateSessionRequest request)
+        {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(sessionId));
+            if (schedule == null)
+            {
+                return false;
+            }
+            if(request.LecturerId != null)
+            {
+                schedule.SubLecturerId = request.LecturerId;
+            }
+            if(request.RoomId != null)
+            {
+                schedule.RoomId = request.RoomId.Value;
+            } 
+            if(request.SlotId != null)
+            {
+                schedule.SlotId = request.SlotId.Value;
+            }
+            _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
         }
     }

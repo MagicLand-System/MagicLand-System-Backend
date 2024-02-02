@@ -9,7 +9,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IWalletTransactionService
     {
-        Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null);
+        Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null,string? transactionCode = null);
         Task<WalletTransactionResponse> GetWalletTransaction(string id);
         Task<BillTopUpResponse?> GenerateBillTopUpTransactionAsync(Guid id);
         Task<BillPaymentResponse?> GenerateBillPaymentTransactionAssync(string txnRefCode);

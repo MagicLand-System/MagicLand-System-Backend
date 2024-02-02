@@ -7,6 +7,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public int DayOfWeek { get; set; }
         public DateTime Date { get; set; }
+        public Guid? SubLecturerId { get; set; } = null;
 
         [ForeignKey("Class")]
         public Guid ClassId { get; set; }

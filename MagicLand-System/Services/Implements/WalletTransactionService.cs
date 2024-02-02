@@ -36,7 +36,7 @@ namespace MagicLand_System.Services.Implements
             return transactions.SingleOrDefault(x => x.TransactionId.ToString().ToLower().Equals(id.ToLower()));
         }
 
-        public async Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<List<WalletTransactionResponse>> GetWalletTransactions(string phone = null, DateTime? startDate = null, DateTime? endDate = null,string? transactionCode = null)
         {
 
             var transactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync( predicate: x => x.Type != TransactionTypeEnum.TopUp.ToString(),
@@ -74,8 +74,8 @@ namespace MagicLand_System.Services.Implements
                 }
                 var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(transaction.PersonalWalletId.ToString()));
                 var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(personalWallet.UserId.ToString()));
-                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
-                var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.CourseId);
+                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()));
+                var courseId = classx.CourseId;
                 var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()), selector: x => x.Name);
                 WalletTransactionResponse response = new WalletTransactionResponse
                 {
@@ -100,12 +100,21 @@ namespace MagicLand_System.Services.Implements
                     Type = transaction.Type,
                     TransactionId = transaction.Id,
                     Students = students,
+                    Status = transaction.Status,
+                    Currency = transaction.Currency,
+                    CreateBy = transaction.CreateBy,
+                    Discount = transaction.Discount,
+                    Signature = transaction.Signature,
                 };
 
                 result.Add(response);
             }
             if (endDate != null) { endDate = endDate.Value.AddHours(23).AddMinutes(59); }
             result = (result.OrderByDescending(x => x.CreatedTime)).ToList();
+            if(transactionCode != null)
+            {
+                result = result.Where(x => x.TransactionCode.Equals(transactionCode)).ToList();
+            }
             if (phone == null && startDate == null && endDate == null)
             {
                 return (result.OrderByDescending(x => x.CreatedTime)).ToList();

@@ -21,9 +21,9 @@ namespace MagicLand_System.Controllers
         }
         [HttpGet(ApiEndpointConstant.WalletTransaction.GetAll)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAll(string? phone, DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> GetAll(string? phone, DateTime? startDate, DateTime? endDate,string? transactionCode)
         {
-            var result = await _walletTransactionService.GetWalletTransactions(phone, startDate, endDate);
+            var result = await _walletTransactionService.GetWalletTransactions(phone, startDate, endDate,transactionCode);
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.WalletTransaction.TransactionById)]

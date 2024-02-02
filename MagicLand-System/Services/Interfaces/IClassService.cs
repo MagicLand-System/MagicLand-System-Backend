@@ -29,5 +29,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);
         Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList);
         Task<bool> CancelClass(string classId); 
+        Task<bool> UpdateSession(string  sessionId,UpdateSessionRequest request);
     }
 }

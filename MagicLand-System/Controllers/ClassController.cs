@@ -292,5 +292,21 @@ namespace MagicLand_System.Controllers
             }
             return Ok("successfully");
         }
+        [HttpPut(ApiEndpointConstant.ClassEnpoint.UpdateSession)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        public async Task<IActionResult> UpdateSession([FromRoute] string id, [FromBody] UpdateSessionRequest request)
+        {
+            var isSuccess = await _classService.UpdateSession(id, request);
+            if (!isSuccess)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    TimeStamp = DateTime.Now,
+                    Error = "không thể insert",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                });
+            }
+            return Ok("success");
+        }
     }
 }   

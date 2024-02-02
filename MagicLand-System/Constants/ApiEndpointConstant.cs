@@ -47,6 +47,7 @@
             public const string GetStuitableClass = GetAll + "/staff/change/suitable";
             public const string ChangeClass = GetAll + "/staff/change";
             public const string CancelClass = GetAll + "/cancel/{classId}";
+            public const string UpdateSession = ClassById + "/updateSession";
 
         }
         public static class PromotionEnpoint
