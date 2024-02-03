@@ -941,6 +941,23 @@
           }
         }
       },
+      "Quartz/3.8.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "2.1.1",
+          "System.Configuration.ConfigurationManager": "6.0.1"
+        },
+        "compile": {
+          "lib/net6.0/Quartz.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Quartz.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/6.5.0": {
         "type": "package",
         "dependencies": {
@@ -1035,7 +1052,7 @@
           "System.Security.Permissions": "6.0.0"
         },
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/System.Configuration.ConfigurationManager.dll": {
             "related": ".xml"
           }
         },
@@ -1216,7 +1233,7 @@
       "System.Security.AccessControl/6.0.0": {
         "type": "package",
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/System.Security.AccessControl.dll": {
             "related": ".xml"
           }
         },
@@ -1311,7 +1328,7 @@
           "System.Windows.Extensions": "6.0.0"
         },
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/System.Security.Permissions.dll": {
             "related": ".xml"
           }
         },
@@ -1438,7 +1455,7 @@
           "System.Drawing.Common": "6.0.0"
         },
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/System.Windows.Extensions.dll": {
             "related": ".xml"
           }
         },
@@ -3109,6 +3126,26 @@
         "nlog.nuspec"
       ]
     },
+    "Quartz/3.8.0": {
+      "sha512": "XYg+O+yw24kNLqp1YyEaZCzpQyVhcLQ5vep61RDKPZFjRNMBfBxcZiHNRFMNuN0XQIQ6zTGTHdZl9h7CuEVvXA==",
+      "type": "package",
+      "path": "quartz/3.8.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net462/Quartz.dll",
+        "lib/net462/Quartz.xml",
+        "lib/net472/Quartz.dll",
+        "lib/net472/Quartz.xml",
+        "lib/net6.0/Quartz.dll",
+        "lib/net6.0/Quartz.xml",
+        "lib/netstandard2.0/Quartz.dll",
+        "lib/netstandard2.0/Quartz.xml",
+        "quartz-logo-small.png",
+        "quartz.3.8.0.nupkg.sha512",
+        "quartz.nuspec"
+      ]
+    },
     "Swashbuckle.AspNetCore/6.5.0": {
       "sha512": "FK05XokgjgwlCI6wCT+D4/abtQkL1X1/B9Oas6uIwHFmYrIO9WUD5aLC9IzMs9GnHfUXOtXZ2S43gN1mhs5+aA==",
       "type": "package",
@@ -4243,27 +4280,28 @@
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets >= 1.18.1",
       "NLog >= 5.2.5",
       "Newtonsoft.Json >= 13.0.3",
+      "Quartz >= 3.8.0",
       "Swashbuckle.AspNetCore >= 6.5.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Thuong\\.nuget\\packages\\": {},
+    "C:\\Users\\Administrator\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "projectUniqueName": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
       "projectName": "MagicLand-System",
-      "projectPath": "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
-      "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-      "outputPath": "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
+      "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
+      "outputPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Thuong\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4272,17 +4310,19 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "C:\\Program Files\\dotnet\\sdk\\7.0.302\\Sdks\\Microsoft.NET.Sdk.Web\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
-              "projectPath": "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
+            "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+              "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
             },
-            "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
-              "projectPath": "D:\\Capstone-310124\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
+            "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
+              "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
             }
           }
         }
@@ -4349,6 +4389,10 @@
             "target": "Package",
             "version": "[13.0.3, )"
           },
+          "Quartz": {
+            "target": "Package",
+            "version": "[3.8.0, )"
+          },
           "Swashbuckle.AspNetCore": {
             "target": "Package",
             "version": "[6.5.0, )"
@@ -4373,7 +4417,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
       }
     }
   }

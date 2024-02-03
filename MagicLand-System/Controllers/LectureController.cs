@@ -131,15 +131,15 @@ namespace MagicLand_System.Controllers
 
         #region document API Get All Class Attendance
         /// <summary>
-        ///  Truy Suất Danh Sách Điểm Danh Các Lớp Của Giáo Viên Hiện Tại Trong Một Ngày Cụ Thể 
+        ///  Truy Suất Danh Sách Điểm Danh Của Một Lớp Của Giáo Viên Hiện Tại Trong Một Ngày Cụ Thể 
         /// </summary>
-        /// <param name="classIdList">Chứa Id Của Các Lớp Học Cần Lấy Danh Sách</param>
+        /// <param name="classId">Chứa Id Của Lớp Học Cần Lấy Danh Sách</param>
         /// <param name="date">Ngày Cần Truy Suất</param>
         /// <remarks>
         /// Sample request:
         ///{     
-        ///   "classIdList":["3c1849af-400c-43ca-979e-58c71ce9301d","a1b2d3se-560s-g23a-345f-a8c71aeff013"],
-        ///   "date":"1/29/2024"
+        ///   "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///   "date":"2024-01-29"
         ///}
         /// </remarks>
         /// <response code="200">Trả Về Danh Sách Điểm Danh Thỏa Mãn | Danh Sách Điểm Danh Rỗng Khi Không Có Lịch Trong Ngày Yêu Cầu Hoặc Lớp Chưa Đủ Chỉ Số</response>
@@ -148,12 +148,12 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.LectureEndPoint.GetClassesAttendanceWithDate)]
-        [ProducesResponseType(typeof(AttendanceWithClassResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ScheduleWithAttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureClasses([FromQuery] List<Guid> classIdList, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetCurrentLetureClasses([FromQuery] Guid classId, [FromQuery] DateTime date)
         {
-            var responses = await _classService.GetAttendanceOfClassesInDateAsync(classIdList, date);
+            var responses = await _classService.GetAttendanceOfClassesInDateAsync(classId, date);
             return Ok(responses);
         }
 

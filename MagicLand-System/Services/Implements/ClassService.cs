@@ -690,7 +690,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
                 var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()));
-                if(attendances != null && attendances.Count > 0)
+                if (attendances != null && attendances.Count > 0)
                 {
                     var attendanceStatus = "NTA";
                     foreach (var attendance in attendances)
@@ -735,8 +735,8 @@ namespace MagicLand_System.Services.Implements
                         AttandanceStatus = attendanceStatus
                     };
                     classForAttendances.Add(classForAttendance);
-                }     
-              
+                }
+
             }
             if (searchString != null)
             {
@@ -763,34 +763,35 @@ namespace MagicLand_System.Services.Implements
             return currentClasses.Select(ccls => _mapper.Map<ClassResponse>(ccls)).ToList();
         }
 
-        public async Task<List<AttendanceWithClassResponse>> GetAttendanceOfClassesInDateAsync(List<Guid> classIdList, DateTime date)
+        public async Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date)
         {
-            var responses = new List<AttendanceWithClassResponse>();
-            foreach (Guid id in classIdList)
+
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Id == classId,
+             include: x => x.Include(x => x.Lecture)
+            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
+            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)
+            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Attendances.Where(att => att.IsPublic == true)).ThenInclude(att => att.Student)!);
+
+            if (cls == null)
             {
-                var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Id == id,
-                 include: x => x.Include(x => x.Lecture)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Attendances.Where(att => att.IsPublic == true)).ThenInclude(att => att.Student)!);
-
-                if (cls == null)
-                {
-                    throw new BadHttpRequestException($"Id [{id}] Lớp Học Không Tồn Tại Hoặc Lớp Học Không Thuộc Phân Công Của Giáo Viên Hiện Tại", StatusCodes.Status400BadRequest);
-                }
-
-                if (cls.Status!.Trim() != ClassStatusEnum.PROGRESSING.ToString())
-                {
-                    string errorMessage = cls.Status == ClassStatusEnum.COMPLETED.ToString() ? "Đã Hoàn Thành" : cls.Status == ClassStatusEnum.CANCELED.ToString() ? "Đã Hủy" : "Sắp Diễn Ra";
-
-                    throw new BadHttpRequestException($"Chỉ Có Thể Truy Suất Danh Sách Điểm Danh Của Các Lớp Học Đang Diễn Ra, Lớp [{cls.ClassCode}] [{errorMessage}]", StatusCodes.Status400BadRequest);
-                }
-
-                cls.Schedules = cls.Schedules.Where(sc => sc.Date == date).ToList();
-                responses.Add(_mapper.Map<AttendanceWithClassResponse>(cls));
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại Hoặc Lớp Học Không Thuộc Phân Công Của Giáo Viên Hiện Tại", StatusCodes.Status400BadRequest);
             }
 
-            return responses;
+            if (cls.Status!.Trim() != ClassStatusEnum.PROGRESSING.ToString())
+            {
+                string errorMessage = cls.Status == ClassStatusEnum.COMPLETED.ToString() ? "Đã Hoàn Thành" : cls.Status == ClassStatusEnum.CANCELED.ToString() ? "Đã Hủy" : "Sắp Diễn Ra";
+
+                throw new BadHttpRequestException($"Chỉ Có Thể Truy Suất Danh Sách Điểm Danh Của Các Lớp Học Đang Diễn Ra, Lớp [{cls.ClassCode}] [{errorMessage}]", StatusCodes.Status400BadRequest);
+            }
+
+            var schedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == date.Date);
+            if(schedule == null)
+            {
+                return new ScheduleWithAttendanceResponse();
+            }
+
+
+            return _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
         }
 
         public async Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList)
@@ -810,9 +811,9 @@ namespace MagicLand_System.Services.Implements
 
             if (currentClass.Status != ClassStatusEnum.UPCOMING.ToString() && currentClass.Status != ClassStatusEnum.CANCELED.ToString())
             {
-                string errorMessage = currentClass.Status == ClassStatusEnum.LOCKED.ToString() 
-                    ? "Đã Chốt Số Lượng Học Sinh" 
-                    : currentClass.Status == ClassStatusEnum.COMPLETED.ToString() 
+                string errorMessage = currentClass.Status == ClassStatusEnum.LOCKED.ToString()
+                    ? "Đã Chốt Số Lượng Học Sinh"
+                    : currentClass.Status == ClassStatusEnum.COMPLETED.ToString()
                     ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
 
                 throw new BadHttpRequestException($"Chỉ Có Thể Chuyển Học Sinh Thuộc Lớp Sắp Bắt Đầu Hoặc Đã Hủy, Lớp [{currentClass.ClassCode}] [{errorMessage}], Không Thể Chuyển Lớp",
@@ -965,12 +966,12 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> CancelClass(string classId)
         {
-            var classFound = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()));    
-            if (classFound == null) 
+            var classFound = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()));
+            if (classFound == null)
             {
                 throw new BadHttpRequestException("không thể tìm ra lớp có id như vậy", StatusCodes.Status400BadRequest);
             }
-            if(!classFound.Status.Equals(ClassStatusEnum.UPCOMING.ToString())) 
+            if (!classFound.Status.Equals(ClassStatusEnum.UPCOMING.ToString()))
             {
                 throw new BadHttpRequestException("chỉ có thể hủy class với status là upcoming", StatusCodes.Status400BadRequest);
             }
