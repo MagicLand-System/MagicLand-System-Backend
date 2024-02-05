@@ -1019,5 +1019,15 @@ namespace MagicLand_System.Services.Implements
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
         }
+
+        public async Task<bool> MakeUpClass(string StudentId, string ScheduleId, MakeupClassRequest request)
+        {
+            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate : x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId))); 
+            if(attendance == null) { return false;}
+            attendance.ScheduleId = Guid.Parse(request.ScheduleId);
+             _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
+            var isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return isSuccess;
+        }
     }
 }

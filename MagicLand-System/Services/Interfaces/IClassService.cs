@@ -30,5 +30,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList);
         Task<bool> CancelClass(string classId); 
         Task<bool> UpdateSession(string  sessionId,UpdateSessionRequest request);
+        Task<bool> MakeUpClass(string StudentId,string ScheduleId,MakeupClassRequest request);
     }
 }
