@@ -641,8 +641,15 @@ namespace MagicLand_System.Services.Implements
                 };
                 responses.Add(progressResponse);
             }
-            responses = responses.OrderByDescending(x => x.Date).ToList();
-            return responses;
+            var responsesx = responses.OrderBy(x => x.Date).ToArray();
+            List<ClassProgressResponse> result = new List<ClassProgressResponse>();
+            for(int i = 0;i < responsesx.Length; i++)
+            {
+                responsesx[i].Index = i +1;
+                result.Add(responsesx[i]);
+            }
+            result = result.OrderBy(x => x.Index).ToList();
+            return result;
         }
 
         public async Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList)
@@ -1015,6 +1022,10 @@ namespace MagicLand_System.Services.Implements
             {
                 schedule.SlotId = request.SlotId.Value;
             }
+            if (request.DateTime != null)
+            {
+                schedule.Date = request.DateTime.Value;
+            }
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
@@ -1029,5 +1040,118 @@ namespace MagicLand_System.Services.Implements
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
         }
-    }
+
+        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId)
+        {
+             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(scheduleId), include : x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
+             if(schedule == null)
+             {
+                return new List<ScheduleResponse>();
+             }
+             var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
+             var scheduleInCourse = allSchedule.Where(x => x.Class.Course.Id.ToString().Equals(schedule.Class.Course.Id.ToString())); 
+             var groupbyId = scheduleInCourse.GroupBy(x => x.Class.Id);  
+             List<Guid> Ids = new List<Guid>();
+             foreach( var group in groupbyId )
+             {
+                Ids.Add(group.Key);
+             }
+            var scheduleClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString())).ToList();
+            var scheduleClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
+            int index = -1;
+            for( int i = 0; i < scheduleClassSort.Length; i++ )
+            {
+                if (scheduleClassSort[i].Date == schedule.Date)
+                {
+                    index = i; break;
+                }
+            }
+            List<Schedule> schedules = new List<Schedule>();
+            foreach(var Id in Ids )
+            {
+                if(Id != schedule.Class.Id)
+                {
+                    var ClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString())).ToList();
+                    var ClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
+                    schedules.Add(ClassSort[index]);
+                }
+            }
+            List<ScheduleResponse> responses = new List<ScheduleResponse>();
+            foreach(var schedulex in schedules)
+            {
+                User lecturer = new User();
+                if (schedulex.SubLecturerId != null)
+                {
+                    lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedulex.SubLecturerId.ToString()));
+                } else
+                {
+                    lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedulex.Class.LecturerId.ToString()));
+                }
+                var dateOfWeek = "monday";
+                if (schedulex.DayOfWeek == 1)
+                {
+                    dateOfWeek = "sunday";
+                }
+                if (schedulex.DayOfWeek == 2)
+                {
+                    dateOfWeek = "monday";
+                }
+                if (schedulex.DayOfWeek == 4)
+                {
+                    dateOfWeek = "tuesday";
+                }
+                if (schedulex.DayOfWeek == 8)
+                {
+                    dateOfWeek = "=wednesday";
+                }
+                if (schedulex.DayOfWeek == 16)
+                {
+                    dateOfWeek = "thursday";
+                }
+                if (schedulex.DayOfWeek == 32)
+                {
+                    dateOfWeek = "friday";
+                }
+                if (schedulex.DayOfWeek == 64)
+                {
+                    dateOfWeek = "saturday";
+                }
+
+                ScheduleResponse scheduleResponse = new ScheduleResponse
+                {
+                    Id = schedulex.Id,
+                    Date = schedulex.Date,
+                    Room = new RoomResponse
+                    {
+                        Capacity = schedulex.Room.Capacity,
+                        Floor = schedulex.Room.Floor.Value,
+                        LinkUrl = schedulex.Room.LinkURL,
+                        Name = schedulex.Room.Name,
+                        RoomId = schedulex.RoomId,
+                        Status = schedulex.Room.Status,
+                    },
+                    Slot = new SlotResponse
+                    {
+                        SlotId = schedulex.SlotId,
+                        EndTime = TimeOnly.Parse(schedulex.Slot.EndTime),
+                        StartTime = TimeOnly.Parse(schedulex.Slot.StartTime),
+                    },
+                    DayOfWeeks = dateOfWeek,
+                    Lecturer = new LecturerResponse
+                    {
+                        AvatarImage = lecturer.AvatarImage,
+                        DateOfBirth = lecturer.DateOfBirth,
+                        Email = lecturer.Email,
+                        FullName = lecturer.FullName,
+                        Gender = lecturer.Gender,
+                        LectureId = lecturer.Id,
+                        Phone = lecturer.Phone,
+                        Role = "Lecturer",
+                    },
+                };
+                responses.Add(scheduleResponse);
+            }
+            return responses;
+        }
+    }       
 }

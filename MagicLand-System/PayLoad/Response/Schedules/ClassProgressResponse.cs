@@ -6,6 +6,7 @@ namespace MagicLand_System.PayLoad.Response.Schedules
 {
     public class ClassProgressResponse
     {
+        public int Index {  get; set; } 
         public Guid Id { get; set; }
         public DateTime Date { get; set; }
         public string Status { get; set; }
