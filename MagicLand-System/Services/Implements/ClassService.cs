@@ -560,10 +560,11 @@ namespace MagicLand_System.Services.Implements
             foreach (var schedule in scheduleFounds)
             {
                 User lecturer = null;
-                if(schedule.SubLecturerId != null)
+                if (schedule.SubLecturerId != null)
                 {
-                     lecturer =  await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.SubLecturerId.ToString()));
-                } else
+                    lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.SubLecturerId.ToString()));
+                }
+                else
                 {
                     lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
                 }
