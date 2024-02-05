@@ -811,7 +811,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList)
         {
             var currentClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).Include(x => x.Lecture)!);
+               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
 
             if (currentClass == null)
             {
@@ -838,7 +838,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (Guid id in studentIdList)
             {
-                var currentStudentClasses = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id != classId && x.StudentClasses.Any(sc => sc.StudentId == id),
+                var currentStudentClasses = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id != classId && x.StudentClasses.Any(sc => sc.StudentId == id) && (x.Status != ClassStatusEnum.COMPLETED.ToString() || x.Status != ClassStatusEnum.CANCELED.ToString()),
                 include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Slot)!);
 
                 if (currentStudentClasses != null)
@@ -849,18 +849,56 @@ namespace MagicLand_System.Services.Implements
 
             var allCourseClass = await _unitOfWork.GetRepository<Class>()
                .GetListAsync(predicate: x => x.CourseId == currentClass.CourseId && x.Status == ClassStatusEnum.UPCOMING.ToString(),
-               include: x => x.Include(x => x.Schedules).Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
+               include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
+               .Include(x => x.Lecture)
+               .Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
                .Include(x => x.StudentClasses));
 
-            var suitableClasses = classes.SelectMany(currCls => currCls.Schedules.SelectMany(schedule =>
-                                  allCourseClass.Where(courCls => !courCls.Schedules.Any(courSchedule => schedule.Slot!.StartTime == courSchedule.Slot!.StartTime)))).ToList();
+            //var suitableClasses = allCourseClass.Where(courCls =>
+            //    !courCls.Schedules.Any(courSchedule =>
+            //        classes.Any(currCls =>
+            //            currCls.Schedules.Any(schedule =>
+            //                schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
+            //    .ToList();
+            var suitableClasses = new List<Class>();
+
+            foreach (var courCls in allCourseClass)
+            {
+                bool hasOverlap = false;
+
+                foreach (var courSchedule in courCls.Schedules)
+                {
+                    foreach (var currCls in classes)
+                    {
+                        foreach (var schedule in currCls.Schedules)
+                        {
+                            if (schedule.Slot?.StartTime == courSchedule.Slot?.StartTime)
+                            {
+                                hasOverlap = true;
+                                break; // No need to check further, as we found an overlap
+                            }
+                        }
+
+                        if (hasOverlap)
+                            break; // No need to check further, as we found an overlap
+                    }
+
+                    if (hasOverlap)
+                        break; // No need to check further, as we found an overlap
+                }
+
+                if (!hasOverlap)
+                    suitableClasses.Add(courCls);
+            }
+
+            // Now, 'suitableClasses' contains the classes from 'allCourseClass' with non-overlapping schedules.
 
 
-            allCourseClass = allCourseClass
+            suitableClasses = suitableClasses
            .Where(cls => cls.StudentClasses.Count + studentIdList.Count <= cls.LimitNumberStudent)
            .Where(cls => cls.Id != currentClass.Id).ToList();
 
-            return allCourseClass.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+            return suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
         }
 
         public async Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList)

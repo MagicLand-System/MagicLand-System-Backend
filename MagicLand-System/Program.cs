@@ -7,10 +7,14 @@ using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Services.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Quartz;
+using Quartz.Impl;
+using Quartz.Spi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Text;
@@ -107,8 +111,19 @@ builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>();
 builder.Services.AddScoped<IPersonalWalletService, PersonalWalletService>();
 builder.Services.AddScoped<ISyllabusService, SyllabusService>();
-//builder.Services.AddScoped<BackgroundService, SystemService>();
-builder.Services.AddSingleton<QuartzConfig>();
+
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddEventLog();
+
+//builder.Services.AddScoped<MyJob>();
+//builder.Services.AddHostedService<QuartzScheduler>();
+//builder.Services.AddSingleton<IJobFactory, SystemService>();
+//builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+//builder.Services.AddSingleton<DailyUpdateJob>();
+//builder.Services.AddSingleton(new MyJob(type: typeof(DailyUpdateJob), expression: "0/30 0/1 * 1/1 * ? *"));
+
+builder.Services.AddScoped<ILogger<DailyUpdateJob>, Logger<DailyUpdateJob>>();
 
 var app = builder.Build();
 

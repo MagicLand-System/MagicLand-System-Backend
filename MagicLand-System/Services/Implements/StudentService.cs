@@ -314,6 +314,11 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request, SlotEnum slot)
         {
+            if(slot == SlotEnum.Default)
+            {
+                slot = SlotEnum.Slot1;
+            }
+
             var cls = await CheckingCurrentClass(request.ClassId, slot);
 
             var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim());
@@ -331,7 +336,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId)
         {
-            var cls = await CheckingCurrentClass(classId, 0);
+            var cls = await CheckingCurrentClass(classId, SlotEnum.Default);
 
             var schedules = cls.Schedules;
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
@@ -369,7 +374,6 @@ namespace MagicLand_System.Services.Implements
             .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
 
-
             if (cls == null)
             {
                 throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Không Tồn Tại Hoặc Lớp Học Không Có Lịch Học", StatusCodes.Status400BadRequest);
@@ -382,7 +386,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.ClassCode}] [{statusError}]", StatusCodes.Status400BadRequest);
             }
 
-            if (!cls.Schedules.Any(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()))
+            if (slot != SlotEnum.Default && (!cls.Schedules.Any(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim())))
             {
                 throw new BadHttpRequestException($"Lớp Học Không Có Lịch Điểm Danh Slot [{slot}] ", StatusCodes.Status400BadRequest);
             }
@@ -449,7 +453,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentStatisticResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time)
         {
-            if(time == PeriodTimeEnum.Default)
+            if (time == PeriodTimeEnum.Default)
             {
                 time = PeriodTimeEnum.Week;
             }

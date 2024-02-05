@@ -3,52 +3,72 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Quartz;
+using Quartz.Spi;
 
 namespace MagicLand_System.Services.System
 {
-    public class SystemService : BackgroundService
+    //public class SystemService : BackgroundService
+    //{
+    //    private readonly ILogger<SystemService> _logger;
+    //    private readonly IScheduler _scheduler;
+
+    //    public SystemService(ILogger<SystemService> logger, IScheduler scheduler)
+    //    {
+    //        _logger = logger;
+    //        _scheduler = scheduler;
+    //    }
+
+    //    public override Task StartAsync(CancellationToken cancellationToken)
+    //    {
+    //        _logger.LogInformation("System service is starting.");
+
+    //        var job = JobBuilder.Create<DailyUpdateJob>()
+    //            .WithIdentity("dailyJob", "group1")
+    //            .Build();
+
+    //        var trigger = TriggerBuilder.Create()
+    //            .WithIdentity("dailyTrigger", "group1")
+    //            .WithDailyTimeIntervalSchedule(s =>
+    //                s.OnEveryDay()
+    //                 .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(0, 0)) 
+    //            )
+    //            .Build();
+
+    //        _scheduler.ScheduleJob(job, trigger);
+    //        _scheduler.Start();
+
+    //        return base.StartAsync(cancellationToken);
+    //    }
+
+    //    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    //    {
+    //        while (!stoppingToken.IsCancellationRequested)
+    //        {
+    //            _logger.LogInformation("Performing a background task...");
+
+
+    //            await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
+    //        }
+    //    }
+    //}
+
+    public class SystemService : IJobFactory
     {
-        private readonly ILogger<SystemService> _logger;
-        private readonly IScheduler _scheduler;
+        private readonly IServiceProvider _serviceProvider;
 
-        public SystemService(ILogger<SystemService> logger, IScheduler scheduler)
+        public SystemService(IServiceProvider serviceProvider)
         {
-            _logger = logger;
-            _scheduler = scheduler;
+            _serviceProvider = serviceProvider;
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
-            _logger.LogInformation("System service is starting.");
-
-            var job = JobBuilder.Create<DailyUpdateJob>()
-                .WithIdentity("dailyJob", "group1")
-                .Build();
-
-            var trigger = TriggerBuilder.Create()
-                .WithIdentity("dailyTrigger", "group1")
-                .WithDailyTimeIntervalSchedule(s =>
-                    s.OnEveryDay()
-                     .StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(0, 0))  // Set the start time to midnight
-                )
-                .Build();
-
-            _scheduler.ScheduleJob(job, trigger);
-            _scheduler.Start();
-
-            return base.StartAsync(cancellationToken);
+            return _serviceProvider!.GetRequiredService(bundle!.JobDetail!.JobType!)! as IJob;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public void ReturnJob(IJob job)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogInformation("Performing a background task...");
-
-                // Your logic goes here
-
-                await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
-            }
+            throw new NotImplementedException();
         }
     }
 }

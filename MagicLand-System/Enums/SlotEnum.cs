@@ -4,6 +4,8 @@ namespace MagicLand_System.Enums
 {
     public enum SlotEnum
     {
+        [Description("00:00")]
+        Default,
         [Description("7:00")]
         Slot1,
         [Description("9:15")]
