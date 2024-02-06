@@ -854,44 +854,44 @@ namespace MagicLand_System.Services.Implements
                .Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
                .Include(x => x.StudentClasses));
 
-            //var suitableClasses = allCourseClass.Where(courCls =>
-            //    !courCls.Schedules.Any(courSchedule =>
-            //        classes.Any(currCls =>
-            //            currCls.Schedules.Any(schedule =>
-            //                schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
-            //    .ToList();
-            var suitableClasses = new List<Class>();
+            var suitableClasses = allCourseClass.Where(courCls =>
+                !courCls.Schedules.Any(courSchedule =>
+                    classes.Any(currCls =>
+                        currCls.Schedules.Any(schedule =>
+                            schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
+                .ToList();
+            //var suitableClasses = new List<Class>();
 
-            foreach (var courCls in allCourseClass)
-            {
-                bool hasOverlap = false;
+            //foreach (var courCls in allCourseClass)
+            //{
+            //    bool hasOverlap = false;
 
-                foreach (var courSchedule in courCls.Schedules)
-                {
-                    foreach (var currCls in classes)
-                    {
-                        foreach (var schedule in currCls.Schedules)
-                        {
-                            if (schedule.Slot?.StartTime == courSchedule.Slot?.StartTime)
-                            {
-                                hasOverlap = true;
-                                break; // No need to check further, as we found an overlap
-                            }
-                        }
+            //    foreach (var courSchedule in courCls.Schedules)
+            //    {
+            //        foreach (var currCls in classes)
+            //        {
+            //            foreach (var schedule in currCls.Schedules)
+            //            {
+            //                if (schedule.Slot?.StartTime == courSchedule.Slot?.StartTime)
+            //                {
+            //                    hasOverlap = true;
+            //                    break; // No need to check further, as we found an overlap
+            //                }
+            //            }
 
-                        if (hasOverlap)
-                            break; // No need to check further, as we found an overlap
-                    }
+            //            if (hasOverlap)
+            //                break; // No need to check further, as we found an overlap
+            //        }
 
-                    if (hasOverlap)
-                        break; // No need to check further, as we found an overlap
-                }
+            //        if (hasOverlap)
+            //            break; // No need to check further, as we found an overlap
+            //    }
 
-                if (!hasOverlap)
-                    suitableClasses.Add(courCls);
-            }
+            //    if (!hasOverlap)
+            //        suitableClasses.Add(courCls);
+            //}
 
-            // Now, 'suitableClasses' contains the classes from 'allCourseClass' with non-overlapping schedules.
+
 
 
             suitableClasses = suitableClasses

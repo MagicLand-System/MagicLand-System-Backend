@@ -1,6 +1,5 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Services.Interfaces;
@@ -22,9 +21,9 @@ namespace MagicLand_System.Controllers
         }
         [HttpGet(ApiEndpointConstant.WalletTransaction.GetAll)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAll(string? phone, DateTime? startDate, DateTime? endDate,string? transactionCode)
+        public async Task<IActionResult> GetAll(string? phone, DateTime? startDate, DateTime? endDate, string? transactionCode)
         {
-            var result = await _walletTransactionService.GetWalletTransactions(phone, startDate, endDate,transactionCode);
+            var result = await _walletTransactionService.GetWalletTransactions(phone, startDate, endDate, transactionCode);
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.WalletTransaction.TransactionById)]

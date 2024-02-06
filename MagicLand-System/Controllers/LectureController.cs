@@ -13,6 +13,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Response.Classes;
 using Microsoft.AspNetCore.Http.HttpResults;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.Background.BackgroundServiceInterfaces;
 
 namespace MagicLand_System.Controllers
 {

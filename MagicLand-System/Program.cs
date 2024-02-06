@@ -1,15 +1,14 @@
-using AutoMapper;
+using MagicLand_System.Background;
+using MagicLand_System.Background.BackgroundServiceImplements;
+using MagicLand_System.Background.BackgroundServiceInterfaces;
 using MagicLand_System.Config;
 using MagicLand_System.Domain;
-using MagicLand_System.Mappers.Schedules;
 using MagicLand_System.Middlewares;
 using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
-using MagicLand_System.Services.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Quartz;
@@ -112,22 +111,18 @@ builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>(
 builder.Services.AddScoped<IPersonalWalletService, PersonalWalletService>();
 builder.Services.AddScoped<ISyllabusService, SyllabusService>();
 
+var quartzJobs = builder.Configuration.GetSection("QuartzJobs").GetChildren();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Logging.AddEventLog();
-
-//builder.Services.AddScoped<MyJob>();
-//builder.Services.AddHostedService<QuartzScheduler>();
-//builder.Services.AddSingleton<IJobFactory, SystemService>();
-//builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
-//builder.Services.AddSingleton<DailyUpdateJob>();
-//builder.Services.AddSingleton(new MyJob(type: typeof(DailyUpdateJob), expression: "0/30 0/1 * 1/1 * ? *"));
-
-builder.Services.AddScoped<ILogger<DailyUpdateJob>, Logger<DailyUpdateJob>>();
+builder.Services.AddScoped<IClassBackroundService, ClassBackgroundService>();
+builder.Services.AddHostedService<QuartzScheduler>();
+builder.Services.AddSingleton<IJobFactory, JobFactoryService>();
+builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+builder.Services.AddScoped<DailyUpdateJob>();
+builder.Services.AddSingleton(new Job(type: typeof(DailyUpdateJob), expression: DetermineCronExpression(quartzJobs, "DailyUpdateJob")));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -150,3 +145,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+string DetermineCronExpression(IEnumerable<IConfigurationSection> quartzJobs, string jobName)
+{
+    var selectedJob = quartzJobs.FirstOrDefault(job => job["JobName"] == jobName);
+    return selectedJob?["CronExpression"] ?? "0/30 * * * * ?";
+}
