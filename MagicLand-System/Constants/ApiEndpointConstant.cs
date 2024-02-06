@@ -48,7 +48,8 @@
             public const string ChangeClass = GetAll + "/staff/change";
             public const string CancelClass = GetAll + "/cancel/{classId}";
             public const string UpdateSession = ClassById + "/updateSession";
-
+            public const string MakeUpClass = GetAll + "/{studentId}" + "/{scheduleId}/makeup";
+            public const string GetMakeUpClass = GetAll + "/getMakeUpSchedule";
         }
         public static class PromotionEnpoint
         {

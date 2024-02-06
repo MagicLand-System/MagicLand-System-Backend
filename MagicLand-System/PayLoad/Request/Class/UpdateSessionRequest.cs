@@ -5,5 +5,6 @@
         public Guid? RoomId { get; set; }
         public Guid? LecturerId { get; set; }
         public Guid? SlotId { get; set;}
+        public DateTime? DateTime { get; set;}
     }
 }

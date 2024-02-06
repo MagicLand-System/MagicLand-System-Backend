@@ -110,28 +110,29 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("StudentId is not exist", StatusCodes.Status400BadRequest);
             }
-            var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
-            if (listClassInstance == null)
+            var scheduleIdList = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(student.Id.ToString()), selector: x => x.ScheduleId);
+            //var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
+            if (scheduleIdList == null)
             {
                 return new List<StudentScheduleResponse>();
             }
-            var sessionIds = new List<Guid>();
-            foreach (var classInstance in listClassInstance)
-            {
-                sessionIds.Add(classInstance.Class.Id);
-            }
-            if (sessionIds.Count == 0)
-            {
-                //throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
-                return new List<StudentScheduleResponse>();
-            }
+            //var sessionIds = new List<Guid>();
+            //foreach (var classInstance in listClassInstance)
+            //{
+            //    sessionIds.Add(classInstance.Class.Id);
+            //}
+            //if (sessionIds.Count == 0)
+            //{
+            //    //throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
+            //    return new List<StudentScheduleResponse>();
+            //}
             var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class));
             var listStudentSchedule = new List<StudentScheduleResponse>();
             StudentScheduleResponse studentSchedule = null;
             List<Schedule> scheduleList = new List<Schedule>();
-            foreach (var Id in sessionIds)
+            foreach (var Id in scheduleIdList)
             {
-                var listResult = (schedules.Where(s => s.ClassId == Id)).ToList();
+                var listResult = (schedules.Where(s => s.Id == Id)).ToList();
                 scheduleList.AddRange(listResult);
             }
             foreach (var schedule in scheduleList)

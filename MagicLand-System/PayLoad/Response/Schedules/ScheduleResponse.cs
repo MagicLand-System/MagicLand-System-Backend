@@ -6,10 +6,12 @@ namespace MagicLand_System.PayLoad.Response.Schedules
 {
     public class ScheduleResponse
     {
+        public Guid? Id { get; set; }
         public string? DayOfWeeks { get; set; }
         public DateTime Date { get; set; }
         
         public SlotResponse Slot { get; set; } = new SlotResponse();
         public RoomResponse Room { get; set; } = new RoomResponse();
+        public LecturerResponse? Lecturer { get; set; }
     }
 }

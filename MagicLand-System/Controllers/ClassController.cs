@@ -308,5 +308,27 @@ namespace MagicLand_System.Controllers
             }
             return Ok("success");
         }
+        [HttpPut(ApiEndpointConstant.ClassEnpoint.MakeUpClass)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        public async Task<IActionResult> MakeUpClass([FromRoute] string studentId, [FromRoute] string scheduleId, [FromBody] MakeupClassRequest request)
+        {
+            var isSuccess = await _classService.MakeUpClass(studentId, scheduleId, request);
+            if (!isSuccess)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    TimeStamp = DateTime.Now,
+                    Error = "không thể update",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                });
+            }
+            return Ok("success");
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetMakeUpClass)]
+        public async Task<IActionResult> GetMakeUpClass(string scheduleId)
+        {
+            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId);
+            return Ok(isSuccess);
+        }
     }
 }   
