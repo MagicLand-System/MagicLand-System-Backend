@@ -13,5 +13,7 @@ namespace MagicLand_System.PayLoad.Response.Schedules
         public SlotResponse Slot { get; set; } = new SlotResponse();
         public RoomResponse Room { get; set; } = new RoomResponse();
         public LecturerResponse? Lecturer { get; set; }
+        public string? ClassCode {  get; set; }
+        public string? Method { get; set;}
     }
 }

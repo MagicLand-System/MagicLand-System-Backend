@@ -15,6 +15,7 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Net.WebSockets;
 
 namespace MagicLand_System.Services.Implements
@@ -906,7 +907,53 @@ namespace MagicLand_System.Services.Implements
            .Where(cls => cls.StudentClasses.Count + studentIdList.Count <= cls.LimitNumberStudent)
            .Where(cls => cls.Id != currentClass.Id).ToList();
 
-            return suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+            var suitableClassesx =  suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+            List<ClassWithDailyScheduleRes> res = new List<ClassWithDailyScheduleRes>();
+            foreach (var suitableClass in suitableClassesx)
+            {
+                var groupBy = from schedule in suitableClass.Schedules
+                              group schedule by new { schedule.DayOfWeek, schedule.StartTime, schedule.EndTime } into grouped
+                              select new DailySchedule
+                              {
+                                  DayOfWeek = grouped.Key.DayOfWeek,
+                                  StartTime = grouped.Key.StartTime,
+                                  EndTime = grouped.Key.EndTime,
+                              };
+                foreach(var sch in groupBy)
+                {
+                    if (sch.DayOfWeek.Equals("Sunday"))
+                    {
+                        sch.DayOfWeek = "Chủ Nhật";
+                    }
+                    if (sch.DayOfWeek.Equals("Monday"))
+                    {
+                        sch.DayOfWeek = "Thứ Hai";
+                    }
+                    if (sch.DayOfWeek.Equals("Tuesday"))
+                    {
+                        sch.DayOfWeek = "Thứ Ba";
+                    }
+                    if (sch.DayOfWeek.Equals("Wednesday"))
+                    {
+                        sch.DayOfWeek = "Thứ Tư";
+                    }
+                    if (sch.DayOfWeek.Equals("Thursday"))
+                    {
+                        sch.DayOfWeek = "Thứ Năm";
+                    }
+                    if (sch.DayOfWeek.Equals("Friday"))
+                    {
+                        sch.DayOfWeek = "Thứ Sáu";
+                    }
+                    if (sch.DayOfWeek.Equals("Saturday"))
+                    {
+                        sch.DayOfWeek = "Thứ Bảy";
+                    }
+                }
+                suitableClass.Schedules = groupBy.ToList();
+                              
+            }
+            return suitableClassesx;
         }
 
         public async Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList)
@@ -1063,6 +1110,35 @@ namespace MagicLand_System.Services.Implements
             if (request.DateTime != null)
             {
                 schedule.Date = request.DateTime.Value;
+                var date = request.DateTime.Value.DayOfWeek;
+                if(date == DayOfWeek.Sunday)
+                {
+                    schedule.DayOfWeek = 1;
+                }
+                if (date == DayOfWeek.Monday)
+                {
+                    schedule.DayOfWeek = 2;
+                }
+                if (date == DayOfWeek.Tuesday)
+                {
+                    schedule.DayOfWeek = 4;
+                }
+                if (date == DayOfWeek.Wednesday)
+                {
+                    schedule.DayOfWeek = 8;
+                }
+                if (date == DayOfWeek.Tuesday)
+                {
+                    schedule.DayOfWeek = 16;
+                }
+                if (date == DayOfWeek.Friday)
+                {
+                    schedule.DayOfWeek = 32;
+                }
+                if (date == DayOfWeek.Saturday)
+                {
+                    schedule.DayOfWeek = 64;
+                }
             }
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
@@ -1079,7 +1155,7 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId)
+        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId,string studentId)
         {
              var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(scheduleId), include : x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
              if(schedule == null)
@@ -1109,8 +1185,8 @@ namespace MagicLand_System.Services.Implements
             {
                 if(Id != schedule.Class.Id)
                 {
-                    var ClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString())).ToList();
-                    var ClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
+                    var ClassIndex = allSchedule.Where(x => x.ClassId.ToString().Equals(Id.ToString())).ToList();
+                    var ClassSort = ClassIndex.OrderBy(x => x.Date).ToArray();
                     schedules.Add(ClassSort[index]);
                 }
             }
@@ -1186,8 +1262,23 @@ namespace MagicLand_System.Services.Implements
                         Phone = lecturer.Phone,
                         Role = "Lecturer",
                     },
+                    ClassCode = schedulex.Class.ClassCode,
+                    Method = schedulex.Class.Method,
                 };
                 responses.Add(scheduleResponse);
+            }
+            var attendance = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate : x => x.StudentId.ToString().Equals(studentId));
+            if(attendance == null)
+            {
+                return responses;
+            }
+            foreach (var response in responses)
+            {
+                var isExist = attendance.SingleOrDefault(x => x.ScheduleId.ToString().Equals(response.Id.ToString()));
+                if(isExist != null)
+                {
+                    responses.Remove(response);
+                }
             }
             return responses;
         }

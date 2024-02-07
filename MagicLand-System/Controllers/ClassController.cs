@@ -325,9 +325,9 @@ namespace MagicLand_System.Controllers
             return Ok("success");
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetMakeUpClass)]
-        public async Task<IActionResult> GetMakeUpClass(string scheduleId)
+        public async Task<IActionResult> GetMakeUpClass(string scheduleId,string studentId)
         {
-            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId);
+            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId,studentId);
             return Ok(isSuccess);
         }
     }
