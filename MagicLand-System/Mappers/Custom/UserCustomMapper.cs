@@ -20,7 +20,7 @@ namespace MagicLand_System.Mappers.Custom
                 Email = user.Email,
                 Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
-                AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? DefaultAvatarConstant.DefaultAvatar() : user.AvatarImage,
+                AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? ImageUrlConstant.DefaultAvatar() : user.AvatarImage,
                 Address = user.Address,
             };
 

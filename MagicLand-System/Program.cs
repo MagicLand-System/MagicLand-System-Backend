@@ -67,6 +67,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.Configure<VnpayConfig>(builder.Configuration.GetSection(VnpayConfig.ConfigName));
 builder.Services.AddDbContext<MagicLandContext>();
+//builder.Services.AddScoped<MagicLandContext>();
 builder.Services.AddScoped<IUnitOfWork<MagicLandContext>, UnitOfWork<MagicLandContext>>();
 builder.Services.AddControllers(opt => opt.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true).AddJsonOptions(opt =>
 {
@@ -115,11 +116,16 @@ var quartzJobs = builder.Configuration.GetSection("QuartzJobs").GetChildren();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Services.AddScoped<IClassBackroundService, ClassBackgroundService>();
+builder.Services.AddScoped<ITransactionBackgroundService, TransactionBackgroundService>();
+builder.Services.AddScoped<INotificationBackgroundService, NotificationBackgroundService>();
 builder.Services.AddHostedService<QuartzScheduler>();
 builder.Services.AddSingleton<IJobFactory, JobFactoryService>();
 builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 builder.Services.AddScoped<DailyUpdateJob>();
+builder.Services.AddScoped<DailyCreateJob>();
 builder.Services.AddSingleton(new Job(type: typeof(DailyUpdateJob), expression: DetermineCronExpression(quartzJobs, "DailyUpdateJob")));
+builder.Services.AddSingleton(new Job(type: typeof(DailyCreateJob), expression: DetermineCronExpression(quartzJobs, "DailyCreateJob")));
+
 
 var app = builder.Build();
 
@@ -148,5 +154,5 @@ app.Run();
 string DetermineCronExpression(IEnumerable<IConfigurationSection> quartzJobs, string jobName)
 {
     var selectedJob = quartzJobs.FirstOrDefault(job => job["JobName"] == jobName);
-    return selectedJob?["CronExpression"] ?? "0/30 * * * * ?";
+    return selectedJob?["CronExpression"] ?? "0/5 * * * * ?";
 }

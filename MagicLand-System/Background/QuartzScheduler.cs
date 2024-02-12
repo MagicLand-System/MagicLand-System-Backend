@@ -53,7 +53,7 @@ namespace MagicLand_System.Background
 
         private static ITrigger CreateTrigger(Job job)
         {
-            string identity = job.GetType().FullName! + ".trigger";
+            string identity = job._type! + ".trigger";
             string expression = job._expression;
 
             var trigger = TriggerBuilder.Create().WithIdentity(identity).WithCronSchedule(expression).WithDescription(expression).Build();

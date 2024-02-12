@@ -69,6 +69,7 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     var response = new ScheduleResWithTopic
                     {
+                        Id = schedule.Id,
                         DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                         Date = schedule.Date,
                         Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
@@ -98,11 +99,12 @@ namespace MagicLand_System.Mappers.Custom
 
                         var response = new ScheduleResWithTopic
                         {
+                            Id = schedule.Id,
                             DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                             Date = schedule.Date,
                             Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
                             Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
-                            Topic = TopicCustomMapper.fromTopicToTopicResponse(topic, session),
+                            Topic = TopicCustomMapper.fromTopicToTopicWithSingleSessionResponse(topic, session),
                         };
 
                         responses.Add(response);

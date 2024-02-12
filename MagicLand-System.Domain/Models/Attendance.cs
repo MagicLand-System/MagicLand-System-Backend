@@ -12,6 +12,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public bool? IsPresent { get; set; } = default;
         public bool? IsPublic { get; set; } = false;
+        public bool? IsValid { get; set; } = true;
 
 
         [ForeignKey("Student")]

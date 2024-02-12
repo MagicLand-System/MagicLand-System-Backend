@@ -29,5 +29,6 @@ namespace MagicLand_System.Domain.Models
 
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<Student> Students { get; set; } = new List<Student>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

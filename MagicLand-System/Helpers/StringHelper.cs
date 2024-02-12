@@ -192,5 +192,29 @@ namespace MagicLand_System.Helpers
 
             return hash.ToString();
         }
+
+        public static string GenerateJsonString(List<(string, string)> values)
+        {
+            StringBuilder json = new StringBuilder("{");
+            bool first = true;
+
+            foreach (var (name, value) in values)
+            {
+                if (!first)
+                {
+                    json.Append(","); 
+                }
+                else
+                {
+                    first = false;
+                }
+
+                json.Append($"\"{name}\": \"{value}\"");
+            }
+
+            json.Append("}");
+
+            return json.ToString();
+        }
     }
 }

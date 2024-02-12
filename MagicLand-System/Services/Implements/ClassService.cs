@@ -4,8 +4,6 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
-using MagicLand_System.PayLoad.Request.Student;
-using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Rooms;
@@ -14,8 +12,8 @@ using MagicLand_System.PayLoad.Response.Slots;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
-using System.Net.WebSockets;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -510,9 +508,9 @@ namespace MagicLand_System.Services.Implements
             {
                 classFound.CourseId = request.CourseId.Value;
             }
-            if(request.LeastNumberStudent <= request.LimitNumberStudent)
+            if (request.LeastNumberStudent <= request.LimitNumberStudent)
             {
-                throw new BadHttpRequestException("số lượng tối thiểu phải nhỏ hơn số lượng tối đa",StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("số lượng tối thiểu phải nhỏ hơn số lượng tối đa", StatusCodes.Status400BadRequest);
             }
             classFound.Status = "UPCOMING";
             _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
@@ -529,11 +527,11 @@ namespace MagicLand_System.Services.Implements
                 {
                     foreach (var schedule in filterSchedule)
                     {
-                        if(request.RoomId != null)
+                        if (request.RoomId != null)
                         {
                             schedule.RoomId = request.RoomId.Value;
                         }
-                        if(request.LecturerId != null)
+                        if (request.LecturerId != null)
                         {
                             schedule.SubLecturerId = request.LecturerId.Value;
                         }
@@ -643,9 +641,9 @@ namespace MagicLand_System.Services.Implements
             }
             var responsesx = responses.OrderBy(x => x.Date).ToArray();
             List<ClassProgressResponse> result = new List<ClassProgressResponse>();
-            for(int i = 0;i < responsesx.Length; i++)
+            for (int i = 0; i < responsesx.Length; i++)
             {
-                responsesx[i].Index = i +1;
+                responsesx[i].Index = i + 1;
                 result.Add(responsesx[i]);
             }
             result = result.OrderBy(x => x.Index).ToList();
@@ -801,17 +799,16 @@ namespace MagicLand_System.Services.Implements
 
             if (cls.Status!.Trim() != ClassStatusEnum.PROGRESSING.ToString())
             {
-                string errorMessage = cls.Status == ClassStatusEnum.COMPLETED.ToString() ? "Đã Hoàn Thành" : cls.Status == ClassStatusEnum.CANCELED.ToString() ? "Đã Hủy" : "Sắp Diễn Ra";
 
-                throw new BadHttpRequestException($"Chỉ Có Thể Truy Suất Danh Sách Điểm Danh Của Các Lớp Học Đang Diễn Ra, Lớp [{cls.ClassCode}] [{errorMessage}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Chỉ Có Thể Truy Suất Danh Sách Điểm Danh Của Các Lớp Học Đang Diễn Ra," +
+                    $" Lớp [{cls.ClassCode}] [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status)}]", StatusCodes.Status400BadRequest);
             }
 
             var schedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == date.Date);
-            if(schedule == null)
+            if (schedule == null)
             {
                 return new ScheduleWithAttendanceResponse();
             }
-
 
             return _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
         }
@@ -821,37 +818,26 @@ namespace MagicLand_System.Services.Implements
             var currentClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
                include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
 
-            if (currentClass == null)
-            {
-                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
-            }
+            ValidateFindSuitableRequestClass(classId, studentIdList, currentClass);
 
-            if (!studentIdList.All(stu => currentClass.StudentClasses.Any(sc => sc.StudentId == stu)))
-            {
-                throw new BadHttpRequestException($"Id [{string.Join(", ", studentIdList)}] Của Các Học Sinh Không Thuộc Về Lớp [{currentClass.ClassCode}]", StatusCodes.Status400BadRequest);
-            }
+            var suitableClasses = await FindSuitableClasses(classId, studentIdList, currentClass);
 
-            if (currentClass.Status != ClassStatusEnum.UPCOMING.ToString() && currentClass.Status != ClassStatusEnum.CANCELED.ToString())
-            {
-                string errorMessage = currentClass.Status == ClassStatusEnum.LOCKED.ToString()
-                    ? "Đã Chốt Số Lượng Học Sinh"
-                    : currentClass.Status == ClassStatusEnum.COMPLETED.ToString()
-                    ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
+            return suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+        }
 
-                throw new BadHttpRequestException($"Chỉ Có Thể Chuyển Học Sinh Thuộc Lớp Sắp Bắt Đầu Hoặc Đã Hủy, Lớp [{currentClass.ClassCode}] [{errorMessage}], Không Thể Chuyển Lớp",
-                      StatusCodes.Status400BadRequest);
-            }
-
-            var classes = new List<Class>();
+        private async Task<List<Class>> FindSuitableClasses(Guid classId, List<Guid> studentIdList, Class currentClass)
+        {
+            var allStudentRegisteredClass = new List<Class>();
 
             foreach (Guid id in studentIdList)
             {
-                var currentStudentClasses = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id != classId && x.StudentClasses.Any(sc => sc.StudentId == id) && (x.Status != ClassStatusEnum.COMPLETED.ToString() || x.Status != ClassStatusEnum.CANCELED.ToString()),
+                var studentRegisteredClass = await _unitOfWork.GetRepository<Class>()
+                .GetListAsync(predicate: x => x.Id != classId && x.StudentClasses.Any(sc => sc.StudentId == id) && (x.Status != ClassStatusEnum.COMPLETED.ToString() || x.Status != ClassStatusEnum.CANCELED.ToString()),
                 include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Slot)!);
 
-                if (currentStudentClasses != null)
+                if (studentRegisteredClass != null)
                 {
-                    classes.AddRange(currentStudentClasses);
+                    allStudentRegisteredClass.AddRange(studentRegisteredClass);
                 }
             }
 
@@ -862,12 +848,13 @@ namespace MagicLand_System.Services.Implements
                .Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
                .Include(x => x.StudentClasses));
 
-            var suitableClasses = allCourseClass.Where(courCls =>
-                !courCls.Schedules.Any(courSchedule =>
-                    classes.Any(currCls =>
-                        currCls.Schedules.Any(schedule =>
-                            schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
+            var suitableClasses = allCourseClass.Where(acc =>
+                !acc.Schedules.Any(accsc =>
+                    allStudentRegisteredClass.Any(asrc =>
+                        asrc.Schedules.Any(asrcsc =>
+                            asrcsc.Slot?.StartTime == accsc.Slot?.StartTime))))
                 .ToList();
+            #region
             //var suitableClasses = new List<Class>();
 
             //foreach (var courCls in allCourseClass)
@@ -898,15 +885,39 @@ namespace MagicLand_System.Services.Implements
             //    if (!hasOverlap)
             //        suitableClasses.Add(courCls);
             //}
-
-
-
+            #endregion
 
             suitableClasses = suitableClasses
            .Where(cls => cls.StudentClasses.Count + studentIdList.Count <= cls.LimitNumberStudent)
            .Where(cls => cls.Id != currentClass.Id).ToList();
+            return suitableClasses;
+        }
 
-            return suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+        private void ValidateFindSuitableRequestClass(Guid classId, List<Guid> studentIdList, Class currentClass)
+        {
+            if (currentClass == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            if (!studentIdList.All(stu => currentClass.StudentClasses.Any(sc => sc.StudentId == stu)))
+            {
+                throw new BadHttpRequestException($"Id [{string.Join(", ", studentIdList)}] Của Các Học Sinh Không Thuộc Về Lớp [{currentClass.ClassCode}]", StatusCodes.Status400BadRequest);
+            }
+
+            if (currentClass.Status != ClassStatusEnum.UPCOMING.ToString() && currentClass.Status != ClassStatusEnum.CANCELED.ToString())
+            {
+                throw new BadHttpRequestException("Chỉ Có Thể Chuyển Học Sinh Thuộc Lớp Sắp Bắt Đầu Hoặc Đã Hủy," +
+                    $" Lớp [{currentClass.ClassCode}] [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(currentClass.Status!)}], Không Thể Chuyển Lớp",
+                      StatusCodes.Status400BadRequest);
+            }
+
+            var changedId = studentIdList.FirstOrDefault(id => currentClass.StudentClasses.FirstOrDefault(stu => stu.Id == id)!.CanChangeClass == false);
+
+            if (changedId != default)
+            {
+                throw new BadHttpRequestException($"Id [{changedId}] Của Học Sinh Đã Được Chuyển Lớp", StatusCodes.Status400BadRequest);
+            }
         }
 
         public async Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList)
@@ -914,113 +925,153 @@ namespace MagicLand_System.Services.Implements
             try
             {
                 var fromClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == fromClassId,
-                include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
+                include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
                 var toClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == toClassId,
-               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
+               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
-                if (fromClass == null)
-                {
-                    throw new BadHttpRequestException($"Id [{fromClassId}] Lớp Học Cần Chuyển Không Tồn Tại", StatusCodes.Status400BadRequest);
-                }
-
-                if (toClass == null)
-                {
-                    throw new BadHttpRequestException($"Id [{toClassId}] Lớp Học Sẽ Chuyển Không Tồn Tại", StatusCodes.Status400BadRequest);
-                }
-
-                if (fromClass.Status == ClassStatusEnum.LOCKED.ToString())
-                {
-                    throw new BadHttpRequestException($"Id [{fromClass}] Lớp Học Cần Chuyển Đã Chốt Danh Sách Học Sinh", StatusCodes.Status400BadRequest);
-                }
-
-                if (toClass.Status == ClassStatusEnum.LOCKED.ToString())
-                {
-                    throw new BadHttpRequestException($"Id [{toClassId}] Lớp Học Sẽ Chuyển Đã Chốt Danh Sách Học Sinh", StatusCodes.Status400BadRequest);
-                }
-
-                if (studentIdList.Any(id => toClass.StudentClasses.Any(sc => sc.StudentId == id)))
-                {
-                    throw new BadHttpRequestException($"Yêu Cầu Chuyển Lớp Không Hợp Lệ Một Số Id Của Học Sinh Đã Có Trong Lớp Sẽ Chuyển", StatusCodes.Status400BadRequest);
-                }
+                ValidateChangeClassRequest(fromClassId, studentIdList, fromClass, true);
+                ValidateChangeClassRequest(toClassId, studentIdList, toClass, false);
 
                 foreach (Guid id in studentIdList)
                 {
                     var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id,
-                    include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!);
+                    include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!.ThenInclude(x => x.Slot!));
 
-                    if (student == null)
-                    {
-                        throw new BadHttpRequestException($"Id [{id}] Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
-                    }
+                    ValidateStudentChangeClassRequest(toClassId, studentIdList, fromClass, toClass, id, student);
 
-                    if (toClass.Course!.Id != fromClass.Course!.Id || toClass.Status != ClassStatusEnum.UPCOMING.ToString())
-                    {
-                        throw new BadHttpRequestException($"Id [{toClassId}] Lớp Sẽ Chuyển Không Thuộc Cùng 1 Khóa Với Lớp Cần Chuyển Hoặc Không Phải Là Lớp Sắp Diễn Ra",
-                            StatusCodes.Status400BadRequest);
-                    }
-
-                    if (toClass.StudentClasses.Count + studentIdList.Count > toClass.LimitNumberStudent)
-                    {
-                        throw new BadHttpRequestException($"Số Lượng Học Sinh Của Lớp [{toClass.ClassCode}] Đã Đủ Số Lượng Tối Đa Không Thể Chuyển ", StatusCodes.Status400BadRequest);
-                    }
-
-                    var currentStudentClasses = student.StudentClasses.Select(sc => sc.Class).ToList();
-
-                    foreach (var currCls in currentStudentClasses)
-                    {
-                        foreach (var schedule in currCls!.Schedules)
-                        {
-
-                            if (toClass.Schedules.Any(sc => sc.Slot!.StartTime == schedule.Slot!.StartTime))
-                            {
-                                throw new BadHttpRequestException($"Lớp Học Sẽ Chuyển Trùng Lịch Học Với Các Lớp Hiện Đang Đăng Ký Khác Của Học Sinh Có Id [{id}]", StatusCodes.Status400BadRequest);
-                            }
-                        }
-                    }
-
-                    var oldAttendances = new List<Attendance>();
-                    foreach (var schedule in fromClass.Schedules)
-                    {
-                        var oldAttendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.StudentId == id && x.ScheduleId == schedule.Id);
-                        if (oldAttendance != null)
-                        {
-                            oldAttendances.Add(oldAttendance);
-                        }
-                    }
-
-                    var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId == id && x.ClassId == fromClassId);
-                    studentClass.ToList().ForEach(stu => stu.ClassId = toClassId);
-
-                    var newStudentAttendance = new List<Attendance>();
-
-                    foreach (var schedule in toClass.Schedules)
-                    {
-                        newStudentAttendance.Add(new Attendance
-                        {
-                            Id = new Guid(),
-                            IsPublic = true,
-                            IsPresent = default,
-                            StudentId = id,
-                            ScheduleId = schedule.Id
-                        });
-                    }
-
-                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendance);
-                    if (oldAttendances.Any())
-                    {
-                        _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAttendances);
-                    }
-                    _unitOfWork.GetRepository<StudentClass>().UpdateRange(studentClass);
+                    await ChangeClassProgress(toClassId, fromClass, toClass, id);
                 }
 
                 _unitOfWork.Commit();
                 return "Đổi Lớp Thành Công";
-
             }
             catch (Exception ex)
             {
-                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
+            }
+        }
+
+        private async Task ChangeClassProgress(Guid toClassId, Class fromClass, Class toClass, Guid id)
+        {
+            var oldStudentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == id && x.ClassId == fromClass.Id);
+            var newStudentClass = new StudentClass
+            {
+                Id = new Guid(),
+                ClassId = toClassId,
+                StudentId = id,
+            };
+
+            var oldStudentAttendance = new List<Attendance>();
+            foreach (var schedule in fromClass.Schedules)
+            {
+                var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.StudentId == id && x.ScheduleId == schedule.Id);
+                if (attendance != null)
+                {
+                    oldStudentAttendance.Add(attendance);
+                }
+            }
+
+            var newStudentAttendance = new List<Attendance>();
+            foreach (var schedule in toClass.Schedules)
+            {
+                newStudentAttendance.Add(new Attendance
+                {
+                    Id = new Guid(),
+                    IsPublic = true,
+                    IsPresent = default,
+                    StudentId = id,
+                    ScheduleId = schedule.Id
+                });
+            }
+
+            await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance);
+        }
+
+        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass, List<Attendance> oldStudentAttendance, List<Attendance> newStudentAttendance)
+        {
+
+            await _unitOfWork.GetRepository<StudentClass>().InsertAsync(newStudentClass);
+            await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendance);
+            if (oldStudentAttendance.Any())
+            {
+                _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldStudentAttendance);
+            }
+
+            if (fromClass.Status == ClassStatusEnum.UPCOMING.ToString())
+            {
+                _unitOfWork.GetRepository<StudentClass>().DeleteAsync(oldStudentClass);
+            }
+
+            if (fromClass.Status == ClassStatusEnum.CANCELED.ToString())
+            {
+                oldStudentClass.CanChangeClass = false;
+                _unitOfWork.GetRepository<StudentClass>().UpdateAsync(oldStudentClass);
+            }
+
+        }
+
+        private void ValidateStudentChangeClassRequest(Guid toClassId, List<Guid> studentIdList, Class fromClass, Class toClass, Guid id, Student student)
+        {
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id [{id}] Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            if (toClass.Course!.Id != fromClass.Course!.Id || toClass.Status != ClassStatusEnum.UPCOMING.ToString())
+            {
+                throw new BadHttpRequestException($"Id [{toClassId}] Lớp Sẽ Chuyển Không Thuộc Cùng 1 Khóa Với Lớp Cần Chuyển Hoặc Không Phải Là Lớp Sắp Diễn Ra",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            if (toClass.StudentClasses.Count + studentIdList.Count > toClass.LimitNumberStudent)
+            {
+                throw new BadHttpRequestException($"Số Lượng Học Sinh Của Lớp [{toClass.ClassCode}] Đã Đủ Số Lượng Tối Đa Không Thể Chuyển ", StatusCodes.Status400BadRequest);
+            }
+
+            var currentStudentClasses = student.StudentClasses.Select(sc => sc.Class).ToList();
+
+            foreach (var currCls in currentStudentClasses)
+            {
+                foreach (var schedule in currCls!.Schedules)
+                {
+
+                    if (toClass.Schedules.Any(sc => sc.Slot!.StartTime == schedule.Slot!.StartTime))
+                    {
+                        throw new BadHttpRequestException($"Id [{toClassId}] Lớp Học Sẽ Chuyển Trùng Lịch Học Với Các Lớp Hiện Đang Đăng Ký Khác Của Học Sinh Có Id [{id}]", StatusCodes.Status400BadRequest);
+                    }
+                }
+            }
+        }
+
+        private void ValidateChangeClassRequest(Guid classId, List<Guid> studentIdList, Class cls, bool isFromClass)
+        {
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            if (cls.Status != ClassStatusEnum.UPCOMING.ToString() && cls.Status != ClassStatusEnum.CANCELED.ToString())
+            {
+                throw new BadHttpRequestException("Chỉ Có Thể Chuyển Học Sinh Từ Lớp Sắp Diễn Ra Hoặc Đã Hủy," +
+                    $" Id [{classId}] Lớp Học Sẽ Chuyển [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status!)}]", StatusCodes.Status400BadRequest);
+            }
+
+            if (isFromClass)
+            {
+                var changedId = studentIdList.FirstOrDefault(id => cls.StudentClasses.FirstOrDefault(stu => stu.Id == id)!.CanChangeClass == false);
+
+                if (changedId != default)
+                {
+                    throw new BadHttpRequestException($"Id [{changedId}] Của Học Sinh Đã Được Chuyển Lớp", StatusCodes.Status400BadRequest);
+                }
+            }
+            else
+            {
+                if (studentIdList.Any(id => cls.StudentClasses.Any(sc => sc.StudentId == id)))
+                {
+                    throw new BadHttpRequestException($"Yêu Cầu Chuyển Lớp Không Hợp Lệ Một Số Id Của Học Sinh Đã Có Trong Id [{classId}] Lớp Sẽ Chuyển", StatusCodes.Status400BadRequest);
+                }
             }
         }
 
@@ -1043,20 +1094,20 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> UpdateSession(string sessionId, UpdateSessionRequest request)
         {
-            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(sessionId));
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sessionId));
             if (schedule == null)
             {
                 return false;
             }
-            if(request.LecturerId != null)
+            if (request.LecturerId != null)
             {
                 schedule.SubLecturerId = request.LecturerId;
             }
-            if(request.RoomId != null)
+            if (request.RoomId != null)
             {
                 schedule.RoomId = request.RoomId.Value;
-            } 
-            if(request.SlotId != null)
+            }
+            if (request.SlotId != null)
             {
                 schedule.SlotId = request.SlotId.Value;
             }
@@ -1071,33 +1122,33 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> MakeUpClass(string StudentId, string ScheduleId, MakeupClassRequest request)
         {
-            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate : x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId))); 
-            if(attendance == null) { return false;}
+            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId)));
+            if (attendance == null) { return false; }
             attendance.ScheduleId = Guid.Parse(request.ScheduleId);
-             _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
+            _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
         }
 
         public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId)
         {
-             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(scheduleId), include : x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
-             if(schedule == null)
-             {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId), include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
+            if (schedule == null)
+            {
                 return new List<ScheduleResponse>();
-             }
-             var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
-             var scheduleInCourse = allSchedule.Where(x => x.Class.Course.Id.ToString().Equals(schedule.Class.Course.Id.ToString())); 
-             var groupbyId = scheduleInCourse.GroupBy(x => x.Class.Id);  
-             List<Guid> Ids = new List<Guid>();
-             foreach( var group in groupbyId )
-             {
+            }
+            var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
+            var scheduleInCourse = allSchedule.Where(x => x.Class.Course.Id.ToString().Equals(schedule.Class.Course.Id.ToString()));
+            var groupbyId = scheduleInCourse.GroupBy(x => x.Class.Id);
+            List<Guid> Ids = new List<Guid>();
+            foreach (var group in groupbyId)
+            {
                 Ids.Add(group.Key);
-             }
+            }
             var scheduleClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString())).ToList();
             var scheduleClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
             int index = -1;
-            for( int i = 0; i < scheduleClassSort.Length; i++ )
+            for (int i = 0; i < scheduleClassSort.Length; i++)
             {
                 if (scheduleClassSort[i].Date == schedule.Date)
                 {
@@ -1105,9 +1156,9 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             List<Schedule> schedules = new List<Schedule>();
-            foreach(var Id in Ids )
+            foreach (var Id in Ids)
             {
-                if(Id != schedule.Class.Id)
+                if (Id != schedule.Class.Id)
                 {
                     var ClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString())).ToList();
                     var ClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
@@ -1115,13 +1166,14 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             List<ScheduleResponse> responses = new List<ScheduleResponse>();
-            foreach(var schedulex in schedules)
+            foreach (var schedulex in schedules)
             {
                 User lecturer = new User();
                 if (schedulex.SubLecturerId != null)
                 {
                     lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedulex.SubLecturerId.ToString()));
-                } else
+                }
+                else
                 {
                     lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedulex.Class.LecturerId.ToString()));
                 }
@@ -1191,5 +1243,5 @@ namespace MagicLand_System.Services.Implements
             }
             return responses;
         }
-    }       
+    }
 }

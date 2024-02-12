@@ -25,5 +25,24 @@ namespace MagicLand_System.Mappers.Custom
             //return response;
             return null;
         }
+
+        public static TopicWithSingleSession fromTopicToTopicWithSingleSessionResponse(Topic topic, Session? session)
+        {
+            if (topic == null)
+            {
+                return new TopicWithSingleSession();
+            }
+
+            var response = new TopicWithSingleSession
+            {
+                TopicName = topic!.Name ??= "Undefined",
+                OrderNumber = topic.OrderNumber,
+                Session = session != null && session != default
+                ? SessionCustomMapper.fromSessionToSessionResponse(session)
+                : new SessionResponse(),
+            };
+
+            return response;
+        }
     }
 }

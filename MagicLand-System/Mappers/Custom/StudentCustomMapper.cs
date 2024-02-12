@@ -19,7 +19,7 @@ namespace MagicLand_System.Mappers.Custom
                 FullName = student.FullName ??= "Undefine",
                 Age = DateTime.Now.Year - student.DateOfBirth.Year,
                 Gender = student.Gender!.ToString(),
-                AvatarImage = student.AvatarImage ??= DefaultAvatarConstant.DefaultAvatar(),
+                AvatarImage = student.AvatarImage ??= ImageUrlConstant.DefaultAvatar(),
                 Email = student.Email,
                 DateOfBirth = student.DateOfBirth,
             };

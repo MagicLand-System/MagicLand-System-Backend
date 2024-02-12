@@ -34,6 +34,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<bool?>("IsPublic")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsValid")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("ScheduleId")
                         .HasColumnType("uniqueidentifier");
 
@@ -253,6 +256,43 @@ namespace MagicLand_System.Domain.Migrations
                         .HasFilter("[CourseId] IS NOT NULL");
 
                     b.ToTable("CourseSyllabus", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActionData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("NotificationTimer")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notification");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PersonalWallet", b =>
@@ -488,6 +528,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CanChangeClass")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
@@ -800,6 +843,15 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Notification", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.User", "TargetUser")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("TargetUser");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.PromotionTransaction", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.UserPromotion", "UserPromotion")
@@ -1070,6 +1122,8 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.User", b =>
                 {
                     b.Navigation("Classes");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("Students");
                 });

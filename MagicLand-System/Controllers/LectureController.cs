@@ -42,7 +42,7 @@ namespace MagicLand_System.Controllers
         /// Sample request:
         ///{     
         ///    "ClassId":"3c1849af-400c-43ca-979e-58c71ce9301d"
-        ///    "SlotTime": "Slot1" ( Slot1: "7:00 - 9:00", Slot2: "9:15 - 11:15", Slot3: "12:00 - 14:00", Slot4: "14:15 - 16:15", Slot5: "16:30 - 18:30", Slot6: "19:00 - 21:00")
+        ///    "SlotTime": "Slot1" ( Slot1: "7:00", Slot2: "9:15", Slot3: "12:00", Slot4: "14:15", Slot5: "16:30", Slot6: "19:00")
         ///    [
         ///       {
         ///          "StudentId":"3c1849af-400c-43ca-979e-58c71ce9301d",

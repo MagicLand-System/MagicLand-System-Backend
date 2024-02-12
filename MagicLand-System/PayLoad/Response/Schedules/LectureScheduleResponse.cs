@@ -1,6 +1,6 @@
 ﻿namespace MagicLand_System.PayLoad.Response.Schedules
 {
-    public class LectureScheduleResponse : ScheduleResponse
+    public class LectureScheduleResponse : ScheduleWithoutLectureResponse
     {
         public required Guid ClassId { get; set; }
         public required string ClassCode { get; set; }

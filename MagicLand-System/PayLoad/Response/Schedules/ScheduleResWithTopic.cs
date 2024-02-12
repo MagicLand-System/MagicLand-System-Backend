@@ -2,8 +2,8 @@
 
 namespace MagicLand_System.PayLoad.Response.Schedules
 {
-    public class ScheduleResWithTopic : ScheduleResponse
+    public class ScheduleResWithTopic : ScheduleWithoutLectureResponse
     {
-        public TopicResponse? Topic { get; set; } = new TopicResponse();
+        public TopicWithSingleSession? Topic { get; set; } = new TopicWithSingleSession();
     }
 }
