@@ -83,11 +83,11 @@ namespace MagicLand_System.Helpers
 
         public static string GenerateAttachValueForTxnRefCode(ItemGenerate item)
         {
-            string attachValue = $"[{TransactionAttachValueEnum.ClassId}:{item.ClassId}][{TransactionAttachValueEnum.StudentId}:{string.Join(", ", item.StudentIdList)}]";
+            string attachValue = $"[{AttachValueEnum.ClassId}:{item.ClassId}][{AttachValueEnum.StudentId}:{string.Join(", ", item.StudentIdList)}]";
 
             if (item.CartItemId != default)
             {
-                attachValue += $"[{TransactionAttachValueEnum.CartItemId}:{item.CartItemId}]";
+                attachValue += $"[{AttachValueEnum.CartItemId}:{item.CartItemId}]";
             }
 
             return Encrypt(attachValue);
@@ -202,14 +202,22 @@ namespace MagicLand_System.Helpers
             {
                 if (!first)
                 {
-                    json.Append(","); 
+                    json.Append(",");
                 }
                 else
                 {
                     first = false;
                 }
 
-                json.Append($"\"{name}\": \"{value}\"");
+                if (value.Contains(','))
+                {
+                    var listValues = value.Split(',').Select(item => $"\"{item.Trim()}\"");
+                    json.Append($"\"{name}\": [{string.Join(", ", listValues)}]");
+                }
+                else
+                {
+                    json.Append($"\"{name}\": \"{value}\"");
+                }
             }
 
             json.Append("}");

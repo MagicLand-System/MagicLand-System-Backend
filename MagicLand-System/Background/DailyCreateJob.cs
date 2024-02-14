@@ -6,25 +6,22 @@ namespace MagicLand_System.Background
     public class DailyCreateJob : IJob
     {
         private readonly ILogger<DailyCreateJob> _logger;
-        private readonly IClassBackroundService _classBackgroundService;
-        private readonly ITransactionBackgroundService _transactionBackgroundService;
+        private readonly INotificationBackgroundService _notificationBackgroundService;
 
-        public DailyCreateJob(ILogger<DailyCreateJob> logger, IClassBackroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService)
+        public DailyCreateJob(ILogger<DailyCreateJob> logger, INotificationBackgroundService notificationBackgroundService)
         {
             _logger = logger;
-            _classBackgroundService = classBackgroundService;
-            _transactionBackgroundService = transactionBackgroundService;
+            _notificationBackgroundService = notificationBackgroundService;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             string message = "";
-            _logger.LogInformation($"Daily Update Job Running At [{DateTime.Now}]");
+            _logger.LogInformation($"Daily Create Job Running At [{DateTime.Now}]");
 
-            message += await _classBackgroundService.UpdateClassInTimeAsync();
-            message += await _transactionBackgroundService.UpdateTransactionAfterTime();
+            message += await _notificationBackgroundService.CreateNewNotificationInCondition();
 
-            _logger.LogInformation($"Daily Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
+            _logger.LogInformation($"Daily Create Job Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
         }
 
     }

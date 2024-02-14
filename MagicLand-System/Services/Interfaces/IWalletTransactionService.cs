@@ -17,8 +17,8 @@ namespace MagicLand_System.Services.Interfaces
         Task<(string, double)> GeneratePaymentTransAsync(List<ItemGenerate> items);
         Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds);
         Task<BillPaymentResponse> CheckoutAsync(List<CheckoutRequest> requests);
-        Task<(string, bool)> HandelSuccessReturnDataVnpayAsync(string transactionCode, string signature, TransactionTypeEnum type);
-        Task<(string, bool)> HandelFailedReturnDataVnpayAsync(string transactionCode, string signature, TransactionTypeEnum type);
+        Task<(string, bool)> HandelSuccessReturnDataVnpayAsync(string transactionCode, string signature, string bankCode, TransactionTypeEnum type);
+        Task<(string, bool)> HandelFailedReturnDataVnpayAsync(string transactionCode, string signature, string bankCode, TransactionTypeEnum type);
         Task<List<RevenueResponse>> GetRevenueTransactionByTimeAsync(RevenueTimeEnum time);
     }
 }

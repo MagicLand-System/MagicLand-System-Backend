@@ -88,7 +88,7 @@ namespace MagicLand_System.Controllers
 
             if (checkingStatus.Item2)
             {
-                var response = await _walletTransactionService.HandelSuccessReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, type);
+                var response = await _walletTransactionService.HandelSuccessReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, request.vnp_BankCode, type);
                 if (!response.Item2)
                 {
                     message = response.Item1;
@@ -96,7 +96,7 @@ namespace MagicLand_System.Controllers
             }
             else
             {
-                var response = await _walletTransactionService.HandelFailedReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, type);
+                var response = await _walletTransactionService.HandelFailedReturnDataVnpayAsync(request.vnp_TransactionNo, request.vnp_TxnRef, request.vnp_BankCode, type);
                 if (!response.Item2)
                 {
                     message += ", " + response.Item1;

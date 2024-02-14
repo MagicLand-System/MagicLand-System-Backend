@@ -1,9 +1,10 @@
 ﻿namespace MagicLand_System.Enums
 {
-    public enum TransactionAttachValueEnum
+    public enum AttachValueEnum
     {
         ClassId,
         StudentId,
         CartItemId,
+        TransactionId,
     }
 }

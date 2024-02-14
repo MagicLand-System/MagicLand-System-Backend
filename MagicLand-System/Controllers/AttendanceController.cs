@@ -19,14 +19,14 @@ namespace MagicLand_System.Controllers
         {
             _attendanceService = attendanceService;
         }
-        [HttpGet(ApiEndpointConstant.AttendanceEnpoint.LoadAttandance)]
+        [HttpGet(ApiEndpointConstant.AttendanceEndPoint.LoadAttandance)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
         public async Task<IActionResult> LoadAttandance(string scheduleId, string? searchString)
         {
             var result = await _attendanceService.LoadAttandance(scheduleId, searchString);
             return Ok(result);
         }
-        [HttpPost(ApiEndpointConstant.AttendanceEnpoint.TakeAttandance)]
+        [HttpPost(ApiEndpointConstant.AttendanceEndPoint.TakeAttandance)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
         public async Task<IActionResult> TakeAttandace([FromBody] List<StaffClassAttandanceRequest> requests)
         {
@@ -53,7 +53,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.AttendanceEnpoint.GetAttendanceOfClass)]
+        [HttpGet(ApiEndpointConstant.AttendanceEndPoint.GetAttendanceOfClass)]
         [ProducesResponseType(typeof(AttendanceWithClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [AllowAnonymous]
@@ -71,7 +71,7 @@ namespace MagicLand_System.Controllers
         /// <response code="200">Trả Danh Sách Điểm Danh Của Các Lớp</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.AttendanceEnpoint.GetAttendanceOfClasses)]
+        [HttpGet(ApiEndpointConstant.AttendanceEndPoint.GetAttendanceOfClasses)]
         [ProducesResponseType(typeof(AttendanceWithClassResponse), StatusCodes.Status200OK)]
         [AllowAnonymous]
         public async Task<IActionResult> GetAttendanceOfClasses()
@@ -96,7 +96,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.AttendanceEnpoint.GetAttendanceOfStudent)]
+        [HttpGet(ApiEndpointConstant.AttendanceEndPoint.GetAttendanceOfStudent)]
         [ProducesResponseType(typeof(AttendanceWithClassResponse), StatusCodes.Status200OK)]
         [AllowAnonymous]
         public async Task<IActionResult> GetAttendanceOfStudent([FromRoute] Guid id)

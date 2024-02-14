@@ -2,6 +2,8 @@
 {
     public interface INotificationBackgroundService
     {
-        internal Task<string> CreateNotificationInCondition();
+        internal Task<string> ModifyNotificationAfterTime();
+        internal Task<string> CreateNewNotificationInCondition();
+        internal Task<string> PushNotificationRealTime();
     }
 }

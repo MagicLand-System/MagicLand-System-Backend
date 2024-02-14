@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
@@ -18,6 +19,7 @@ using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Transactions;
 
 
@@ -209,17 +211,23 @@ namespace MagicLand_System.Services.Implements
 
                 if (classes.Any())
                 {
+                    string classCodeString = string.Join(", ", classes.Select(cls => cls.ClassCode).ToList());
+
                     message = $"Xóa Bé [{student.FullName}] Thành Công, " +
-                              $"Hệ Thống Không Hoàn Tiền Lớp [{string.Join(", ", classes.Select(cls => cls.ClassCode).ToList())}] Do Lớp Đã Bắt Đầu";
+                              $"Hệ Thống Không Hoàn Tiền Lớp [{classCodeString}] Do Lớp Đã Bắt Đầu";
+
+                    refundAmount = await HandelRefundTransaction(classes, personalWallet, student, true);
                 }
 
                 classes = await GetClassOfStudent(student.Id.ToString(), ClassStatusEnum.UPCOMING.ToString());
                 if (classes.Any())
                 {
-                    message = $"Xóa Bé [{student.FullName}] Thành Công, " +
-                              $"Hệ Thống Đã Hoàn Tiền Lớp [{string.Join(", ", classes.Select(cls => cls.ClassCode).ToList())}] Do Lớp Chưa Bắt Đầu";
+                    string classCodeString = string.Join(", ", classes.Select(cls => cls.ClassCode).ToList());
 
-                    refundAmount = await AddRefundTransaction(classes, personalWallet);
+                    message = $"Xóa Bé [{student.FullName}] Thành Công, " +
+                              $"Hệ Thống Đã Hoàn Tiền Lớp [{classCodeString}] Do Lớp Chưa Bắt Đầu";
+
+                    refundAmount = await HandelRefundTransaction(classes, personalWallet, student, false);
                 }
 
                 await DeleteRelatedStudentInfor(student);
@@ -239,35 +247,74 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        private async Task<double> AddRefundTransaction(List<ClassResExtraInfor> classes, PersonalWallet personalWallet)
+        private async Task<double> HandelRefundTransaction(List<ClassResExtraInfor> classes, PersonalWallet personalWallet, Student student, bool isProgressing)
         {
-            var oldTransactions = (await _unitOfWork.GetRepository<WalletTransaction>()
-               .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id && x.Status == TransactionTypeEnum.Payment.ToString())).ToList();
-
             var currentUser = await GetUserFromJwt();
-
+            var newNotifications = new List<Notification>();
             var refundTransactions = new List<WalletTransaction>();
             double refundAmount = 0.0;
+
+            var oldTransactions = (await _unitOfWork.GetRepository<WalletTransaction>()
+          .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id && x.Status == TransactionTypeEnum.Payment.ToString())).ToList();
 
             foreach (var cls in classes)
             {
                 foreach (var trans in oldTransactions)
                 {
-                    var result = StringHelper.ExtractAttachValueFromSignature(trans.Signature!);
-
-                    foreach (var pair in result)
+                    if (!isProgressing)
                     {
-                        if (pair.Key == TransactionAttachValueEnum.ClassId.ToString() && pair.Value[0] == cls.ClassId.ToString())
+                        var result = StringHelper.ExtractAttachValueFromSignature(trans.Signature!);
+
+                        foreach (var pair in result)
                         {
-                            refundAmount += trans.Money - trans.Discount;
-                            refundTransactions.Add(GenerateRefundTransaction(personalWallet, currentUser.FullName!, refundAmount, cls.ClassCode!, trans.Signature!));
+                            if (pair.Key == AttachValueEnum.ClassId.ToString() && pair.Value[0] == cls.ClassId.ToString())
+                            {
+                                refundAmount += trans.Money - trans.Discount;
+                                refundTransactions.Add(GenerateRefundTransaction(personalWallet, currentUser.FullName!, refundAmount, cls.ClassCode!, trans.Signature!));
+                            }
                         }
                     }
+
+                    string title = isProgressing ? NotificationMessageContant.NoRefundTitle : NotificationMessageContant.RefundTitle;
+                    string body = isProgressing
+                        ? NotificationMessageContant.NoRefundBody(cls.ClassCode!, (trans.Money - trans.Discount).ToString(), student.FullName!)
+                        : NotificationMessageContant.RefundBody(cls.ClassCode!, (trans.Money - trans.Discount).ToString(), student.FullName!);
+
+                    string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                    {
+                      ($"{AttachValueEnum.ClassId}", $"{cls.ClassId}"),
+                      ($"{AttachValueEnum.StudentId}", $"{student.Id}"),
+                      ($"{AttachValueEnum.TransactionId}", $"{trans.Id}"),
+                    });
+
+                    newNotifications.Add(GenerateNotification(currentUser, title, body, actionData));
                 }
             }
-            await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(refundTransactions);
+
+            if (refundTransactions.Any())
+            {
+                await _unitOfWork.GetRepository<WalletTransaction>().InsertRangeAsync(refundTransactions);
+            }
+            await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
 
             return refundAmount;
+        }
+
+        private Notification GenerateNotification(User targetUser, string title, string body, string actionData)
+        {
+            return new Notification
+            {
+                Id = new Guid(),
+                Title = title,
+                Body = body,
+                Type = NotificationTypeEnum.IMPORTANCE.ToString(),
+                Image = ImageUrlConstant.RefundImageUrl,
+                CreatedAt = DateTime.Now,
+                IsRead = false,
+                ActionData = actionData,
+                UserId = targetUser.Id,
+            };
+
         }
 
         private WalletTransaction GenerateRefundTransaction(PersonalWallet personalWallet, string payer, double refundAmount, string className, string signature)
@@ -315,7 +362,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> TakeStudentAttendanceAsync(AttendanceRequest request, SlotEnum slot)
         {
-            if(slot == SlotEnum.Default)
+            if (slot == SlotEnum.Default)
             {
                 slot = SlotEnum.Slot1;
             }

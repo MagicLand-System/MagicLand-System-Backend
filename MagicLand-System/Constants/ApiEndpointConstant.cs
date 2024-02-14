@@ -20,7 +20,6 @@
             public const string CheckOutClassByVnpay = UsersEndpoint + "/vnpay/checkout";
             public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
             public const string UpdateUser = UsersEndpoint + "/update";
-
         }
         public static class Authentication
         {
@@ -124,7 +123,7 @@
             public const string GetLectureSchedule = EndPointBase + "/schedules";
         }
 
-        public static class AttendanceEnpoint
+        public static class AttendanceEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/attendance";
             public const string GetAttendanceOfClass = EndPointBase + "/class/{id}";
@@ -138,6 +137,15 @@
         {
             public const string EndPointBase = ApiEndpoint + "/wallet";
             public const string TopUpWallet = EndPointBase + "/topup";
+        }
+
+        public static class NotificationEndPoint
+        {
+            public const string EndPointBase = ApiEndpoint + "/notification";
+            public const string GetNotifications = "/user" + EndPointBase;
+            public const string GetStaffNotifications = "/staff" + EndPointBase;
+            public const string UpdateNotification = EndPointBase + "/update";
+            public const string DeleteNotification = EndPointBase + "/delete/{id}";
         }
     }
 }

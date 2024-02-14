@@ -13,12 +13,13 @@ namespace MagicLand_System.Background
         private readonly ILogger<DailyUpdateJob> _logger;
         private readonly IClassBackroundService _classBackgroundService;
         private readonly ITransactionBackgroundService _transactionBackgroundService;
-
-        public DailyUpdateJob(ILogger<DailyUpdateJob> logger, IClassBackroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService)
+        private readonly INotificationBackgroundService _notificationBackgroundService;
+        public DailyUpdateJob(ILogger<DailyUpdateJob> logger, IClassBackroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService, INotificationBackgroundService notificationBackgroundService)
         {
             _logger = logger;
             _classBackgroundService = classBackgroundService;
             _transactionBackgroundService = transactionBackgroundService;
+            _notificationBackgroundService = notificationBackgroundService;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -28,8 +29,9 @@ namespace MagicLand_System.Background
 
             message += await _classBackgroundService.UpdateClassInTimeAsync();
             message += await _transactionBackgroundService.UpdateTransactionAfterTime();
+            message += await _notificationBackgroundService.ModifyNotificationAfterTime();
 
-            _logger.LogInformation($"Daily Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
+            _logger.LogInformation($"Daily Update Job Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
         }
 
     }

@@ -59,7 +59,7 @@ namespace MagicLand_System.Controllers
         [HttpPut(ApiEndpointConstant.LectureEndPoint.TakeStudentAttendance)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
-        //[Authorize(Roles = "LECTURER")]
+        [Authorize(Roles = "LECTURER")]
         public async Task<IActionResult> TakeStudentAttendance([FromBody] AttendanceRequest request, [FromQuery] SlotEnum slot)
         {
             var response = await _studentService.TakeStudentAttendanceAsync(request, slot);
