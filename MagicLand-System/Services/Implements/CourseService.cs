@@ -123,10 +123,23 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return courses.Select(c => CourseCustomMapper
+            var findCourse =  courses.Select(c => CourseCustomMapper
                   .fromCourseToCourseResExtraInfor(c, coursePrerequisites
                   .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
                   coureSubsequents)).ToList();
+            foreach (var course in findCourse)
+            {
+                var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status.Equals("Progressing")));
+                if(count == null)
+                {
+                    course.NumberClassOnGoing = 0;
+                }
+                else
+                {
+                    course.NumberClassOnGoing = count.Count();
+                }
+            }
+            return findCourse;
         }
 
         private async Task<ICollection<Course>> GetDefaultCourse()
