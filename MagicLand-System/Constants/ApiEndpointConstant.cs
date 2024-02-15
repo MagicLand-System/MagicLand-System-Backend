@@ -142,10 +142,11 @@
         public static class NotificationEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/notification";
-            public const string GetNotifications = "/user" + EndPointBase;
-            public const string GetStaffNotifications = "/staff" + EndPointBase;
+            public const string GetNotifications = EndPointBase + "/user";
+            public const string GetStaffNotifications = EndPointBase + "/staff";
             public const string UpdateNotification = EndPointBase + "/update";
-            public const string DeleteNotification = EndPointBase + "/delete/{id}";
+            public const string DeleteNotification = EndPointBase + "/{id}/delete";
+            public const string DirectPushNotification = EndPointBase + "/direct/pushNotification";
         }
     }
 }

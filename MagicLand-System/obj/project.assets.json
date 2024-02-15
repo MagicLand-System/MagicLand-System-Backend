@@ -75,6 +75,19 @@
           }
         }
       },
+      "CorePush/3.0.4": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "12.0.3",
+          "Portable.BouncyCastle": "1.8.9"
+        },
+        "compile": {
+          "lib/netstandard2.0/CorePush.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/CorePush.dll": {}
+        }
+      },
       "EPPlus/7.0.1": {
         "type": "package",
         "dependencies": {
@@ -941,6 +954,19 @@
           }
         }
       },
+      "Portable.BouncyCastle/1.8.9": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/BouncyCastle.Crypto.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/BouncyCastle.Crypto.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Quartz/3.8.0": {
         "type": "package",
         "dependencies": {
@@ -1587,6 +1613,18 @@
         "azureicon.png",
         "lib/netstandard2.0/Azure.Identity.dll",
         "lib/netstandard2.0/Azure.Identity.xml"
+      ]
+    },
+    "CorePush/3.0.4": {
+      "sha512": "YePvy76FfCYNM/Ey1RuNX/wRwSyPFJG2EWVieFlBKoGeTmpoIGkB+OYeiDXxJjy5EkgNSs/J9oVNTy13UL4KTA==",
+      "type": "package",
+      "path": "corepush/3.0.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "corepush.3.0.4.nupkg.sha512",
+        "corepush.nuspec",
+        "lib/netstandard2.0/CorePush.dll"
       ]
     },
     "EPPlus/7.0.1": {
@@ -3145,6 +3183,21 @@
         "nlog.nuspec"
       ]
     },
+    "Portable.BouncyCastle/1.8.9": {
+      "sha512": "wlJo8aFoeyl+W93iFXTK5ShzDYk5WBqoUPjTNEM0Xv9kn1H+4hmuCjF0/n8HLm9Nnp1aY6KNndWqQTNk+NGgRQ==",
+      "type": "package",
+      "path": "portable.bouncycastle/1.8.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net40/BouncyCastle.Crypto.dll",
+        "lib/net40/BouncyCastle.Crypto.xml",
+        "lib/netstandard2.0/BouncyCastle.Crypto.dll",
+        "lib/netstandard2.0/BouncyCastle.Crypto.xml",
+        "portable.bouncycastle.1.8.9.nupkg.sha512",
+        "portable.bouncycastle.nuspec"
+      ]
+    },
     "Quartz/3.8.0": {
       "sha512": "XYg+O+yw24kNLqp1YyEaZCzpQyVhcLQ5vep61RDKPZFjRNMBfBxcZiHNRFMNuN0XQIQ6zTGTHdZl9h7CuEVvXA==",
       "type": "package",
@@ -4307,6 +4360,7 @@
     "net7.0": [
       "AutoMapper >= 12.0.1",
       "AutoMapper.Extensions.Microsoft.DependencyInjection >= 12.0.1",
+      "CorePush >= 3.0.4",
       "EPPlus >= 7.0.1",
       "MagicLand-System.Domain >= 1.0.0",
       "MagicLand-System.Repository >= 1.0.0",
@@ -4384,6 +4438,10 @@
           "AutoMapper.Extensions.Microsoft.DependencyInjection": {
             "target": "Package",
             "version": "[12.0.1, )"
+          },
+          "CorePush": {
+            "target": "Package",
+            "version": "[3.0.4, )"
           },
           "EPPlus": {
             "target": "Package",
