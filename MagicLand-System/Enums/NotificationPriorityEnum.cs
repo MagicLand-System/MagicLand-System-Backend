@@ -1,6 +1,6 @@
 ﻿namespace MagicLand_System.Enums
 {
-    public enum NotificationTypeEnum
+    public enum NotificationPriorityEnum
     {
         NORMAL,
         REMIND,

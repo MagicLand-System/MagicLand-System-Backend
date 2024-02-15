@@ -29,28 +29,29 @@ namespace MagicLand_System.Mappers.Custom
         {
             if(startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot1).Trim())
             {
-                return "Tiết 1";
+                return "Slot 1";
             }
             if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot2).Trim())
             {
-                return "Tiết 2";
+                return "Slot 2";
             }
             if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot3).Trim())
             {
-                return "Tiết 3";
+                return "Slot 3";
             }
             if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot4).Trim())
             {
-                return "Tiết 4";
+                return "Slot 4";
             }
             if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot5).Trim())
             {
-                return "Tiết 5";
+                return "Slot 5";
             }
             if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot6).Trim())
             {
-                return "Tiết 6";
+                return "Slot 6";
             }
+
             return "Undefined";
         }
     }

@@ -307,7 +307,7 @@ namespace MagicLand_System.Services.Implements
                 Id = new Guid(),
                 Title = title,
                 Body = body,
-                Type = NotificationTypeEnum.IMPORTANCE.ToString(),
+                Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
                 Image = ImageUrlConstant.RefundImageUrl,
                 CreatedAt = DateTime.Now,
                 IsRead = false,

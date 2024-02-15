@@ -100,7 +100,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                 {
                                     GenerateNotification(currentDate, newNotifications, NotificationMessageContant.ChangeClassTitle,
                                         NotificationMessageContant.ChangeClassBody(cls.ClassCode!, stu.Student!.FullName!),
-                                        currentDate.Day - cls.StartDate.Day <= 3 ? NotificationTypeEnum.IMPORTANCE.ToString() : NotificationTypeEnum.WARNING.ToString(), cls.Id, stu.StudentId, cls.Image!);
+                                        currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, stu.StudentId, cls.Image!);
                                 }
                             }
                             continue;
@@ -135,7 +135,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     GenerateNotification(currentDate, newNotifications, NotificationMessageContant.MakeUpAttendanceTitle,
                            NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
-                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationTypeEnum.IMPORTANCE.ToString() : NotificationTypeEnum.WARNING.ToString(), cls.Id, attendance.StudentId, cls.Image!);
+                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, attendance.StudentId, cls.Image!);
                 }
             }
         }
@@ -147,7 +147,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 Id = new Guid(),
                 Title = title,
                 Body = body,
-                Type = type,
+                Priority = type,
                 Image = image,
                 CreatedAt = currentDate,
                 IsRead = false,

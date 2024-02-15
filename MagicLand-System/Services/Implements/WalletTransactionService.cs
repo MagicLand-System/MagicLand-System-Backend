@@ -242,7 +242,7 @@ namespace MagicLand_System.Services.Implements
                     });
 
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
-            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationTypeEnum.NORMAL.ToString(), cls.Image!, actionData);
+            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
         }
 
         private Notification GenerateNewNotification(User targetUser, string title, string body, string type, string image, string actionData)
@@ -252,7 +252,7 @@ namespace MagicLand_System.Services.Implements
                 Id = new Guid(),
                 Title = title,
                 Body = body,
-                Type = type,
+                Priority = type,
                 Image = image,
                 CreatedAt = DateTime.Now,
                 IsRead = false,
@@ -806,7 +806,7 @@ namespace MagicLand_System.Services.Implements
                 trans.UpdateTime = DateTime.Now;
 
                 var newNotification = GenerateNewNotification(personalWallet.User!, tilte, body,
-                    isSuccess ? NotificationTypeEnum.NORMAL.ToString() : NotificationTypeEnum.IMPORTANCE.ToString(), image, actionData);
+                    isSuccess ? NotificationPriorityEnum.NORMAL.ToString() : NotificationPriorityEnum.IMPORTANCE.ToString(), image, actionData);
 
                 await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
             }

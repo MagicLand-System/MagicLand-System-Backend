@@ -922,54 +922,54 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-            var suitableClassesx =  suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
-            List<ClassWithDailyScheduleRes> res = new List<ClassWithDailyScheduleRes>();
-            foreach (var suitableClass in suitableClassesx)
-            {
-                var groupBy = from schedule in suitableClass.Schedules
-                              group schedule by new { schedule.DayOfWeek, schedule.StartTime, schedule.EndTime } into grouped
-                              select new DailySchedule
-                              {
-                                  DayOfWeek = grouped.Key.DayOfWeek,
-                                  StartTime = grouped.Key.StartTime,
-                                  EndTime = grouped.Key.EndTime,
-                              };
-                foreach(var sch in groupBy)
-                {
-                    if (sch.DayOfWeek.Equals("Sunday"))
-                    {
-                        sch.DayOfWeek = "Chủ Nhật";
-                    }
-                    if (sch.DayOfWeek.Equals("Monday"))
-                    {
-                        sch.DayOfWeek = "Thứ Hai";
-                    }
-                    if (sch.DayOfWeek.Equals("Tuesday"))
-                    {
-                        sch.DayOfWeek = "Thứ Ba";
-                    }
-                    if (sch.DayOfWeek.Equals("Wednesday"))
-                    {
-                        sch.DayOfWeek = "Thứ Tư";
-                    }
-                    if (sch.DayOfWeek.Equals("Thursday"))
-                    {
-                        sch.DayOfWeek = "Thứ Năm";
-                    }
-                    if (sch.DayOfWeek.Equals("Friday"))
-                    {
-                        sch.DayOfWeek = "Thứ Sáu";
-                    }
-                    if (sch.DayOfWeek.Equals("Saturday"))
-                    {
-                        sch.DayOfWeek = "Thứ Bảy";
-                    }
-                }
-                suitableClass.Schedules = groupBy.ToList();
+        //    var suitableClassesx =  suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+        //    List<ClassWithDailyScheduleRes> res = new List<ClassWithDailyScheduleRes>();
+        //    foreach (var suitableClass in suitableClassesx)
+        //    {
+        //        var groupBy = from schedule in suitableClass.Schedules
+        //                      group schedule by new { schedule.DayOfWeek, schedule.StartTime, schedule.EndTime } into grouped
+        //                      select new DailySchedule
+        //                      {
+        //                          DayOfWeek = grouped.Key.DayOfWeek,
+        //                          StartTime = grouped.Key.StartTime,
+        //                          EndTime = grouped.Key.EndTime,
+        //                      };
+        //        foreach(var sch in groupBy)
+        //        {
+        //            if (sch.DayOfWeek.Equals("Sunday"))
+        //            {
+        //                sch.DayOfWeek = "Chủ Nhật";
+        //            }
+        //            if (sch.DayOfWeek.Equals("Monday"))
+        //            {
+        //                sch.DayOfWeek = "Thứ Hai";
+        //            }
+        //            if (sch.DayOfWeek.Equals("Tuesday"))
+        //            {
+        //                sch.DayOfWeek = "Thứ Ba";
+        //            }
+        //            if (sch.DayOfWeek.Equals("Wednesday"))
+        //            {
+        //                sch.DayOfWeek = "Thứ Tư";
+        //            }
+        //            if (sch.DayOfWeek.Equals("Thursday"))
+        //            {
+        //                sch.DayOfWeek = "Thứ Năm";
+        //            }
+        //            if (sch.DayOfWeek.Equals("Friday"))
+        //            {
+        //                sch.DayOfWeek = "Thứ Sáu";
+        //            }
+        //            if (sch.DayOfWeek.Equals("Saturday"))
+        //            {
+        //                sch.DayOfWeek = "Thứ Bảy";
+        //            }
+        //        }
+        //        suitableClass.Schedules = groupBy.ToList();
                               
-            }
-            return suitableClassesx;
-        }
+        //    }
+        //    return suitableClassesx;
+        //}
 
         public async Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList)
         {
