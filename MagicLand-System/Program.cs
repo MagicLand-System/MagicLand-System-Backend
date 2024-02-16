@@ -66,6 +66,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.Configure<VnpayConfig>(builder.Configuration.GetSection(VnpayConfig.ConfigName));
+builder.Services.Configure<FcmNotificationSetting>(builder.Configuration.GetSection(FcmNotificationSetting.ConfigName));
 builder.Services.AddDbContext<MagicLandContext>();
 //builder.Services.AddScoped<MagicLandContext>();
 builder.Services.AddScoped<IUnitOfWork<MagicLandContext>, UnitOfWork<MagicLandContext>>();

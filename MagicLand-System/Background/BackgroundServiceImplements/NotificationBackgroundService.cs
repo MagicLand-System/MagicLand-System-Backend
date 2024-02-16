@@ -98,8 +98,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                             {
                                 if (stu.CanChangeClass)
                                 {
-                                    GenerateNotification(currentDate, newNotifications, NotificationMessageContant.ChangeClassTitle,
-                                        NotificationMessageContant.ChangeClassBody(cls.ClassCode!, stu.Student!.FullName!),
+                                    GenerateNotification(currentDate, newNotifications, NotificationMessageContant.ChangeClassRequestTitle,
+                                        NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
                                         currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, stu.StudentId, cls.Image!);
                                 }
                             }

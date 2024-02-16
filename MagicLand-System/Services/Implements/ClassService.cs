@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Class;
@@ -16,6 +18,7 @@ using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Diagnostics;
 using System.Net.WebSockets;
 
 namespace MagicLand_System.Services.Implements
@@ -1095,7 +1098,7 @@ namespace MagicLand_System.Services.Implements
         //            }
         //        }
         //        suitableClass.Schedules = groupBy.ToList();
-                              
+
         //    }
         //    return suitableClassesx;
         //}
@@ -1116,11 +1119,12 @@ namespace MagicLand_System.Services.Implements
                 foreach (Guid id in studentIdList)
                 {
                     var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id,
-                    include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!.ThenInclude(x => x.Slot!));
+                    include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!.ThenInclude(x => x.Slot!).Include(x => x.User));
 
                     ValidateStudentChangeClassRequest(toClassId, studentIdList, fromClass, toClass, id, student);
 
-                    await ChangeClassProgress(toClassId, fromClass, toClass, id);
+                    await ChangeClassProgress(fromClass, toClass, student);
+
                 }
 
                 _unitOfWork.Commit();
@@ -1132,20 +1136,20 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        private async Task ChangeClassProgress(Guid toClassId, Class fromClass, Class toClass, Guid id)
+        private async Task ChangeClassProgress(Class fromClass, Class toClass, Student student)
         {
-            var oldStudentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == id && x.ClassId == fromClass.Id);
+            var oldStudentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == student.Id && x.ClassId == fromClass.Id);
             var newStudentClass = new StudentClass
             {
                 Id = new Guid(),
-                ClassId = toClassId,
-                StudentId = id,
+                ClassId = toClass.Id,
+                StudentId = student.Id,
             };
 
             var oldStudentAttendance = new List<Attendance>();
             foreach (var schedule in fromClass.Schedules)
             {
-                var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.StudentId == id && x.ScheduleId == schedule.Id);
+                var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.StudentId == student.Id && x.ScheduleId == schedule.Id);
                 if (attendance != null)
                 {
                     oldStudentAttendance.Add(attendance);
@@ -1160,19 +1164,39 @@ namespace MagicLand_System.Services.Implements
                     Id = new Guid(),
                     IsPublic = true,
                     IsPresent = default,
-                    StudentId = id,
+                    StudentId = student.Id,
                     ScheduleId = schedule.Id
                 });
             }
 
-            await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance);
+            var newNotification = new Notification
+            {
+                Id = new Guid(),
+                Title = NotificationMessageContant.ChangeClassTitle,
+                Body = NotificationMessageContant.ChangeClassBody(fromClass.ClassCode!, toClass.ClassCode!,
+                      student.FullName!, fromClass.Status == ClassStatusEnum.UPCOMING.ToString() ? ChangeClassReasoneEnum.REQUEST : ChangeClassReasoneEnum.CANCELED),
+                Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
+                Image = ImageUrlConstant.SystemImageUrl,
+                CreatedAt = DateTime.Now,
+                IsRead = false,
+                ActionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                      {
+                              ($"{AttachValueEnum.ClassId}", $"{fromClass.Id} , {toClass.Id}"),
+                            ($"{AttachValueEnum.StudentId}", $"{student.Id}"),
+                      }),
+                UserId = student.User.Id,
+            };
+
+            await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance, newNotification);
         }
 
-        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass, List<Attendance> oldStudentAttendance, List<Attendance> newStudentAttendance)
+        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass, List<Attendance> oldStudentAttendance, List<Attendance> newStudentAttendance, Notification newNotification)
         {
 
             await _unitOfWork.GetRepository<StudentClass>().InsertAsync(newStudentClass);
             await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendance);
+            await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
+
             if (oldStudentAttendance.Any())
             {
                 _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldStudentAttendance);
@@ -1301,7 +1325,7 @@ namespace MagicLand_System.Services.Implements
             {
                 schedule.Date = request.DateTime.Value;
                 var date = request.DateTime.Value.DayOfWeek;
-                if(date == DayOfWeek.Sunday)
+                if (date == DayOfWeek.Sunday)
                 {
                     schedule.DayOfWeek = 1;
                 }
@@ -1345,7 +1369,7 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId,string studentId)
+        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId, string studentId)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId), include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
             if (schedule == null)
@@ -1458,15 +1482,15 @@ namespace MagicLand_System.Services.Implements
                 };
                 responses.Add(scheduleResponse);
             }
-            var attendance = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate : x => x.StudentId.ToString().Equals(studentId));
-            if(attendance == null)
+            var attendance = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId));
+            if (attendance == null)
             {
                 return responses;
             }
             foreach (var response in responses)
             {
                 var isExist = attendance.SingleOrDefault(x => x.ScheduleId.ToString().Equals(response.Id.ToString()));
-                if(isExist != null)
+                if (isExist != null)
                 {
                     responses.Remove(response);
                 }

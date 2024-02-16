@@ -146,6 +146,7 @@
             public const string GetStaffNotifications = EndPointBase + "/staff";
             public const string UpdateNotification = EndPointBase + "/update";
             public const string DeleteNotification = EndPointBase + "/{id}/delete";
+            public const string DirectPushNotification = EndPointBase + "/direct/pushNotification";
         }
     }
 }
