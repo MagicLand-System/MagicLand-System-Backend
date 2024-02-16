@@ -818,13 +818,141 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList)
         {
             var currentClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
+            include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
 
-            ValidateFindSuitableRequestClass(classId, studentIdList, currentClass);
+            if (currentClass == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
 
-            var suitableClasses = await FindSuitableClasses(classId, studentIdList, currentClass);
+            if (!studentIdList.All(stu => currentClass.StudentClasses.Any(sc => sc.StudentId == stu)))
+            {
+                throw new BadHttpRequestException($"Id [{string.Join(", ", studentIdList)}] Của Các Học Sinh Không Thuộc Về Lớp [{currentClass.ClassCode}]", StatusCodes.Status400BadRequest);
+            }
 
-            return suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+            if (currentClass.Status != ClassStatusEnum.UPCOMING.ToString() && currentClass.Status != ClassStatusEnum.CANCELED.ToString())
+            {
+                string errorMessage = currentClass.Status == ClassStatusEnum.LOCKED.ToString()
+                    ? "Đã Chốt Số Lượng Học Sinh"
+                    : currentClass.Status == ClassStatusEnum.COMPLETED.ToString()
+                    ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
+
+                throw new BadHttpRequestException($"Chỉ Có Thể Chuyển Học Sinh Thuộc Lớp Sắp Bắt Đầu Hoặc Đã Hủy, Lớp [{currentClass.ClassCode}] [{errorMessage}], Không Thể Chuyển Lớp",
+                      StatusCodes.Status400BadRequest);
+            }
+
+            var classes = new List<Class>();
+
+            foreach (Guid id in studentIdList)
+            {
+                var currentStudentClasses = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id != classId && x.StudentClasses.Any(sc => sc.StudentId == id) && (x.Status != ClassStatusEnum.COMPLETED.ToString() || x.Status != ClassStatusEnum.CANCELED.ToString()),
+                include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Slot)!);
+
+                if (currentStudentClasses != null)
+                {
+                    classes.AddRange(currentStudentClasses);
+                }
+            }
+
+            var allCourseClass = await _unitOfWork.GetRepository<Class>()
+               .GetListAsync(predicate: x => x.CourseId == currentClass.CourseId && x.Status == ClassStatusEnum.UPCOMING.ToString(),
+               include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
+               .Include(x => x.Lecture)
+               .Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
+               .Include(x => x.StudentClasses));
+
+            var suitableClasses = allCourseClass.Where(courCls =>
+                !courCls.Schedules.Any(courSchedule =>
+                    classes.Any(currCls =>
+                        currCls.Schedules.Any(schedule =>
+                            schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
+                .ToList();
+            //var suitableClasses = new List<Class>();
+
+            //foreach (var courCls in allCourseClass)
+            //{
+            //    bool hasOverlap = false;
+
+            //    foreach (var courSchedule in courCls.Schedules)
+            //    {
+            //        foreach (var currCls in classes)
+            //        {
+            //            foreach (var schedule in currCls.Schedules)
+            //            {
+            //                if (schedule.Slot?.StartTime == courSchedule.Slot?.StartTime)
+            //                {
+            //                    hasOverlap = true;
+            //                    break; // No need to check further, as we found an overlap
+            //                }
+            //            }
+
+            //            if (hasOverlap)
+            //                break; // No need to check further, as we found an overlap
+            //        }
+
+            //        if (hasOverlap)
+            //            break; // No need to check further, as we found an overlap
+            //    }
+
+            //    if (!hasOverlap)
+            //        suitableClasses.Add(courCls);
+            //}
+
+
+
+
+            suitableClasses = suitableClasses
+           .Where(cls => cls.StudentClasses.Count + studentIdList.Count <= cls.LimitNumberStudent)
+           .Where(cls => cls.Id != currentClass.Id).ToList();
+
+            var suitableClassesx = suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+            List<ClassWithDailyScheduleRes> res = new List<ClassWithDailyScheduleRes>();
+            foreach (var suitableClass in suitableClassesx)
+            {
+                var groupBy = from schedule in suitableClass.Schedules
+                              group schedule by new { schedule.DayOfWeek, schedule.StartTime, schedule.EndTime } into grouped
+                              select new DailySchedule
+                              {
+                                  DayOfWeek = grouped.Key.DayOfWeek,
+                                  StartTime = grouped.Key.StartTime,
+                                  EndTime = grouped.Key.EndTime,
+                              };
+                foreach (var sch in groupBy)
+                {
+                    if (sch.DayOfWeek.Equals("Sunday"))
+                    {
+                        sch.DayOfWeek = "Chủ Nhật";
+                    }
+                    if (sch.DayOfWeek.Equals("Monday"))
+                    {
+                        sch.DayOfWeek = "Thứ Hai";
+                    }
+                    if (sch.DayOfWeek.Equals("Tuesday"))
+                    {
+                        sch.DayOfWeek = "Thứ Ba";
+                    }
+                    if (sch.DayOfWeek.Equals("Wednesday"))
+                    {
+                        sch.DayOfWeek = "Thứ Tư";
+                    }
+                    if (sch.DayOfWeek.Equals("Thursday"))
+                    {
+                        sch.DayOfWeek = "Thứ Năm";
+                    }
+                    if (sch.DayOfWeek.Equals("Friday"))
+                    {
+                        sch.DayOfWeek = "Thứ Sáu";
+                    }
+                    if (sch.DayOfWeek.Equals("Saturday"))
+                    {
+                        sch.DayOfWeek = "Thứ Bảy";
+                    }
+                }
+                suitableClass.Schedules = groupBy.ToList();
+
+            }
+            return suitableClassesx;
+
         }
 
         private async Task<List<Class>> FindSuitableClasses(Guid classId, List<Guid> studentIdList, Class currentClass)
