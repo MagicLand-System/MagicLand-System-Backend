@@ -89,22 +89,22 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
 
-        #region document API Direct Push Notification
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <response code="200">Xóa Thành Công</response>
-        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
-        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
-        #endregion
-        [HttpPost(ApiEndpointConstant.NotificationEndPoint.DeleteNotification)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(Exception))]
-        [AllowAnonymous]
-        public async Task<IActionResult> DirectPushNotification([FromBody] NotificationModel notificationModel)
-        {
-            var response = await _notificationService.SendNotification(notificationModel);
-            return Ok(response);
-        }
+        //#region document API Direct Push Notification
+        ///// <summary>
+        /////  
+        ///// </summary>
+        ///// <response code="200">Xóa Thành Công</response>
+        ///// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        ///// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        //#endregion
+        //[HttpPost(ApiEndpointConstant.NotificationEndPoint.DirectPushNotification)]
+        //[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        //[ProducesErrorResponseType(typeof(Exception))]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> DirectPushNotification([FromBody] NotificationModel notificationModel)
+        //{
+        //    var response = await _notificationService.SendNotification(notificationModel);
+        //    return Ok(response);
+        //}
     }
 }

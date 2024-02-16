@@ -1,10 +1,12 @@
 ﻿using MagicLand_System.Enums;
+using MagicLand_System.Utils;
 
 namespace MagicLand_System.Constants
 {
     public class NotificationMessageContant
     {
-        public const string ChangeClassTitle = "Học Sinh Cần Chuyển Lớp";
+        public const string ChangeClassRequestTitle = "Học Sinh Cần Chuyển Lớp";
+        public const string ChangeClassTitle = "Học Sinh Được Chuyển Lớp";
         public const string MakeUpAttendanceTitle = "Học Sinh Cần Điểm Danh Bù";
         public const string PaymentSuccessTitle = "Đăng Ký Lớp Học Thành Công";
         public const string TopUpSuccessTitle = "Nạp Tiền Vào Ví Thành Công";
@@ -15,9 +17,13 @@ namespace MagicLand_System.Constants
         public const string NoRefundTitle = "Không Hoàn Tiền Từ Hệ Thống";
 
 
-        public static string ChangeClassBody(string classCode, string studentName)
+        public static string ChangeClassRequestBody(string classCode, string studentName)
         {
             return $"Học Sinh {studentName} Thuộc Lớp {classCode} Cần Được Chuyển Lớp, Do Lớp Đã Hủy Vì Không Đủ Số Lượng Học Sinh";
+        }
+        public static string ChangeClassBody(string fromClass, string toClass, string studentName, ChangeClassReasoneEnum reason)
+        {
+            return $"Học Sinh {studentName} Đã Được Chuyển Từ Lớp {fromClass} Sang Lớp {toClass}, {EnumUtil.GetDescriptionFromEnum<ChangeClassReasoneEnum>(reason)}";
         }
         public static string MakeUpAttendanceBody(string classCode, string studentName, DateTime date)
         {

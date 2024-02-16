@@ -217,10 +217,6 @@
               "target": "Package",
               "version": "[12.0.1, )"
             },
-            "CorePush": {
-              "target": "Package",
-              "version": "[3.0.4, )"
-            },
             "EPPlus": {
               "target": "Package",
               "version": "[7.0.1, )"
