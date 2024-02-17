@@ -330,5 +330,11 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId,studentId);
             return Ok(isSuccess);
         }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClasses)]
+        public async Task<IActionResult> GetMakeUpClass([FromBody] List<CreateClassesRequest> requests)
+        {
+            var isSuccess = await _classService.InsertClasses(requests);
+            return Ok("insert all success");
+        }
     }
 }   

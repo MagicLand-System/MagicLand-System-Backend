@@ -1497,5 +1497,97 @@ namespace MagicLand_System.Services.Implements
             }
             return responses;
         }
+        public async Task<bool> InsertClasses(List<CreateClassesRequest> request)
+        {
+            if (request == null)
+            {
+                return false;
+            }
+            foreach (var rq in request)
+            {
+                var courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Name.Trim().ToLower().Equals(rq.CourseName.Trim().ToLower()), selector: x => x.Id);
+                var roomId = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Name.Trim().ToLower().Equals(rq.RoomName.Trim().ToLower()), selector: x => x.Id);
+                var lecturerId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().ToLower().Equals(rq.LecturerPhone.Trim().ToLower()), selector: x => x.Id);
+                if (courseId == null)
+                {
+                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại courseName như vậy", StatusCodes.Status400BadRequest);
+                }
+                if (roomId == null)
+                {
+                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại roomName như vậy", StatusCodes.Status400BadRequest);
+                }
+                if (lecturerId == null)
+                {
+                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại  lecturer như vậy", StatusCodes.Status400BadRequest);
+                }
+                var schedules = rq.ScheduleRequests;
+                List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
+                foreach (var schedule in schedules)
+                {
+                    string[] parts = schedule.ScheduleTime.Split(':');
+                    string day = parts[0].Trim(); // Thứ 2
+                    string timeRange = parts[1].Trim(); // 15:00 - 20:00
+                    string startTime = timeRange.Split('-')[0].Trim() + ":00"; // 15:00
+                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Equals(startTime.Trim()), selector: x => x.Id);
+                    if (slotId == null)
+                    {
+                        throw new BadHttpRequestException($"cột {rq.Index} không tồn tại slot như v", StatusCodes.Status400BadRequest);
+                    }
+                    string dateofweek = "";
+                    if (day.ToLower().Equals("thứ 2"))
+                    {
+                        dateofweek = "monday";
+                    }
+                    if (day.ToLower().Equals("thứ 3"))
+                    {
+                        dateofweek = "tuesday";
+                    }
+                    if (day.ToLower().Equals("thứ 4"))
+                    {
+                        dateofweek = "wednesday";
+                    }
+                    if (day.ToLower().Equals("thứ 5"))
+                    {
+                        dateofweek = "thursday";
+                    }
+                    if (day.ToLower().Equals("thứ 6"))
+                    {
+                        dateofweek = "friday";
+                    }
+                    if (day.ToLower().Equals("thứ 7"))
+                    {
+                        dateofweek = "saturday";
+                    }
+                    if (day.ToLower().Equals("chủ nhật"))
+                    {
+                        dateofweek = "sunday";
+                    }
+                    scheduleRequests.Add(new ScheduleRequest
+                    {
+                        DateOfWeek = dateofweek,
+                        SlotId = slotId,
+                    });
+                }
+                var myRequest = new CreateClassRequest
+                {
+                    ClassCode = rq.ClassCode,
+                    CourseId = courseId,
+                    LecturerId = lecturerId,
+                    LeastNumberStudent = rq.LeastNumberStudent,
+                    LimitNumberStudent = rq.LimitNumberStudent,
+                    Method = rq.Method,
+                    RoomId = roomId,
+                    ScheduleRequests = scheduleRequests,
+                    StartDate = rq.StartDate,
+                };
+                var isSuccess = await CreateNewClass(myRequest);
+                if (!isSuccess)
+                {
+                    throw new BadHttpRequestException($"{rq.Index} không thể insert", StatusCodes.Status400BadRequest);
+                }
+            }
+            return true;
+        }
     }
 }
+

@@ -32,5 +32,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<bool> UpdateSession(string  sessionId,UpdateSessionRequest request);
         Task<bool> MakeUpClass(string StudentId,string ScheduleId,MakeupClassRequest request);
         Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId,string studentId);
+        Task<bool> InsertClasses(List<CreateClassesRequest> request);
     }
 }

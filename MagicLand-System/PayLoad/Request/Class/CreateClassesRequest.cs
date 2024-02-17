@@ -4,9 +4,10 @@ namespace MagicLand_System.PayLoad.Request.Class
 {
     public class CreateClassesRequest
     {
-        public Guid CourseId { get; set; }
-        public Guid RoomId { get; set; }
-        public Guid LecturerId { get; set; }
+        public int Index { get; set; }
+        public string CourseName { get; set; }
+        public string RoomName { get; set; }
+        public string LecturerPhone { get; set; }
         public DateTime StartDate { get; set; }
         public string Method { get; set; }
         [Required(ErrorMessage = "Limit number student is missing")]
@@ -17,6 +18,6 @@ namespace MagicLand_System.PayLoad.Request.Class
         [Required(ErrorMessage = "Min number student is missing")]
         [Range(1, 100)]
         public int LeastNumberStudent { get; set; }
-        public List<ScheduleRequest> ScheduleRequests { get; set; } = new List<ScheduleRequest>();
+        public List<ScheduleRequestV2> ScheduleRequests { get; set; } = new List<ScheduleRequestV2>();
     }
 }
