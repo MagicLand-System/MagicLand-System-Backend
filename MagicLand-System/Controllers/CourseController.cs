@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -133,6 +134,12 @@ namespace MagicLand_System.Controllers
         {
             var categories = await _courseService.GetCourseCategories();
             return Ok(categories);
+        }
+        [HttpPost(ApiEndpointConstant.CourseEnpoint.AddCourse)]
+        public async Task<IActionResult> InsertCourse([FromBody] CreateCourseRequest request)
+        {
+            var isSuccess = await _courseService.AddCourse(request);
+            return Ok(isSuccess);
         }
     }
 }

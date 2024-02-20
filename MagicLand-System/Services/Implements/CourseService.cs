@@ -2,6 +2,7 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Mappers.Custom;
+using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -215,6 +216,127 @@ namespace MagicLand_System.Services.Implements
             }
 
             return listCourseResExtraInfror;
+        }
+
+        public async Task<bool> AddCourse(CreateCourseRequest request)
+        {
+            if(request != null) {
+                Course course = new Course
+                {
+                    AddedDate = DateTime.Now,
+                    CourseCategoryId = Guid.Parse(request.SubjectId),
+                    Id = Guid.NewGuid(),
+                    Image = request.Img,
+                    MaxYearOldsStudent = request.MaxAge,
+                    MinYearOldsStudent = request.MinAge,
+                    MainDescription = request.MainDescription,
+                    Name = request.CourseName,
+                    Price = request.Price,
+                    UpdateDate = DateTime.Now,
+                    Status = "UPCOMING",
+                   
+                };
+                List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();
+                var listSubDescription = request.SubDescriptions;
+                List<SubDescriptionContent> contents = new List<SubDescriptionContent>();
+                foreach(var sd in listSubDescription)
+                {
+                  var newTitle =  new SubDescriptionTitle
+                    {
+                        Title = sd.Title,
+                        Id = Guid.NewGuid(),
+                        CourseId = course.Id,
+                    };
+                    var contentList = sd.SubDescriptionContentRequests;
+                    foreach(var content in contentList)
+                    {
+                        var newDescrption = new SubDescriptionContent
+                        {
+                            SubDescriptionTitleId = newTitle.Id,
+                            Content = content.Content,
+                            Description = content.Description,
+                            Id = Guid.NewGuid(),
+                        };
+                        contents.Add(newDescrption);
+                    }
+                    newTitle.SubDescriptionContents = contents;
+                    subDescriptionTitles.Add(newTitle);
+                }
+                course.SubDescriptionTitles = subDescriptionTitles;
+                CourseSyllabus syllabus = new CourseSyllabus
+                {
+                    Id = Guid.NewGuid(),
+                    CourseId = course.Id,
+                    EffectiveDate = request.EffecttiveDate,
+                    UpdateTime = DateTime.Now,
+                    
+                };
+                List<Material> materials = new List<Material>();
+                var mat = request.MaterialRequests;
+                foreach(var material in mat)
+                {
+                    materials.Add(new Material
+                    {
+                        Id = Guid.NewGuid(),
+                        CourseSyllabusId = syllabus.Id,
+                        URL = material
+                    });
+                }
+                course.CourseSyllabusId = syllabus.Id;
+                syllabus.Materials = materials;
+                List<Topic> topicList = new List<Topic>();
+                List<Session> sessions = new List<Session>();
+                List<SessionDescription> sessionDescriptions = new List<SessionDescription>();
+                var topics = request.SyllabusRequests.ToList();
+                foreach(var topicx in topics)
+                {
+                    Topic topic = new Topic
+                    {
+                        Id = Guid.NewGuid(),
+                        CourseSyllabusId = syllabus.Id,
+                        Name = topicx.TopicName,
+                        OrderNumber = topicx.Index,
+                    };
+                    topicList.Add(topic);
+                    var sessionList = topicx.SessionRequests.ToList();
+                    foreach (var session in sessionList)
+                    {
+                        var content = session.SessionContentRequests.ToList();
+                        foreach(var cont in content)
+                        {
+                            Session session1 = new Session
+                            {
+                                Id = Guid.NewGuid(),
+                                Content = cont.Content,
+                                TopicId = topic.Id,
+                                NoSession = session.Order,
+                            };
+                            sessions.Add(session1);
+                            var dex = cont.SessionContentDetails;
+                            foreach(var rec in dex)
+                            {
+                                SessionDescription sessionDescription = new SessionDescription
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Detail = rec,
+                                    SessionId = session1.Id,
+                                };
+                                sessionDescriptions.Add(sessionDescription);
+                            }
+
+                        }
+                    }
+                }
+                await _unitOfWork.GetRepository<Course>().InsertAsync(course);
+                await _unitOfWork.GetRepository<CourseSyllabus>().InsertAsync(syllabus);
+                await _unitOfWork.GetRepository<Material>().InsertRangeAsync(materials);
+                await _unitOfWork.GetRepository<Topic>().InsertRangeAsync(topicList);
+                await _unitOfWork.GetRepository<Session>().InsertRangeAsync(sessions);
+                await _unitOfWork.GetRepository<SessionDescription>().InsertRangeAsync(sessionDescriptions);
+                var isSucess = await _unitOfWork.CommitAsync() > 0;
+                return isSucess;
+            }
+            return false;
         }
     }
 }
