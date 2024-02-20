@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
@@ -1369,7 +1370,7 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId, string studentId)
+        public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId, string studentId, DateTime? date = null, string? keyword = null, string? slotId = null)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId), include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
             if (schedule == null)
@@ -1401,7 +1402,13 @@ namespace MagicLand_System.Services.Implements
                 {
                     var ClassIndex = allSchedule.Where(x => x.ClassId.ToString().Equals(Id.ToString())).ToList();
                     var ClassSort = ClassIndex.OrderBy(x => x.Date).ToArray();
-                    schedules.Add(ClassSort[index]);
+                    if(ClassSort.Length -1 < index)
+                    {
+                        schedules.Add(ClassSort[ClassSort.Length -1]);   
+                    } else
+                    {
+                        schedules.Add(ClassSort[index]);
+                    }
                 }
             }
             List<ScheduleResponse> responses = new List<ScheduleResponse>();
@@ -1485,17 +1492,30 @@ namespace MagicLand_System.Services.Implements
             var attendance = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId));
             if (attendance == null)
             {
-                return responses;
+                responses = responses;
             }
+            List<ScheduleResponse> resultList = new List<ScheduleResponse>();
             foreach (var response in responses)
             {
                 var isExist = attendance.SingleOrDefault(x => x.ScheduleId.ToString().Equals(response.Id.ToString()));
-                if (isExist != null)
+                if (isExist == null)
                 {
-                    responses.Remove(response);
+                    resultList.Add(response);
                 }
             }
-            return responses;
+            if(date != null && responses != null)
+            {
+                resultList =(responses.Where(x => (x.Date.Day == date.Value.Day && x.Date.Month == date.Value.Month && x.Date.Year == date.Value.Year))).ToList();
+            }
+            if(slotId != null && responses != null)
+            {
+                resultList = (responses.Where(x => x.Slot.SlotId.ToString().Equals(slotId.ToString()))).ToList();
+            }
+            if (keyword != null && responses != null)
+            {
+                resultList = (responses.Where(x => (x.ClassCode.Trim().ToLower().Contains(keyword.Trim().ToLower()) || x.Lecturer.FullName.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            return resultList;
         }
         public async Task<bool> InsertClasses(List<CreateClassesRequest> request)
         {
