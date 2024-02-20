@@ -1570,7 +1570,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 var myRequest = new CreateClassRequest
                 {
-                    ClassCode = rq.ClassCode,
+                    ClassCode = await AutoCreateClassCode(courseId.ToString()),
                     CourseId = courseId,
                     LecturerId = lecturerId,
                     LeastNumberStudent = rq.LeastNumberStudent,

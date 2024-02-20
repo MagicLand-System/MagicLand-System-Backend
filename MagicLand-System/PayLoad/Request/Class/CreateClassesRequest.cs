@@ -13,8 +13,6 @@ namespace MagicLand_System.PayLoad.Request.Class
         [Required(ErrorMessage = "Limit number student is missing")]
         [Range(1, 100)]
         public int LimitNumberStudent { get; set; }
-        [Required(ErrorMessage = "Class code is missing")]
-        public string ClassCode { get; set; }
         [Required(ErrorMessage = "Min number student is missing")]
         [Range(1, 100)]
         public int LeastNumberStudent { get; set; }
