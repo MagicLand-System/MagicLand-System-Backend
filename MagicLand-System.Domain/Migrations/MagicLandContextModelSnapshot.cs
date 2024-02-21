@@ -246,6 +246,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid?>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -259,6 +262,26 @@ namespace MagicLand_System.Domain.Migrations
                         .HasFilter("[CourseId] IS NOT NULL");
 
                     b.ToTable("CourseSyllabus", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Material", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseSyllabusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("URL")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseSyllabusId");
+
+                    b.ToTable("Material", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Notification", b =>
@@ -471,6 +494,26 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasIndex("TopicId");
 
                     b.ToTable("Session", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.SessionDescription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("SessionDescription", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Slot", b =>
@@ -849,6 +892,16 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Material", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.CourseSyllabus", "CourseSyllabus")
+                        .WithMany("Materials")
+                        .HasForeignKey("CourseSyllabusId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CourseSyllabus");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Notification", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.User", "TargetUser")
@@ -906,6 +959,17 @@ namespace MagicLand_System.Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("Topic");
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.SessionDescription", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.Session", "Session")
+                        .WithMany("SessionDescriptions")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Student", b =>
@@ -1074,6 +1138,8 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CourseSyllabus", b =>
                 {
+                    b.Navigation("Materials");
+
                     b.Navigation("Topics");
                 });
 
@@ -1102,6 +1168,11 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.Schedule", b =>
                 {
                     b.Navigation("Attendances");
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
+                {
+                    b.Navigation("SessionDescriptions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Slot", b =>

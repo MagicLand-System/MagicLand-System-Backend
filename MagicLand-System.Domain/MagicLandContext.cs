@@ -33,6 +33,8 @@ namespace MagicLand_System.Domain
         public DbSet<SubDescriptionContent> SubDescriptionContents { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<SessionDescription> SessionDescriptions { get; set; }
+        public DbSet<Material> Materials { get; set; }  
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -205,6 +207,18 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Notification");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.TargetUser).WithMany(e => e.Notifications).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<SessionDescription>(entity => 
+            {
+                entity.ToTable("SessionDescription");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(x => x.Session).WithMany(e => e.SessionDescriptions).OnDelete(DeleteBehavior.Restrict);   
+            });
+            modelBuilder.Entity<Material>(entity =>
+            {
+                entity.ToTable("Material");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.Materials).OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

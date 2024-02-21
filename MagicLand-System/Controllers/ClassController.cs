@@ -325,10 +325,16 @@ namespace MagicLand_System.Controllers
             return Ok("success");
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetMakeUpClass)]
-        public async Task<IActionResult> GetMakeUpClass(string scheduleId,string studentId)
+        public async Task<IActionResult> GetMakeUpClass(string scheduleId,string studentId,DateTime? dateTime,string? keyword,string? slotId)
         {
-            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId,studentId);
+            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId,studentId,dateTime,keyword,slotId);
             return Ok(isSuccess);
+        }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClasses)]
+        public async Task<IActionResult> GetMakeUpClass([FromBody] List<CreateClassesRequest> requests)
+        {
+            var isSuccess = await _classService.InsertClasses(requests);
+            return Ok("insert all success");
         }
     }
 }   

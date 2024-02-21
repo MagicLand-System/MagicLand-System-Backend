@@ -49,6 +49,7 @@
             public const string UpdateSession = ClassById + "/updateSession";
             public const string MakeUpClass = GetAll + "/{studentId}" + "/{scheduleId}/makeup";
             public const string GetMakeUpClass = GetAll + "/getMakeUpSchedule";
+            public const string InsertClasses = GetAll + "/insertClasses";
         }
         public static class PromotionEnpoint
         {
@@ -74,6 +75,7 @@
             public const string CourseById = GetAll + "/{id}";
             public const string FilterCourse = GetAll + "/filter";
             public const string GetCourseCategory = GetAll + "/categories";
+            public const string AddCourse = GetAll + "/insert";
         }
         public static class StudentEndpoint
         {
