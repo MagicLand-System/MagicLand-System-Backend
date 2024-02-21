@@ -4,5 +4,6 @@
     {
         public int Order {  get; set; } 
         public List<SessionContentRequest> SessionContentRequests { get; set; }
+       
     }
 }

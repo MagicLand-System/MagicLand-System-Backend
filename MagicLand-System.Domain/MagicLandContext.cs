@@ -35,7 +35,12 @@ namespace MagicLand_System.Domain
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<SessionDescription> SessionDescriptions { get; set; }
         public DbSet<Material> Materials { get; set; }  
-
+        public DbSet<ExamSyllabus> ExamSyllabuses { get; set; }  
+        public DbSet<QuestionPackage> QuestionPackages { get; set; }
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<MutipleChoiceAnswer> MutipleChoiceAnswers { get; set; }
+        public DbSet<FlashCard> FlashCards { get; set; }    
+        public DbSet<SideFlashCard> SideFlashCards { get; set; }    
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -194,6 +199,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Session");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Topic).WithMany(e => e.Sessions).HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.QuestionPackage).WithOne(e => e.Session).HasForeignKey<QuestionPackage>(e => e.SessionId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Attendance>(entity =>
             {
@@ -219,6 +225,41 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Material");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.Materials).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ExamSyllabus>(entity =>
+            {
+                entity.ToTable("ExamSyllabus");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.ExamSyllabuses).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<QuestionPackage>(entity =>
+            {
+                entity.ToTable("QuestionPackage");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<Session>(e => e.QuestionPackageId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<Question>(entity =>
+            {
+                entity.ToTable("Question");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<MutipleChoiceAnswer>(entity =>
+            {
+                entity.ToTable("MutipleChoiceAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Question).WithMany(e => e.MutipleChoiceAnswers).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<FlashCard>(entity =>
+            {
+                entity.ToTable("FlashCard");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Question).WithMany(e => e.FlashCards).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<SideFlashCard>(entity =>
+            {
+                entity.ToTable($"{nameof(SideFlashCard)}");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.FlashCard).WithMany(e => e.SideFlashCards).OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

@@ -75,7 +75,7 @@
             public const string CourseById = GetAll + "/{id}";
             public const string FilterCourse = GetAll + "/filter";
             public const string GetCourseCategory = GetAll + "/categories";
-            public const string AddCourse = GetAll + "/insert";
+            public const string AddSyllabus = GetAll + "/insertSyllabus";
         }
         public static class StudentEndpoint
         {
