@@ -65,7 +65,6 @@ namespace MagicLand_System.Mappers.Custom
                 MinAgeStudent = course.MinYearOldsStudent.ToString(),
                 MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
                 AddedDate = course.AddedDate,
-                Subject = course.CourseCategory.Name,
                 Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
                 NumberOfSession = course.NumberOfSession,
                 CoursePrerequisites = coursePrerequisites != null
@@ -109,7 +108,7 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     CourseRelatedId = course.Id,
                     Name = course.Name,
-                    Subject = course.CourseCategory.Name,
+                    //Subject = course.CourseCategory.Name,
                     Image = course.Image,
                     Price = course.Price,
                     MinAgeStudent = course.MinYearOldsStudent,

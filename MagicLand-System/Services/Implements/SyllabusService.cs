@@ -25,7 +25,6 @@ namespace MagicLand_System.Services.Implements
             {
                 CourseSyllabus syllabus = new CourseSyllabus
                 {
-                    Id = Guid.NewGuid(),
                     EffectiveDate = DateTime.Parse(request.EffectiveDate),
                     UpdateTime = DateTime.Now,
                     Description = request.Description,
@@ -37,13 +36,14 @@ namespace MagicLand_System.Services.Implements
                     SyllabusLink = request.SyllabusLink,
                     TimePerSession = request.TimePerSession,
                 };
+                var courseCategory = await _unitOfWork.GetRepository<CourseCategory>().SingleOrDefaultAsync(predicate : x => x.Name.ToLower().Trim().Equals(request.Type.ToLower().Trim()));
+                syllabus.CourseCategoryId = courseCategory.Id;
                 List<Material> materials = new List<Material>();
                 var mat = request.MaterialRequests;
                 foreach (var material in mat)
                 {
                     materials.Add(new Material
                     {
-                        Id = Guid.NewGuid(),
                         CourseSyllabusId = syllabus.Id,
                         URL = material
                     });
@@ -57,7 +57,6 @@ namespace MagicLand_System.Services.Implements
                 {
                     Topic topic = new Topic
                     {
-                        Id = Guid.NewGuid(),
                         CourseSyllabusId = syllabus.Id,
                         Name = topicx.TopicName,
                         OrderNumber = topicx.Index,
@@ -69,22 +68,24 @@ namespace MagicLand_System.Services.Implements
                         var content = session.SessionContentRequests.ToList();
                         Session session1 = new Session
                         {
-                            Id = Guid.NewGuid(),
                             TopicId = topic.Id,
                             NoSession = session.Order,
                         };
                         sessions.Add(session1);
                         foreach (var cont in content)
                         {
-                            var detailStrings = cont.SessionContentDetails;
+                            var detailStrings = cont.SessionContentDetails.ToArray();
                             var stringFinal = "";
-                            foreach (var d in detailStrings)
+                            for (int i = 0; i < detailStrings.Length; i++)
                             {
-                                stringFinal = stringFinal + "/r/n" + d.ToString();
+                                if(i != 0)
+                                {
+                                    stringFinal += "/r/n";
+                                }
+                                stringFinal += detailStrings[i];
                             }
                             SessionDescription sessionDescription = new SessionDescription
                             {
-                                Id = Guid.NewGuid(),
                                 Detail = stringFinal,
                                 SessionId = session1.Id,
                                 Content = cont.Content,
@@ -106,7 +107,6 @@ namespace MagicLand_System.Services.Implements
                     QuestionPackage qp = new QuestionPackage
                     {
 
-                        Id = Guid.NewGuid(),
                         SessionId = sessionFound.Id,
                         Title = ques.Title,
                         Type = ques.Type,
@@ -118,7 +118,6 @@ namespace MagicLand_System.Services.Implements
                     {
                         Question question1 = new Question
                         {
-                            Id = Guid.NewGuid(),
                             Description = question.Description,
                             Img = question.Img,
                             QuestionPacketId = qp.Id,
@@ -146,14 +145,12 @@ namespace MagicLand_System.Services.Implements
                                 List<SideFlashCard> flashCardsx = new List<SideFlashCard>();
                                 FlashCard flashCard = new FlashCard
                                 {
-                                    Id = Guid.NewGuid(),
                                     QuestionId = question1.Id,
                                     Score = flash.Score,
                                 };
                                 flashCards.Add(flashCard);
                                 SideFlashCard flashCard1 = new SideFlashCard
                                 {
-                                    Id = Guid.NewGuid(),
                                     Description = flash.RightSideDescription,
                                     Image = flash.RightSideImg,
                                     Side = "Right",
@@ -162,7 +159,6 @@ namespace MagicLand_System.Services.Implements
                                 flashCardsx.Add(flashCard1);
                                 SideFlashCard flashCard2 = new SideFlashCard
                                 {
-                                    Id = Guid.NewGuid(),
                                     Description = flash.LeftSideDescription,
                                     Image = flash.LeftSideDescription,
                                     Side = "Left",
@@ -185,7 +181,6 @@ namespace MagicLand_System.Services.Implements
                         CompleteionCriteria = exam.CompleteionCriteria,
                         CourseSyllabusId = syllabus.Id,
                         Duration = exam.Duration,
-                        Id = Guid.NewGuid(),
                         QuestionType = exam.QuestionType,
                         Weight = exam.Weight,
                         Part = exam.Part,
@@ -193,11 +188,17 @@ namespace MagicLand_System.Services.Implements
                     examSyllab.Add(ex);
                 }
                 await _unitOfWork.GetRepository<CourseSyllabus>().InsertAsync(syllabus);
+                await _unitOfWork.CommitAsync();    
                 await _unitOfWork.GetRepository<Material>().InsertRangeAsync(materials);
+                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<Topic>().InsertRangeAsync(topicList);
+                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<Session>().InsertRangeAsync(sessions);
+                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<SessionDescription>().InsertRangeAsync(sessionDescriptions);
+                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<ExamSyllabus>().InsertRangeAsync(examSyllab);
+                await _unitOfWork.CommitAsync();
                 try
                 {
                     bool isSuc = await _unitOfWork.CommitAsync() > 0;
@@ -207,8 +208,9 @@ namespace MagicLand_System.Services.Implements
                     var msg = ex.InnerException;
                 }
                 await _unitOfWork.GetRepository<QuestionPackage>().InsertRangeAsync(questionPackages);
+                await _unitOfWork.CommitAsync();
                 await _unitOfWork.GetRepository<Question>().InsertRangeAsync(questionList);
-
+                await _unitOfWork.CommitAsync();
 
                 try
                 {
@@ -222,10 +224,13 @@ namespace MagicLand_System.Services.Implements
                 if (mutipleChoiceAnswers != null && mutipleChoiceAnswers.Count > 0)
                 {
                     await _unitOfWork.GetRepository<MutipleChoiceAnswer>().InsertRangeAsync(mutipleChoiceAnswers);
+                    await _unitOfWork.CommitAsync();
                 }
                 if (flashCards.Count > 0 && flashCards != null)
                 {
                     await _unitOfWork.GetRepository<FlashCard>().InsertRangeAsync(flashCards);
+                    await _unitOfWork.CommitAsync();
+
                 }
                 if (sideFlashCards.Count > 0 && sideFlashCards != null)
                 {
@@ -307,6 +312,44 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.Topics.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.QuestionPackage)!);
 
             return syllabuses.ToList();
+        }
+        public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword)
+        {
+            var syllabuses = await _unitOfWork.GetRepository<CourseSyllabus>().GetListAsync(include: x => x.Include(x => x.Course));
+            List<SyllabusResponseV2> responses = new List<SyllabusResponseV2>();
+            foreach (var syl in syllabuses)
+            {
+                var name = "undefined";
+                var subjectCode = "undefined";
+                var syllabusName = "undefined";
+                if (syl.Course != null)
+                {
+                    name = syl.Course.Name;
+                }
+                if (syl.SubjectCode != null)
+                {
+                    subjectCode = syl.SubjectCode;
+                }
+                if (syl.Name != null)
+                {
+                    syllabusName = syl.Name;
+                }
+                if (syl.SubjectCode != null) { }
+                SyllabusResponseV2 syllabusResponseV2 = new SyllabusResponseV2
+                {
+                    Id = syl.Id,
+                    CourseName = name,
+                    EffectiveDate = syl.EffectiveDate,
+                    SubjectCode = subjectCode,
+                    SyllabusName = syllabusName,
+                };
+                responses.Add(syllabusResponseV2);
+            }
+            if (keyword != null)
+            {
+                responses = (responses.Where(x => (x.SyllabusName.ToLower().Trim().Contains(keyword.ToLower().Trim()) || x.SubjectCode.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            return responses;
         }
     }
 }

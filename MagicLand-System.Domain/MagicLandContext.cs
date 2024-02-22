@@ -116,7 +116,6 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Course");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.CourseCategory).WithMany(e => e.Courses).HasForeignKey(e => e.CourseCategoryId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.CourseSyllabus).WithOne(e => e.Course).HasForeignKey<CourseSyllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<CoursePrerequisite>(entity =>
@@ -187,6 +186,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("CourseSyllabus");
                 entity.HasKey(entity => entity.Id);
+                entity.HasOne(entity => entity.CourseCategory).WithMany(e => e.CourseSyllabuses).HasForeignKey(e => e.CourseCategoryId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Topic>(entity =>
             {
@@ -200,6 +200,7 @@ namespace MagicLand_System.Domain
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Topic).WithMany(e => e.Sessions).HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.QuestionPackage).WithOne(e => e.Session).HasForeignKey<QuestionPackage>(e => e.SessionId).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<Attendance>(entity =>
             {
@@ -218,48 +219,58 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("SessionDescription");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(x => x.Session).WithMany(e => e.SessionDescriptions).OnDelete(DeleteBehavior.Cascade);   
+                entity.HasOne(x => x.Session).WithMany(e => e.SessionDescriptions).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<Material>(entity =>
             {
                 entity.ToTable("Material");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.Materials).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<ExamSyllabus>(entity =>
             {
                 entity.ToTable("ExamSyllabus");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.ExamSyllabuses).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<QuestionPackage>(entity =>
             {
                 entity.ToTable("QuestionPackage");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<Session>(e => e.QuestionPackageId).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<Question>(entity =>
             {
                 entity.ToTable("Question");
                 entity.HasKey(e => e.Id);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<MutipleChoiceAnswer>(entity =>
             {
                 entity.ToTable("MutipleChoiceAnswer");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Question).WithMany(e => e.MutipleChoiceAnswers).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
             });
             modelBuilder.Entity<FlashCard>(entity =>
             {
                 entity.ToTable("FlashCard");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Question).WithMany(e => e.FlashCards).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
+
             });
             modelBuilder.Entity<SideFlashCard>(entity =>
             {
                 entity.ToTable($"{nameof(SideFlashCard)}");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.FlashCard).WithMany(e => e.SideFlashCards).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Id).HasDefaultValueSql("NEWID()");
+
             });
         }
     }

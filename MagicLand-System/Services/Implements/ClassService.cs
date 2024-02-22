@@ -386,7 +386,8 @@ namespace MagicLand_System.Services.Implements
                .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
                .Include(x => x.Lecture!)
                .Include(x => x.StudentClasses)
-               .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+               .Include(x => x.Course)
+               //.ThenInclude(c => c!.CourseCategory)
                .Include(x => x.Course).ThenInclude(c => c!.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
@@ -412,7 +413,7 @@ namespace MagicLand_System.Services.Implements
                 .GetListAsync(predicate: x => x.CourseId == id, include: x => x
                 .Include(x => x.Lecture!)
                 .Include(x => x.StudentClasses)
-                .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+                //.Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
                 .Include(x => x.Course).ThenInclude(c => c!.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                 .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
@@ -435,7 +436,7 @@ namespace MagicLand_System.Services.Implements
                 return await _unitOfWork.GetRepository<Class>()
                     .GetListAsync(predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time), include: x => x
                     .Include(x => x.Lecture)
-                    .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+                    //.Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
                     .Include(x => x.Course!).ThenInclude(c => c.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                     .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                     .Include(x => x.StudentClasses)
@@ -446,7 +447,7 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(include: x => x
                 .Include(x => x.Lecture)
-                .Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
+                //.Include(x => x.Course).ThenInclude(c => c!.CourseCategory)
                 .Include(x => x.Course!).ThenInclude(c => c.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                 .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                 .Include(x => x.StudentClasses)
@@ -694,7 +695,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime, string? attendanceStatusInput = null)
         {
-            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => ((x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)), include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course).ThenInclude(x => x.CourseCategory));
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => ((x.Date.Date.Year == dateTime.Date.Year) && (x.Date.Month == dateTime.Date.Month) && (x.Date.Date == dateTime.Date.Date)), include: x => x.Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class).ThenInclude(x => x.Course));
+            //ThenInclude(x => x.CourseCategory));
             if (schedules.Count == 0 || schedules == null)
             {
                 return new List<ClassForAttendance>();
@@ -732,7 +734,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         ClassCode = schedule.Class.ClassCode,
                         ClassId = schedule.Class.Id,
-                        ClassSubject = schedule.Class.Course.CourseCategory.Name,
+                        //ClassSubject = schedule.Class.Course.CourseCategory.Name,
                         Method = schedule.Class.Method,
                         Image = schedule.Class.Image,
                         EndDate = schedule.Class.EndDate,
@@ -766,7 +768,8 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<ClassResponse>> GetCurrentLectureClassesAsync()
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.Schedules).Include(x => x.Course!).ThenInclude(c => c.CourseCategory));
+                include: x => x.Include(x => x.Schedules).Include(x => x.Course!));
+             //.ThenInclude(c => c.CourseCategory));
 
             if (!classes.Any())
             {
@@ -850,7 +853,7 @@ namespace MagicLand_System.Services.Implements
                .GetListAsync(predicate: x => x.CourseId == currentClass.CourseId && x.Status == ClassStatusEnum.UPCOMING.ToString(),
                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
                .Include(x => x.Lecture)
-               .Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
+               //.Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
                .Include(x => x.StudentClasses));
 
             var suitableClasses = allCourseClass.Where(courCls =>
@@ -967,7 +970,7 @@ namespace MagicLand_System.Services.Implements
                .GetListAsync(predicate: x => x.CourseId == currentClass.CourseId && x.Status == ClassStatusEnum.UPCOMING.ToString(),
                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
                .Include(x => x.Lecture)
-               .Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
+               //.Include(x => x.Course!).ThenInclude(c => c.CourseCategory)
                .Include(x => x.StudentClasses));
 
             var suitableClasses = allCourseClass.Where(acc =>

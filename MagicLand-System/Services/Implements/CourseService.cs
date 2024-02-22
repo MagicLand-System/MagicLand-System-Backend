@@ -56,9 +56,9 @@ namespace MagicLand_System.Services.Implements
 
             filteredCourses = filteredCourses.Where(x => x.NumberOfSession >= minNumberSession && x.NumberOfSession <= maxNumberSession).ToList();
 
-            filteredCourses = subject != null
-            ? filteredCourses.Where(x => x.CourseCategory!.Name!.ToLower().Equals(subject.ToLower())).ToList()
-            : filteredCourses;
+            //filteredCourses = subject != null
+            ////? filteredCourses.Where(x => x.CourseCategory!.Name!.ToLower().Equals(subject.ToLower())).ToList()
+            //: filteredCourses;
 
             return filteredCourses;
         }
@@ -67,7 +67,7 @@ namespace MagicLand_System.Services.Implements
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
             .Include(x => x.CoursePrerequisites)
-            .Include(x => x.CourseCategory)
+            //.Include(x => x.CourseCategory)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -112,7 +112,7 @@ namespace MagicLand_System.Services.Implements
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
             .Include(x => x.CoursePrerequisites)
-            .Include(x => x.CourseCategory)
+            //.Include(x => x.CourseCategory)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -149,7 +149,7 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Course>()
                 .GetListAsync(include: x => x
                 .Include(x => x.CoursePrerequisites)
-                .Include(x => x.CourseCategory)
+                //.Include(x => x.CourseCategory)
                 .Include(x => x.Classes)
                 .ThenInclude(c => c.Schedules)
                 .ThenInclude(s => s.Slot)
@@ -167,8 +167,8 @@ namespace MagicLand_System.Services.Implements
             foreach (var c in courses)
             {
                 var course = await _unitOfWork.GetRepository<Course>()
-                    .SingleOrDefaultAsync(predicate: x => x.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == c.Id),
-                    include: x => x.Include(x => x.CourseCategory));
+                    .SingleOrDefaultAsync(predicate: x => x.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == c.Id));
+                    //include: x => x.Include(x => x.CourseCategory));
 
                 if (course != null)
                 {
@@ -226,7 +226,7 @@ namespace MagicLand_System.Services.Implements
                 Course course = new Course
                 {
                     AddedDate = DateTime.Now,
-                    CourseCategoryId = Guid.Parse(request.CourseCategoryId),
+                    //CourseCategoryId = Guid.Parse(request.CourseCategoryId),
                     Id = Guid.NewGuid(),
                     Image = request.Img,
                     MaxYearOldsStudent = request.MaxAge,

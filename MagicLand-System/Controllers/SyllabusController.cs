@@ -128,7 +128,7 @@ namespace MagicLand_System.Controllers
             var syllabuses = await _syllabusService.FilterSyllabusAsync(keyWords, date, score);
             return Ok(syllabuses);
         }
-        [HttpGet(ApiEndpointConstant.Syllabus.GetAll)]
+        [HttpGet(ApiEndpointConstant.Syllabus.GeneralSyllabus)]
         public async Task<IActionResult> GetAll(string? keyword)
         {
             var course = await _syllabusService.GetAllSyllabus(keyword);

@@ -16,9 +16,6 @@ namespace MagicLand_System.Domain.Models
         public double Price { get; set; }
         public string? MainDescription { get; set; }
         public DateTime? UpdateDate { get; set; } = default;
-        [ForeignKey("CourseCategory")]
-        public Guid CourseCategoryId { get; set; }
-        public CourseCategory CourseCategory { get; set; } = new CourseCategory();
         [ForeignKey("CourseSyllabus")]
         public Guid? CourseSyllabusId { get; set; }
         public CourseSyllabus? CourseSyllabus { get; set; }

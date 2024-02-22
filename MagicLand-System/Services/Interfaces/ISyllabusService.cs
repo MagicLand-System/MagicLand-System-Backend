@@ -12,5 +12,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<SyllabusResponse> LoadSyllabusByIdAsync(Guid id);
         Task<List<SyllabusResponse>> LoadSyllabusesAsync();
         Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords,DateTime? date,double? score);
+        Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword);
+
     }
 }

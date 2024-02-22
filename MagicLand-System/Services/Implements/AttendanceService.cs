@@ -24,7 +24,8 @@ namespace MagicLand_System.Services.Implements
             {
                 return new List<StaffAttandaceResponse>();
             }
-            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.ClassId.ToString()), include: x => x.Include(x => x.StudentClasses).Include(x => x.Course).ThenInclude(x => x.CourseCategory));
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.ClassId.ToString()), include: x => x.Include(x => x.StudentClasses).Include(x => x.Course));
+            //.ThenInclude(x => x.CourseCategory));
             if (classx == null)
             {
                 return new List<StaffAttandaceResponse>();
@@ -54,7 +55,7 @@ namespace MagicLand_System.Services.Implements
                         ClassCode = classx.ClassCode,
                         ClassId = classx.Id,
                         CoursePrice = classx.Course.Price,
-                        ClassSubject = classx.Course.CourseCategory.Name,
+                        //ClassSubject = classx.Course.CourseCategory.Name,
                         LeastNumberStudent = classx.LeastNumberStudent,
                         LimitNumberStudent = classx.LimitNumberStudent,
                         Image = classx.Image,

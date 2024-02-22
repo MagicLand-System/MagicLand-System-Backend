@@ -164,9 +164,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<DateTime?>("AddedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("CourseCategoryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid?>("CourseSyllabusId")
                         .HasColumnType("uniqueidentifier");
 
@@ -198,8 +195,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CourseCategoryId");
 
                     b.ToTable("Course", (string)null);
                 });
@@ -243,6 +238,9 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CourseCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -278,6 +276,8 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CourseCategoryId");
+
                     b.HasIndex("CourseId")
                         .IsUnique()
                         .HasFilter("[CourseId] IS NOT NULL");
@@ -289,7 +289,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -326,7 +327,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<Guid>("QuestionId")
                         .HasColumnType("uniqueidentifier");
@@ -345,7 +347,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<Guid?>("CourseSyllabusId")
                         .HasColumnType("uniqueidentifier");
@@ -365,7 +368,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -498,7 +502,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -521,7 +526,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
@@ -623,7 +629,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -652,7 +659,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -676,7 +684,8 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -1041,17 +1050,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Lecture");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.CourseCategory", "CourseCategory")
-                        .WithMany("Courses")
-                        .HasForeignKey("CourseCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CourseCategory");
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.CoursePrerequisite", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
@@ -1065,12 +1063,19 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CourseSyllabus", b =>
                 {
+                    b.HasOne("MagicLand_System.Domain.Models.CourseCategory", "CourseCategory")
+                        .WithMany("CourseSyllabuses")
+                        .HasForeignKey("CourseCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
                         .WithOne("CourseSyllabus")
                         .HasForeignKey("MagicLand_System.Domain.Models.CourseSyllabus", "CourseId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Course");
+
+                    b.Navigation("CourseCategory");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.ExamSyllabus", b =>
@@ -1376,7 +1381,7 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CourseCategory", b =>
                 {
-                    b.Navigation("Courses");
+                    b.Navigation("CourseSyllabuses");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.CourseSyllabus", b =>
