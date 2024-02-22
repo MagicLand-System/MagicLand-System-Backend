@@ -15,7 +15,7 @@ namespace MagicLand_System.Domain.Models
         public string? Image { get; set; } = null;
         public double Price { get; set; }
         public string? MainDescription { get; set; }
-
+        public DateTime? UpdateDate { get; set; } = default;
         [ForeignKey("CourseCategory")]
         public Guid CourseCategoryId { get; set; }
         public CourseCategory CourseCategory { get; set; } = new CourseCategory();
@@ -26,6 +26,5 @@ namespace MagicLand_System.Domain.Models
         public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<SubDescriptionTitle> SubDescriptionTitles { get; set; } = new List<SubDescriptionTitle>();
-
     }
 }

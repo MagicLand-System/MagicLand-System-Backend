@@ -49,6 +49,7 @@
             public const string UpdateSession = ClassById + "/updateSession";
             public const string MakeUpClass = GetAll + "/{studentId}" + "/{scheduleId}/makeup";
             public const string GetMakeUpClass = GetAll + "/getMakeUpSchedule";
+            public const string InsertClasses = GetAll + "/insertClasses";
         }
         public static class PromotionEnpoint
         {
@@ -74,6 +75,7 @@
             public const string CourseById = GetAll + "/{id}";
             public const string FilterCourse = GetAll + "/filter";
             public const string GetCourseCategory = GetAll + "/categories";
+            public const string AddSyllabus = GetAll + "/insertSyllabus";
             public const string AddCourse = GetAll + "/add";
         }
         public static class StudentEndpoint
@@ -110,10 +112,8 @@
         }
         public static class Syllabus
         {
-            public const string EndPointBase = ApiEndpoint + "/Syllabus";
-            public const string LoadByCourse = EndPointBase + "/getByCourse";
-            public const string AddSyllabus = EndPointBase + "/insertSyllabus";
-            public const string LoadSyllabus = EndPointBase + "/getById";
+            public const string GetAll = ApiEndpoint + "/Syllabus";
+            public const string GetByCourse = GetAll + "/getByCourse";
         }
         public static class LectureEndPoint
         {

@@ -2,7 +2,7 @@
 {
     public class SessionContentRequest
     {
-        public required string Content {  get; set; }    
-        public required List<string> SessionContentDetails {  get; set; }  
+        public string Content {  get; set; }    
+        public List<string> SessionContentDetails {  get; set; }  
     }
 }

@@ -46,6 +46,7 @@ namespace MagicLand_System.Mappers.Custom
                 CourseDetail = fromCourseInforToCourseDetailResponse(course, coursePrerequisites),
                 OpeningSchedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
                 RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
+                UpdateDate = course.UpdateDate,
             };
 
             return response;
