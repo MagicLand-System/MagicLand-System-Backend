@@ -39,7 +39,6 @@ namespace MagicLand_System.Services.Implements
                 {
                     SessionResponse sessionResponse = new SessionResponse
                     {
-                        Content = session.Content,
                         Description = session.Description,
                         NoOfSession = session.NoSession,
                     };

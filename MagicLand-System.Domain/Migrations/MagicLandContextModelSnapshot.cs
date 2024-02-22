@@ -305,6 +305,9 @@ namespace MagicLand_System.Domain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Part")
+                        .HasColumnType("int");
+
                     b.Property<string>("QuestionType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -502,7 +505,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Img")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("QuestionPacketId")
@@ -623,9 +625,6 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -654,6 +653,10 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Detail")
                         .IsRequired()

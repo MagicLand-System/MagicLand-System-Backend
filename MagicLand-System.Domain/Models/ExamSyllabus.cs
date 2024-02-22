@@ -14,6 +14,7 @@ namespace MagicLand_System.Domain.Models
         public double CompleteionCriteria {  get; set; }    
         public string Duration {  get; set; }   
         public string QuestionType {  get; set; }   
+        public int Part { get; set; }
         public Guid CourseSyllabusId { get; set; }
         public CourseSyllabus CourseSyllabus { get; set; }
     }

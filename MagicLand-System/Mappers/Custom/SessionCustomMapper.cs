@@ -14,7 +14,6 @@ namespace MagicLand_System.Mappers.Custom
 
             SessionResponse response = new SessionResponse
             {
-                Content = session.Content ??= string.Empty,
                 Description = session.Description ??= string.Empty
             };
 

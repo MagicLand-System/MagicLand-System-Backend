@@ -11,7 +11,7 @@ namespace MagicLand_System.Domain.Models
     {
         public Guid Id { get; set; }
         public string Description { get; set; } 
-        public string Img { get; set; }
+        public string? Img { get; set; }
         [ForeignKey("QuestionPackage")] 
         
         public Guid QuestionPacketId { get; set; }

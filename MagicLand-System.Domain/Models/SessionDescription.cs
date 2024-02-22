@@ -10,6 +10,7 @@ namespace MagicLand_System.Domain.Models
     {
         public Guid Id { get; set; }    
         public string Detail { get; set; }  
+        public string Content { get; set; }
         public Guid SessionId { get; set; }
         public Session Session { get; set; }    
     }

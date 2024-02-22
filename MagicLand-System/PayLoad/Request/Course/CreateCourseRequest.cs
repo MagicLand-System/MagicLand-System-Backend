@@ -7,13 +7,10 @@
         public int MinAge {  get; set; }    
         public int MaxAge { get; set; }
         public string MainDescription { get; set; } 
-        public string Img {  get; set; }    
-        public string PreRequisiteId { get; set; }    
-        public string SubjectId { get; set; }
+        public string Img {  get; set; }
+        public string CourseCategoryId { get; set; }
+        public string SyllabusId {  get; set; } 
         public List<SubDescriptionRequest>?  SubDescriptions { get; set; }   
-        public List<SyllabusRequest>? SyllabusRequests { get; set; }
-        public DateTime EffecttiveDate { get; set; }
-        public List<string> MaterialRequests { get; set; }
 
     }
 }

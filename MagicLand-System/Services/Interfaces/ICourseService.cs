@@ -14,5 +14,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<CourseCategory>> GetCourseCategories();
         Task<List<CourseResExtraInfor>> GetCoursesOfStudentByIdAsync(Guid studentId);
         Task<bool> AddCourse(OverallSyllabusRequest request);
+        Task<bool> AddCourseInformation(CreateCourseRequest request);
     }
 }
