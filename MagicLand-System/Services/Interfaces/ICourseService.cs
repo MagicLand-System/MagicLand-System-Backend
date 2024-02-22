@@ -13,7 +13,6 @@ namespace MagicLand_System.Services.Interfaces
             int? maxNumberSession, double minPrice, double? maxPrice, string? subject, int? rate);
         Task<List<CourseCategory>> GetCourseCategories();
         Task<List<CourseResExtraInfor>> GetCoursesOfStudentByIdAsync(Guid studentId);
-        Task<bool> AddCourse(OverallSyllabusRequest request);
         Task<bool> AddCourseInformation(CreateCourseRequest request);
     }
 }

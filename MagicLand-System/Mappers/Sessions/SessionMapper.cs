@@ -7,7 +7,7 @@ namespace MagicLand_System.Mappers.Sessions
     {
         public SessionMapper()
         {
-            CreateMap<MagicLand_System.Domain.Models.Session, SessionResponse>();
+            
         }
     }
 }

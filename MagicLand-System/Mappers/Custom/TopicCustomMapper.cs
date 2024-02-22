@@ -39,7 +39,7 @@ namespace MagicLand_System.Mappers.Custom
                 OrderNumber = topic.OrderNumber,
                 Session = session != null && session != default
                 ? SessionCustomMapper.fromSessionToSessionResponse(session)
-                : new SessionResponse(),
+                : default,
             };
 
             return response;

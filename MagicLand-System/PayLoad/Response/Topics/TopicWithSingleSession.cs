@@ -7,6 +7,6 @@ namespace MagicLand_System.PayLoad.Response.Topics
         public string? TopicName { get; set; }
         public int? OrderNumber { get; set; }
 
-        public SessionResponse Session { get; set; } = new SessionResponse();
+        public SessionResponse? Session { get; set; }
     }
 }
