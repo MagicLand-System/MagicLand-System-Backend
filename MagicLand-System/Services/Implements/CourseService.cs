@@ -478,18 +478,31 @@ namespace MagicLand_System.Services.Implements
                 }
                 List<string> preIds = request.PreRequisiteIds;
                 List<CoursePrerequisite> prerequisites = new List<CoursePrerequisite>();
-                foreach (var preId in preIds)
+                if(prerequisites != null && prerequisites.Count > 0)
                 {
-                    var newPreQ = new CoursePrerequisite
+                    foreach (var preId in preIds)
                     {
-                        CurrentCourseId = course.Id,
-                        Id = Guid.NewGuid(),
-                        PrerequisiteCourseId = Guid.Parse(preId),
-                    };
-                    prerequisites.Add(newPreQ); 
+                        var newPreQ = new CoursePrerequisite
+                        {
+                            CurrentCourseId = course.Id,
+                            Id = Guid.NewGuid(),
+                            PrerequisiteCourseId = Guid.Parse(preId),
+                        };
+                        prerequisites.Add(newPreQ);
+                    }
                 }
                 course.SubDescriptionTitles = subDescriptionTitles;
-                var syll = await _unitOfWork.GetRepository<CourseSyllabus>().SingleOrDefaultAsync(predicate :  x => x.Id.ToString().Equals(request.SyllabusId));
+                var syll = await _unitOfWork.GetRepository<CourseSyllabus>().SingleOrDefaultAsync(predicate :  x => x.Id.ToString().Equals(request.SyllabusId) ,include : x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions));
+                var NumOfSess = 0;
+                List<Session> sessions = new List<Session>();   
+                foreach (var sess in syll.Topics)
+                {
+                    foreach (var se in sess.Sessions)
+                    {
+                        sessions.Add(se);
+                    }
+                }
+                course.NumberOfSession = sessions.Count;
                 syll.CourseId = course.Id;
                 await _unitOfWork.GetRepository<Course>().InsertAsync(course);
                 await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
