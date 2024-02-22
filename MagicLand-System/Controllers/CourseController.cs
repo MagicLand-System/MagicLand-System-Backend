@@ -134,5 +134,12 @@ namespace MagicLand_System.Controllers
             var categories = await _courseService.GetCourseCategories();
             return Ok(categories);
         }
+
+        [HttpPost(ApiEndpointConstant.CourseEnpoint.AddCourse)]
+        public async Task<IActionResult> InsertCourseInformation([FromBody] CreateCourseRequest request)
+        {
+            var isSuccess = await _courseService.AddCourseInformation(request);
+            return Ok(isSuccess);
+        }
     }
 }

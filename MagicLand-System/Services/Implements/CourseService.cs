@@ -216,5 +216,60 @@ namespace MagicLand_System.Services.Implements
 
             return listCourseResExtraInfror;
         }
+
+        public async Task<bool> AddCourseInformation(CreateCourseRequest request)
+        {
+            if(request == null)
+            {
+                Course course = new Course
+                {
+                    AddedDate = DateTime.Now,
+                    CourseCategoryId = Guid.Parse(request.CourseCategoryId),
+                    Id = Guid.NewGuid(),
+                    Image = request.Img,
+                    MaxYearOldsStudent = request.MaxAge,
+                    MinYearOldsStudent = request.MinAge,
+                    MainDescription = request.MainDescription,
+                    Name = request.CourseName,
+                    Price = request.Price,
+                    UpdateDate = DateTime.Now,
+                    Status = "UPCOMING",
+                    CourseSyllabusId = Guid.Parse(request.SyllabusId),
+                };
+                List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();
+                var listSubDescription = request.SubDescriptions;
+                List<SubDescriptionContent> contents = new List<SubDescriptionContent>();
+                foreach (var sd in listSubDescription)
+                {
+                    var newTitle = new SubDescriptionTitle
+                    {
+                        Title = sd.Title,
+                        Id = Guid.NewGuid(),
+                        CourseId = course.Id,
+                    };
+                    var contentList = sd.SubDescriptionContentRequests;
+                    foreach (var content in contentList)
+                    {
+                        var newDescrption = new SubDescriptionContent
+                        {
+                            SubDescriptionTitleId = newTitle.Id,
+                            Content = content.Content,
+                            Description = content.Description,
+                            Id = Guid.NewGuid(),
+                        };
+                        contents.Add(newDescrption);
+                    }
+                    newTitle.SubDescriptionContents = contents;
+                    subDescriptionTitles.Add(newTitle);
+                }
+                course.SubDescriptionTitles = subDescriptionTitles;
+                await _unitOfWork.GetRepository<Course>().InsertAsync(course);
+                await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
+                await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
+                var isSuccess = await _unitOfWork.CommitAsync() > 0;
+                return isSuccess;
+            }
+            return false;   
+        }
     }
 }

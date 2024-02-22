@@ -16,8 +16,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Diagnostics;
+using System.Net.WebSockets;
 using System.Net.WebSockets;
 
 namespace MagicLand_System.Services.Implements
@@ -454,28 +453,15 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
-            var studentIds = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id), selector: x => x.StudentId);
-            if (studentIds == null)
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id),
+               include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
+
+            if (students == null)
             {
                 return null;
             }
-            List<StudentInClass> result = new List<StudentInClass>();
-            foreach (var studentId in studentIds)
-            {
-                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().ToLower().Equals(studentId.ToString().ToLower()), include: x => x.Include(x => x.User));
-                StudentInClass studentInClass = new StudentInClass
-                {
-                    DateOfBirth = student.DateOfBirth,
-                    FullName = student.FullName,
-                    Gender = student.Gender,
-                    ParentName = student.User.FullName,
-                    ParentPhoneNumber = student.User.Phone,
-                    StudentId = student.Id,
-                    ImgAvatar = student.AvatarImage,
-                };
-                result.Add(studentInClass);
-            }
-            return result;
+
+            return students.Select(x => _mapper.Map<StudentInClass>(x)).ToList();
 
         }
 
@@ -1168,8 +1154,14 @@ namespace MagicLand_System.Services.Implements
         }
 
         public async Task<bool> UpdateSession(string sessionId, UpdateSessionRequest request)
-        {
-            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sessionId));
+            var myScheudule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => (!x.Id.ToString().Equals(schedule.Id.ToString()) && x.ClassId.ToString().Equals(schedule.ClassId.ToString())));
+            var isExist = myScheudule.Where(x => (x.Date.Date.Day == request.DateTime.Value.Day && x.Date.Month == request.DateTime.Value.Month && x.Date.Year == request.DateTime.Value.Year && x.SlotId.ToString().Equals(request.SlotId.ToString())));
+            if (isExist != null)
+            {
+                throw new BadHttpRequestException("Ngày này đã tồn tại , không thể update", StatusCodes.Status400BadRequest);
+            }
+            }
+            }
             if (schedule == null)
             {
                 return false;
@@ -1264,10 +1256,17 @@ namespace MagicLand_System.Services.Implements
             {
                 if (Id != schedule.Class.Id)
                 {
-                    var ClassIndex = allSchedule.Where(x => x.ClassId.ToString().Equals(Id.ToString())).ToList();
-                    var ClassSort = ClassIndex.OrderBy(x => x.Date).ToArray();
-                    schedules.Add(ClassSort[index]);
+                    if (ClassSort.Length - 1 < index)
+                    {
+                        schedules.Add(ClassSort[ClassSort.Length - 1]);
+                    }
+                    else
+                    {
+                        schedules.Add(ClassSort[index]);
+                    }
                 }
+            }
+            }
             }
             List<ScheduleResponse> responses = new List<ScheduleResponse>();
             foreach (var schedulex in schedules)
@@ -1355,12 +1354,116 @@ namespace MagicLand_System.Services.Implements
             foreach (var response in responses)
             {
                 var isExist = attendance.SingleOrDefault(x => x.ScheduleId.ToString().Equals(response.Id.ToString()));
-                if (isExist != null)
-                {
-                    responses.Remove(response);
+                    resultList.Add(response);
                 }
             }
-            return responses;
+            if (date != null && responses != null)
+            {
+                resultList = (responses.Where(x => (x.Date.Day == date.Value.Day && x.Date.Month == date.Value.Month && x.Date.Year == date.Value.Year))).ToList();
+                resultList =(responses.Where(x => (x.Date.Day == date.Value.Day && x.Date.Month == date.Value.Month && x.Date.Year == date.Value.Year))).ToList();
+            if (slotId != null && responses != null)
+            {
+                resultList = (responses.Where(x => x.Slot.SlotId.ToString().Equals(slotId.ToString()))).ToList();
+            }
+            if (keyword != null && responses != null)
+            {
+                resultList = (responses.Where(x => (x.ClassCode.Trim().ToLower().Contains(keyword.Trim().ToLower()) || x.Lecturer.FullName.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            return resultList;
+        }
+        public async Task<bool> InsertClasses(List<CreateClassesRequest> request)
+        {
+            if (request == null)
+            {
+                return false;
+            }
+            foreach (var rq in request)
+            {
+                var courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Name.Trim().ToLower().Equals(rq.CourseName.Trim().ToLower()), selector: x => x.Id);
+                var roomId = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Name.Trim().ToLower().Equals(rq.RoomName.Trim().ToLower()), selector: x => x.Id);
+                var lecturerId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().ToLower().Equals(rq.LecturerPhone.Trim().ToLower()), selector: x => x.Id);
+                if (courseId == null)
+                {
+                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại courseName như vậy", StatusCodes.Status400BadRequest);
+                }
+                if (roomId == null)
+                {
+                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại roomName như vậy", StatusCodes.Status400BadRequest);
+                }
+                if (lecturerId == null)
+                {
+                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại  lecturer như vậy", StatusCodes.Status400BadRequest);
+                }
+                var schedules = rq.ScheduleRequests;
+                List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
+                foreach (var schedule in schedules)
+                {
+                    string[] parts = schedule.ScheduleTime.Split(':');
+                    string day = parts[0].Trim(); // Thứ 2
+                    string timeRange = parts[1].Trim(); // 15:00 - 20:00
+                    string startTime = timeRange.Split('-')[0].Trim() + ":00"; // 15:00
+                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Equals(startTime.Trim()), selector: x => x.Id);
+                    if (slotId == null)
+                    {
+                        throw new BadHttpRequestException($"cột {rq.Index} không tồn tại slot như v", StatusCodes.Status400BadRequest);
+                    }
+                    string dateofweek = "";
+                    if (day.ToLower().Equals("thứ 2"))
+                    {
+                        dateofweek = "monday";
+                    }
+                    if (day.ToLower().Equals("thứ 3"))
+                    {
+                        dateofweek = "tuesday";
+                    }
+                    if (day.ToLower().Equals("thứ 4"))
+                    {
+                        dateofweek = "wednesday";
+                    }
+                    if (day.ToLower().Equals("thứ 5"))
+                    {
+                        dateofweek = "thursday";
+                    }
+                    if (day.ToLower().Equals("thứ 6"))
+                    {
+                        dateofweek = "friday";
+                    }
+                    if (day.ToLower().Equals("thứ 7"))
+                    {
+                        dateofweek = "saturday";
+                    }
+                    if (day.ToLower().Equals("chủ nhật"))
+                    {
+                        dateofweek = "sunday";
+                    }
+                    scheduleRequests.Add(new ScheduleRequest
+                    {
+                        DateOfWeek = dateofweek,
+                        SlotId = slotId,
+                    });
+                }
+                var myRequest = new CreateClassRequest
+                {
+                    ClassCode = await AutoCreateClassCode(courseId.ToString()),
+                    CourseId = courseId,
+                    LecturerId = lecturerId,
+                    LeastNumberStudent = rq.LeastNumberStudent,
+                    LimitNumberStudent = rq.LimitNumberStudent,
+                    Method = rq.Method,
+                    RoomId = roomId,
+                    ScheduleRequests = scheduleRequests,
+                    StartDate = rq.StartDate,
+                };
+                var isSuccess = await CreateNewClass(myRequest);
+                if (!isSuccess)
+                {
+                    throw new BadHttpRequestException($"{rq.Index} không thể insert", StatusCodes.Status400BadRequest);
+                }
+            }
+            return true;
         }
     }
 }
+
+
+

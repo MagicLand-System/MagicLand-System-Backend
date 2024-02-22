@@ -1,9 +1,12 @@
-﻿using MagicLand_System.PayLoad.Response.Syllabuses;
+﻿using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response.Syllabuses;
 
 namespace MagicLand_System.Services.Interfaces
 {
     public interface ISyllabusService
     {
-        Task<SyllabusResponse> GetSyllasbusResponse(string courseId);
+        Task<bool> AddSyllabus(OverallSyllabusRequest request);
+        Task<SyllabusResponse> LoadSyllabusByCourseIdAsync(Guid id);
+        Task<SyllabusResponse> LoadSyllabusByIdAsync(Guid id);
     }
 }

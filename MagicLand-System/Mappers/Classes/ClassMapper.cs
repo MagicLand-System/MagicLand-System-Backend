@@ -11,6 +11,7 @@ namespace MagicLand_System.Mappers.Classes
     {
         public ClassMapper()
         {
+
             CreateMap<User, LoginResponse>()
                .ForMember(des => des.AccessToken, src => src.Ignore())
                .ForMember(des => des.Role, src => src.MapFrom(src => src.Role!.Name));
