@@ -26,5 +26,6 @@ namespace MagicLand_System.Domain.Models
         public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<SubDescriptionTitle> SubDescriptionTitles { get; set; } = new List<SubDescriptionTitle>();
+
     }
 }

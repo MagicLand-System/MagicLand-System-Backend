@@ -9,5 +9,6 @@
         public string ParentName { get; set; }
         public string ParentPhoneNumber {  get; set; }  
         public string ImgAvatar {  get; set; }  
+        public required bool CanChangeClass { get; set; }
     }
 }
