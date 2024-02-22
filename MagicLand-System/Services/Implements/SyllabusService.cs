@@ -17,6 +17,45 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
+        public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword)
+        {
+            var syllabuses = await _unitOfWork.GetRepository<CourseSyllabus>().GetListAsync(include : x => x.Include(x => x.Course));
+            List<SyllabusResponseV2> responses = new List<SyllabusResponseV2>();
+            foreach(var syl in syllabuses)
+            {
+                var name = "undefined";
+                var subjectCode = "undefined";
+                var syllabusName = "undefined"; 
+                if (syl.Course != null)
+                {
+                    name = syl.Course.Name;
+                }
+                if(syl.SubjectCode != null)
+                {
+                    subjectCode = syl.SubjectCode;
+                }
+                if(syl.Name != null)
+                {
+                    syllabusName = syl.Name;
+                }
+                if(syl.SubjectCode != null) { }
+                SyllabusResponseV2 syllabusResponseV2 = new SyllabusResponseV2
+                {
+                    Id = syl.Id,
+                    CourseName = name,
+                    EffectiveDate = syl.EffectiveDate,
+                    SubjectCode = subjectCode,
+                    SyllabusName = syllabusName,
+                };
+                responses.Add(syllabusResponseV2);  
+            }
+            if (keyword != null)
+            {
+                responses = (responses.Where(x => (x.SyllabusName.ToLower().Trim().Contains(keyword.ToLower().Trim()) || x.SubjectCode.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            return responses;
+        }
+
         public async Task<SyllabusResponse> GetSyllasbusResponse(string courseId)
         {
             CourseSyllabus courseSyllabus = (await _unitOfWork.GetRepository<CourseSyllabus>().SingleOrDefaultAsync(predicate :  x => x.CourseId.ToString().Equals(courseId), include : x => x.Include(x => x.Course).Include(x => x.Topics)));

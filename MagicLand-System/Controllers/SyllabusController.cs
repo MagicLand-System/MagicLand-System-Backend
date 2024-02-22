@@ -21,5 +21,11 @@ namespace MagicLand_System.Controllers
             var course = await _syllabusService.GetSyllasbusResponse(CouseId);
             return Ok(course);
         }
+        [HttpGet(ApiEndpointConstant.Syllabus.GetAll)]
+        public async Task<IActionResult> GetAll(string? keyword)
+        {
+            var course = await _syllabusService.GetAllSyllabus(keyword);
+            return Ok(course);
+        }
     }
 }
