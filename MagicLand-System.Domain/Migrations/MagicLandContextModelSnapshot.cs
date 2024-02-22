@@ -1046,7 +1046,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.CourseCategory", "CourseCategory")
                         .WithMany("Courses")
                         .HasForeignKey("CourseCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CourseCategory");
@@ -1068,7 +1068,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
                         .WithOne("CourseSyllabus")
                         .HasForeignKey("MagicLand_System.Domain.Models.CourseSyllabus", "CourseId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Course");
                 });
@@ -1078,7 +1078,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.CourseSyllabus", "CourseSyllabus")
                         .WithMany("ExamSyllabuses")
                         .HasForeignKey("CourseSyllabusId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CourseSyllabus");
@@ -1089,7 +1089,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.Question", "Question")
                         .WithMany("FlashCards")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Question");
@@ -1100,7 +1100,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.CourseSyllabus", "CourseSyllabus")
                         .WithMany("Materials")
                         .HasForeignKey("CourseSyllabusId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("CourseSyllabus");
                 });
@@ -1110,7 +1110,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.Question", "Question")
                         .WithMany("MutipleChoiceAnswers")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Question");
@@ -1180,12 +1180,12 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.QuestionPackage", "QuestionPackage")
                         .WithOne("Session")
                         .HasForeignKey("MagicLand_System.Domain.Models.Session", "QuestionPackageId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("MagicLand_System.Domain.Models.Topic", "Topic")
                         .WithMany("Sessions")
                         .HasForeignKey("TopicId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("QuestionPackage");
@@ -1198,7 +1198,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.Session", "Session")
                         .WithMany("SessionDescriptions")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Session");
@@ -1209,7 +1209,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.FlashCard", "FlashCard")
                         .WithMany("SideFlashCards")
                         .HasForeignKey("FlashCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("FlashCard");
@@ -1283,7 +1283,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.CourseSyllabus", "CourseSyllabus")
                         .WithMany("Topics")
                         .HasForeignKey("CourseSyllabusId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CourseSyllabus");
