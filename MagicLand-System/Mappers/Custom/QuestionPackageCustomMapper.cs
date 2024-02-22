@@ -15,13 +15,18 @@ namespace MagicLand_System.Mappers.Custom
             var questions = new List<QuestionPackageInforResponse>();
             var sessions = topics.SelectMany(tp => tp.Sessions).ToList();
 
+            if(sessions.Any(ses => ses.QuestionPackage == null))
+            {
+                return default!;
+            }
+
             foreach(var session in sessions)
             {
 
                 questions.Add(new QuestionPackageInforResponse
                 {
                     Title = session.QuestionPackage!.Title,
-                    Type = session.QuestionPackage.Type,
+                    Type = session.QuestionPackage!.Type,
                     NoOfSession = session.NoSession,
                 });
             }      

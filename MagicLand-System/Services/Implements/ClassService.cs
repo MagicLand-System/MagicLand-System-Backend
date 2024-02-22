@@ -456,28 +456,15 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
-            var studentIds = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id), selector: x => x.StudentId);
-            if (studentIds == null)
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id),
+               include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
+
+            if (students == null)
             {
-                return null;
+                return default!;
             }
-            List<StudentInClass> result = new List<StudentInClass>();
-            foreach (var studentId in studentIds)
-            {
-                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().ToLower().Equals(studentId.ToString().ToLower()), include: x => x.Include(x => x.User));
-                StudentInClass studentInClass = new StudentInClass
-                {
-                    DateOfBirth = student.DateOfBirth,
-                    FullName = student.FullName,
-                    Gender = student.Gender,
-                    ParentName = student.User.FullName,
-                    ParentPhoneNumber = student.User.Phone,
-                    StudentId = student.Id,
-                    ImgAvatar = student.AvatarImage,
-                };
-                result.Add(studentInClass);
-            }
-            return result;
+
+            return students.Select(x => _mapper.Map<StudentInClass>(x)).ToList();
 
         }
 
@@ -1302,7 +1289,7 @@ namespace MagicLand_System.Services.Implements
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sessionId));
             var myScheudule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => (!x.Id.ToString().Equals(schedule.Id.ToString()) && x.ClassId.ToString().Equals(schedule.ClassId.ToString())));
             var isExist = myScheudule.Where(x => (x.Date.Date.Day == request.DateTime.Value.Day && x.Date.Month == request.DateTime.Value.Month && x.Date.Year == request.DateTime.Value.Year && x.SlotId.ToString().Equals(request.SlotId.ToString())));
-            if(isExist != null)
+            if (isExist != null)
             {
                 throw new BadHttpRequestException("Ngày này đã tồn tại , không thể update", StatusCodes.Status400BadRequest);
             }
@@ -1402,10 +1389,11 @@ namespace MagicLand_System.Services.Implements
                 {
                     var ClassIndex = allSchedule.Where(x => x.ClassId.ToString().Equals(Id.ToString())).ToList();
                     var ClassSort = ClassIndex.OrderBy(x => x.Date).ToArray();
-                    if(ClassSort.Length -1 < index)
+                    if (ClassSort.Length - 1 < index)
                     {
-                        schedules.Add(ClassSort[ClassSort.Length -1]);   
-                    } else
+                        schedules.Add(ClassSort[ClassSort.Length - 1]);
+                    }
+                    else
                     {
                         schedules.Add(ClassSort[index]);
                     }
@@ -1503,11 +1491,11 @@ namespace MagicLand_System.Services.Implements
                     resultList.Add(response);
                 }
             }
-            if(date != null && responses != null)
+            if (date != null && responses != null)
             {
-                resultList =(responses.Where(x => (x.Date.Day == date.Value.Day && x.Date.Month == date.Value.Month && x.Date.Year == date.Value.Year))).ToList();
+                resultList = (responses.Where(x => (x.Date.Day == date.Value.Day && x.Date.Month == date.Value.Month && x.Date.Year == date.Value.Year))).ToList();
             }
-            if(slotId != null && responses != null)
+            if (slotId != null && responses != null)
             {
                 resultList = (responses.Where(x => x.Slot.SlotId.ToString().Equals(slotId.ToString()))).ToList();
             }

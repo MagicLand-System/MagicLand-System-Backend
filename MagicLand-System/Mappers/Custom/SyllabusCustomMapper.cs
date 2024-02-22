@@ -5,7 +5,7 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class SyllabusCustomMapper
     {
-       
+      
 
     }
 }

@@ -1,11 +1,8 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Course;
-using MagicLand_System.PayLoad.Response.Notifications;
 using MagicLand_System.PayLoad.Response.Syllabuses;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -15,12 +12,12 @@ namespace MagicLand_System.Controllers
     public class SyllabusController : BaseController<SyllabusController>
     {
         private readonly ISyllabusService _syllabusService;
-        public SyllabusController(ILogger<SyllabusController> logger,ISyllabusService syllabusService) : base(logger)
+        public SyllabusController(ILogger<SyllabusController> logger, ISyllabusService syllabusService) : base(logger)
         {
             _logger = logger;
             _syllabusService = syllabusService;
         }
-     
+
         [HttpPost(ApiEndpointConstant.Syllabus.AddSyllabus)]
         public async Task<IActionResult> InsertCourse([FromBody] OverallSyllabusRequest request)
         {
@@ -50,8 +47,8 @@ namespace MagicLand_System.Controllers
         [ProducesErrorResponseType(typeof(Exception))]
         public async Task<IActionResult> LoadSyllabusByCourseId([FromQuery] Guid id)
         {
-            var course = await _syllabusService.LoadSyllabusByCourseIdAsync(id);
-            return Ok(course);
+            var syllabus = await _syllabusService.LoadSyllabusByCourseIdAsync(id);
+            return Ok(syllabus);
         }
 
         #region document API Get Syllabus By Id
@@ -77,8 +74,59 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusById([FromQuery] Guid id)
         {
-            var courses = await _syllabusService.LoadSyllabusByIdAsync(id);
-            return Ok(courses);
+            var syllabus = await _syllabusService.LoadSyllabusByIdAsync(id);
+            return Ok(syllabus);
+        }
+
+        #region document API Get Syllabuses
+        /// <summary>
+        ///  Truy Suất Toàn Bộ Giáo Trình
+        /// </summary>
+        /// <response code="200">Trả Về Giáo Trình</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.Syllabus.LoadSyllabuses)]
+        [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoadSyllabuses()
+        {
+            var syllabuses = await _syllabusService.LoadSyllabusesAsync();
+            return Ok(syllabuses);
+        }
+
+        #region document API Filter Syllabus
+        /// <summary>
+        ///  Tìm Kiếm Hoặc Lọc Giáo Trình Thông Qua Các Nhãn Cho Phép
+        /// </summary>
+        /// <param name="keyWords">Cho Giáo Trình Thỏa Mãn 1 Trong Các Từ Khóa</param>
+        /// <param name="date">Cho Giáo Trình Có Biến Ngày Tháng Bằng Giá Trị Này</param>
+        /// <param name="score">Cho Giáo Trình Có Biến Điểm Số Lơn Hơn Hoặc Bằng Giá Trị Này</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "keyWords": ["Toán tư duy cho bé", "TTD1"],
+        ///        "date": "2024-02-22",
+        ///        "score": 5.5,
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Giáo Trình</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.Syllabus.FilterSyllabus)]
+        [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
+        public async Task<IActionResult> FilterSyllabus([FromQuery] List<string>? keyWords,
+            [FromQuery] DateTime? date,
+            [FromQuery] double? score)
+        {
+            var syllabuses = await _syllabusService.FilterSyllabusAsync(keyWords, date, score);
+            return Ok(syllabuses);
         }
     }
 }
