@@ -1,6 +1,5 @@
 ﻿using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Cart;
-using MagicLand_System.PayLoad.Request.Checkout;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,6 +8,19 @@ namespace MagicLand_System.Helpers
 {
     public class StringHelper
     {
+        public static List<string> FromStringToList(string input)
+        {
+            var separators = new string[] { "/r/n", "\r\n", "\n" };
+
+            var result = input.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                              .Select(line => line.Trim())
+                              .ToList();
+
+            return result;
+        }
+
+
+
         public static string TrimStringAndNoSpace(string input)
         {
             return input.Trim().Replace(" ", "");

@@ -5,6 +5,6 @@ namespace MagicLand_System.PayLoad.Response.Sessions
 {
     public class SyllabusInforResponse
     {
-        public List<SyllabusSessionResponse>? Sessions { get; set; } = new List<SyllabusSessionResponse>();
+        public List<SessionResponse>? Sessions { get; set; } = new List<SessionResponse>();
     }
 }

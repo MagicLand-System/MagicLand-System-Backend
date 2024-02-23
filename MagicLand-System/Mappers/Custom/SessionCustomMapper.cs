@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response.Sessions;
 
 namespace MagicLand_System.Mappers.Custom
@@ -14,56 +15,38 @@ namespace MagicLand_System.Mappers.Custom
 
             var response = new SyllabusInforResponse
             {
-                Sessions = fromTopicsToSyllabusSessionResponse(topics),
+                Sessions = fromTopicsToSessionResponses(topics),
             };
 
             return response;
         }
 
 
-        public static List<SyllabusSessionResponse> fromTopicsToSyllabusSessionResponse(ICollection<Topic> topics)
+        public static List<SessionResponse> fromTopicsToSessionResponses(ICollection<Topic> topics)
         {
             if (topics == null)
             {
                 return default!;
             }
 
-            var responses = new List<SyllabusSessionResponse>();
+            var responses = new List<SessionResponse>();
 
             foreach (var topic in topics)
             {
-                responses.Add(new SyllabusSessionResponse
+                foreach(var session in topic.Sessions!)
                 {
-                    TopicName = topic.Name!,
-                    Sessions = fromSessionsToListSessionResponse(topic.Sessions),
-
-                });
+                    responses.Add(new SessionResponse
+                    {
+                        OrderTopic = topic.OrderNumber,
+                        OrderSession = session.NoSession,
+                        TopicName = topic.Name!,
+                        Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions!),
+                    });
+                }        
             }
-
-
             return responses;
         }
 
-
-        public static List<SessionResponse> fromSessionsToListSessionResponse(ICollection<Session> sessions)
-        {
-            if (sessions == null)
-            {
-                return default!;
-            }
-            var responses = new List<SessionResponse>();
-
-            foreach (var session in sessions)
-            {
-                responses.Add(new SessionResponse
-                {
-                    Order = session.NoSession,
-                    Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions),
-                });
-            }
-
-            return responses;
-        }
 
         public static List<SessionContentReponse> fromSessionDescriptionsToSessionContentResponse(ICollection<SessionDescription> descriptions)
         {
@@ -79,24 +62,26 @@ namespace MagicLand_System.Mappers.Custom
                 responses.Add(new SessionContentReponse
                 {
                     Content = desc.Content,
-                    Details = desc.Detail,
-
+                    Details = StringHelper.FromStringToList(desc.Detail!),
                 });
             }
 
             return responses;
         }
 
-        public static SessionResponse fromSessionToSessionResponse(Session session)
+        public static SessionResponse fromSessionToSessionResponse(Session session, Topic topic)
         {
             if (session == null)
             {
                 return new SessionResponse();
             }
+
             var response = new SessionResponse
             {
-                Order = session.NoSession,
-                Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions),
+                OrderTopic = topic.OrderNumber,
+                OrderSession = session.NoSession,
+                TopicName = topic.Name,
+                Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions!),
             };
 
             return response;

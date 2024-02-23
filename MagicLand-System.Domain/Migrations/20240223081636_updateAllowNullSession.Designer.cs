@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240223081636_updateAllowNullSession")]
+    partial class updateAllowNullSession
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -769,6 +772,9 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("CourseCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -793,9 +799,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("SubjectCode")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("SyllabusCategoryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("SyllabusLink")
                         .HasColumnType("nvarchar(max)");
 
@@ -807,11 +810,11 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CourseCategoryId");
+
                     b.HasIndex("CourseId")
                         .IsUnique()
                         .HasFilter("[CourseId] IS NOT NULL");
-
-                    b.HasIndex("SyllabusCategoryId");
 
                     b.ToTable("Syllabus", (string)null);
                 });
@@ -1252,16 +1255,16 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Syllabus", b =>
                 {
+                    b.HasOne("MagicLand_System.Domain.Models.SyllabusCategory", "SyllabusCategory")
+                        .WithMany("Syllabuses")
+                        .HasForeignKey("CourseCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
                         .WithOne("CourseSyllabus")
                         .HasForeignKey("MagicLand_System.Domain.Models.Syllabus", "CourseId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("MagicLand_System.Domain.Models.SyllabusCategory", "SyllabusCategory")
-                        .WithMany("Syllabuses")
-                        .HasForeignKey("SyllabusCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
 
                     b.Navigation("Course");
 

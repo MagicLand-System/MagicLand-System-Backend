@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response.Slots;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 
@@ -6,27 +7,24 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class ExamSyllabusCustomMapper
     {
-        public static ExamSyllabusResponse fromExamSyllabusesToExamSyllabusResponse(ICollection<ExamSyllabus> exams)
+        public static List<ExamSyllabusResponse> fromExamSyllabusesToExamSyllabusResponse(ICollection<ExamSyllabus> exams)
         {
             if (exams == null)
             {
                 return default!;
             }
 
-            var response = new ExamSyllabusResponse
+            var responses = exams.Select(exam => new ExamSyllabusResponse
             {
-                ExamSyllabusInfor = exams.Select(exam => new ExamSyllabusInforResponse
-                {
-                    Type = exam.Category,
-                    Weight = exam.Weight,
-                    CompletionCriteria = exam.CompleteionCriteria,
-                    Duration = exam.Duration,
-                    QuestionType = exam.QuestionType,
-                    Part = exam.Part,
-                }).ToList(),
-            };
+                Type = exam.Category,
+                Weight = exam.Weight,
+                CompletionCriteria = exam.CompleteionCriteria,
+                Duration = exam.Duration,
+                QuestionType = string.Join(",", StringHelper.FromStringToList(exam.QuestionType!)),
+                Part = exam.Part,
+            }).ToList();
 
-            return response;
+            return responses;
         }
     }
 }

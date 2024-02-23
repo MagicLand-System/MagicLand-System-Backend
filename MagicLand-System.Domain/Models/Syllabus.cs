@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MagicLand_System.Domain.Models
 {
-    public class CourseSyllabus
+    public class Syllabus
     {
         public Guid Id { get; set; }
         public string? Name { get; set; }
@@ -22,11 +22,14 @@ namespace MagicLand_System.Domain.Models
         public string? Description { get; set; } 
         public string? SyllabusLink { get; set; }
         public string? SubjectCode { get; set; }
-        [ForeignKey("CourseCategory")]
-        public Guid? CourseCategoryId { get; set; }
-        public CourseCategory? CourseCategory { get; set; } = new CourseCategory();
-        public ICollection<Topic> Topics { get; set; } = new List<Topic>();
-        public ICollection<Material> Materials { get; set; } = new List<Material>();
-        public ICollection<ExamSyllabus> ExamSyllabuses { get; set; } = new List<ExamSyllabus>(); 
+
+
+        [ForeignKey("SyllabusCategory")]
+        public Guid SyllabusCategoryId { get; set; }
+        public SyllabusCategory? SyllabusCategory { get; set; }
+
+        public ICollection<Topic>? Topics { get; set; }
+        public ICollection<Material>? Materials { get; set; }
+        public ICollection<ExamSyllabus>? ExamSyllabuses { get; set; }
     }
 }

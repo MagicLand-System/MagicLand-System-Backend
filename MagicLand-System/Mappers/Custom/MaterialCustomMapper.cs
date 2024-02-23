@@ -5,24 +5,21 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class MaterialCustomMapper
     {
-        public static MaterialResponse fromMaterialsToMaterialResponse(ICollection<Material> materials)
+        public static List<MaterialResponse> fromMaterialsToMaterialResponse(ICollection<Material> materials)
         {
             if (materials == null)
             {
                 return default!;
             }
 
-            var response = new MaterialResponse()
+            var responses = materials.Select(mat => new MaterialResponse
             {
-                MaterialInfor = materials.Select(x => new MaterialInforResponse
-                {
-                    MaterialId = x.Id,
-                    Url = x.URL,
+                MaterialId = mat.Id,
+                Url = mat.URL,
+            }).ToList();
 
-                }).ToList(),
-            };
 
-            return response;
+            return responses;
         }
     }
 }

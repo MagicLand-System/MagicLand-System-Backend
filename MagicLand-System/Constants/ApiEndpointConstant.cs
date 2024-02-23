@@ -100,7 +100,7 @@
             public const string GetAll = ApiEndpoint + "/slots";
             public const string SlotById = GetAll + "/{id}";
         }
-        public static class WalletTransaction
+        public static class WalletTransactionEndPoint
         {
             public const string GetAll = ApiEndpoint + "/walletTransactions";
             public const string TransactionById = GetAll + "/{id}";
@@ -109,7 +109,7 @@
             public const string GetBillTransactionByTxnRefCode = GetAll + "/{txnRefCode}/bills/status";
             public const string GetRevenueTransactionByTime = GetAll + "/bills/revenue";
         }
-        public static class Syllabus
+        public static class SyllabusEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/Syllabus";
             public const string LoadByCourse = EndPointBase + "/getByCourse";

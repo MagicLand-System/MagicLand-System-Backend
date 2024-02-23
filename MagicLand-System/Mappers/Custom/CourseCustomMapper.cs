@@ -62,6 +62,7 @@ namespace MagicLand_System.Mappers.Custom
             CourseDetailResponse response = new CourseDetailResponse
             {
                 CourseName = course.Name,
+                Subject = course.SubjectName,
                 MinAgeStudent = course.MinYearOldsStudent.ToString(),
                 MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
                 AddedDate = course.AddedDate,

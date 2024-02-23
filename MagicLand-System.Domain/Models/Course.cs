@@ -8,6 +8,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public DateTime? AddedDate { get; set; } = default;
+        public string? SubjectName { get; set; }
         public int NumberOfSession { get; set; }
         public int? MinYearOldsStudent { get; set; } = 3;
         public int? MaxYearOldsStudent { get; set; } = 120;
@@ -18,7 +19,7 @@ namespace MagicLand_System.Domain.Models
         public DateTime? UpdateDate { get; set; } = default;
         [ForeignKey("CourseSyllabus")]
         public Guid? CourseSyllabusId { get; set; }
-        public CourseSyllabus? CourseSyllabus { get; set; }
+        public Syllabus? CourseSyllabus { get; set; }
 
         public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();

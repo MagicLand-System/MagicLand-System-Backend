@@ -7,7 +7,6 @@ using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Drawing;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -56,9 +55,9 @@ namespace MagicLand_System.Services.Implements
 
             filteredCourses = filteredCourses.Where(x => x.NumberOfSession >= minNumberSession && x.NumberOfSession <= maxNumberSession).ToList();
 
-            //filteredCourses = subject != null
-            ////? filteredCourses.Where(x => x.CourseCategory!.Name!.ToLower().Equals(subject.ToLower())).ToList()
-            //: filteredCourses;
+            filteredCourses = subject != null
+            ? filteredCourses.Where(x => x.SubjectName!.ToLower().Equals(subject.ToLower())).ToList()
+            : filteredCourses;
 
             return filteredCourses;
         }
@@ -67,7 +66,6 @@ namespace MagicLand_System.Services.Implements
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
             .Include(x => x.CoursePrerequisites)
-            //.Include(x => x.CourseCategory)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -86,9 +84,9 @@ namespace MagicLand_System.Services.Implements
             return CourseCustomMapper.fromCourseToCourseResExtraInfor(course.ToList()[0], coursePrerequisites, coureSubsequents);
         }
 
-        public async Task<List<CourseCategory>> GetCourseCategories()
+        public async Task<List<SyllabusCategory>> GetCourseCategories()
         {
-            var categories = await _unitOfWork.GetRepository<CourseCategory>().GetListAsync();
+            var categories = await _unitOfWork.GetRepository<SyllabusCategory>().GetListAsync();
             return categories.ToList();
         }
 
@@ -112,7 +110,6 @@ namespace MagicLand_System.Services.Implements
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
             .Include(x => x.CoursePrerequisites)
-            //.Include(x => x.CourseCategory)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -125,14 +122,14 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            var findCourse =  courses.Select(c => CourseCustomMapper
+            var findCourse = courses.Select(c => CourseCustomMapper
                   .fromCourseToCourseResExtraInfor(c, coursePrerequisites
                   .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
                   coureSubsequents)).ToList();
             foreach (var course in findCourse)
             {
-                var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status.Equals("Progressing")));
-                if(count == null)
+                var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status.Equals("Progressing")));
+                if (count == null)
                 {
                     course.NumberClassOnGoing = 0;
                 }
@@ -149,7 +146,6 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Course>()
                 .GetListAsync(include: x => x
                 .Include(x => x.CoursePrerequisites)
-                //.Include(x => x.CourseCategory)
                 .Include(x => x.Classes)
                 .ThenInclude(c => c.Schedules)
                 .ThenInclude(s => s.Slot)
@@ -168,7 +164,6 @@ namespace MagicLand_System.Services.Implements
             {
                 var course = await _unitOfWork.GetRepository<Course>()
                     .SingleOrDefaultAsync(predicate: x => x.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == c.Id));
-                    //include: x => x.Include(x => x.CourseCategory));
 
                 if (course != null)
                 {
@@ -221,7 +216,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> AddCourseInformation(CreateCourseRequest request)
         {
-            if(request != null)
+            if (request != null)
             {
                 Course course = new Course
                 {
@@ -266,7 +261,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 List<string> preIds = request.PreRequisiteIds;
                 List<CoursePrerequisite> prerequisites = new List<CoursePrerequisite>();
-                if(prerequisites != null && prerequisites.Count > 0)
+                if (prerequisites != null && prerequisites.Count > 0)
                 {
                     foreach (var preId in preIds)
                     {
@@ -280,9 +275,9 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 course.SubDescriptionTitles = subDescriptionTitles;
-                var syll = await _unitOfWork.GetRepository<CourseSyllabus>().SingleOrDefaultAsync(predicate :  x => x.Id.ToString().Equals(request.SyllabusId) ,include : x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions));
+                var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.SyllabusId), include: x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions));
                 var NumOfSess = 0;
-                List<Session> sessions = new List<Session>();   
+                List<Session> sessions = new List<Session>();
                 foreach (var sess in syll.Topics)
                 {
                     foreach (var se in sess.Sessions)
@@ -296,11 +291,11 @@ namespace MagicLand_System.Services.Implements
                 await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
                 await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
                 await _unitOfWork.GetRepository<CoursePrerequisite>().InsertRangeAsync(prerequisites);
-                 _unitOfWork.GetRepository<CourseSyllabus>().UpdateAsync(syll);
+                _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syll);
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;
             }
-            return false;   
+            return false;
         }
     }
 }

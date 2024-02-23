@@ -13,10 +13,12 @@ namespace MagicLand_System.Domain.Models
         public string? Name { get; set; }
         public int OrderNumber {  get; set; }
 
-        [ForeignKey("CourseSyllabus")]
-        public Guid CourseSyllabusId { get; set; }
-        public CourseSyllabus CourseSyllabus { get; set; } = new CourseSyllabus();
 
-        public ICollection<Session> Sessions = new List<Session>();
+        [ForeignKey("Syllabus")]
+        public Guid SyllabusId { get; set; }
+        public Syllabus? Syllabus { get; set; }
+
+
+        public ICollection<Session>? Sessions = new List<Session>();
     }
 }

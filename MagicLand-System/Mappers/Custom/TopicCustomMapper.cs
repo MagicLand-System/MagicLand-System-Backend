@@ -38,7 +38,7 @@ namespace MagicLand_System.Mappers.Custom
                 TopicName = topic!.Name ??= "Undefined",
                 OrderNumber = topic.OrderNumber,
                 Session = session != null && session != default
-                ? SessionCustomMapper.fromSessionToSessionResponse(session)
+                ? SessionCustomMapper.fromSessionToSessionResponse(session, topic)
                 : default,
             };
 
