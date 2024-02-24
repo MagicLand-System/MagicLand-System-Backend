@@ -17,9 +17,11 @@ namespace MagicLand_System.Domain.Models
         public double Price { get; set; }
         public string? MainDescription { get; set; }
         public DateTime? UpdateDate { get; set; } = default;
-        [ForeignKey("CourseSyllabus")]
-        public Guid? CourseSyllabusId { get; set; }
-        public Syllabus? CourseSyllabus { get; set; }
+
+
+        [ForeignKey("Syllabus")]
+        public Guid? SyllabusId { get; set; }
+        public Syllabus? Syllabus { get; set; }
 
         public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();

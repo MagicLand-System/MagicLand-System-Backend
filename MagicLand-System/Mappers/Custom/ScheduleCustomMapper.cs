@@ -54,27 +54,26 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<ScheduleResWithTopic> fromClassRelatedItemsToScheduleResWithTopic(List<Schedule> schedules, List<Topic> topics)
+        public static List<ScheduleResWithSession> fromClassRelatedItemsToScheduleResWithSession(List<Schedule> schedules, List<Topic> topics)
         {
             if (!schedules.Any())
             {
-                return new List<ScheduleResWithTopic>();
+                return new List<ScheduleResWithSession>();
             }
 
-            var responses = new List<ScheduleResWithTopic>();
+            var responses = new List<ScheduleResWithSession>();
 
             if (!topics.Any())
             {
                 foreach (var schedule in schedules)
                 {
-                    var response = new ScheduleResWithTopic
+                    var response = new ScheduleResWithSession
                     {
                         Id = schedule.Id,
                         DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                         Date = schedule.Date,
                         Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
                         Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
-                        Topic = default,
                     };
 
                     responses.Add(response);
@@ -86,7 +85,7 @@ namespace MagicLand_System.Mappers.Custom
 
                 foreach (var topic in topics)
                 {
-                    foreach (var session in topic.Sessions)
+                    foreach (var session in topic.Sessions!)
                     {
                         //Remove after insert Success Database
                         if (orderSchedule > schedules!.Count() - 1)
@@ -97,14 +96,14 @@ namespace MagicLand_System.Mappers.Custom
 
                         var schedule = schedules![orderSchedule];
 
-                        var response = new ScheduleResWithTopic
+                        var response = new ScheduleResWithSession
                         {
                             Id = schedule.Id,
                             DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                             Date = schedule.Date,
                             Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
                             Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
-                            Topic = TopicCustomMapper.fromTopicToTopicWithSingleSessionResponse(topic, session),
+                            Session = SessionCustomMapper.fromSessionToSessionResponse(session, topic)
                         };
 
                         responses.Add(response);

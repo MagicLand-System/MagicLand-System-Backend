@@ -116,7 +116,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Course");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.CourseSyllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<CoursePrerequisite>(entity =>
             {

@@ -164,9 +164,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<DateTime?>("AddedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("CourseSyllabusId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
@@ -193,6 +190,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Property<string>("SubjectName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("SyllabusId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("datetime2");
@@ -234,6 +234,12 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("Duration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ExamOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Part")
@@ -452,6 +458,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("PackageOrder")
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
@@ -1253,7 +1262,7 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.Syllabus", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
-                        .WithOne("CourseSyllabus")
+                        .WithOne("Syllabus")
                         .HasForeignKey("MagicLand_System.Domain.Models.Syllabus", "CourseId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -1359,9 +1368,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Navigation("CoursePrerequisites");
 
-                    b.Navigation("CourseSyllabus");
-
                     b.Navigation("SubDescriptionTitles");
+
+                    b.Navigation("Syllabus");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.FlashCard", b =>

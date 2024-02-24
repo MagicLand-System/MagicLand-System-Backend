@@ -32,7 +32,6 @@ namespace MagicLand_System.Mappers.Classes
             CreateMap<Class, ClassResExtraInfor>()
                 .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
-                //.ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.CourseCategory.Name))
                 .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
                 .ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
                 .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
@@ -42,10 +41,10 @@ namespace MagicLand_System.Mappers.Classes
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
                 .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
-                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromClassRelatedItemsToScheduleResWithTopic(
+                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromClassRelatedItemsToScheduleResWithSession(
                 src.Schedules.ToList(), 
-                src.Course!.CourseSyllabus != null
-                ? src.Course.CourseSyllabus.Topics.ToList()
+                src.Course!.Syllabus != null
+                ? src.Course.Syllabus.Topics!.ToList()
                 : new List<Topic>())));
 
 

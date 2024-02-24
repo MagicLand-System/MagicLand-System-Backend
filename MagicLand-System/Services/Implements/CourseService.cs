@@ -71,9 +71,9 @@ namespace MagicLand_System.Services.Implements
             .ThenInclude(s => s.Slot)
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents)
-            .Include(x => x.CourseSyllabus)
-            .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
-            .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
+            .Include(x => x.Syllabus)
+            .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
+            .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
 
             var coursePrerequisites = !course.Any()
                 ? throw new BadHttpRequestException($"Id [{id}] Khóa Hoc Không Tồn Tại", StatusCodes.Status400BadRequest)
@@ -115,9 +115,9 @@ namespace MagicLand_System.Services.Implements
             .ThenInclude(s => s.Slot)
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents)
-            .Include(x => x.CourseSyllabus)
-            .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
-            .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
+            .Include(x => x.Syllabus)
+            .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
+            .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
 
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
@@ -151,9 +151,9 @@ namespace MagicLand_System.Services.Implements
                 .ThenInclude(s => s.Slot)
                 .Include(x => x.SubDescriptionTitles)
                 .ThenInclude(sdt => sdt.SubDescriptionContents)
-                .Include(x => x.CourseSyllabus)
-                .ThenInclude(cs => cs!.Topics.OrderBy(tp => tp.OrderNumber))
-                .ThenInclude(tp => tp.Sessions.OrderBy(s => s.NoSession)));
+                .Include(x => x.Syllabus)
+                .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
+                .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
         }
 
         private async Task<Course[]> GetCoureSubsequents(ICollection<Course> courses)
@@ -231,7 +231,7 @@ namespace MagicLand_System.Services.Implements
                     Price = request.Price,
                     UpdateDate = DateTime.Now,
                     Status = "UPCOMING",
-                    CourseSyllabusId = Guid.Parse(request.SyllabusId),
+                    SyllabusId = Guid.Parse(request.SyllabusId),
                 };
                 List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();
                 var listSubDescription = request.SubDescriptions;

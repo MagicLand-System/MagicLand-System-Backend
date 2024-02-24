@@ -155,5 +155,12 @@
             public const string DeleteNotification = EndPointBase + "/{id}/delete";
             public const string DirectPushNotification = EndPointBase + "/direct/pushNotification";
         }
+
+        public static class QuizEndPoint
+        {
+            public const string EndPointBase = ApiEndpoint + "/quizzes";
+            public const string GetQuizByCourseId = ApiEndpoint + "/quizzes/course/{id}";
+            public const string GetQuizByClassId = ApiEndpoint + "/quizzes/class/{id}";
+        }
     }
 }

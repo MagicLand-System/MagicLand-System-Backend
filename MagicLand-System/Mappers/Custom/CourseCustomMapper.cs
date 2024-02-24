@@ -5,6 +5,21 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class CourseCustomMapper
     {
+        public static CourseSimpleResponse fromCourseToCourseSimpleResponse(Course course)
+        {
+            if (course == null)
+            {
+                return new CourseSimpleResponse();
+            }
+
+            var response = new CourseSimpleResponse
+            {
+                CourseId = course.Id,
+                CourseName = course.Name,
+            };
+
+            return response;
+        }
         public static CourseResponse fromCourseToCourseResponse(Course course)
         {
             if (course == null)

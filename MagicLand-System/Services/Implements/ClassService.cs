@@ -381,7 +381,7 @@ namespace MagicLand_System.Services.Implements
                .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x
                .Include(x => x.Lecture!)
                .Include(x => x.StudentClasses)
-               .Include(x => x.Course).ThenInclude(c => c!.CourseSyllabus)
+               .Include(x => x.Course).ThenInclude(c => c!.Syllabus)
                .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
@@ -407,7 +407,7 @@ namespace MagicLand_System.Services.Implements
                 .GetListAsync(predicate: x => x.CourseId == id, include: x => x
                 .Include(x => x.Lecture!)
                 .Include(x => x.StudentClasses)
-                .Include(x => x.Course).ThenInclude(c => c!.CourseSyllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+                .Include(x => x.Course).ThenInclude(c => c!.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
                 .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
@@ -429,8 +429,8 @@ namespace MagicLand_System.Services.Implements
                 return await _unitOfWork.GetRepository<Class>()
                     .GetListAsync(predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time), include: x => x
                     .Include(x => x.Lecture)
-                    .Include(x => x.Course!).ThenInclude(c => c.CourseSyllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-                    .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession))
+                    .Include(x => x.Course!).ThenInclude(c => c.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+                    .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions)
                     .Include(x => x.StudentClasses)
                     .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
                     .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
@@ -439,8 +439,8 @@ namespace MagicLand_System.Services.Implements
             return await _unitOfWork.GetRepository<Class>()
                 .GetListAsync(include: x => x
                 .Include(x => x.Lecture)
-                .Include(x => x.Course!).ThenInclude(c => c.CourseSyllabus).ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
-                .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
+                .Include(x => x.Course!).ThenInclude(c => c.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+                .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions)
                 .Include(x => x.StudentClasses)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);

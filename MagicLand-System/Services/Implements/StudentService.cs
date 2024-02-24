@@ -74,7 +74,7 @@ namespace MagicLand_System.Services.Implements
                .Include(x => x.Lecture!)
                .Include(x => x.StudentClasses)
                .Include(x => x.Course)
-               .ThenInclude(c => c.CourseSyllabus)
+               .ThenInclude(c => c.Syllabus)
                .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
                .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
                .Include(x => x.Schedules.OrderBy(sc => sc.Date))
