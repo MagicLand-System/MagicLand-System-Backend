@@ -259,21 +259,21 @@ namespace MagicLand_System.Services.Implements
                     newTitle.SubDescriptionContents = contents;
                     subDescriptionTitles.Add(newTitle);
                 }
-                List<string> preIds = request.PreRequisiteIds;
-                List<CoursePrerequisite> prerequisites = new List<CoursePrerequisite>();
-                if (prerequisites != null && prerequisites.Count > 0)
-                {
-                    foreach (var preId in preIds)
-                    {
-                        var newPreQ = new CoursePrerequisite
-                        {
-                            CurrentCourseId = course.Id,
-                            Id = Guid.NewGuid(),
-                            PrerequisiteCourseId = Guid.Parse(preId),
-                        };
-                        prerequisites.Add(newPreQ);
-                    }
-                }
+                //List<string> preIds = request.PreRequisiteIds;
+                //List<CoursePrerequisite> prerequisites = new List<CoursePrerequisite>();
+                //if (prerequisites != null && prerequisites.Count > 0)
+                //{
+                //    foreach (var preId in preIds)
+                //    {
+                //        var newPreQ = new CoursePrerequisite
+                //        {
+                //            CurrentCourseId = course.Id,
+                //            Id = Guid.NewGuid(),
+                //            PrerequisiteCourseId = Guid.Parse(preId),
+                //        };
+                //        prerequisites.Add(newPreQ);
+                //    }
+                //}
                 course.SubDescriptionTitles = subDescriptionTitles;
                 var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.SyllabusId), include: x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions));
                 var NumOfSess = 0;
@@ -290,7 +290,7 @@ namespace MagicLand_System.Services.Implements
                 await _unitOfWork.GetRepository<Course>().InsertAsync(course);
                 await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
                 await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
-                await _unitOfWork.GetRepository<CoursePrerequisite>().InsertRangeAsync(prerequisites);
+                //await _unitOfWork.GetRepository<CoursePrerequisite>().InsertRangeAsync(prerequisites);
                 _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syll);
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;

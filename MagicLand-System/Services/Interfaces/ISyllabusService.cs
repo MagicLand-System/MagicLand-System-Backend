@@ -13,6 +13,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<SyllabusResponse>> LoadSyllabusesAsync();
         Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords,DateTime? date,double? score);
         Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword);
+        Task<bool> UpdateSyllabus(OverallSyllabusRequest request, string id);
 
     }
 }

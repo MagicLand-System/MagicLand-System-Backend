@@ -7,6 +7,7 @@ using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
@@ -438,5 +439,157 @@ namespace MagicLand_System.Services.Implements
             }
             return responses;
         }
+
+        public async Task<bool> UpdateSyllabus(OverallSyllabusRequest request, string id)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync( predicate :  x => x.Id.ToString().Equals(id));
+            if(syllabus.CourseId == null) 
+            {
+                await UpdateGeneralSyllabus(syllabus.Id, request);
+                await UpdateMaterial(request, syllabus.Id);
+                await UpdateExam(request, syllabus.Id);
+                await UpdateLearningItems(request, syllabus.Id);
+                return await _unitOfWork.CommitAsync() > 0;
+            } 
+             bool isSuccess = await AddSyllabus(request);
+            return isSuccess;
+        }
+        private async Task UpdateGeneralSyllabus(Guid syllabusId, OverallSyllabusRequest request) 
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabusId.ToString()));
+            if (syllabus != null)
+            {
+                if(request.EffectiveDate != null)
+                {
+                    syllabus.EffectiveDate = DateTime.Parse(request.EffectiveDate);
+
+                }
+                syllabus.UpdateTime = DateTime.Now;
+                if (!request.Description.IsNullOrEmpty())
+                {
+                    syllabus.Description = request.Description;
+                }
+                if(request.MinAvgMarkToPass != null) 
+                {
+                    syllabus.MinAvgMarkToPass = request.MinAvgMarkToPass;
+                }
+                if(!request.SyllabusLink.IsNullOrEmpty()) 
+                {
+                    syllabus.SyllabusLink = request.SyllabusLink;
+                }
+                if(!request.SyllabusName.IsNullOrEmpty())
+                {
+                    syllabus.Name = request.SyllabusName;
+                }
+                if(request.ScoringScale != null)
+                {
+                    syllabus.ScoringScale = request.ScoringScale;
+                }
+                if(request.SubjectCode != null)
+                {
+                    syllabus.SubjectCode = request.SubjectCode; 
+                }
+                if(syllabus.TimePerSession != null)
+                {
+                    syllabus.TimePerSession = request.TimePerSession;
+                }
+                if(!request.StudentTasks.IsNullOrEmpty())
+                {
+                    syllabus.StudentTasks = request.StudentTasks;
+                }
+                var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>()
+             .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type!.ToLower().Trim()));
+                syllabus.SyllabusCategoryId = categoryId;
+                _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syllabus);
+                await _unitOfWork.CommitAsync();
+            }
+        }
+        private async Task UpdateMaterial(OverallSyllabusRequest request , Guid syllabusId)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabusId.ToString()));
+            var listMaterial = await _unitOfWork.GetRepository<Material>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabusId.ToString()));
+            _unitOfWork.GetRepository<Material>().DeleteRangeAsync(listMaterial);
+            await _unitOfWork.CommitAsync();
+            syllabus.Materials = request.MaterialRequests.Select(mat => new Material
+            {
+                Id = new Guid(),
+                SyllabusId = syllabus.Id,
+                URL = mat,
+            }).ToList();
+
+            await _unitOfWork.GetRepository<Material>().InsertRangeAsync(syllabus.Materials);
+        }
+        private async Task UpdateExam(OverallSyllabusRequest request , Guid syllabusId)
+        {
+            var listExam = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabusId.ToString()));
+          
+             _unitOfWork.GetRepository<ExamSyllabus>().DeleteRangeAsync(listExam);
+            await _unitOfWork.CommitAsync();
+            await GenerateExam(request , syllabusId);
+        }
+        private async Task UpdateLearningItems(OverallSyllabusRequest request , Guid syllabusId)
+        {
+             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabusId.ToString()));
+             var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate : x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
+             List<Session> sessions = new List<Session>();
+             foreach (var item in topics)
+            {
+                var session = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(item.Id.ToString()) , include : x => x.Include(x => x.QuestionPackage));
+                sessions.AddRange(session);
+            }
+             List<SessionDescription> sessionDescriptions = new List<SessionDescription>();
+            List<QuestionPackage> questionPackages = new List<QuestionPackage>();
+            var qpx = await _unitOfWork.GetRepository<QuestionPackage>().GetListAsync();
+            foreach (var sessionx in sessions)
+            {
+                var sessionDescription = await _unitOfWork.GetRepository<SessionDescription>().GetListAsync(predicate: x => x.SessionId.ToString().Equals(sessionx.Id.ToString()));
+                sessionDescriptions.AddRange(sessionDescription);                
+            }
+            foreach(var sessionx in sessions)
+            {
+                var qp = qpx.SingleOrDefault(x => x.SessionId.ToString().Equals(sessionx.Id.ToString()));
+                if (qp != null)
+                {
+                    questionPackages.Add(qp);
+                }
+            }
+            List<Question> questions = new List<Question>();    
+            foreach(var questionpack in questionPackages)
+            {
+                var question = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionpack.Id.ToString()) , include : x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoiceAnswers));
+                questions.AddRange(question);
+            }
+            List<FlashCard> flashCards = new List<FlashCard>();
+            List <MutipleChoiceAnswer> mutipleChoiceAnswers = new List<MutipleChoiceAnswer>();
+            foreach(var question in questions)
+            {
+                if(question.FlashCards.Count > 0 )
+                {
+                    flashCards.AddRange(question.FlashCards);
+                }
+                if(question.MutipleChoiceAnswers.Count > 0)
+                {
+                    mutipleChoiceAnswers.AddRange(question.MutipleChoiceAnswers);
+                }
+            }
+            List<SideFlashCard> sideFlashCards = new List<SideFlashCard>();
+            foreach(var flashCard in flashCards)
+            {
+                var sideFlashCard = await _unitOfWork.GetRepository<SideFlashCard>().GetListAsync(predicate: x => x.FlashCardId.ToString().Equals(flashCard.Id.ToString()));
+                sideFlashCards.AddRange(sideFlashCard);
+            }
+            _unitOfWork.GetRepository<SideFlashCard>().DeleteRangeAsync(sideFlashCards);
+            _unitOfWork.GetRepository<FlashCard>().DeleteRangeAsync(flashCards);
+            _unitOfWork.GetRepository<MutipleChoiceAnswer>().DeleteRangeAsync(mutipleChoiceAnswers);
+            _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
+            _unitOfWork.GetRepository<QuestionPackage>().DeleteRangeAsync(questionPackages);
+            _unitOfWork.GetRepository<SessionDescription>().DeleteRangeAsync(sessionDescriptions);
+            _unitOfWork.GetRepository<Session>().DeleteRangeAsync(sessions);
+            _unitOfWork.GetRepository<Topic>().DeleteRangeAsync(topics);
+            await _unitOfWork.CommitAsync();
+            var sessionInsert = await GenerateLearningItems(request.SyllabusRequests, syllabusId);
+            await GenerateExerciseItems(request.QuestionPackageRequests!, sessions);
+        }
+
     }
 }
