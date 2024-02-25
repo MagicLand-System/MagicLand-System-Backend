@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240225105821_FixFieldAndRelationship")]
+    partial class FixFieldAndRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -843,6 +846,9 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("CurrentSyllabusId")
                         .HasColumnType("uniqueidentifier");
 
@@ -850,6 +856,8 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("CurrentSyllabusId");
 
@@ -1285,6 +1293,10 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.SyllabusPrerequisite", b =>
                 {
+                    b.HasOne("MagicLand_System.Domain.Models.Course", null)
+                        .WithMany("CoursePrerequisites")
+                        .HasForeignKey("CourseId");
+
                     b.HasOne("MagicLand_System.Domain.Models.Syllabus", "Syllabus")
                         .WithMany("SyllabusPrerequisites")
                         .HasForeignKey("CurrentSyllabusId")
@@ -1382,6 +1394,8 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
                 {
                     b.Navigation("Classes");
+
+                    b.Navigation("CoursePrerequisites");
 
                     b.Navigation("SubDescriptionTitles");
 

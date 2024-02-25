@@ -22,8 +22,6 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("Syllabus")]
         public Guid? SyllabusId { get; set; }
         public Syllabus? Syllabus { get; set; }
-
-        public ICollection<CoursePrerequisite> CoursePrerequisites { get; set; } = new List<CoursePrerequisite>();
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<SubDescriptionTitle> SubDescriptionTitles { get; set; } = new List<SubDescriptionTitle>();
     }

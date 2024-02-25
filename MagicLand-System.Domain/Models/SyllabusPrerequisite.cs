@@ -2,14 +2,14 @@
 
 namespace MagicLand_System.Domain.Models
 {
-    public class CoursePrerequisite
+    public class SyllabusPrerequisite
     {
         public Guid Id { get; set; }
         public Guid PrerequisiteCourseId { get; set; }
 
-        [ForeignKey("Course")]
-        public Guid CurrentCourseId { get; set; }
-        public Course? Course { get; set; }
+        [ForeignKey("Syllabus")]
+        public Guid CurrentSyllabusId { get; set; }
+        public Syllabus? Syllabus { get; set; }
 
     }
 }

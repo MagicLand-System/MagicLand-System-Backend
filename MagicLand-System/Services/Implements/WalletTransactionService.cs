@@ -413,20 +413,20 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateCoursePrerequisite(Student student, Class cls)
         {
-            var currentCourseIdPrerRequiredList = (List<Guid>)await _unitOfWork.GetRepository<Course>()
-                .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
-                predicate: x => x.Classes.Any(c => c.Id.Equals(cls.Id)),
-                include: x => x.Include(x => x.CoursePrerequisites));
+            //var currentCourseIdPrerRequiredList = (List<Guid>)await _unitOfWork.GetRepository<Course>()
+            //    .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
+            //    predicate: x => x.Classes.Any(c => c.Id.Equals(cls.Id)),
+            //    include: x => x.Include(x => x.CoursePrerequisites));
 
-            var allCoursePrerIdRequired = new List<Guid>();
+            //var allCoursePrerIdRequired = new List<Guid>();
 
-            var allCoursePrerIdRequiredRender = await RenderAllCoursePrerRequired(currentCourseIdPrerRequiredList);
-            allCoursePrerIdRequired.AddRange(allCoursePrerIdRequiredRender);
+            //var allCoursePrerIdRequiredRender = await RenderAllCoursePrerRequired(currentCourseIdPrerRequiredList);
+            //allCoursePrerIdRequired.AddRange(allCoursePrerIdRequiredRender);
 
-            if (allCoursePrerIdRequired?.Any() ?? false)
-            {
-                await ValidateCoursePrerProgress(student, cls, allCoursePrerIdRequired);
-            }
+            //if (allCoursePrerIdRequired?.Any() ?? false)
+            //{
+            //    await ValidateCoursePrerProgress(student, cls, allCoursePrerIdRequired);
+            //}
         }
 
         private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allCoursePrerIdRequired)
@@ -435,10 +435,10 @@ namespace MagicLand_System.Services.Implements
 
             foreach (Guid id in allCoursePrerIdRequired)
             {
-                var courseRequired = await _unitOfWork.GetRepository<Course>()
-                   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
+                //var courseRequired = await _unitOfWork.GetRepository<Course>()
+                //   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
 
-                courseRequiredList.Add(courseRequired);
+                //courseRequiredList.Add(courseRequired);
             }
 
             var courseCompleted = await _unitOfWork.GetRepository<Course>()
@@ -488,18 +488,18 @@ namespace MagicLand_System.Services.Implements
             {
                 var tempCourseIdRequiredList = new List<Guid>();
 
-                foreach (Guid id in courseIdRequiredList!)
-                {
-                    var coursePrerIdRequired = await _unitOfWork.GetRepository<Course>()
-                       .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
-                       predicate: x => x.CoursePrerequisites.Any(cp => cp.CurrentCourseId == id),
-                       include: x => x.Include(x => x.CoursePrerequisites));
+                //foreach (Guid id in courseIdRequiredList!)
+                //{
+                //    var coursePrerIdRequired = await _unitOfWork.GetRepository<Course>()
+                //       .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
+                //       //predicate: x => x.CoursePrerequisites.Any(cp => cp.CurrentCourseId == id),
+                //       include: x => x.Include(x => x.CoursePrerequisites));
 
-                    if (coursePrerIdRequired?.Any() ?? false)
-                    {
-                        tempCourseIdRequiredList.AddRange(coursePrerIdRequired);
-                    }
-                }
+                //    if (coursePrerIdRequired?.Any() ?? false)
+                //    {
+                //        tempCourseIdRequiredList.AddRange(coursePrerIdRequired);
+                //    }
+                //}
                 courseIdRequiredList = tempCourseIdRequiredList;
 
                 subCoursePrerIdRequiredList.AddRange(courseIdRequiredList);
