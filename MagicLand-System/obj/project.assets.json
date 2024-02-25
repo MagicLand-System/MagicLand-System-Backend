@@ -4379,23 +4379,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Thuong\\.nuget\\packages\\": {},
+    "C:\\Users\\Administrator\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "projectUniqueName": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
       "projectName": "MagicLand-System",
-      "projectPath": "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
-      "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-      "outputPath": "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
+      "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
+      "outputPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Thuong\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4404,17 +4404,19 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "C:\\Program Files\\dotnet\\sdk\\7.0.302\\Sdks\\Microsoft.NET.Sdk.Web\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
-              "projectPath": "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
+            "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+              "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
             },
-            "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
-              "projectPath": "D:\\CP-2502\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
+            "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
+              "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
             }
           }
         }
@@ -4517,7 +4519,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.102\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
       }
     }
   }

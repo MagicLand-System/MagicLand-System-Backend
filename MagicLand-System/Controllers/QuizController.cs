@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Customs;
+using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Services.Interfaces;
@@ -22,7 +23,7 @@ namespace MagicLand_System.Controllers
 
         #region document API get Quizzes
         /// <summary>
-        ///  Truy Suất Toàn Bộ Quiz Của Các Khóa Học Thuộc Đã Có Giáo Trình
+        ///  Truy Suất Toàn Bộ Quiz Của Các Khóa Học Đã Có Giáo Trình
         /// </summary>
         /// <response code="200">Trả Về Danh Sách Quiz</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
@@ -30,20 +31,14 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.QuizEndPoint.EndPointBase)]
-        [ProducesResponseType(typeof(QuizApiCustomResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> GetQuizzes()
         {
-            var results = await _syllabusService.LoadQuizzesAsync();
+            var responses = await _syllabusService.LoadQuizzesAsync();
 
-            var response = new QuizApiCustomResponse
-            {
-                QuizMutilpleChoice = results.Item1,
-                QuizFlashCard = results.Item2,
-            };
-
-            return Ok(response);
+            return Ok(responses);
         }
 
         #region document API Get Quizzes By Course Id
@@ -63,20 +58,14 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizByCourseId)]
-        [ProducesResponseType(typeof((QuizMultipleChoiceResponse, QuizFlashCardResponse)), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> GetQuizByCourseId([FromRoute] Guid id)
         {
-            var results = await _syllabusService.LoadQuizzesByCourseIdAsync(id);
+            var responses = await _syllabusService.LoadQuizzesByCourseIdAsync(id);
 
-            var response = new QuizApiCustomResponse
-            {
-                QuizMutilpleChoice = results.Item1,
-                QuizFlashCard = results.Item2,
-            };
-
-            return Ok(response);
+            return Ok(responses);
         }
 
         #region document API Get Quizzes By Class Id
@@ -96,19 +85,14 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizByClassId)]
-        [ProducesResponseType(typeof((QuizMultipleChoiceResponse, QuizFlashCardResponse)), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> GetQuizByClassId([FromRoute] Guid id)
         {
-            var results = await _syllabusService.LoadQuizzesByClassIdAsync(id);
+            var responses = await _syllabusService.LoadQuizzesByClassIdAsync(id);
 
-            var response = new QuizApiCustomResponse
-            {
-                QuizMutilpleChoice = results.Item1,
-                QuizFlashCard = results.Item2,
-            };
-            return Ok(response);
+            return Ok(responses);
         }
     }
 }

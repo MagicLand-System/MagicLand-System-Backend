@@ -14,9 +14,9 @@ namespace MagicLand_System.Services.Interfaces
         Task<(SyllabusResponse?, SyllabusWithCourseResponse?)> LoadSyllabusByIdAsync(Guid id);
         Task<List<SyllabusWithCourseResponse>> LoadSyllabusesAsync();
         Task<List<SyllabusWithCourseResponse>> FilterSyllabusAsync(List<string>? keyWords,DateTime? date,double? score);
-        Task<(List<QuizMultipleChoiceResponse>, List<QuizFlashCardResponse>)> LoadQuizzesAsync();
-        Task<(List<QuizMultipleChoiceResponse>, List<QuizFlashCardResponse>)> LoadQuizzesByCourseIdAsync(Guid id);
-        Task<(List<QuizMultipleChoiceResponse>, List<QuizFlashCardResponse>)> LoadQuizzesByClassIdAsync(Guid id);
+        Task<List<QuizResponse>> LoadQuizzesAsync();
+        Task<List<QuizResponse>> LoadQuizzesByCourseIdAsync(Guid id);
+        Task<List<QuizResponse>> LoadQuizzesByClassIdAsync(Guid id);
         Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword);
         Task<bool> UpdateSyllabus(OverallSyllabusRequest request, string id);
 

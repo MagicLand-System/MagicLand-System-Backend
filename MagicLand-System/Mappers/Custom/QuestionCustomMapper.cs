@@ -1,7 +1,8 @@
-﻿using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Response.Quizzes;
+﻿using Azure;
+using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Response.Quizzes.Answers;
+using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
-using MagicLand_System.Utils;
 
 namespace MagicLand_System.Mappers.Custom
 {
@@ -47,19 +48,38 @@ namespace MagicLand_System.Mappers.Custom
 
             foreach (var question in package.Questions!)
             {
-                foreach (var answer in question.MutipleChoiceAnswers!)
+                responses.Add(new QuestionMutipleChoiceResponse
                 {
-                    responses.Add(new QuestionMutipleChoiceResponse
-                    {
-                        QuestionDescription = question.Description,
-                        QuestionImage = question.Img,
-                        AnswerImage = answer.Img,
-                        Answer = answer.Description,
-                        Score = answer.Score,
-                    });
-                }
+                    QuestionId = question.Id,
+                    QuestionDescription = question.Description,
+                    QuestionImage = question.Img,
+                    Answers = fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoiceAnswers!),
+                });
             }
 
+            return responses;
+        }
+
+        public static List<MutilpleChoiceAnswerResponse> fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(List<MutipleChoiceAnswer> answers)
+        {
+            if (answers == null)
+            {
+                return default!;
+            }
+
+            var responses = new List<MutilpleChoiceAnswerResponse>();
+
+            foreach (var answer in answers)
+            {
+                responses.Add(new MutilpleChoiceAnswerResponse
+                {
+                    AnswerId = answer.Id,
+                    AnswerDescription = answer.Description,
+                    AnswerImage = answer.Img,
+                    Score = answer.Score,
+                });
+
+            }
             return responses;
         }
 
@@ -74,34 +94,81 @@ namespace MagicLand_System.Mappers.Custom
 
             foreach (var question in package.Questions!)
             {
-                foreach (var flashCard in question.FlashCards!)
+                var questionFlashCard = new QuestionFlashCardResponse
                 {
-                    var questionFlashCard = new QuestionFlashCardResponse
-                    {
-                        QuestionDescription = question.Description,
-                        QuestionImage = question.Img,
-                        Score = flashCard.Score,
-                    };
+                    QuestionId = question.Id,
+                    QuestionDescription = question.Description,
+                    QuestionImage = question.Img,
+                    FlashCars = fromFlashCardToFlashCardAnswerResponse(question.FlashCards!),
+                };
 
-                    foreach (var sideFlashCard in flashCard.SideFlashCards!)
-                    {
-                        if (sideFlashCard.Side == "Left")
-                        {
-                            questionFlashCard.CardQuestion = sideFlashCard.Image != null ? sideFlashCard.Image : sideFlashCard.Description;
-                            continue;
-                        }
-
-                        if (sideFlashCard.Side == "Right")
-                        {
-                            questionFlashCard.CardAnswer = sideFlashCard.Image != null ? sideFlashCard.Image : sideFlashCard.Description;
-                        }
-                    }
-                    responses.Add(questionFlashCard);
-                }
+                responses.Add(questionFlashCard);
             }
 
             return responses;
         }
+
+        public static List<FlashCardAnswerResponse> fromFlashCardToFlashCardAnswerResponse(List<FlashCard> flashCards)
+        {
+            if (flashCards == null)
+            {
+                return default!;
+            }
+
+            var responses = new List<FlashCardAnswerResponse>();
+
+            foreach (var flashCard in flashCards)
+            {
+                var response = new FlashCardAnswerResponse();
+                foreach (var sideFlashCard in flashCard.SideFlashCards!)
+                {
+
+                    if (sideFlashCard.Side == "Left")
+                    {
+                        response.FirstCardId = sideFlashCard.Id;
+                        response.FirstCardInfor = !string.IsNullOrEmpty(sideFlashCard.Image) ? sideFlashCard.Image : sideFlashCard.Description;
+                        continue;
+                    }
+                    if (sideFlashCard.Side == "Right")
+                    {
+                        response.SecondCardId = sideFlashCard.Id;
+                        response.SecondCardInfor = !string.IsNullOrEmpty(sideFlashCard.Image) ? sideFlashCard.Image : sideFlashCard.Description;
+                    }
+                }
+
+                response.Score = flashCard.Score;
+                responses.Add(response);
+            }
+
+            return responses;
+        }
+
+        public static List<QuestionResponse> fromQuestionPackageToQuestionResponse(QuestionPackage package)
+        {
+            if (package == null)
+            {
+                return default!;
+            }
+
+            var responses = new List<QuestionResponse>();
+
+            foreach (var question in package.Questions!)
+            {
+                var response = new QuestionResponse
+                {
+                    QuestionId = question.Id,
+                    QuestionDescription = question.Description,
+                    QuestionImage = question.Img,
+                    AnswersMutipleChoicesInfor = question.MutipleChoiceAnswers!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoiceAnswers!) : default,
+                    AnwserFlashCarsInfor = question.FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(question.FlashCards!) : default,
+                };
+
+                responses.Add(response);
+            }
+
+            return responses;
+        }
+
     }
 }
 
