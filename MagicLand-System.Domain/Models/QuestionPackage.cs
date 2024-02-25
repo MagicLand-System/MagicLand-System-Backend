@@ -9,7 +9,9 @@ namespace MagicLand_System.Domain.Models
         public string? Type { get; set; }
         public int PackageOrder { get; set; }
 
-
+        public int? Duration { get; set; }  
+        public int? DeadlineTime { get; set; }
+        public int? Score { get; set; }
         [ForeignKey("Session")]
         public Guid? SessionId { get; set; }
         public Session? Session { get; set; } = default;

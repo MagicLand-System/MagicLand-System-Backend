@@ -23,7 +23,7 @@ namespace MagicLand_System.Domain
         public DbSet<Class> Classes { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<Course> Courses { get; set; }
-        public DbSet<CoursePrerequisite> CoursePrerequisites { get; set; }
+        public DbSet<SyllabusPrerequisite> CoursePrerequisites { get; set; }
         public DbSet<Slot> Slots { get; set; }
         public DbSet<Schedule> Sessions { get; set; }
         public DbSet<Room> Rooms { get; set; }
@@ -118,11 +118,11 @@ namespace MagicLand_System.Domain
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
-            modelBuilder.Entity<CoursePrerequisite>(entity =>
+            modelBuilder.Entity<SyllabusPrerequisite>(entity =>
             {
                 entity.ToTable("CoursePrerequisite");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Course).WithMany(e => e.CoursePrerequisites).HasForeignKey(e => e.CurrentCourseId);
+                entity.HasOne(e => e.Syllabus).WithMany(e => e.SyllabusPrerequisites).HasForeignKey(e => e.CurrentSyllabusId);
             });
             modelBuilder.Entity<PersonalWallet>(entity =>
             {

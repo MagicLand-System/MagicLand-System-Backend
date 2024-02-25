@@ -34,10 +34,11 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisitesFilter = await GetCoursePrerequesites(filteredCourses);
             var coureSubsequentsFilter = await GetCoureSubsequents(filteredCourses);
 
-            return filteredCourses.Select(fc => CourseCustomMapper
-                   .fromCourseToCourseResExtraInfor(fc, coursePrerequisitesFilter
-                   .Where(cpf => fc.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == cpf.Id)),
-                   coureSubsequentsFilter)).ToList();
+            //return filteredCourses.Select(fc => CourseCustomMapper
+            //       .fromCourseToCourseResExtraInfor(fc, coursePrerequisitesFilter
+            //       .Where(cpf => fc.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == cpf.Id)),
+            //       coureSubsequentsFilter)).ToList();
+            return new List<CourseResExtraInfor>();
         }
 
         private List<Course> FilterProgress(int minYearsOld, int maxYearsOld, int? minNumberSession, int? maxNumberSession, double minPrice, double? maxPrice, string? subject, ICollection<Course> courses)
@@ -65,7 +66,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<CourseResExtraInfor> GetCourseByIdAsync(Guid id)
         {
             var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
-            .Include(x => x.CoursePrerequisites)
+            //.Include(x => x.CoursePrerequisites)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -97,10 +98,11 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return courses.Select(c => CourseCustomMapper
-            .fromCourseToCourseResExtraInfor(c, coursePrerequisites
-            .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
-            coureSubsequents)).ToList();
+            //return courses.Select(c => CourseCustomMapper
+            //.fromCourseToCourseResExtraInfor(c, coursePrerequisites
+            //.Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
+            //coureSubsequents)).ToList();
+            return new List<CourseResExtraInfor>();
         }
 
 
@@ -109,7 +111,7 @@ namespace MagicLand_System.Services.Implements
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
-            .Include(x => x.CoursePrerequisites)
+            //.Include(x => x.CoursePrerequisites)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -122,10 +124,11 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            var findCourse = courses.Select(c => CourseCustomMapper
-                  .fromCourseToCourseResExtraInfor(c, coursePrerequisites
-                  .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
-                  coureSubsequents)).ToList();
+            //var findCourse = courses.Select(c => CourseCustomMapper
+            //      .fromCourseToCourseResExtraInfor(c, coursePrerequisites
+            //      .Where(cp => c.CoursePrerequisites.Any(x => x.PrerequisiteCourseId == cp.Id)),
+            //      coureSubsequents)).ToList();
+            var findCourse = new List<CourseResExtraInfor>();
             foreach (var course in findCourse)
             {
                 var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status.Equals("Progressing")));
@@ -145,7 +148,7 @@ namespace MagicLand_System.Services.Implements
         {
             return await _unitOfWork.GetRepository<Course>()
                 .GetListAsync(include: x => x
-                .Include(x => x.CoursePrerequisites)
+                //.Include(x => x.CoursePrerequisites)
                 .Include(x => x.Classes)
                 .ThenInclude(c => c.Schedules)
                 .ThenInclude(s => s.Slot)
@@ -158,36 +161,37 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<Course[]> GetCoureSubsequents(ICollection<Course> courses)
         {
-            var coureSubsequents = new List<Course>();
+            //var coureSubsequents = new List<Course>();
 
-            foreach (var c in courses)
-            {
-                var course = await _unitOfWork.GetRepository<Course>()
-                    .SingleOrDefaultAsync(predicate: x => x.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == c.Id));
+            //foreach (var c in courses)
+            //{
+            //    var course = await _unitOfWork.GetRepository<Course>()
+            //        .SingleOrDefaultAsync(predicate: x => x.CoursePrerequisites.Any(cp => cp.PrerequisiteCourseId == c.Id));
 
-                if (course != null)
-                {
-                    coureSubsequents.Add(course);
-                }
-            }
+            //    if (course != null)
+            //    {
+            //        coureSubsequents.Add(course);
+            //    }
+            //}
 
-            return coureSubsequents.ToArray();
+            //return coureSubsequents.ToArray();
+            return (new List<Course>()).ToArray();
         }
 
         private async Task<Course[]> GetCoursePrerequesites(ICollection<Course> courses)
         {
             var coursePrerequesites = new List<Course>();
 
-            foreach (var cp in courses.SelectMany(c => c.CoursePrerequisites))
-            {
-                var course = await _unitOfWork.GetRepository<Course>()
-                    .SingleOrDefaultAsync(predicate: c => c.Id == cp.PrerequisiteCourseId);
+            //foreach (var cp in courses.SelectMany(c => c.CoursePrerequisites))
+            //{
+            //    var course = await _unitOfWork.GetRepository<Course>()
+            //        .SingleOrDefaultAsync(predicate: c => c.Id == cp.PrerequisiteCourseId);
 
-                if (course != null)
-                {
-                    coursePrerequesites.Add(course);
-                }
-            }
+            //    if (course != null)
+            //    {
+            //        coursePrerequesites.Add(course);
+            //    }
+            //}
 
             return coursePrerequesites.ToArray();
         }
