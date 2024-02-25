@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj": {}
+    "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj": {}
   },
   "projects": {
-    "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+    "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
+        "projectUniqueName": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
         "projectName": "MagicLand-System.Domain",
-        "projectPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
+        "projectPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj",
         "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-        "outputPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\obj\\",
+        "outputPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -89,14 +89,14 @@
         }
       }
     },
-    "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
+    "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj",
+        "projectUniqueName": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj",
         "projectName": "MagicLand-System.Repository",
-        "projectPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj",
+        "projectPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj",
         "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-        "outputPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Repository\\obj\\",
+        "outputPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Repository\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -117,8 +117,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
-                "projectPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
+              "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+                "projectPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
               }
             }
           }
@@ -158,14 +158,14 @@
         }
       }
     },
-    "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj": {
+    "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+        "projectUniqueName": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
         "projectName": "MagicLand-System",
-        "projectPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+        "projectPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
         "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-        "outputPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
+        "outputPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -186,11 +186,11 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
-                "projectPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
+              "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+                "projectPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
               },
-              "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
-                "projectPath": "D:\\Capstone-260224\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
+              "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
+                "projectPath": "D:\\dev-252\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
               }
             }
           }

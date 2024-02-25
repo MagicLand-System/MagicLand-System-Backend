@@ -12,6 +12,7 @@ namespace MagicLand_System.Domain.Models
         public int? Duration { get; set; }  
         public int? DeadlineTime { get; set; }
         public int? Score { get; set; }
+        public int AttemptsAllowed {  get; set; }   
         [ForeignKey("Session")]
         public Guid? SessionId { get; set; }
         public Session? Session { get; set; } = default;

@@ -165,5 +165,11 @@ namespace MagicLand_System.Controllers
             }
             return Ok(message);
         }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.StaffSyl)]
+        public async Task<IActionResult> GetStaffSyllabus([FromRoute] string id)
+        {
+            var result = await _syllabusService.GetStaffSyllabusResponse(id);
+            return Ok(result);
+        }
     }
 }

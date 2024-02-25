@@ -215,7 +215,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("ContentName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Duration")
@@ -225,7 +224,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Method")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -447,6 +445,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptsAllowed")
+                        .HasColumnType("int");
 
                     b.Property<int?>("DeadlineTime")
                         .HasColumnType("int");
