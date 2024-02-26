@@ -1025,8 +1025,8 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<StaffAnswerResponse> GetAnswerResponse(string questionId)
         {
-            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate : x => x.Id.ToString().Equals(questionId));
-            var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.Id.ToString().Equals(questionId));
+            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate : x => x.QuestionId.ToString().Equals(questionId));
+            var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
             StaffAnswerResponse response = new StaffAnswerResponse();
             List<StaffMultipleChoiceResponse> multipleChoiceResponses = new List<StaffMultipleChoiceResponse>();
             List<FlashCardAnswerResponse> flashCardAnswerResponses = new List<FlashCardAnswerResponse>();
@@ -1045,7 +1045,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 response.StaffMultiplechoiceAnswerResponses = multipleChoiceResponses;
             }
-            if(flashCardAnswerResponses != null && flashCardAnswerResponses.Count > 0)
+            if(flashcards != null && flashcards.Count > 0)
             {
                 foreach(var flashcard in flashcards)
                 {
