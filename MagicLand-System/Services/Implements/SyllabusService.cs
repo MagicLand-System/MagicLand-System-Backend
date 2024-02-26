@@ -257,15 +257,15 @@ namespace MagicLand_System.Services.Implements
                 sideFlashCardList.Add(new SideFlashCard
                 {
                     Description = flash.RightSideDescription,
-                    Image = flash.LeftSideImg,
+                    Image = flash.RightSideImg,
                     Side = "Right",
                     FlashCardId = newFlashCardId,
                 });
 
                 sideFlashCardList.Add(new SideFlashCard
                 {
-                    Description = flash.RightSideDescription,
-                    Image = flash.RightSideImg,
+                    Description = flash.LeftSideDescription,
+                    Image = flash.LeftSideImg,
                     Side = "Left",
                     FlashCardId = newFlashCardId,
                 });
