@@ -8,7 +8,7 @@ namespace MagicLand_System.PayLoad.Response.Sessions
         public int OrderSession { get; set; } = 1;
         public string TopicName { get; set; }
         public int OrderTopic { get; set; }
-        public List<StaffSessionDescriptionResponse> Sessions { get; set; }
+        public List<StaffSessionDescriptionResponse> Contents { get; set; }
         public StaffQuestionPackageResponse? StaffQuestionPackageResponse { get; set; }  = null;
       
     }

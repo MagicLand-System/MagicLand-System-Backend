@@ -906,7 +906,7 @@ namespace MagicLand_System.Services.Implements
                     OrderTopic = session.Topic.OrderNumber,
                     TopicName = session.Topic.Name,
                 };
-                st.Sessions = await GetStaffSessionDescriptions(session.Id.ToString());
+                st.Contents = await GetStaffSessionDescriptions(session.Id.ToString());
                 var qp = await GetPackageQuestionBySessionId(session.Id.ToString());
                 if( qp != null )
                 {
