@@ -18,7 +18,7 @@ namespace MagicLand_System.PayLoad.Response.Syllabuses
         public string? SyllabusLink { get; set; } = string.Empty;
 
 
-        public List<TopicResponse>? TopicResponses { get; set; } = new List<TopicResponse>();
+        public List<StaffSessionResponse>? SessionResponses { get; set; } = new List<StaffSessionResponse>();
         public List<StaffMaterialResponse>? Materials { get; set; } = new List<StaffMaterialResponse>();
         public List<StaffQuestionPackageResponse>? QuestionPackages { get; set; } = new List<StaffQuestionPackageResponse>();
         public List<StaffExamSyllabusResponse>? Exams { get; set; } = new List<StaffExamSyllabusResponse>();

@@ -824,7 +824,7 @@ namespace MagicLand_System.Services.Implements
             };
             syllRes.Materials = await GetMaterialResponse(id);
             syllRes.Exams = await GetStaffExamSyllabusResponses(id);
-            syllRes.TopicResponses = await GetTopicResponses(id);   
+            syllRes.SessionResponses = await GetAllSessionResponses(id);   
             syllRes.QuestionPackages = await GetStaffQuestionPackageResponses(id);
             return syllRes;
         }
@@ -873,32 +873,25 @@ namespace MagicLand_System.Services.Implements
             }
             return result;
         }
-        private async Task<List<TopicResponse>> GetTopicResponses(string id)
+        private async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate :  x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
             if(topics == null)
             {
-                return new List<TopicResponse>();
+                return new List<StaffSessionResponse>();
             }
-            List<TopicResponse> topicResponses = new List<TopicResponse>();
+            List<StaffSessionResponse> sessionResponses = new List<StaffSessionResponse>();
             foreach ( var topic in topics )
             {
-                TopicResponse topicResponse = new TopicResponse
-                {
-                    OrderTopic = topic.OrderNumber,
-                    TopicId = topic.Id,
-                    TopicName = topic.Name,
-                };
-                topicResponse.Sessions = await GetStaffSession(topic.Id.ToString());
-                topicResponses.Add(topicResponse);
+                sessionResponses.AddRange(await GetStaffSession(topic.Id.ToString()));
             }
-            topicResponses = topicResponses.OrderBy(x => x.OrderTopic).ToList();
-            return topicResponses;
+            sessionResponses = sessionResponses.OrderBy(x => x.OrderSession).ToList();
+            return sessionResponses;
         }
         private async Task<List<StaffSessionResponse>> GetStaffSession(string topicid)
         {
-            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topicid));
+            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topicid),include : x => x.Include(x => x.Topic));
             if(sessions == null)
             {
                 return new List<StaffSessionResponse>();
@@ -910,6 +903,8 @@ namespace MagicLand_System.Services.Implements
                 {
                     OrderSession = session.NoSession,
                     SessionId = session.Id,
+                    OrderTopic = session.Topic.OrderNumber,
+                    TopicName = session.Topic.Name,
                 };
                 st.Sessions = await GetStaffSessionDescriptions(session.Id.ToString());
                 var qp = await GetPackageQuestionBySessionId(session.Id.ToString());
@@ -957,11 +952,11 @@ namespace MagicLand_System.Services.Implements
         private async Task<StaffQuestionPackageResponse> GetPackageQuestionBySessionId(string sessionId)
         {
             var questionpackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate : x => x.SessionId.ToString().Equals(sessionId), include : x => x.Include(x => x.Session));
-            var session = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(questionpackage.SessionId.ToString()));
             if(questionpackage == null)
             {
                 return null;
             }
+            var session = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(questionpackage.SessionId.ToString()));
             return new StaffQuestionPackageResponse
             {
                 NoOfSession = session.NoSession,
@@ -1000,6 +995,7 @@ namespace MagicLand_System.Services.Implements
                         questionPackageResponses.Add(qp);
                     }
                 }
+                questionPackageResponses = questionPackageResponses.OrderBy(x => x.PackageOrder).ToList();
                 return questionPackageResponses;
             }
             return new List<StaffQuestionPackageResponse>();
