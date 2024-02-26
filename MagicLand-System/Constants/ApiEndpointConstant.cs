@@ -119,7 +119,7 @@
             public const string FilterSyllabus = EndPointBase + "/filter";
             public const string GeneralSyllabus = EndPointBase + "/general";
             public const string UpdateSyllabus = EndPointBase + "/{id}/update";
-            public const string StaffSyl = EndPointBase + "{id}/staff/get";
+            public const string StaffSyl = EndPointBase + "/{id}/staff/get";
 
         }
         public static class LectureEndPoint
@@ -164,6 +164,7 @@
             public const string EndPointBase = ApiEndpoint + "/quizzes";
             public const string GetQuizByCourseId = ApiEndpoint + "/quizzes/course/{id}";
             public const string GetQuizByClassId = ApiEndpoint + "/quizzes/class/{id}";
+            public const string GetQuizForStaff = ApiEndpoint + "/{id}/staff/get";
         }
     }
 }

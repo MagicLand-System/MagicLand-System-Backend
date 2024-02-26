@@ -13,6 +13,7 @@ using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Crypto.Engines;
+using System.Xml;
 using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
@@ -1000,5 +1001,86 @@ namespace MagicLand_System.Services.Implements
             }
             return new List<StaffQuestionPackageResponse>();
         }
+
+        public async Task<List<StaffQuestionResponse>> GetStaffQuestions(string questionpackageId)
+        {
+            var questions = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate : x => x.QuestionPacketId.ToString().Equals(questionpackageId));
+            if(questions.Count() == null)
+            {
+                return new List<StaffQuestionResponse>();   
+            }
+            List<StaffQuestionResponse> questionQuestions = new List<StaffQuestionResponse>();  
+            foreach (var question in questions)
+            {
+                var questionQuestion = new StaffQuestionResponse
+                {
+                    QuestionId = question.Id,
+                    Description = question.Description,
+                    QuestionImg = question.Img,
+                };
+                questionQuestion.StaffAnswerResponse = await GetAnswerResponse(question.Id.ToString());
+                questionQuestions.Add(questionQuestion);
+            }
+            return questionQuestions;
+        }
+        private async Task<StaffAnswerResponse> GetAnswerResponse(string questionId)
+        {
+            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate : x => x.Id.ToString().Equals(questionId));
+            var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.Id.ToString().Equals(questionId));
+            StaffAnswerResponse response = new StaffAnswerResponse();
+            List<StaffMultipleChoiceResponse> multipleChoiceResponses = new List<StaffMultipleChoiceResponse>();
+            List<FlashCardAnswerResponse> flashCardAnswerResponses = new List<FlashCardAnswerResponse>();
+            if(multiples != null && multiples.Count > 0)
+            {
+                foreach(var mul in multiples)
+                {
+                    StaffMultipleChoiceResponse res = new StaffMultipleChoiceResponse
+                    {
+                        Answer = mul.Description,
+                        AnswerImage = mul.Img,
+                        MultipleChoiceId = mul.Id,
+                        Score = mul.Score,
+                    };
+                    multipleChoiceResponses.Add(res);
+                }
+                response.StaffMultiplechoiceAnswerResponses = multipleChoiceResponses;
+            }
+            if(flashCardAnswerResponses != null && flashCardAnswerResponses.Count > 0)
+            {
+                foreach(var flashcard in flashcards)
+                {
+                    FlashCardAnswerResponse flashCardAnswerResponse = new FlashCardAnswerResponse
+                    {
+                        FlashCarId = flashcard.Id,
+                        Score = flashcard.Score,
+                    };
+                    flashCardAnswerResponse.SideFlashCardResponses = await GetSideFlashCard(flashcard.Id.ToString());
+                    flashCardAnswerResponses.Add(flashCardAnswerResponse);
+                }
+                response.FlashCardAnswerResponses = flashCardAnswerResponses;
+            }
+            return response;
+        }
+        private async Task<List<SideFlashCardResponse>> GetSideFlashCard(string flashcardId)
+        {
+            var sides = await _unitOfWork.GetRepository<SideFlashCard>().GetListAsync(predicate : x => x.FlashCardId.ToString().Equals(flashcardId));   
+            if(sides  == null)
+            {
+                return new List<SideFlashCardResponse>();
+            }
+            List<SideFlashCardResponse> sideFlashCardResponses = new List<SideFlashCardResponse>();
+            foreach(var side in sides) 
+            {
+                sideFlashCardResponses.Add(new SideFlashCardResponse
+                {
+                    Side = side.Side,
+                    SideFlashCardDescription = side.Description,
+                    SideFlashCardId = side.Id,
+                    SideFlashCardImage = side.Image,
+                });
+            }
+            return sideFlashCardResponses;
+        }
+        
     }
 }
