@@ -647,7 +647,7 @@ namespace MagicLand_System.Services.Implements
             _unitOfWork.GetRepository<Topic>().DeleteRangeAsync(topics);
             await _unitOfWork.CommitAsync();
             var sessionInsert = await GenerateLearningItems(request.SyllabusRequests, syllabusId);
-            await GenerateExerciseItems(request.QuestionPackageRequests!, sessions);
+            await GenerateExerciseItems(request.QuestionPackageRequests!, sessionInsert);
         }
 
 

@@ -158,10 +158,10 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> UpdateSyll([FromRoute] string id , OverallSyllabusRequest request)
         {
             var isSuccess = await _syllabusService.UpdateSyllabus(request,id);
-            string message = "Tạo Giáo Trình Sảy Ra Lỗi";
+            string message = "Cập Nhật Giáo Trình Sảy Ra Lỗi";
             if (isSuccess)
             {
-                message = "Tạo Giáo Trình Thành Công";
+                message = "Cập Nhật Giáo Trình Thành Công";
             }
             return Ok(message);
         }
