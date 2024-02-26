@@ -8,11 +8,14 @@ using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
+using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Crypto.Engines;
+using System.Xml;
 using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
@@ -836,5 +839,287 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
+        }
+
+        public async Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(id));
+            if (syllabus == null) { 
+                return new StaffSyllabusResponse(); 
+            }
+            var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()),selector : x => x.Name);
+            var syllRes = new StaffSyllabusResponse()
+            {
+                SyllabusLink = syllabus.SyllabusLink,
+                Description = syllabus.Description,
+                Category = cagegory,
+                EffectiveDate = syllabus.EffectiveDate.ToString(),
+                MinAvgMarkToPass = syllabus.MinAvgMarkToPass,
+                ScoringScale = syllabus.ScoringScale,
+                StudentTasks = syllabus.StudentTasks,
+                SyllabusName = syllabus.Name,
+                TimePerSession = syllabus.TimePerSession,
+                SubjectCode = syllabus.SubjectCode,
+                SyllabusId = syllabus.Id,
+            };
+            syllRes.Materials = await GetMaterialResponse(id);
+            syllRes.Exams = await GetStaffExamSyllabusResponses(id);
+            syllRes.SessionResponses = await GetAllSessionResponses(id);   
+            syllRes.QuestionPackages = await GetStaffQuestionPackageResponses(id);
+            return syllRes;
+        }
+        private async Task<List<StaffMaterialResponse>> GetMaterialResponse(string id)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            var materials = await _unitOfWork.GetRepository<Material>().GetListAsync(predicate : x =>  x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
+            if(materials == null)
+            {
+                return new List<StaffMaterialResponse>();
+            }
+            List<StaffMaterialResponse> result = new List<StaffMaterialResponse>();
+            foreach ( var material in materials )
+            {
+                result.Add(new StaffMaterialResponse()
+                {
+                    MaterialId = material.Id,
+                    Url = material.URL,
+                });
+            }
+            return result;
+        }
+        private async Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string id)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            var examSyllabuses = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
+            if(examSyllabuses == null) {
+                return new List<StaffExamSyllabusResponse>();
+            }
+            List<StaffExamSyllabusResponse> result = new List<StaffExamSyllabusResponse>();
+            foreach(var syll in examSyllabuses)
+            {
+                StaffExamSyllabusResponse staffExamSyllabusResponse = new StaffExamSyllabusResponse
+                {
+                    ExamSyllabusId = syll.Id,
+                    CompletionCriteria = syll.CompleteionCriteria,
+                    Duration = syll.Duration,
+                    ContentName = syll.ContentName,
+                    Method = syll.Method,
+                    Part = syll.Part,
+                    QuestionType = syll.QuestionType,
+                    Type = syll.Category,
+                    Weight = syll.Weight,
+                };
+                result.Add(staffExamSyllabusResponse);
+            }
+            return result;
+        }
+        private async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate :  x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
+            if(topics == null)
+            {
+                return new List<StaffSessionResponse>();
+            }
+            List<StaffSessionResponse> sessionResponses = new List<StaffSessionResponse>();
+            foreach ( var topic in topics )
+            {
+                sessionResponses.AddRange(await GetStaffSession(topic.Id.ToString()));
+            }
+            sessionResponses = sessionResponses.OrderBy(x => x.OrderSession).ToList();
+            return sessionResponses;
+        }
+        private async Task<List<StaffSessionResponse>> GetStaffSession(string topicid)
+        {
+            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topicid),include : x => x.Include(x => x.Topic));
+            if(sessions == null)
+            {
+                return new List<StaffSessionResponse>();
+            }
+            List<StaffSessionResponse> staffSessionResponses = new List <StaffSessionResponse>();   
+            foreach ( var session in sessions )
+            {
+                StaffSessionResponse st = new StaffSessionResponse
+                {
+                    OrderSession = session.NoSession,
+                    SessionId = session.Id,
+                    OrderTopic = session.Topic.OrderNumber,
+                    TopicName = session.Topic.Name,
+                };
+                st.Contents = await GetStaffSessionDescriptions(session.Id.ToString());
+                var qp = await GetPackageQuestionBySessionId(session.Id.ToString());
+                if( qp != null )
+                {
+                    st.StaffQuestionPackageResponse = qp;
+                }
+                staffSessionResponses.Add(st);
+            }
+            staffSessionResponses = staffSessionResponses.OrderBy(x => x.OrderSession).ToList();
+            return staffSessionResponses;
+        }
+        private async Task<List<StaffSessionDescriptionResponse>> GetStaffSessionDescriptions(string sessionId)
+        {
+            var sessionDescriptions = await _unitOfWork.GetRepository<SessionDescription>().GetListAsync(predicate: x => x.SessionId.ToString().Equals(sessionId));
+            if(sessionDescriptions == null)
+            {
+                return new List<StaffSessionDescriptionResponse>();
+            }
+            List<StaffSessionDescriptionResponse> sessionDescriptionResponses = new List<StaffSessionDescriptionResponse>();
+            foreach( var session in sessionDescriptions )
+            {
+               var des = session.Detail;
+                List<string> strings = new List<string>();
+                if( des != null )
+                {
+                    string[] depart = des.Split(new string[] { "/r/n" }, StringSplitOptions.None);
+                    for( int i = 0; i < depart.Length; i++ )
+                    {
+                        strings.Add(depart[i] );
+                    }
+                } else
+                {
+                    strings.Add(string.Empty);
+                }
+                StaffSessionDescriptionResponse staffSessionDescriptionResponse = new StaffSessionDescriptionResponse
+                {
+                    Content = session.Content,
+                    Details = strings,
+                };
+                sessionDescriptionResponses.Add(staffSessionDescriptionResponse);  
+            }
+            return sessionDescriptionResponses;
+        }
+        private async Task<StaffQuestionPackageResponse> GetPackageQuestionBySessionId(string sessionId)
+        {
+            var questionpackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate : x => x.SessionId.ToString().Equals(sessionId), include : x => x.Include(x => x.Session));
+            if(questionpackage == null)
+            {
+                return null;
+            }
+            var session = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(questionpackage.SessionId.ToString()));
+            return new StaffQuestionPackageResponse
+            {
+                NoOfSession = session.NoSession,
+                QuestionPackageId = questionpackage.Id,
+                Title = questionpackage.Title,
+                Type = questionpackage.Type,
+                PackageOrder = questionpackage.PackageOrder,
+                Deadline = questionpackage.DeadlineTime,
+                Duration = questionpackage.Duration,
+                Score = questionpackage.Score.Value,
+                AttemptsAllowed = questionpackage.AttemptsAllowed,
+            };
+        }
+        private async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sylId),include : x => x.Include(x => x.Topics));
+            if(syllabus.Topics.Count() > 0 && syllabus.Topics != null) 
+            {
+                var topics = syllabus.Topics;
+                List<Session> sessions = new List<Session>();
+                foreach(var topic in topics)
+                {
+                    var session = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topic.Id.ToString()));
+                    if(session.Count() > 0 && session != null)
+                    {
+                        sessions.AddRange(session);
+                    }
+                }
+                List<StaffQuestionPackageResponse> questionPackageResponses = new List<StaffQuestionPackageResponse>();
+                foreach(var session in sessions)
+                {
+                 
+                    var qp = await GetPackageQuestionBySessionId(session.Id.ToString());
+                    if(qp != null)
+                    {
+                        questionPackageResponses.Add(qp);
+                    }
+                }
+                questionPackageResponses = questionPackageResponses.OrderBy(x => x.PackageOrder).ToList();
+                return questionPackageResponses;
+            }
+            return new List<StaffQuestionPackageResponse>();
+        }
+
+        public async Task<List<StaffQuestionResponse>> GetStaffQuestions(string questionpackageId)
+        {
+            var questions = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate : x => x.QuestionPacketId.ToString().Equals(questionpackageId));
+            if(questions.Count() == null)
+            {
+                return new List<StaffQuestionResponse>();   
+            }
+            List<StaffQuestionResponse> questionQuestions = new List<StaffQuestionResponse>();  
+            foreach (var question in questions)
+            {
+                var questionQuestion = new StaffQuestionResponse
+                {
+                    QuestionId = question.Id,
+                    Description = question.Description,
+                    QuestionImg = question.Img,
+                };
+                questionQuestion.StaffAnswerResponse = await GetAnswerResponse(question.Id.ToString());
+                questionQuestions.Add(questionQuestion);
+            }
+            return questionQuestions;
+        }
+        private async Task<StaffAnswerResponse> GetAnswerResponse(string questionId)
+        {
+            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate : x => x.QuestionId.ToString().Equals(questionId));
+            var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
+            StaffAnswerResponse response = new StaffAnswerResponse();
+            List<StaffMultipleChoiceResponse> multipleChoiceResponses = new List<StaffMultipleChoiceResponse>();
+            List<FlashCardAnswerResponse> flashCardAnswerResponses = new List<FlashCardAnswerResponse>();
+            if(multiples != null && multiples.Count > 0)
+            {
+                foreach(var mul in multiples)
+                {
+                    StaffMultipleChoiceResponse res = new StaffMultipleChoiceResponse
+                    {
+                        Answer = mul.Description,
+                        AnswerImage = mul.Img,
+                        MultipleChoiceId = mul.Id,
+                        Score = mul.Score,
+                    };
+                    multipleChoiceResponses.Add(res);
+                }
+                response.StaffMultiplechoiceAnswerResponses = multipleChoiceResponses;
+            }
+            if(flashcards != null && flashcards.Count > 0)
+            {
+                foreach(var flashcard in flashcards)
+                {
+                    FlashCardAnswerResponse flashCardAnswerResponse = new FlashCardAnswerResponse
+                    {
+                        FlashCarId = flashcard.Id,
+                        Score = flashcard.Score,
+                    };
+                    flashCardAnswerResponse.SideFlashCardResponses = await GetSideFlashCard(flashcard.Id.ToString());
+                    flashCardAnswerResponses.Add(flashCardAnswerResponse);
+                }
+                response.FlashCardAnswerResponses = flashCardAnswerResponses;
+            }
+            return response;
+        }
+        private async Task<List<SideFlashCardResponse>> GetSideFlashCard(string flashcardId)
+        {
+            var sides = await _unitOfWork.GetRepository<SideFlashCard>().GetListAsync(predicate : x => x.FlashCardId.ToString().Equals(flashcardId));   
+            if(sides  == null)
+            {
+                return new List<SideFlashCardResponse>();
+            }
+            List<SideFlashCardResponse> sideFlashCardResponses = new List<SideFlashCardResponse>();
+            foreach(var side in sides) 
+            {
+                sideFlashCardResponses.Add(new SideFlashCardResponse
+                {
+                    Side = side.Side,
+                    SideFlashCardDescription = side.Description,
+                    SideFlashCardId = side.Id,
+                    SideFlashCardImage = side.Image,
+                });
+            }
+            return sideFlashCardResponses;
+        }
+        
     }
 }

@@ -21,6 +21,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id);
         Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword);
         Task<bool> UpdateSyllabus(OverallSyllabusRequest request, string id);
-
+        Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id);
+        Task<List<StaffQuestionResponse>> GetStaffQuestions(string questionpackageId);
     }
 }

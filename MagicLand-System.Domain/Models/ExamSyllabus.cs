@@ -20,7 +20,6 @@ namespace MagicLand_System.Domain.Models
         public string? ContentName { get; set; } 
         public string? Method { get; set; }
 
-
         [ForeignKey("Syllabus")]
         public Guid SyllabusId { get; set; }
         public Syllabus? Syllabus { get; set; }

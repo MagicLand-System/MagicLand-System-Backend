@@ -125,5 +125,11 @@ namespace MagicLand_System.Controllers
 
             return Ok(responses);
         }
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizForStaff)]
+        public async Task<IActionResult> GetQuizForStaff([FromRoute] string id)
+        {
+            var result = await _syllabusService.GetStaffQuestions(id);
+            return Ok(result);
+        }
     }
 }

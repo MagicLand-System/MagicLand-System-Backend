@@ -119,6 +119,8 @@
             public const string FilterSyllabus = EndPointBase + "/filter";
             public const string GeneralSyllabus = EndPointBase + "/general";
             public const string UpdateSyllabus = EndPointBase + "/{id}/update";
+            public const string StaffSyl = EndPointBase + "/{id}/staff/get";
+
         }
         public static class LectureEndPoint
         {
