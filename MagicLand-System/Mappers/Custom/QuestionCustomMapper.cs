@@ -1,5 +1,6 @@
 ﻿using Azure;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response.Quizzes.Answers;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
@@ -143,18 +144,18 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<QuestionResponse> fromQuestionPackageToQuestionResponse(QuestionPackage package)
+        public static List<QuizResponse> fromQuestionPackageToQuizResponse(QuestionPackage package)
         {
             if (package == null)
             {
                 return default!;
             }
 
-            var responses = new List<QuestionResponse>();
+            var responses = new List<QuizResponse>();
 
             foreach (var question in package.Questions!)
             {
-                var response = new QuestionResponse
+                var response = new QuizResponse
                 {
                     QuestionId = question.Id,
                     QuestionDescription = question.Description,
@@ -168,6 +169,55 @@ namespace MagicLand_System.Mappers.Custom
 
             return responses;
         }
+
+        public static List<QuizResponse> fromQuestionPackageToQuizResponseInLimitScore(QuestionPackage package)
+        {
+            if (package == null)
+            {
+                return default!;
+            }
+
+            Random random = new Random();
+            var questions = package.Questions;
+            double totalMark = 0.0;
+            bool isBreak = false;
+            var responses = new List<QuizResponse>();
+            var usedIndices = new HashSet<int>();
+
+            while (!isBreak)
+            {
+                int randomQuestionIndex;
+                do
+                {
+                    randomQuestionIndex = random.Next(0, questions!.Count);
+                } while (usedIndices.Contains(randomQuestionIndex));
+
+                usedIndices.Add(randomQuestionIndex);
+
+                var response = new QuizResponse
+                {
+                    QuestionId = questions![randomQuestionIndex].Id,
+                    QuestionDescription = questions![randomQuestionIndex].Description,
+                    QuestionImage = questions![randomQuestionIndex].Img,
+                    AnswersMutipleChoicesInfor = questions![randomQuestionIndex].MutipleChoiceAnswers!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(questions![randomQuestionIndex].MutipleChoiceAnswers!) : default,
+                    AnwserFlashCarsInfor = questions![randomQuestionIndex].FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(questions![randomQuestionIndex].FlashCards!) : default,
+                };
+
+                totalMark += questions![randomQuestionIndex].MutipleChoiceAnswers!.Any()
+                    ? questions![randomQuestionIndex].MutipleChoiceAnswers!.Select(mc => mc.Score).Sum()
+                    : questions![randomQuestionIndex].FlashCards!.Select(fc => fc.Score).Sum();
+
+                if (totalMark == package.Score)
+                {
+                    isBreak = true;
+                }
+
+                responses.Add(response);
+            }
+
+            return responses;
+        }
+
 
     }
 }

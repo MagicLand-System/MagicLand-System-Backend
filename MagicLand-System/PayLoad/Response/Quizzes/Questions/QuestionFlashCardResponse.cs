@@ -2,7 +2,7 @@
 
 namespace MagicLand_System.PayLoad.Response.Quizzes.Questions
 {
-    public class QuestionFlashCardResponse : QuestionResponse
+    public class QuestionFlashCardResponse : QuizResponse
     {
         public List<FlashCardAnswerResponse> FlashCars { get; set; } = new List<FlashCardAnswerResponse>();
     }

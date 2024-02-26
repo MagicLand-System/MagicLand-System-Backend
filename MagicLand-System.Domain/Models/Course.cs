@@ -1,5 +1,4 @@
-﻿using OfficeOpenXml.ConditionalFormatting.Contracts;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {

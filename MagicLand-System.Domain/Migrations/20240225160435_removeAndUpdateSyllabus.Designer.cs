@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240225160435_removeAndUpdateSyllabus")]
+    partial class removeAndUpdateSyllabus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -443,7 +446,7 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("AttemptsAllowed")
+                    b.Property<int>("AttemptsAllowed")
                         .HasColumnType("int");
 
                     b.Property<string>("ContentName")
@@ -832,7 +835,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SyllabusCategory", (string)null);
+                    b.ToTable("CourseCategory", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.SyllabusPrerequisite", b =>
@@ -841,7 +844,7 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CurrentSyllabusId")
+                    b.Property<Guid>("CurrentSyllabusId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("PrerequisiteSyllabusId")
@@ -851,7 +854,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("CurrentSyllabusId");
 
-                    b.ToTable("SyllabusPrerequisite", (string)null);
+                    b.ToTable("CoursePrerequisite", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Topic", b =>
@@ -1285,7 +1288,9 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Syllabus", "Syllabus")
                         .WithMany("SyllabusPrerequisites")
-                        .HasForeignKey("CurrentSyllabusId");
+                        .HasForeignKey("CurrentSyllabusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Syllabus");
                 });

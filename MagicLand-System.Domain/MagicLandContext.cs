@@ -23,12 +23,12 @@ namespace MagicLand_System.Domain
         public DbSet<Class> Classes { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<Course> Courses { get; set; }
-        public DbSet<SyllabusPrerequisite> CoursePrerequisites { get; set; }
+        public DbSet<SyllabusPrerequisite> SyllabusPrerequisites { get; set; }
         public DbSet<Slot> Slots { get; set; }
         public DbSet<Schedule> Sessions { get; set; }
         public DbSet<Room> Rooms { get; set; }
-        public DbSet<SyllabusCategory> CourseCategories { get; set; }
-        public DbSet<Syllabus> CourseSyllabuses { get; set; }
+        public DbSet<SyllabusCategory> SyllabusCategories { get; set; }
+        public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SubDescriptionTitle> SubDescriptionTitles { get; set; }
         public DbSet<SubDescriptionContent> SubDescriptionContents { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
@@ -118,12 +118,6 @@ namespace MagicLand_System.Domain
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
-            modelBuilder.Entity<SyllabusPrerequisite>(entity =>
-            {
-                entity.ToTable("CoursePrerequisite");
-                entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Syllabus).WithMany(e => e.SyllabusPrerequisites).HasForeignKey(e => e.CurrentSyllabusId);
-            });
             modelBuilder.Entity<PersonalWallet>(entity =>
             {
                 entity.ToTable("PersonalWallet");
@@ -167,7 +161,7 @@ namespace MagicLand_System.Domain
             });
             modelBuilder.Entity<SyllabusCategory>(entity =>
             {
-                entity.ToTable("CourseCategory");
+                entity.ToTable("SyllabusCategory");
                 entity.HasKey(entity => entity.Id);
             });
             modelBuilder.Entity<SubDescriptionTitle>(entity =>
@@ -187,6 +181,12 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Syllabus");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(entity => entity.SyllabusCategory).WithMany(e => e.Syllabuses).HasForeignKey(e => e.SyllabusCategoryId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<SyllabusPrerequisite>(entity =>
+            {
+                entity.ToTable("SyllabusPrerequisite");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Syllabus).WithMany(e => e.SyllabusPrerequisites).HasForeignKey(e => e.CurrentSyllabusId);
             });
             modelBuilder.Entity<Topic>(entity =>
             {

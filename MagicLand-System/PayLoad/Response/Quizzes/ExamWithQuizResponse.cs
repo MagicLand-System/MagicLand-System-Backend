@@ -3,8 +3,8 @@ using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 
 namespace MagicLand_System.PayLoad.Response.Quizzes
 {
-    public class QuizFlashCardResponse : ExamResponse
+    public class ExamWithQuizResponse : ExamResponse
     {
-        public List<QuestionFlashCardResponse>? QuestionFlasCards { get; set; } = new List<QuestionFlashCardResponse>();
+        public List<QuizResponse> Quizzes { get; set; } = new List<QuizResponse>();
     }
 }

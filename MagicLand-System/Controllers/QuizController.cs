@@ -21,17 +21,17 @@ namespace MagicLand_System.Controllers
             _syllabusService = syllabusService;
         }
 
-        #region document API get Quizzes
+        #region document API Get Exams With Quiz
         /// <summary>
-        ///  Truy Suất Toàn Bộ Quiz Của Các Khóa Học Đã Có Giáo Trình
+        ///  Truy Suất Toàn Bộ Bài Kiểm Tra Kèm Bộ Đề Và Câu Hỏi (Quiz) Của Các Khóa Học Đã Có Giáo Trình
         /// </summary>
-        /// <response code="200">Trả Về Danh Sách Quiz</response>
+        /// <response code="200">Trả Về Các Bài Kiểm Tra Kèm Bộ Đề Của Các Khóa Học</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.QuizEndPoint.EndPointBase)]
-        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ExamWithQuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> GetQuizzes()
@@ -41,9 +41,9 @@ namespace MagicLand_System.Controllers
             return Ok(responses);
         }
 
-        #region document API Get Quizzes By Course Id
+        #region document API Get Exams With Quiz By Course Id
         /// <summary>
-        ///  Truy Suất Quiz Của Một Khóa Học Dựa Vào Id Của Khóa
+        ///  Truy Suất Toàn Bộ Bài Kiểm Tra Kèm Bộ Đề Và Câu Hỏi (Quiz) Của Một Khóa Học Cụ Thể Dựa Vào Id Của Khóa
         /// </summary>
         /// <param name="id">Id Của Khóa Học</param>
         /// <remarks>
@@ -52,25 +52,25 @@ namespace MagicLand_System.Controllers
         ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"  
         ///}
         /// </remarks>
-        /// <response code="200">Trả Về Quiz Của Khóa Học</response>
+        /// <response code="200">Trả Về Các Bài Kiểm Tra Kèm Bộ Đề Của Khóa Học</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizByCourseId)]
-        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizOverallByCourseId)]
+        [ProducesResponseType(typeof(ExamWithQuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> GetQuizByCourseId([FromRoute] Guid id)
+        public async Task<IActionResult> GetQuizByCourseId([FromQuery] Guid id)
         {
             var responses = await _syllabusService.LoadQuizzesByCourseIdAsync(id);
 
             return Ok(responses);
         }
 
-        #region document API Get Quizzes By Class Id
+        #region document API Get Exams Of Class By Class Id
         /// <summary>
-        ///  Truy Suất Quiz Và Ngày Làm Dựa Vào Id Của Lớp
+        ///  Truy Suất Các Bài Kiểm Tra Của Một Lớp Học
         /// </summary>
         /// <param name="id">Id Của Lớp Học</param>
         /// <remarks>
@@ -79,18 +79,49 @@ namespace MagicLand_System.Controllers
         ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"  
         ///}
         /// </remarks>
-        /// <response code="200">Trả Về Quiz Của Khóa Học</response>
+        /// <response code="200">Trả Về Các Bài Kiểm Tra Của Lớp Học</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizByClassId)]
-        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetExamOffClassByClassId)]
+        [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> GetQuizByClassId([FromRoute] Guid id)
+        public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid id)
         {
-            var responses = await _syllabusService.LoadQuizzesByClassIdAsync(id);
+            var responses = await _syllabusService.LoadExamOfClassByClassIdAsync(id);
+
+            return Ok(responses);
+        }
+
+        #region document API Get Quizzes By Class Id
+        /// <summary>
+        ///  Truy Suất Các Câu Hỏi (Quiz) Trong Bộ Đề Của Một Bài Kiểm Tra Dựa Vào Id Của Bài Kiểm Tra, *Các Câu Hỏi Sẽ Được Truy Suất Ngẫu Nhiên Và Thỏa Mãn Số Điểm Của Bài Kiểm Tra*
+        /// </summary>
+        /// <param name="id">Id Của Bài Kiểm Tra</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"  
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Quiz Của Bài Kiểm Tra</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizOffExamByExamId)]
+        [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id)
+        {
+            var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id);
+            if(responses == default)
+            {
+                return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");
+            }
 
             return Ok(responses);
         }

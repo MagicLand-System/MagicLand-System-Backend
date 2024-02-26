@@ -75,13 +75,13 @@ namespace MagicLand_System.Domain.Migrations
                 principalTable: "Course",
                 principalColumn: "Id");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_CoursePrerequisite_Syllabus_CurrentSyllabusId",
-                table: "CoursePrerequisite",
-                column: "CurrentSyllabusId",
-                principalTable: "Syllabus",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_CoursePrerequisite_Syllabus_CurrentSyllabusId",
+            //    table: "CoursePrerequisite",
+            //    column: "CurrentSyllabusId",
+            //    principalTable: "Syllabus",
+            //    principalColumn: "Id",
+            //    onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />

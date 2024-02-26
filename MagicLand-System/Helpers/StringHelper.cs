@@ -8,6 +8,7 @@ namespace MagicLand_System.Helpers
 {
     public class StringHelper
     {
+
         public static List<string> FromStringToList(string input)
         {
             var separators = new string[] { "/r/n", "\r\n", "\n" };
@@ -18,8 +19,6 @@ namespace MagicLand_System.Helpers
 
             return result;
         }
-
-
 
         public static string TrimStringAndNoSpace(string input)
         {

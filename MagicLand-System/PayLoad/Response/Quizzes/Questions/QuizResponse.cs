@@ -2,7 +2,7 @@
 
 namespace MagicLand_System.PayLoad.Response.Quizzes.Questions
 {
-    public class QuestionResponse
+    public class QuizResponse
     {
         public Guid QuestionId { get; set; }
         public string? QuestionDescription { get; set; } = string.Empty;

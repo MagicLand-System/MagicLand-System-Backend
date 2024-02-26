@@ -159,9 +159,10 @@
 
         public static class QuizEndPoint
         {
-            public const string EndPointBase = ApiEndpoint + "/quizzes";
-            public const string GetQuizByCourseId = ApiEndpoint + "/quizzes/course/{id}";
-            public const string GetQuizByClassId = ApiEndpoint + "/quizzes/class/{id}";
+            public const string EndPointBase = ApiEndpoint + "/exams/quizzes";
+            public const string GetQuizOverallByCourseId = ApiEndpoint + "/exams/quizzes/course";
+            public const string GetExamOffClassByClassId = ApiEndpoint + "/exams/class";
+            public const string GetQuizOffExamByExamId = ApiEndpoint + "/exam/quiz";
         }
     }
 }

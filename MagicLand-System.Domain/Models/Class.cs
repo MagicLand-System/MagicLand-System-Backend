@@ -30,9 +30,5 @@ namespace MagicLand_System.Domain.Models
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
 
-        public object Include(Func<object, object> value)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
