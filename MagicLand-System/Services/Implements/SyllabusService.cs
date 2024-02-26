@@ -860,6 +860,20 @@ namespace MagicLand_System.Services.Implements
                 SubjectCode = syllabus.SubjectCode,
                 SyllabusId = syllabus.Id,
             };
+            var courseId = syllabus.CourseId;
+            if(courseId == null)
+            {
+                syllRes.LinkedCourse = null;
+            } else
+            {
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(courseId.ToString()));
+                var courseName = course.Name;
+                syllRes.LinkedCourse = new PayLoad.Response.Courses.LinkedCourse
+                {
+                    CourseId = courseId.Value,
+                    CourseName = courseName
+                };
+            }
             syllRes.Materials = await GetMaterialResponse(id);
             syllRes.Exams = await GetStaffExamSyllabusResponses(id);
             syllRes.SessionResponses = await GetAllSessionResponses(id);

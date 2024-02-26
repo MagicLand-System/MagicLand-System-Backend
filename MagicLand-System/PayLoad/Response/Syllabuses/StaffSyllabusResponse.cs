@@ -1,4 +1,5 @@
-﻿using MagicLand_System.PayLoad.Response.Sessions;
+﻿using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Sessions;
 
 namespace MagicLand_System.PayLoad.Response.Syllabuses
 {
@@ -17,10 +18,10 @@ namespace MagicLand_System.PayLoad.Response.Syllabuses
         public string? SubjectCode { get; set; } = string.Empty;
         public string? SyllabusLink { get; set; } = string.Empty;
 
-
         public List<StaffSessionResponse>? SessionResponses { get; set; } = new List<StaffSessionResponse>();
         public List<StaffMaterialResponse>? Materials { get; set; } = new List<StaffMaterialResponse>();
         public List<StaffQuestionPackageResponse>? QuestionPackages { get; set; } = new List<StaffQuestionPackageResponse>();
         public List<StaffExamSyllabusResponse>? Exams { get; set; } = new List<StaffExamSyllabusResponse>();
+        public LinkedCourse? LinkedCourse { get; set; }
     }
 }
