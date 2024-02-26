@@ -10,5 +10,6 @@
         public int? Deadline { get; set; }  
         public int? AttemptsAllowed { get; set; }   
         public int Score {  get; set; } 
+        public string? ContentName { get; set; }    
     }
 }

@@ -1007,6 +1007,7 @@ namespace MagicLand_System.Services.Implements
                 Duration = questionpackage.Duration,
                 Score = questionpackage.Score.Value,
                 AttemptsAllowed = questionpackage.AttemptsAllowed,
+                ContentName = questionpackage.ContentName,
             };
         }
         private async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
