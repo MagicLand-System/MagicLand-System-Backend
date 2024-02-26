@@ -838,16 +838,14 @@ namespace MagicLand_System.Services.Implements
 
             return responses;
         }
-
-        }
-
         public async Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id)
         {
-            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(id));
-            if (syllabus == null) { 
-                return new StaffSyllabusResponse(); 
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            if (syllabus == null)
+            {
+                return new StaffSyllabusResponse();
             }
-            var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()),selector : x => x.Name);
+            var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()), selector: x => x.Name);
             var syllRes = new StaffSyllabusResponse()
             {
                 SyllabusLink = syllabus.SyllabusLink,
@@ -864,20 +862,20 @@ namespace MagicLand_System.Services.Implements
             };
             syllRes.Materials = await GetMaterialResponse(id);
             syllRes.Exams = await GetStaffExamSyllabusResponses(id);
-            syllRes.SessionResponses = await GetAllSessionResponses(id);   
+            syllRes.SessionResponses = await GetAllSessionResponses(id);
             syllRes.QuestionPackages = await GetStaffQuestionPackageResponses(id);
             return syllRes;
         }
         private async Task<List<StaffMaterialResponse>> GetMaterialResponse(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
-            var materials = await _unitOfWork.GetRepository<Material>().GetListAsync(predicate : x =>  x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
-            if(materials == null)
+            var materials = await _unitOfWork.GetRepository<Material>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
+            if (materials == null)
             {
                 return new List<StaffMaterialResponse>();
             }
             List<StaffMaterialResponse> result = new List<StaffMaterialResponse>();
-            foreach ( var material in materials )
+            foreach (var material in materials)
             {
                 result.Add(new StaffMaterialResponse()
                 {
@@ -891,11 +889,12 @@ namespace MagicLand_System.Services.Implements
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var examSyllabuses = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
-            if(examSyllabuses == null) {
+            if (examSyllabuses == null)
+            {
                 return new List<StaffExamSyllabusResponse>();
             }
             List<StaffExamSyllabusResponse> result = new List<StaffExamSyllabusResponse>();
-            foreach(var syll in examSyllabuses)
+            foreach (var syll in examSyllabuses)
             {
                 StaffExamSyllabusResponse staffExamSyllabusResponse = new StaffExamSyllabusResponse
                 {
@@ -916,13 +915,13 @@ namespace MagicLand_System.Services.Implements
         private async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
-            var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate :  x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
-            if(topics == null)
+            var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
+            if (topics == null)
             {
                 return new List<StaffSessionResponse>();
             }
             List<StaffSessionResponse> sessionResponses = new List<StaffSessionResponse>();
-            foreach ( var topic in topics )
+            foreach (var topic in topics)
             {
                 sessionResponses.AddRange(await GetStaffSession(topic.Id.ToString()));
             }
@@ -931,13 +930,13 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<List<StaffSessionResponse>> GetStaffSession(string topicid)
         {
-            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topicid),include : x => x.Include(x => x.Topic));
-            if(sessions == null)
+            var sessions = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topicid), include: x => x.Include(x => x.Topic));
+            if (sessions == null)
             {
                 return new List<StaffSessionResponse>();
             }
-            List<StaffSessionResponse> staffSessionResponses = new List <StaffSessionResponse>();   
-            foreach ( var session in sessions )
+            List<StaffSessionResponse> staffSessionResponses = new List<StaffSessionResponse>();
+            foreach (var session in sessions)
             {
                 StaffSessionResponse st = new StaffSessionResponse
                 {
@@ -948,7 +947,7 @@ namespace MagicLand_System.Services.Implements
                 };
                 st.Contents = await GetStaffSessionDescriptions(session.Id.ToString());
                 var qp = await GetPackageQuestionBySessionId(session.Id.ToString());
-                if( qp != null )
+                if (qp != null)
                 {
                     st.StaffQuestionPackageResponse = qp;
                 }
@@ -960,23 +959,24 @@ namespace MagicLand_System.Services.Implements
         private async Task<List<StaffSessionDescriptionResponse>> GetStaffSessionDescriptions(string sessionId)
         {
             var sessionDescriptions = await _unitOfWork.GetRepository<SessionDescription>().GetListAsync(predicate: x => x.SessionId.ToString().Equals(sessionId));
-            if(sessionDescriptions == null)
+            if (sessionDescriptions == null)
             {
                 return new List<StaffSessionDescriptionResponse>();
             }
             List<StaffSessionDescriptionResponse> sessionDescriptionResponses = new List<StaffSessionDescriptionResponse>();
-            foreach( var session in sessionDescriptions )
+            foreach (var session in sessionDescriptions)
             {
-               var des = session.Detail;
+                var des = session.Detail;
                 List<string> strings = new List<string>();
-                if( des != null )
+                if (des != null)
                 {
                     string[] depart = des.Split(new string[] { "/r/n" }, StringSplitOptions.None);
-                    for( int i = 0; i < depart.Length; i++ )
+                    for (int i = 0; i < depart.Length; i++)
                     {
-                        strings.Add(depart[i] );
+                        strings.Add(depart[i]);
                     }
-                } else
+                }
+                else
                 {
                     strings.Add(string.Empty);
                 }
@@ -985,14 +985,14 @@ namespace MagicLand_System.Services.Implements
                     Content = session.Content,
                     Details = strings,
                 };
-                sessionDescriptionResponses.Add(staffSessionDescriptionResponse);  
+                sessionDescriptionResponses.Add(staffSessionDescriptionResponse);
             }
             return sessionDescriptionResponses;
         }
         private async Task<StaffQuestionPackageResponse> GetPackageQuestionBySessionId(string sessionId)
         {
-            var questionpackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate : x => x.SessionId.ToString().Equals(sessionId), include : x => x.Include(x => x.Session));
-            if(questionpackage == null)
+            var questionpackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId.ToString().Equals(sessionId), include: x => x.Include(x => x.Session));
+            if (questionpackage == null)
             {
                 return null;
             }
@@ -1003,7 +1003,6 @@ namespace MagicLand_System.Services.Implements
                 QuestionPackageId = questionpackage.Id,
                 Title = questionpackage.Title,
                 Type = questionpackage.Type,
-                PackageOrder = questionpackage.PackageOrder,
                 Deadline = questionpackage.DeadlineTime,
                 Duration = questionpackage.Duration,
                 Score = questionpackage.Score.Value,
@@ -1012,30 +1011,29 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
         {
-            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sylId),include : x => x.Include(x => x.Topics));
-            if(syllabus.Topics.Count() > 0 && syllabus.Topics != null) 
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sylId), include: x => x.Include(x => x.Topics));
+            if (syllabus.Topics.Count() > 0 && syllabus.Topics != null)
             {
                 var topics = syllabus.Topics;
                 List<Session> sessions = new List<Session>();
-                foreach(var topic in topics)
+                foreach (var topic in topics)
                 {
                     var session = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId.ToString().Equals(topic.Id.ToString()));
-                    if(session.Count() > 0 && session != null)
+                    if (session.Count() > 0 && session != null)
                     {
                         sessions.AddRange(session);
                     }
                 }
                 List<StaffQuestionPackageResponse> questionPackageResponses = new List<StaffQuestionPackageResponse>();
-                foreach(var session in sessions)
+                foreach (var session in sessions)
                 {
-                 
+
                     var qp = await GetPackageQuestionBySessionId(session.Id.ToString());
-                    if(qp != null)
+                    if (qp != null)
                     {
                         questionPackageResponses.Add(qp);
                     }
                 }
-                questionPackageResponses = questionPackageResponses.OrderBy(x => x.PackageOrder).ToList();
                 return questionPackageResponses;
             }
             return new List<StaffQuestionPackageResponse>();
@@ -1043,12 +1041,12 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StaffQuestionResponse>> GetStaffQuestions(string questionpackageId)
         {
-            var questions = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate : x => x.QuestionPacketId.ToString().Equals(questionpackageId));
-            if(questions.Count() == null)
+            var questions = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionpackageId));
+            if (questions.Count() == null)
             {
-                return new List<StaffQuestionResponse>();   
+                return new List<StaffQuestionResponse>();
             }
-            List<StaffQuestionResponse> questionQuestions = new List<StaffQuestionResponse>();  
+            List<StaffQuestionResponse> questionQuestions = new List<StaffQuestionResponse>();
             foreach (var question in questions)
             {
                 var questionQuestion = new StaffQuestionResponse
@@ -1064,14 +1062,14 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<StaffAnswerResponse> GetAnswerResponse(string questionId)
         {
-            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate : x => x.QuestionId.ToString().Equals(questionId));
+            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
             var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
             StaffAnswerResponse response = new StaffAnswerResponse();
             List<StaffMultipleChoiceResponse> multipleChoiceResponses = new List<StaffMultipleChoiceResponse>();
             List<FlashCardAnswerResponse> flashCardAnswerResponses = new List<FlashCardAnswerResponse>();
-            if(multiples != null && multiples.Count > 0)
+            if (multiples != null && multiples.Count > 0)
             {
-                foreach(var mul in multiples)
+                foreach (var mul in multiples)
                 {
                     StaffMultipleChoiceResponse res = new StaffMultipleChoiceResponse
                     {
@@ -1084,9 +1082,9 @@ namespace MagicLand_System.Services.Implements
                 }
                 response.StaffMultiplechoiceAnswerResponses = multipleChoiceResponses;
             }
-            if(flashcards != null && flashcards.Count > 0)
+            if (flashcards != null && flashcards.Count > 0)
             {
-                foreach(var flashcard in flashcards)
+                foreach (var flashcard in flashcards)
                 {
                     FlashCardAnswerResponse flashCardAnswerResponse = new FlashCardAnswerResponse
                     {
@@ -1102,13 +1100,13 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<List<SideFlashCardResponse>> GetSideFlashCard(string flashcardId)
         {
-            var sides = await _unitOfWork.GetRepository<SideFlashCard>().GetListAsync(predicate : x => x.FlashCardId.ToString().Equals(flashcardId));   
-            if(sides  == null)
+            var sides = await _unitOfWork.GetRepository<SideFlashCard>().GetListAsync(predicate: x => x.FlashCardId.ToString().Equals(flashcardId));
+            if (sides == null)
             {
                 return new List<SideFlashCardResponse>();
             }
             List<SideFlashCardResponse> sideFlashCardResponses = new List<SideFlashCardResponse>();
-            foreach(var side in sides) 
+            foreach (var side in sides)
             {
                 sideFlashCardResponses.Add(new SideFlashCardResponse
                 {
@@ -1120,6 +1118,8 @@ namespace MagicLand_System.Services.Implements
             }
             return sideFlashCardResponses;
         }
-        
+
     }
+
+     
 }

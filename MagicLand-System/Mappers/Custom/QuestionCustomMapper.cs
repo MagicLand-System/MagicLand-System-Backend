@@ -93,18 +93,18 @@ namespace MagicLand_System.Mappers.Custom
 
             var responses = new List<QuestionFlashCardResponse>();
 
-            foreach (var question in package.Questions!)
-            {
-                var questionFlashCard = new QuestionFlashCardResponse
-                {
-                    QuestionId = question.Id,
-                    QuestionDescription = question.Description,
-                    QuestionImage = question.Img,
-                    FlashCars = fromFlashCardToFlashCardAnswerResponse(question.FlashCards!),
-                };
+            //foreach (var question in package.Questions!)
+            //{
+            //    var questionFlashCard = new QuestionFlashCardResponse
+            //    {
+            //        QuestionId = question.Id,
+            //        QuestionDescription = question.Description,
+            //        QuestionImage = question.Img,
+            //        FlashCars = fromFlashCardToFlashCardAnswerResponse(question.FlashCards!),
+            //    };
 
-                responses.Add(questionFlashCard);
-            }
+            //    responses.Add(questionFlashCard);
+            //}
 
             return responses;
         }
@@ -161,7 +161,7 @@ namespace MagicLand_System.Mappers.Custom
                     QuestionDescription = question.Description,
                     QuestionImage = question.Img,
                     AnswersMutipleChoicesInfor = question.MutipleChoiceAnswers!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoiceAnswers!) : default,
-                    AnwserFlashCarsInfor = question.FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(question.FlashCards!) : default,
+                    //AnwserFlashCarsInfor = question.FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(question.FlashCards!) : default,
                 };
 
                 responses.Add(response);
@@ -200,7 +200,7 @@ namespace MagicLand_System.Mappers.Custom
                     QuestionDescription = questions![randomQuestionIndex].Description,
                     QuestionImage = questions![randomQuestionIndex].Img,
                     AnswersMutipleChoicesInfor = questions![randomQuestionIndex].MutipleChoiceAnswers!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(questions![randomQuestionIndex].MutipleChoiceAnswers!) : default,
-                    AnwserFlashCarsInfor = questions![randomQuestionIndex].FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(questions![randomQuestionIndex].FlashCards!) : default,
+                    //AnwserFlashCarsInfor = questions![randomQuestionIndex].FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(questions![randomQuestionIndex].FlashCards!) : default,
                 };
 
                 totalMark += questions![randomQuestionIndex].MutipleChoiceAnswers!.Any()
