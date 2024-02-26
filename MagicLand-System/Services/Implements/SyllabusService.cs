@@ -50,7 +50,7 @@ namespace MagicLand_System.Services.Implements
         {
             var syllabusesSubjectCode = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(selector: x => x.SubjectCode);
 
-            if (syllabusesSubjectCode.Any(ssc => ssc!.Contains(request.SubjectCode!)))
+            if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(request.SubjectCode!)))
             {
                 throw new BadHttpRequestException($"Mã Giáo Trình Đã Tồn Tại", StatusCodes.Status400BadRequest);
             }
@@ -819,7 +819,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Id [{id}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
             }
-            if(exam.Method == "Offline")
+            if (exam.Method == "Offline")
             {
                 return default!;
             }
@@ -1121,5 +1121,5 @@ namespace MagicLand_System.Services.Implements
 
     }
 
-     
+
 }
