@@ -287,6 +287,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 course.NumberOfSession = sessions.Count;
+                course.SubjectName = syll.SubjectCode;
                 syll.CourseId = course.Id;
                 await _unitOfWork.GetRepository<Course>().InsertAsync(course);
                 await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
