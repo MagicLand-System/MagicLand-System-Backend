@@ -4,7 +4,7 @@
     {
         public string ContentName { get; set; }
         public int? DeadLine { get; set; }
-        public int Duration { get; set; }
+        public int? Duration { get; set; }
         public int? AttemptsAllowed { get; set; }
         public int NoOfSession { get; set; }    
         public string Type { get; set; }

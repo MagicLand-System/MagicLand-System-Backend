@@ -15,6 +15,7 @@ using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Crypto.Engines;
+using System.Globalization;
 using System.Xml;
 using static MagicLand_System.Constants.ApiEndpointConstant;
 
@@ -56,10 +57,10 @@ namespace MagicLand_System.Services.Implements
             }
 
             Guid newSyllabusId = Guid.NewGuid();
+
             var syllabus = new Syllabus
             {
                 Id = newSyllabusId,
-                EffectiveDate = DateTime.Parse(request.EffectiveDate!),
                 UpdateTime = DateTime.Now,
                 Description = request.Description,
                 MinAvgMarkToPass = request.MinAvgMarkToPass,
@@ -70,6 +71,42 @@ namespace MagicLand_System.Services.Implements
                 SyllabusLink = request.SyllabusLink,
                 TimePerSession = request.TimePerSession,
             };
+
+            if (request.EffectiveDate != null)
+            {
+                string format = "dd/MM/yyyy";
+
+                var date = DateTime.TryParseExact(request.EffectiveDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
+                    ? (DateTime?)parsedDate
+                    : DateTime.Parse(request.EffectiveDate);
+
+                syllabus.EffectiveDate = date;
+
+            }
+
+            if (request.PreRequisite!.Any())
+            {
+                var syllabusPrerequisties = new List<SyllabusPrerequisite>();
+
+                foreach (string code in request.PreRequisite!)
+                {
+                    var syllabusId = await _unitOfWork.GetRepository<Syllabus>()
+                   .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.SubjectCode!.ToLower().Trim().Equals(code!.ToLower().Trim()));
+                    if (syllabusId == default)
+                    {
+                        throw new BadHttpRequestException($"Mã Giáo Trình Tiên Quyết Không Tồn Tại [{code}]", StatusCodes.Status400BadRequest);
+                    }
+
+                    syllabusPrerequisties.Add(new SyllabusPrerequisite
+                    {
+                        Id = Guid.NewGuid(),
+                        CurrentSyllabusId = newSyllabusId,
+                        PrerequisiteSyllabusId = syllabusId,
+                    });
+                }
+
+                await _unitOfWork.GetRepository<SyllabusPrerequisite>().InsertRangeAsync(syllabusPrerequisties);
+            }
 
             var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>()
                .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type!.ToLower().Trim()));
@@ -520,7 +557,13 @@ namespace MagicLand_System.Services.Implements
             {
                 if (request.EffectiveDate != null)
                 {
-                    syllabus.EffectiveDate = DateTime.Parse(request.EffectiveDate);
+                    string format = "dd/MM/yyyy";
+
+                    var date = DateTime.TryParseExact(request.EffectiveDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
+                        ? (DateTime?)parsedDate
+                        : DateTime.Parse(request.EffectiveDate);
+
+                    syllabus.EffectiveDate = date;
 
                 }
                 syllabus.UpdateTime = DateTime.Now;

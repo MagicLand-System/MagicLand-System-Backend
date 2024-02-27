@@ -99,7 +99,7 @@ namespace MagicLand_System.Services.Implements
 
             return courses.Select(c => CourseCustomMapper
             .fromCourseToCourseResExtraInfor(c, coursePrerequisites
-            .Where(cp => c.Syllabus!.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
+            .Where(cp => c.Syllabus != null && c.Syllabus!.SyllabusPrerequisites!.Any(sp => cp.Syllabus != null && sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
             coureSubsequents)).ToList();
         }
 
@@ -161,7 +161,7 @@ namespace MagicLand_System.Services.Implements
         {
             var coureSubsequents = new List<Course>();
 
-            foreach (var syll in courses.Select(c => c.Syllabus!))
+            foreach (var syll in courses.Where(c => c.Syllabus! != null).ToList())
             {
                 var course = await _unitOfWork.GetRepository<Syllabus>()
                     .SingleOrDefaultAsync(selector: x => x.Course, predicate: x => x.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == syll.Id));
@@ -178,8 +178,9 @@ namespace MagicLand_System.Services.Implements
         private async Task<Course[]> GetCoursePrerequesites(ICollection<Course> courses)
         {
             var coursePrerequesites = new List<Course>();
+            var syllabusPrerequisites = courses.Where(c => c.Syllabus! != null && c.Syllabus!.SyllabusPrerequisites! != null).SelectMany(c => c.Syllabus!.SyllabusPrerequisites!).ToList();
 
-            foreach (var cp in courses.SelectMany(c => c.Syllabus!.SyllabusPrerequisites!))
+            foreach (var cp in syllabusPrerequisites)
             {
                 var course = await _unitOfWork.GetRepository<Syllabus>()
                     .SingleOrDefaultAsync(selector: x => x.Course, predicate: c => c.Id == cp.PrerequisiteSyllabusId);
