@@ -9,7 +9,7 @@
         public string MainDescription { get; set; } 
         public string Img {  get; set; }
         public string SyllabusId {  get; set; } 
-        //public List<string> PreRequisiteIds {  get; set; } 
+       
         public List<SubDescriptionRequest>?  SubDescriptions { get; set; }   
 
     }
