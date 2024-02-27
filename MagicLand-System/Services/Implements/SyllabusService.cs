@@ -50,8 +50,9 @@ namespace MagicLand_System.Services.Implements
         private async Task<Syllabus> GenerateSyllabus(OverallSyllabusRequest request)
         {
             var syllabusesSubjectCode = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(selector: x => x.SubjectCode);
+            string newSyllabusCode = request.SubjectCode! + "01";
 
-            if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(request.SubjectCode!)))
+            if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(newSyllabusCode)))
             {
                 throw new BadHttpRequestException($"Mã Giáo Trình Đã Tồn Tại", StatusCodes.Status400BadRequest);
             }
@@ -67,7 +68,7 @@ namespace MagicLand_System.Services.Implements
                 Name = request.SyllabusName,
                 ScoringScale = request.ScoringScale,
                 StudentTasks = request.StudentTasks,
-                SubjectCode = request.SubjectCode + "01",
+                SubjectCode = newSyllabusCode,
                 SyllabusLink = request.SyllabusLink,
                 TimePerSession = request.TimePerSession,
             };
@@ -84,7 +85,7 @@ namespace MagicLand_System.Services.Implements
 
             }
 
-            if (request.PreRequisite!.Any())
+            if (request.PreRequisite != null && request.PreRequisite.Any())
             {
                 var syllabusPrerequisties = new List<SyllabusPrerequisite>();
 
