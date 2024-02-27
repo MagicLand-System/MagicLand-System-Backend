@@ -97,10 +97,26 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return courses.Select(c => CourseCustomMapper
-            .fromCourseToCourseResExtraInfor(c, coursePrerequisites
-            .Where(cp => c.Syllabus != null && c.Syllabus!.SyllabusPrerequisites!.Any(sp => cp.Syllabus != null && sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
-            coureSubsequents)).ToList();
+            var responses = new List<CourseResExtraInfor>();
+            foreach (var course in courses)
+            {
+                var currentCoursePrerequistites = new List<Course>();
+                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
+                {
+                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
+                    {
+                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
+                    }
+                }
+
+                responses.Add(CourseCustomMapper.fromCourseToCourseResExtraInfor(course, currentCoursePrerequistites, coureSubsequents));
+            }
+
+            return responses;
+            //return courses.Select(c => CourseCustomMapper
+            //.fromCourseToCourseResExtraInfor(c, coursePrerequisites
+            //.Where(cp => c.Syllabus != null && c.Syllabus!.SyllabusPrerequisites!.Any(sp => cp.Syllabus != null && sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
+            //coureSubsequents)).ToList();
         }
 
 
@@ -182,8 +198,8 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var cp in syllabusPrerequisites)
             {
-                var course = await _unitOfWork.GetRepository<Syllabus>()
-                    .SingleOrDefaultAsync(selector: x => x.Course, predicate: c => c.Id == cp.PrerequisiteSyllabusId);
+                var course = await _unitOfWork.GetRepository<Course>()
+                    .SingleOrDefaultAsync(predicate: c => c.Syllabus!.Id == cp.PrerequisiteSyllabusId, include: x => x.Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites!));
 
                 if (course != null)
                 {
