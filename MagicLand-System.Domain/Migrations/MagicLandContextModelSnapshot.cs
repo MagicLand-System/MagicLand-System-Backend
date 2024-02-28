@@ -217,9 +217,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("ContentName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Duration")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Method")
                         .HasColumnType("nvarchar(max)");
 
@@ -841,7 +838,7 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CurrentSyllabusId")
+                    b.Property<Guid>("CurrentSyllabusId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("PrerequisiteSyllabusId")
@@ -1285,7 +1282,9 @@ namespace MagicLand_System.Domain.Migrations
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Syllabus", "Syllabus")
                         .WithMany("SyllabusPrerequisites")
-                        .HasForeignKey("CurrentSyllabusId");
+                        .HasForeignKey("CurrentSyllabusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Syllabus");
                 });

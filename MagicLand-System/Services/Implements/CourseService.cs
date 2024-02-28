@@ -125,7 +125,7 @@ namespace MagicLand_System.Services.Implements
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
-            .Include(x => x.Syllabus).ThenInclude(syll => syll.SyllabusPrerequisites)
+            .Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -138,9 +138,21 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
+            var currentCoursePrerequistites = new List<Course>();
+            foreach (var course in courses)
+            {
+                
+                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
+                {
+                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
+                    {
+                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
+                    }
+                }
+            }
+
             var findCourse = courses.Select(c => CourseCustomMapper
-                  .fromCourseToCourseResExtraInfor(c, coursePrerequisites
-                  .Where(cp => c.Syllabus!.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == cp.Id)),
+                  .fromCourseToCourseResExtraInfor(c, currentCoursePrerequistites,
                   coureSubsequents)).ToList();
 
             foreach (var course in findCourse)
@@ -162,7 +174,7 @@ namespace MagicLand_System.Services.Implements
         {
             return await _unitOfWork.GetRepository<Course>()
                 .GetListAsync(include: x => x
-                .Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites)
+                .Include(x => x.Syllabus!).ThenInclude(syll => syll!.SyllabusPrerequisites)
                 .Include(x => x.Classes)
                 .ThenInclude(c => c.Schedules)
                 .ThenInclude(s => s.Slot)

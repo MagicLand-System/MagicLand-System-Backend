@@ -14,7 +14,6 @@ namespace MagicLand_System.Domain.Models
         public string? Name { get; set; }
         public double Weight { get; set; }
         public double CompleteionCriteria { get; set; }
-        public string? Duration { get; set; }
         public string? QuestionType { get; set; }
         public int Part { get; set; }
         public string? ContentName { get; set; } 

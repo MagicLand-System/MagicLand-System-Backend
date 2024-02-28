@@ -141,7 +141,6 @@ namespace MagicLand_System.Services.Implements
                 ContentName = exam.ContentName,
                 CompleteionCriteria = exam.CompleteionCriteria,
                 SyllabusId = syllabusId,
-                Duration = exam.Duration,
                 QuestionType = exam.QuestionType,
                 Weight = exam.Weight,
                 Part = exam.Part,
@@ -246,9 +245,6 @@ namespace MagicLand_System.Services.Implements
                     SessionId = sessionFound!.Id,
                     Title = qp.Title,
                     ContentName = qp.ContentName,
-                    DeadlineTime = qp.DeadLine,
-                    Duration = qp.Duration,
-                    AttemptsAllowed = qp.AttemptsAllowed,
                     Type = qp.Type,
                     Score = qp.Score,
                 };
@@ -422,7 +418,7 @@ namespace MagicLand_System.Services.Implements
 
             if (syllabus == null)
             {
-                throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại Hoặc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Hoặc Giáo Trình Không Tồn Tại, Hoặc Id Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
             };
 
             foreach (var session in syllabus.Topics!.SelectMany(tp => tp.Sessions!).ToList())
@@ -958,7 +954,6 @@ namespace MagicLand_System.Services.Implements
                 {
                     ExamSyllabusId = syll.Id,
                     CompletionCriteria = syll.CompleteionCriteria,
-                    Duration = syll.Duration,
                     ContentName = syll.ContentName,
                     Method = syll.Method,
                     Part = syll.Part,
