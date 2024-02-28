@@ -50,7 +50,13 @@ namespace MagicLand_System.Services.Implements
         private async Task<Syllabus> GenerateSyllabus(OverallSyllabusRequest request)
         {
             var syllabusesSubjectCode = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(selector: x => x.SubjectCode);
-            string newSyllabusCode = request.SubjectCode! + "01";
+            var numberversion = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Name.ToLower().Trim().Equals(request.SyllabusName));
+            var numberCount = 1;
+            if (numberversion != null)
+            {
+                numberCount = numberversion.Count + 1;
+            }
+            string newSyllabusCode = request.SubjectCode! + "0" + numberCount;
 
             if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(newSyllabusCode)))
             {
@@ -1177,7 +1183,63 @@ namespace MagicLand_System.Services.Implements
             }
             return sideFlashCardResponses;
         }
+        public async Task<List<SyllabusResponseV2>> GetStaffSyllabusCanInsert(string? keyword)
+        {
+            var allSyllabus = await GetAllSyllabus();
+            if (allSyllabus == null)
+            {
+                return new List<SyllabusResponseV2>();
+            }
+            var filterSyllabus = allSyllabus.Where(x => (x.EffectiveDate > DateTime.UtcNow && (!x.CourseName.Equals("undefined"))));
+            if (filterSyllabus == null)
+            {
+                return new List<SyllabusResponseV2>();
+            }
+            if (keyword != null)
+            {
+                filterSyllabus = (filterSyllabus.Where(x => (x.SyllabusName.ToLower().Trim().Contains(keyword.ToLower().Trim()) || x.SubjectCode.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            return filterSyllabus.ToList();
+        }
 
+        public async Task<bool> UpdateQuiz(string questionpackageId, List<QuestionRequest> requests)
+        {
+            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(questionpackageId));
+            if (questionPackage == null)
+            {
+                throw new BadHttpRequestException($"không tìm thấy question package có id {questionpackageId}", StatusCodes.Status400BadRequest);
+            }
+            List<Question> questions = new List<Question>();
+
+            var questionx = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionPackage.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoiceAnswers));
+            questions.AddRange(questionx);
+            List<FlashCard> flashCards = new List<FlashCard>();
+            List<MutipleChoiceAnswer> mutipleChoiceAnswers = new List<MutipleChoiceAnswer>();
+            foreach (var question in questions)
+            {
+                if (question.FlashCards.Count > 0)
+                {
+                    flashCards.AddRange(question.FlashCards);
+                }
+                if (question.MutipleChoiceAnswers.Count > 0)
+                {
+                    mutipleChoiceAnswers.AddRange(question.MutipleChoiceAnswers);
+                }
+            }
+            List<SideFlashCard> sideFlashCards = new List<SideFlashCard>();
+            foreach (var flashCard in flashCards)
+            {
+                var sideFlashCard = await _unitOfWork.GetRepository<SideFlashCard>().GetListAsync(predicate: x => x.FlashCardId.ToString().Equals(flashCard.Id.ToString()));
+                sideFlashCards.AddRange(sideFlashCard);
+            }
+            _unitOfWork.GetRepository<SideFlashCard>().DeleteRangeAsync(sideFlashCards);
+            _unitOfWork.GetRepository<FlashCard>().DeleteRangeAsync(flashCards);
+            _unitOfWork.GetRepository<MutipleChoiceAnswer>().DeleteRangeAsync(mutipleChoiceAnswers);
+            _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
+            await _unitOfWork.CommitAsync();
+            await GenerateQuestionPackgeItems(questionPackage.Id, requests);
+            return true;
+        }
     }
 
 
