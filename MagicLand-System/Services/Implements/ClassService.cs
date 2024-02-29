@@ -8,6 +8,7 @@ using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Slots;
@@ -302,6 +303,21 @@ namespace MagicLand_System.Services.Implements
                     RoomResponse = roomResponse,
                     CreatedDate = c.AddedDate.Value,
                 };
+                Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.Course.Id.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                CustomCourseResponse customCourseResponse = new CustomCourseResponse
+                {
+                    Image = course.Image,
+                    MainDescription = course.MainDescription,
+                    MaxYearOldsStudent = course.MaxYearOldsStudent,
+                    MinYearOldsStudent = course.MaxYearOldsStudent,
+                    Name = course.Name,
+                    Price = course.Price,
+                    SyllabusCode = course.Syllabus.SubjectCode,
+                    SyllabusName = course.Syllabus.Name,
+                    SyllabusType = course.Syllabus.SyllabusCategory.Name,
+                    Status = course.Status
+                };
+                myClassResponse.CourseResponse = customCourseResponse;
                 result.Add(myClassResponse);
             }
             if (result.Count == 0)
