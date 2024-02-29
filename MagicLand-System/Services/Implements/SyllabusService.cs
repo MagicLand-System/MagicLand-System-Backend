@@ -1205,13 +1205,31 @@ namespace MagicLand_System.Services.Implements
             return filterSyllabus.ToList();
         }
 
-        public async Task<bool> UpdateQuiz(string questionpackageId, List<QuestionRequest> requests)
+        public async Task<bool> UpdateQuiz(string questionpackageId, UpdateQuestionPackageRequest request)
         {
             var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(questionpackageId));
             if (questionPackage == null)
             {
                 throw new BadHttpRequestException($"không tìm thấy question package có id {questionpackageId}", StatusCodes.Status400BadRequest);
             }
+            if(request.ContentName != null)
+            {
+                questionPackage.ContentName = request.ContentName;
+            }
+            if(request.Type != null)
+            {
+                questionPackage.Type = request.Type;
+            }
+            if(request.Score != null)
+            {
+                questionPackage.Score = request.Score;
+            }
+            if(request.Title != null)
+            {
+                questionPackage.Title = request.Title;
+            }
+            _unitOfWork.GetRepository<QuestionPackage>().UpdateAsync(questionPackage);
+            await _unitOfWork.CommitAsync();
             List<Question> questions = new List<Question>();
 
             var questionx = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionPackage.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoiceAnswers));
@@ -1240,7 +1258,7 @@ namespace MagicLand_System.Services.Implements
             _unitOfWork.GetRepository<MutipleChoiceAnswer>().DeleteRangeAsync(mutipleChoiceAnswers);
             _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
             await _unitOfWork.CommitAsync();
-            await GenerateQuestionPackgeItems(questionPackage.Id, requests);
+            await GenerateQuestionPackgeItems(questionPackage.Id, request.QuestionRequests);
             return true;
         }
     }

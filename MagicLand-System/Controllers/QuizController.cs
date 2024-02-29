@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Customs;
 using MagicLand_System.PayLoad.Response.Quizes;
@@ -130,6 +131,16 @@ namespace MagicLand_System.Controllers
         {
             var result = await _syllabusService.GetStaffQuestions(id);
             return Ok(result);
+        }
+        [HttpPut(ApiEndpointConstant.QuizEndPoint.UpdateQuizForStaff)]
+        public async Task<IActionResult> UpdateQuizForStaff([FromRoute] string questionpackageId,UpdateQuestionPackageRequest request)
+        {
+            var result = await _syllabusService.UpdateQuiz(questionpackageId,request);
+            if(!result)
+            {
+                return Ok("Update quiz gặp lỗi");
+            }
+            return Ok("Update quiz thành công");
         }
     }
 }
