@@ -171,5 +171,11 @@ namespace MagicLand_System.Controllers
             var result = await _syllabusService.GetStaffSyllabusResponse(id);
             return Ok(result);
         }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.AvailableSyl)]
+        public async Task<IActionResult> GetAvailableSyllabus(string? keyword = null)
+        {
+            var result = await _syllabusService.GetStaffSyllabusCanInsert(keyword);
+            return Ok(result);
+        }
     }
 }

@@ -34,12 +34,12 @@ namespace MagicLand_System.Controllers
             {
                 return NotFound(new ErrorResponse
                 {
-                    Error = "User with phone not exist",
+                    Error = $"Không tìm thấy user có số điện thoại {phone}",
                     StatusCode = StatusCodes.Status404NotFound,
                     TimeStamp = DateTime.Now,
                 });
             }
-            return Ok(new { Message = "Phone has exist" , Role = isExist.Role});
+            return Ok(new { Message = $"Tồn tại user có số điện thoại {phone}" , Role = isExist.Role});
         }
         [HttpGet(ApiEndpointConstant.User.UserEndPointGetCurrentUser)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]

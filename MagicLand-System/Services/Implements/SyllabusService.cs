@@ -77,6 +77,7 @@ namespace MagicLand_System.Services.Implements
                 SubjectCode = newSyllabusCode,
                 SyllabusLink = request.SyllabusLink,
                 TimePerSession = request.TimePerSession,
+                NumOfSessions = request.NumOfSessions,
             };
 
             if (request.EffectiveDate != null)
@@ -314,10 +315,12 @@ namespace MagicLand_System.Services.Implements
             if (flashCardList.Any())
             {
                 await _unitOfWork.GetRepository<FlashCard>().InsertRangeAsync(flashCardList);
+                await _unitOfWork.CommitAsync();
             }
             if (sideFlashCardList.Any())
             {
                 await _unitOfWork.GetRepository<SideFlashCard>().InsertRangeAsync(sideFlashCardList);
+                await _unitOfWork.CommitAsync();
             }
 
         }
@@ -332,6 +335,7 @@ namespace MagicLand_System.Services.Implements
                 QuestionPacketId = newQuestionPackageId,
             };
             await _unitOfWork.GetRepository<Question>().InsertAsync(question);
+            await _unitOfWork.CommitAsync();
         }
 
         private async Task GenerateMutipleChoice(QuestionRequest quest, Guid newQuestionId)
@@ -354,6 +358,7 @@ namespace MagicLand_System.Services.Implements
             if (mutipleChoiceAnswers != null && mutipleChoiceAnswers.Count > 0)
             {
                 await _unitOfWork.GetRepository<MutipleChoiceAnswer>().InsertRangeAsync(mutipleChoiceAnswers);
+                await _unitOfWork.CommitAsync();
             }
         }
 
@@ -500,7 +505,7 @@ namespace MagicLand_System.Services.Implements
 
             return syllabuses.ToList();
         }
-        public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword)
+        public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword = null)
         {
             var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(include: x => x.Include<Syllabus, Course>(x => x.Course));
             List<SyllabusResponseV2> responses = new List<SyllabusResponseV2>();
@@ -909,7 +914,7 @@ namespace MagicLand_System.Services.Implements
                 SyllabusLink = syllabus.SyllabusLink,
                 Description = syllabus.Description,
                 Category = cagegory,
-                EffectiveDate = syllabus.EffectiveDate.ToString(),
+                EffectiveDate = syllabus.EffectiveDate.Value.ToString("dd/MM/yyyy"),
                 MinAvgMarkToPass = syllabus.MinAvgMarkToPass,
                 ScoringScale = syllabus.ScoringScale,
                 StudentTasks = syllabus.StudentTasks,
@@ -1198,7 +1203,15 @@ namespace MagicLand_System.Services.Implements
             {
                 return new List<SyllabusResponseV2>();
             }
-            var filterSyllabus = allSyllabus.Where(x => (x.EffectiveDate > DateTime.UtcNow && (!x.CourseName.Equals("undefined"))));
+            List<SyllabusResponseV2> filterSyllabus = new List<SyllabusResponseV2>();
+            foreach(var syl in allSyllabus)
+            {
+                var ix = syl.CourseName.Trim().ToLower().Equals("undefined");
+                if(syl.CourseName.Trim().ToLower().Equals("undefined")  && (syl.EffectiveDate > DateTime.Now))
+                {
+                    filterSyllabus.Add(syl);
+                }
+            }
             if (filterSyllabus == null)
             {
                 return new List<SyllabusResponseV2>();
@@ -1210,13 +1223,31 @@ namespace MagicLand_System.Services.Implements
             return filterSyllabus.ToList();
         }
 
-        public async Task<bool> UpdateQuiz(string questionpackageId, List<QuestionRequest> requests)
+        public async Task<bool> UpdateQuiz(string questionpackageId, UpdateQuestionPackageRequest request)
         {
             var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(questionpackageId));
             if (questionPackage == null)
             {
                 throw new BadHttpRequestException($"không tìm thấy question package có id {questionpackageId}", StatusCodes.Status400BadRequest);
             }
+            if(request.ContentName != null)
+            {
+                questionPackage.ContentName = request.ContentName;
+            }
+            if(request.Type != null)
+            {
+                questionPackage.Type = request.Type;
+            }
+            if(request.Score != null)
+            {
+                questionPackage.Score = request.Score;
+            }
+            if(request.Title != null)
+            {
+                questionPackage.Title = request.Title;
+            }
+            _unitOfWork.GetRepository<QuestionPackage>().UpdateAsync(questionPackage);
+            await _unitOfWork.CommitAsync();
             List<Question> questions = new List<Question>();
 
             var questionx = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionPackage.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoiceAnswers));
@@ -1245,7 +1276,8 @@ namespace MagicLand_System.Services.Implements
             _unitOfWork.GetRepository<MutipleChoiceAnswer>().DeleteRangeAsync(mutipleChoiceAnswers);
             _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
             await _unitOfWork.CommitAsync();
-            await GenerateQuestionPackgeItems(questionPackage.Id, requests);
+            await GenerateQuestionPackgeItems(questionPackage.Id, request.QuestionRequests);
+            await _unitOfWork.CommitAsync();
             return true;
         }
     }

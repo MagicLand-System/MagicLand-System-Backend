@@ -53,7 +53,6 @@ namespace MagicLand_System.Services.Implements
                 return new UserExistRespone
                 {
                     IsExist = false,
-                    Role = user.Role.Name,
                 };
             }
             return new UserExistRespone

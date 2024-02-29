@@ -22,7 +22,7 @@ namespace MagicLand_System.Domain.Models
         public string? Description { get; set; } 
         public string? SyllabusLink { get; set; }
         public string? SubjectCode { get; set; }
-
+        public int? NumOfSessions {  get; set; }
 
         [ForeignKey("SyllabusCategory")]
         public Guid SyllabusCategoryId { get; set; }
