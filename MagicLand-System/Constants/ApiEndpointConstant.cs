@@ -120,7 +120,7 @@
             public const string GeneralSyllabus = EndPointBase + "/general";
             public const string UpdateSyllabus = EndPointBase + "/{id}/update";
             public const string StaffSyl = EndPointBase + "/{id}/staff/get";
-
+            public const string AvailableSyl = EndPointBase + "/available";
         }
         public static class LectureEndPoint
         {
