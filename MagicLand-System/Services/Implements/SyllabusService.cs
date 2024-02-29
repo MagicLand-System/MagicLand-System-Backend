@@ -77,6 +77,7 @@ namespace MagicLand_System.Services.Implements
                 SubjectCode = newSyllabusCode,
                 SyllabusLink = request.SyllabusLink,
                 TimePerSession = request.TimePerSession,
+                NumOfSessions = request.NumOfSessions,
             };
 
             if (request.EffectiveDate != null)
