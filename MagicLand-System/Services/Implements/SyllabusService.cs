@@ -315,10 +315,12 @@ namespace MagicLand_System.Services.Implements
             if (flashCardList.Any())
             {
                 await _unitOfWork.GetRepository<FlashCard>().InsertRangeAsync(flashCardList);
+                await _unitOfWork.CommitAsync();
             }
             if (sideFlashCardList.Any())
             {
                 await _unitOfWork.GetRepository<SideFlashCard>().InsertRangeAsync(sideFlashCardList);
+                await _unitOfWork.CommitAsync();
             }
 
         }
@@ -333,6 +335,7 @@ namespace MagicLand_System.Services.Implements
                 QuestionPacketId = newQuestionPackageId,
             };
             await _unitOfWork.GetRepository<Question>().InsertAsync(question);
+            await _unitOfWork.CommitAsync();
         }
 
         private async Task GenerateMutipleChoice(QuestionRequest quest, Guid newQuestionId)
@@ -355,6 +358,7 @@ namespace MagicLand_System.Services.Implements
             if (mutipleChoiceAnswers != null && mutipleChoiceAnswers.Count > 0)
             {
                 await _unitOfWork.GetRepository<MutipleChoiceAnswer>().InsertRangeAsync(mutipleChoiceAnswers);
+                await _unitOfWork.CommitAsync();
             }
         }
 
@@ -1260,6 +1264,7 @@ namespace MagicLand_System.Services.Implements
             _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
             await _unitOfWork.CommitAsync();
             await GenerateQuestionPackgeItems(questionPackage.Id, request.QuestionRequests);
+            await _unitOfWork.CommitAsync();
             return true;
         }
     }
