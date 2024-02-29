@@ -1228,10 +1228,11 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<ClassResponse>> GetCurrentLectureClassesAsync()
+        public async Task<List<ClassResponseForLecture>> GetCurrentLectureClassesAsync()
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt(),
-                include: x => x.Include(x => x.Schedules).Include(x => x.Course!));
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Slot)
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Room).Include(x => x.Course!));
 
             if (!classes.Any())
             {
@@ -1239,7 +1240,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var currentClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
-            return currentClasses.Select(ccls => _mapper.Map<ClassResponse>(ccls)).ToList();
+            return currentClasses.Select(ccls => _mapper.Map<ClassResponseForLecture>(ccls)).ToList();
         }
 
         public async Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date)

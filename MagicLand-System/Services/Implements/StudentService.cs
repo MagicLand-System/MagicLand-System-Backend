@@ -369,9 +369,9 @@ namespace MagicLand_System.Services.Implements
 
             var cls = await CheckingCurrentClass(request.ClassId, slot);
 
-            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim());
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
+            var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()).ToList();
 
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
 
             if (studentNotHaveAttendance.Count() > 0)
@@ -418,8 +418,8 @@ namespace MagicLand_System.Services.Implements
         {
 
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-            include: x => x.Include(x => x.Schedules).Include(x => x.Lecture)!
-            .Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
+            include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).Include(x => x.Lecture)!
+            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
 
 
             if (cls == null)
@@ -466,6 +466,12 @@ namespace MagicLand_System.Services.Implements
                 {
                     foreach (var stuAttReq in studentAttendanceRequest)
                     {
+                        var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == stuAttReq.StudentId);
+                        if (student == null)
+                        {
+                            throw new BadHttpRequestException($"Id Học Sinh [{stuAttReq.StudentId}] Không Tồn Tại Hoặc Không Học Lớp Đang Điểm Danh", StatusCodes.Status400BadRequest);
+                        }
+
                         if (stuAttReq.StudentId == attendance.StudentId)
                         {
                             attendance.IsPresent = stuAttReq.IsPresent;

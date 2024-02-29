@@ -100,6 +100,7 @@ namespace MagicLand_System.Controllers
         ///  Truy Suất Các Câu Hỏi (Quiz) Trong Bộ Đề Của Một Bài Kiểm Tra Dựa Vào Id Của Bài Kiểm Tra, *Các Câu Hỏi Sẽ Được Truy Suất Ngẫu Nhiên Và Thỏa Mãn Số Điểm Của Bài Kiểm Tra*
         /// </summary>
         /// <param name="id">Id Của Bài Kiểm Tra</param>
+        /// <param name="examPart">Phần Kiểm Tra (Thứ Tự bài Kiểm Tra) </param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -115,9 +116,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id)
+        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int examPart)
         {
-            var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id);
+            var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, examPart);
             if(responses == default)
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");

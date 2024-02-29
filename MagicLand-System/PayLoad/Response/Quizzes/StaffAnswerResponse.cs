@@ -3,6 +3,6 @@
     public class StaffAnswerResponse
     {
         public List<StaffMultipleChoiceResponse>? StaffMultiplechoiceAnswerResponses { get; set; } = null;
-        public List<FlashCardAnswerResponse>? FlashCardAnswerResponses { get; set; } = null;
+        public List<FlashCardAnswerResponseDefault>? FlashCardAnswerResponses { get; set; } = null;
     }
 }

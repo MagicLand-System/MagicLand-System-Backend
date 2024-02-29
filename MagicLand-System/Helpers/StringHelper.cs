@@ -8,6 +8,24 @@ namespace MagicLand_System.Helpers
 {
     public class StringHelper
     {
+        public static (string, string) SplitStringByNewLine(string input)
+        {
+            string[] parts = input.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length >= 2)
+            {
+                return (TrimStringAndNoSpace(parts[0]), TrimStringAndNoSpace(parts[1]));
+            }
+            else if (parts.Length == 1)
+            {
+                return (TrimStringAndNoSpace(parts[0]), string.Empty);
+            }
+            else
+            {
+                return (string.Empty, string.Empty);
+            }
+        }
+
 
         public static List<string> FromStringToList(string input)
         {

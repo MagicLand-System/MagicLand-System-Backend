@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
@@ -16,8 +17,15 @@ namespace MagicLand_System.Mappers.Custom
                 return new ExamWithQuizResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
 
+            int part = 1;
+            if(questionPackage.Type == "flashcard")
+            {
+                part = 2;
+            }
+
             var response = new ExamWithQuizResponse
             {
+                ExamPart = part,
                 QuizCategory = examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,
@@ -44,10 +52,19 @@ namespace MagicLand_System.Mappers.Custom
                 return new ExamWithQuizResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
 
+
+            int part = 1;
+            if (questionPackage.Type == "flashcard")
+            {
+                part = 2;
+            }
+
+
             var quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
 
             return new ExamResponse
             {
+                ExamPart = part,
                 QuizCategory = examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,
@@ -70,8 +87,16 @@ namespace MagicLand_System.Mappers.Custom
                 return new QuizMultipleChoiceResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
 
+
+            int part = 1;
+            if (questionPackage.Type == "flashcard")
+            {
+                part = 2;
+            }
+
             var response = new QuizMultipleChoiceResponse
             {
+                ExamPart = part,
                 QuizCategory = examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,
@@ -94,8 +119,16 @@ namespace MagicLand_System.Mappers.Custom
                 return new QuizFlashCardResponse { Date = "Cần Truy Suất Qua Lớp", };
             }
 
+
+            int part = 1;
+            if (questionPackage.Type == "flashcard")
+            {
+                part = 2;
+            }
+
             var response = new QuizFlashCardResponse
             {
+                ExamPart = part,
                 QuizCategory = examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,

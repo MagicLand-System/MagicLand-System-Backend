@@ -71,6 +71,7 @@
         public static class CourseEnpoint
         {
             public const string GetAll = ApiEndpoint + "/courses";
+            public const string GetAllValid = ApiEndpoint + "/courses/validRegister";
             public const string SearchCourse = GetAll + "/search";
             public const string CourseById = GetAll + "/{id}";
             public const string FilterCourse = GetAll + "/filter";

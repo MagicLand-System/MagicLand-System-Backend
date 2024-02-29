@@ -24,7 +24,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
         Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList);
         Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime,string? attendanceStatus);
-        Task<List<ClassResponse>> GetCurrentLectureClassesAsync();
+        Task<List<ClassResponseForLecture>> GetCurrentLectureClassesAsync();
         Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date);
         Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);
         Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList);

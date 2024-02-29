@@ -3,7 +3,9 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Attendances;
 using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Slots;
 using System.Dynamic;
 
 namespace MagicLand_System.Mappers.Custom
@@ -11,7 +13,35 @@ namespace MagicLand_System.Mappers.Custom
     public class ScheduleCustomMapper
     {
 
-        public static List<DailySchedule> fromScheduleToDailyScheduleList (List<Schedule> schedules)
+        public static List<ScheduleWithoutLectureResponse> fromScheduleToScheduleWithOutLectureList(List<Schedule> schedules)
+        {
+            if (schedules == null)
+            {
+                return new List<ScheduleWithoutLectureResponse>();
+            }
+
+            var responses = new List<ScheduleWithoutLectureResponse>();
+            foreach (var schedule in schedules)
+            {
+                responses.Add(new ScheduleWithoutLectureResponse
+                {
+                    Id = schedule.Id,
+                    DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                    Date = schedule.Date,
+                    Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
+                    Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
+                });
+            }
+
+            return responses;
+        }
+        public Guid? Id { get; set; }
+        public string? DayOfWeeks { get; set; }
+        public DateTime Date { get; set; }
+
+        public SlotResponse Slot { get; set; } = new SlotResponse();
+        public RoomResponse Room { get; set; } = new RoomResponse();
+        public static List<DailySchedule> fromScheduleToDailyScheduleList(List<Schedule> schedules)
         {
             if (schedules == null)
             {
@@ -19,7 +49,7 @@ namespace MagicLand_System.Mappers.Custom
             }
 
             var responses = new List<DailySchedule>();
-            foreach(var schedule in schedules )
+            foreach (var schedule in schedules)
             {
                 responses.Add(new DailySchedule
                 {
@@ -35,7 +65,7 @@ namespace MagicLand_System.Mappers.Custom
         public static List<LectureScheduleResponse> fromClassToListLectureScheduleResponse(Class cls)
         {
             var responses = new List<LectureScheduleResponse>();
-          
+
             foreach (var schedule in cls.Schedules)
             {
                 var response = new LectureScheduleResponse

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -90,10 +91,14 @@ namespace MagicLand_System.Services.Implements
             return categories.ToList();
         }
 
-        public async Task<List<CourseResExtraInfor>> GetCoursesAsync()
+        public async Task<List<CourseResExtraInfor>> GetCoursesAsync(bool isValid)
         {
             var courses = await GetDefaultCourse();
 
+            if (isValid)
+            {
+                courses = courses.Where(c => c.Classes.Any() && c.Classes.Any(c => c.Status == ClassStatusEnum.UPCOMING.ToString())).ToList();
+            }
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
@@ -141,7 +146,7 @@ namespace MagicLand_System.Services.Implements
             var currentCoursePrerequistites = new List<Course>();
             foreach (var course in courses)
             {
-                
+
                 if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
                 {
                     foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
@@ -172,17 +177,26 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<ICollection<Course>> GetDefaultCourse()
         {
-            return await _unitOfWork.GetRepository<Course>()
-                .GetListAsync(include: x => x
-                .Include(x => x.Syllabus!).ThenInclude(syll => syll!.SyllabusPrerequisites)
-                .Include(x => x.Classes)
-                .ThenInclude(c => c.Schedules)
-                .ThenInclude(s => s.Slot)
-                .Include(x => x.SubDescriptionTitles)
-                .ThenInclude(sdt => sdt.SubDescriptionContents)
-                .Include(x => x.Syllabus)
-                .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
-                .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
+            try
+            {
+                return await _unitOfWork.GetRepository<Course>()
+               .GetListAsync(include: x => x
+               .Include(x => x.Syllabus!).ThenInclude(syll => syll!.SyllabusPrerequisites)
+               .Include(x => x.Classes)
+               .ThenInclude(c => c.Schedules)
+               .ThenInclude(s => s.Slot)
+               .Include(x => x.SubDescriptionTitles)
+               .ThenInclude(sdt => sdt.SubDescriptionContents)
+               .Include(x => x.Syllabus)
+               .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
+               .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
+            }
+            catch (Exception e)
+            {
+
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{e}]", StatusCodes.Status400BadRequest);
+            }
+
         }
 
         private async Task<Course[]> GetCoureSubsequents(ICollection<Course> courses)

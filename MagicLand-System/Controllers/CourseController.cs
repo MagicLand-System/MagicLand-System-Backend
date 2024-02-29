@@ -27,7 +27,21 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetCourses()
         {
-            var courses = await _courseService.GetCoursesAsync();
+            var courses = await _courseService.GetCoursesAsync(false);
+            return Ok(courses);
+        }
+        #region document API Get Courses Statisfy
+        /// <summary>
+        ///  Truy Suất Các Khóa Học Có Lớp Có Thể Đăng Ký
+        /// </summary>
+        /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllValid)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCoursesValid()
+        {
+            var courses = await _courseService.GetCoursesAsync(true);
             return Ok(courses);
         }
 

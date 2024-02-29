@@ -858,9 +858,9 @@ namespace MagicLand_System.Services.Implements
             return examsResponse;
         }
 
-        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id)
+        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id, int examPart)
         {
-            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Syllabus!));
             if (exam == null)
             {
                 throw new BadHttpRequestException($"Id [{id}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
@@ -870,19 +870,31 @@ namespace MagicLand_System.Services.Implements
                 return default!;
             }
 
-            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>()
-              .GetListAsync(include: x => x.Include(x => x.Questions)!.ThenInclude(quest => quest.MutipleChoiceAnswers)!
-              .Include(x => x.Questions)!.ThenInclude(quest => quest.FlashCards)!.ThenInclude(fc => fc.SideFlashCards));
+            var sessions = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Id == exam.SyllabusId, include: x => x.Include(x => x.Topics!)
+            .ThenInclude(tp => tp.Sessions!))).SelectMany(syll => syll.Topics!).SelectMany(tp => tp.Sessions!).ToList();
 
-            questionPackage = questionPackage.Where(x => StringHelper.TrimStringAndNoSpace(x.ContentName!) == StringHelper.TrimStringAndNoSpace(exam.ContentName!)).ToList();
-            if (questionPackage == null)
+            var questionPackage = new QuestionPackage();
+            foreach (var ses in sessions)
             {
-                throw new BadHttpRequestException($"Id [{id}] Của Bài Kiểm Tra Không Tồn Tại Bộ Đề Xin Chờ Cập Nhập Từ Nhân Viên", StatusCodes.Status400BadRequest);
+                var qp = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id,
+                    include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
+                   .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
+
+                if (qp != null && StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(qp.ContentName!))
+                {
+                    int part = 1;
+                    if (qp.Type == "flashcard")
+                    {
+                        part = 2;
+                    }
+                    if (examPart == part)
+                    {
+                        questionPackage = qp;
+                    }
+                }
             }
 
-            var responses = questionPackage.SelectMany(qp => QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(qp)).ToList();
-
-            return responses;
+            return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
         }
         public async Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id)
         {
@@ -907,12 +919,13 @@ namespace MagicLand_System.Services.Implements
                 SyllabusId = syllabus.Id,
             };
             var courseId = syllabus.CourseId;
-            if(courseId == null)
+            if (courseId == null)
             {
                 syllRes.LinkedCourse = null;
-            } else
+            }
+            else
             {
-                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(courseId.ToString()));
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()));
                 var courseName = course.Name;
                 syllRes.LinkedCourse = new PayLoad.Response.Courses.LinkedCourse
                 {
@@ -1126,7 +1139,7 @@ namespace MagicLand_System.Services.Implements
             var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
             StaffAnswerResponse response = new StaffAnswerResponse();
             List<StaffMultipleChoiceResponse> multipleChoiceResponses = new List<StaffMultipleChoiceResponse>();
-            List<FlashCardAnswerResponse> flashCardAnswerResponses = new List<FlashCardAnswerResponse>();
+            List<FlashCardAnswerResponseDefault> flashCardAnswerResponses = new List<FlashCardAnswerResponseDefault>();
             if (multiples != null && multiples.Count > 0)
             {
                 foreach (var mul in multiples)
@@ -1146,7 +1159,7 @@ namespace MagicLand_System.Services.Implements
             {
                 foreach (var flashcard in flashcards)
                 {
-                    FlashCardAnswerResponse flashCardAnswerResponse = new FlashCardAnswerResponse
+                    FlashCardAnswerResponseDefault flashCardAnswerResponse = new FlashCardAnswerResponseDefault
                     {
                         FlashCarId = flashcard.Id,
                         Score = flashcard.Score,
@@ -1180,7 +1193,7 @@ namespace MagicLand_System.Services.Implements
         }
         public async Task<List<SyllabusResponseV2>> GetStaffSyllabusCanInsert(string? keyword)
         {
-            var allSyllabus = await GetAllSyllabus();
+            var allSyllabus = await GetAllSyllabus(keyword);
             if (allSyllabus == null)
             {
                 return new List<SyllabusResponseV2>();
