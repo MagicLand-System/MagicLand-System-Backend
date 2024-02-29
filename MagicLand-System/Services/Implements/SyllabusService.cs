@@ -897,7 +897,7 @@ namespace MagicLand_System.Services.Implements
                 SyllabusLink = syllabus.SyllabusLink,
                 Description = syllabus.Description,
                 Category = cagegory,
-                EffectiveDate = syllabus.EffectiveDate.ToString(),
+                EffectiveDate = syllabus.EffectiveDate.Value.ToString("dd/MM/yyyy"),
                 MinAvgMarkToPass = syllabus.MinAvgMarkToPass,
                 ScoringScale = syllabus.ScoringScale,
                 StudentTasks = syllabus.StudentTasks,
