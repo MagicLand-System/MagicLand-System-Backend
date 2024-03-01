@@ -17,6 +17,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -999,6 +1000,7 @@ namespace MagicLand_System.Services.Implements
                 if (courseId == null)
                 {
                     throw new BadHttpRequestException($"cột {rq.Index} không tồn tại courseName như vậy", StatusCodes.Status400BadRequest);
+                    continue;
                 }
                 if (roomId == null)
                 {
@@ -1056,6 +1058,12 @@ namespace MagicLand_System.Services.Implements
                         SlotId = slotId,
                     });
                 }
+
+                string format = "dd/MM/yyyy";
+
+                var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
+                    ? (DateTime?)parsedDate
+                    : DateTime.Parse(rq.StartDate);
                 var myRequest = new CreateClassRequest
                 {
                     ClassCode = await AutoCreateClassCode(courseId.ToString()),
@@ -1066,7 +1074,7 @@ namespace MagicLand_System.Services.Implements
                     Method = rq.Method,
                     RoomId = roomId,
                     ScheduleRequests = scheduleRequests,
-                    StartDate = rq.StartDate,
+                    StartDate = date.Value,
                 };
                 var isSuccess = await CreateNewClass(myRequest);
                 if (!isSuccess)

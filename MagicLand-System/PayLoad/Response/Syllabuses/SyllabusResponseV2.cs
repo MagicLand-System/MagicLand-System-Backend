@@ -7,5 +7,6 @@
         public DateTime? EffectiveDate { get; set; }
         public string CourseName { get; set; } = "undefined";
         public string SubjectCode {  get; set; }    
+        public DateTime? UpdateTime { get; set; }   
     }
 }

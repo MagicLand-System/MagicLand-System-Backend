@@ -503,7 +503,7 @@ namespace MagicLand_System.Services.Implements
             {
                 session.QuestionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id);
             }
-
+        
             return syllabuses.ToList();
         }
         public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword = null)
@@ -535,12 +535,17 @@ namespace MagicLand_System.Services.Implements
                     EffectiveDate = syl.EffectiveDate,
                     SubjectCode = subjectCode,
                     SyllabusName = syllabusName,
+                    UpdateTime = syl.UpdateTime,
                 };
                 responses.Add(syllabusResponseV2);
             }
             if (keyword != null)
             {
                 responses = (responses.Where(x => (x.SyllabusName.ToLower().Trim().Contains(keyword.ToLower().Trim()) || x.SubjectCode.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            if(responses != null)
+            {
+                responses = (responses.OrderByDescending(x => x.UpdateTime)).ToList();
             }
             return responses;
         }
