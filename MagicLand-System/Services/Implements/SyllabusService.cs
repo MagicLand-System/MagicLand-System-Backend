@@ -152,6 +152,7 @@ namespace MagicLand_System.Services.Implements
                 Weight = exam.Weight,
                 Part = exam.Part,
                 Method = exam.Method,
+                Duration = exam.Duration,
             }).ToList();
 
             await _unitOfWork.GetRepository<ExamSyllabus>().InsertRangeAsync(examList);
@@ -984,6 +985,7 @@ namespace MagicLand_System.Services.Implements
                     QuestionType = syll.QuestionType,
                     Type = syll.Category,
                     Weight = syll.Weight,
+                    Duration = syll.Duration,
                 };
                 result.Add(staffExamSyllabusResponse);
             }
