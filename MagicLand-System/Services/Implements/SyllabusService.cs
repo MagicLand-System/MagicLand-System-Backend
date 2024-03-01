@@ -1214,7 +1214,7 @@ namespace MagicLand_System.Services.Implements
             foreach(var syl in allSyllabus)
             {
                 var ix = syl.CourseName.Trim().ToLower().Equals("undefined");
-                if(syl.CourseName.Trim().ToLower().Equals("undefined")  && (syl.EffectiveDate > DateTime.Now))
+                if(syl.CourseName.Trim().ToLower().Equals("undefined")  && (syl.EffectiveDate < DateTime.Now))
                 {
                     filterSyllabus.Add(syl);
                 }
