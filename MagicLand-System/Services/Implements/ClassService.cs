@@ -304,6 +304,15 @@ namespace MagicLand_System.Services.Implements
                     CreatedDate = c.AddedDate.Value,
                 };
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.Course.Id.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                var syllabusCode = "undefined";
+                var syllabusName = "undefined"; 
+                var syllabusType = "undefined"; 
+                if(course.Syllabus != null)
+                {
+                    syllabusCode = course.Syllabus.SubjectCode;
+                    syllabusName = course.Syllabus.Name;
+                    syllabusType = course.Syllabus.SyllabusCategory.Name;
+                }
                 CustomCourseResponse customCourseResponse = new CustomCourseResponse
                 {
                     Image = course.Image,
@@ -312,9 +321,9 @@ namespace MagicLand_System.Services.Implements
                     MinYearOldsStudent = course.MaxYearOldsStudent,
                     Name = course.Name,
                     Price = course.Price,
-                    SyllabusCode = course.Syllabus.SubjectCode,
-                    SyllabusName = course.Syllabus.Name,
-                    SyllabusType = course.Syllabus.SyllabusCategory.Name,
+                    SyllabusCode = syllabusCode,
+                    SyllabusName = syllabusName,
+                    SyllabusType = syllabusType,
                     Status = course.Status
                 };
                 myClassResponse.CourseResponse = customCourseResponse;
