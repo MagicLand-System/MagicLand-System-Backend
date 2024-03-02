@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
@@ -25,5 +26,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StaffQuestionResponse>> GetStaffQuestions(string questionpackageId);
         Task<List<SyllabusResponseV2>> GetStaffSyllabusCanInsert(string? keyword);
         Task<bool> UpdateQuiz(string questionpackageId, UpdateQuestionPackageRequest request);
+        Task<bool> UpdateOverallSyllabus(string id,UpdateOverallSyllabus updateOverallSyllabus);
     }
 }
