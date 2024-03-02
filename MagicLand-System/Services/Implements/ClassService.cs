@@ -1076,9 +1076,9 @@ namespace MagicLand_System.Services.Implements
                     LeastNumberStudent = rq.LeastNumberStudent,
                     LimitNumberStudent = rq.LimitNumberStudent,
                     Method = rq.Method,
-                    RoomId = roomId,
                     ScheduleRequests = scheduleRequests,
                     StartDate = date.Value,
+                    RoomId = roomId,
                 };
                 var isSuccess = await CreateNewClass(myRequest);
                 if (!isSuccess)

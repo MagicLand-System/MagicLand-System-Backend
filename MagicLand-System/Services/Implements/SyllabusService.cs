@@ -125,7 +125,8 @@ namespace MagicLand_System.Services.Implements
             {
                 Id = new Guid(),
                 SyllabusId = newSyllabusId,
-                URL = mat,
+                URL = mat.URL,
+                Name = mat.FileName,
             }).ToList();
 
             await _unitOfWork.GetRepository<Syllabus>().InsertAsync(syllabus);
@@ -630,7 +631,8 @@ namespace MagicLand_System.Services.Implements
             {
                 Id = new Guid(),
                 SyllabusId = syllabus.Id,
-                URL = mat,
+                URL = mat.URL,
+                Name = mat.FileName,
             }).ToList();
 
             await _unitOfWork.GetRepository<Material>().InsertRangeAsync(syllabus.Materials);
@@ -965,6 +967,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     MaterialId = material.Id,
                     Url = material.URL,
+                    FileName = material.Name,
                 });
             }
             return result;

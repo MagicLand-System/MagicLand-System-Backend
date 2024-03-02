@@ -5,8 +5,8 @@ namespace MagicLand_System.PayLoad.Request.Class
     public class CreateClassRequest
     {
         public Guid CourseId { get; set; }
-        public Guid RoomId { get; set; }
         public Guid LecturerId { get; set; }
+        public Guid RoomId { get; set; }    
         public DateTime StartDate { get; set; } 
         public string Method {  get; set; }
         [Required(ErrorMessage = "Limit number student is missing")]
