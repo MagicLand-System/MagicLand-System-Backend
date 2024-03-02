@@ -1367,6 +1367,43 @@ namespace MagicLand_System.Services.Implements
             }
             return false;   
         }
+
+        public async Task<bool> UpdateTopic(string id, UpdateTopicRequest request)
+        {
+            var topic = await _unitOfWork.GetRepository<Topic>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            if (topic == null) { return false; }
+            if(request != null)
+            {
+                if (!request.TopicName.IsNullOrEmpty())
+                {
+                    topic.Name = request.TopicName;
+                } 
+                _unitOfWork.GetRepository<Topic>().UpdateAsync(topic);
+                bool isSuc = await _unitOfWork.CommitAsync() > 0;
+            }
+            return false;
+        }
+
+        public async Task<bool> UpdateSession(string id, UpdateSessionRequest request)
+        {
+            var sessionDescription = await _unitOfWork.GetRepository<SessionDescription>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            if(sessionDescription == null) { return false; }    
+            if (request != null)
+            {
+                if (!request.Content.IsNullOrEmpty())
+                {
+                    sessionDescription.Content = request.Content;
+                }
+                if (!request.Content.IsNullOrEmpty())
+                {
+                    sessionDescription.Detail = request.Detail;
+                }
+                _unitOfWork.GetRepository<SessionDescription>().UpdateAsync(sessionDescription);
+                bool isSuc = await _unitOfWork.CommitAsync() > 0;
+                return isSuc;
+            }
+            return false;
+        }
     }
 
 

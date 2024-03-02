@@ -27,5 +27,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<SyllabusResponseV2>> GetStaffSyllabusCanInsert(string? keyword);
         Task<bool> UpdateQuiz(string questionpackageId, UpdateQuestionPackageRequest request);
         Task<bool> UpdateOverallSyllabus(string id,UpdateOverallSyllabus updateOverallSyllabus);
+        Task<bool> UpdateTopic(string id,UpdateTopicRequest request);
+        Task<bool> UpdateSession(string id,UpdateSessionRequest request);
     }
 }

@@ -188,5 +188,25 @@ namespace MagicLand_System.Controllers
             }
             return Ok("Update Success");
         }
+        [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateTopic)]
+        public async Task<IActionResult> UpdateTopic([FromRoute] string topicId, UpdateTopicRequest request)
+        {
+            var result = await _syllabusService.UpdateTopic(topicId, request);
+            if (!result)
+            {
+                return BadRequest("Update failed");
+            }
+            return Ok("Update Success");
+        }
+        //[HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateSession)]
+        //public async Task<IActionResult> UpdateSession([FromRoute] string descriptionId, UpdateSessionRequest request)
+        //{
+        //    var result = await _syllabusService.UpdateSession(descriptionId, request);
+        //    if (!result)
+        //    {
+        //        return BadRequest("Update failed");
+        //    }
+        //    return Ok("Update Success");
+        //}
     }
 }
