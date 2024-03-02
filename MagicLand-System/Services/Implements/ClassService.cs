@@ -334,6 +334,10 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
+            if(result != null)
+            {
+                result = result.OrderByDescending(x => x.CreatedDate).ToList();
+            }
             if (searchString == null && status == null)
             {
                 return result;

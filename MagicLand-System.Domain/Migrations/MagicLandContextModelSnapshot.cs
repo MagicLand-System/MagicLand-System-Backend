@@ -264,6 +264,21 @@ namespace MagicLand_System.Domain.Migrations
                     b.ToTable("FlashCard", (string)null);
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.LecturerField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LecturerField", (string)null);
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Material", b =>
                 {
                     b.Property<Guid>("Id")
@@ -909,6 +924,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("LecturerFieldId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("PersonalWalletId")
                         .HasColumnType("uniqueidentifier");
 
@@ -923,6 +941,8 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasIndex("CartId")
                         .IsUnique()
                         .HasFilter("[CartId] IS NOT NULL");
+
+                    b.HasIndex("LecturerFieldId");
 
                     b.HasIndex("PersonalWalletId")
                         .IsUnique()
@@ -1313,6 +1333,11 @@ namespace MagicLand_System.Domain.Migrations
                         .HasForeignKey("MagicLand_System.Domain.Models.User", "CartId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("MagicLand_System.Domain.Models.LecturerField", "LecturerField")
+                        .WithMany("Users")
+                        .HasForeignKey("LecturerFieldId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MagicLand_System.Domain.Models.PersonalWallet", "PersonalWallet")
                         .WithOne("User")
                         .HasForeignKey("MagicLand_System.Domain.Models.User", "PersonalWalletId");
@@ -1325,6 +1350,8 @@ namespace MagicLand_System.Domain.Migrations
                         .HasConstraintName("FK_USER_ROLE");
 
                     b.Navigation("Cart");
+
+                    b.Navigation("LecturerField");
 
                     b.Navigation("PersonalWallet");
 
@@ -1392,6 +1419,11 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.FlashCard", b =>
                 {
                     b.Navigation("SideFlashCards");
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.LecturerField", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PersonalWallet", b =>

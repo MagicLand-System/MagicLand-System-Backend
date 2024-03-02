@@ -40,7 +40,9 @@ namespace MagicLand_System.Domain
         public DbSet<Question> Questions { get; set; }
         public DbSet<MutipleChoiceAnswer> MutipleChoiceAnswers { get; set; }
         public DbSet<FlashCard> FlashCards { get; set; }    
-        public DbSet<SideFlashCard> SideFlashCards { get; set; }    
+        public DbSet<SideFlashCard> SideFlashCards { get; set; }
+        public DbSet<LecturerField> LecturerFields { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -68,6 +70,7 @@ namespace MagicLand_System.Domain
                 entity.Property(entity => entity.FullName).HasMaxLength(255);
                 entity.Property(e => e.DateOfBirth).HasDefaultValueSql("getutcdate()");
                 entity.HasOne(e => e.Role).WithMany(r => r.Accounts).HasForeignKey(e => e.RoleId).HasConstraintName("FK_USER_ROLE");
+                entity.HasOne(e => e.LecturerField).WithMany(e => e.Users).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Role>(entity =>
             {
@@ -264,6 +267,11 @@ namespace MagicLand_System.Domain
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.FlashCard).WithMany(e => e.SideFlashCards).HasForeignKey(e => e.FlashCardId).OnDelete(DeleteBehavior.Cascade);
 
+            });
+            modelBuilder.Entity<LecturerField>(entity =>
+            {
+                entity.ToTable("LecturerField");
+                entity.HasKey(e => e.Id);
             });
         }
     }
