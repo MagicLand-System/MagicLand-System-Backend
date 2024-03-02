@@ -208,58 +208,59 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> CheckOutCartItemByVnpay([FromBody] List<Guid> cartItemIdList)
         {
 
-            var result = await ValidCartItem(cartItemIdList);
-            var items = result as OkObjectResult;
+            //var result = await ValidCartItem(cartItemIdList);
+            //var items = result as OkObjectResult;
 
-            if (items == null)
-            {
-                return result;
-            }
+            //if (items == null)
+            //{
+            //    return result;
+            //}
 
-            var itemGenerates = new List<ItemGenerate>();
+            //var itemGenerates = new List<ItemGenerate>();
 
-            foreach (var item in (List<CartItemResponse>)items.Value!)
-            {
-                var allStudentSchedules = new List<StudentScheduleResponse>();
+            //foreach (var item in (List<CartItemResponse>)items.Value!)
+            //{
+            //    var allStudentSchedules = new List<StudentScheduleResponse>();
 
-                foreach (var task in item!.Students.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.StudentId.ToString())))
-                {
-                    var schedules = await task;
-                    allStudentSchedules.AddRange(schedules);
+            //    foreach (var task in item!.Students.Select(async stu => await _studentService
+            //    .GetScheduleOfStudent(stu.StudentId.ToString())))
+            //    {
+            //        var schedules = await task;
+            //        allStudentSchedules.AddRange(schedules);
 
-                }
+            //    }
 
-                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
-                {
-                    return BadRequest(new ErrorResponse
-                    {
-                        Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
-                        StatusCode = StatusCodes.Status500InternalServerError,
-                        TimeStamp = DateTime.Now,
-                    });
-                }
+            //    if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
+            //    {
+            //        return BadRequest(new ErrorResponse
+            //        {
+            //            Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
+            //            StatusCode = StatusCodes.Status500InternalServerError,
+            //            TimeStamp = DateTime.Now,
+            //        });
+            //    }
 
-                itemGenerates.Add(new ItemGenerate
-                {
-                    CartItemId = item.ItemId,
-                    ClassId = item.Class.ClassId,
-                    StudentIdList = item.Students.Select(stu => stu.StudentId).ToList(),
-                });
+            //    itemGenerates.Add(new ItemGenerate
+            //    {
+            //        CartItemId = item.CartItemId,
+            //        ClassId = item.Class.ClassId,
+            //        StudentIdList = item.Students.Select(stu => stu.StudentId).ToList(),
+            //    });
 
-            }
-            await _classService.ValidateScheduleAmongClassesAsync(itemGenerates.Select(ig => ig.ClassId).ToList());
+            //}
+            //await _classService.ValidateScheduleAmongClassesAsync(itemGenerates.Select(ig => ig.ClassId).ToList());
 
-            var transResult = await _walletTransactionService.GeneratePaymentTransAsync(itemGenerates);
-            var linkResult = _gatewayService.GetLinkGateway(transResult.Item2, transResult.Item1, "Register Students Into Classes From Cart");
+            //var transResult = await _walletTransactionService.GeneratePaymentTransAsync(itemGenerates);
+            //var linkResult = _gatewayService.GetLinkGateway(transResult.Item2, transResult.Item1, "Register Students Into Classes From Cart");
 
-            var response = new GatewayResponseTxnCode
-            {
-                TxnRefCode = transResult.Item1,
-                PaymentGatewayUrl = linkResult,
-            };
+            //var response = new GatewayResponseTxnCode
+            //{
+            //    TxnRefCode = transResult.Item1,
+            //    PaymentGatewayUrl = linkResult,
+            //};
 
-            return Ok(response);
+            //return Ok(response);
+            return Ok("In Fixing");
         }
 
 
@@ -286,85 +287,87 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> CheckOutCartItem([FromBody] List<Guid> cartItemIdList)
         {
-            var result = await ValidCartItem(cartItemIdList);
-            var items = result as OkObjectResult;
+            //var result = await ValidCartItem(cartItemIdList);
+            //var items = result as OkObjectResult;
 
-            if (items == null)
-            {
-                return result;
-            }
+            //if (items == null)
+            //{
+            //    return result;
+            //}
 
-            var requests = new List<CheckoutRequest>();
+            //var requests = new List<CheckoutRequest>();
 
-            foreach (var item in (List<CartItemResponse>)items.Value!)
-            {
-                var allStudentSchedules = new List<StudentScheduleResponse>();
+            //foreach (var item in (List<CartItemResponse>)items.Value!)
+            //{
+            //    var allStudentSchedules = new List<StudentScheduleResponse>();
 
-                foreach (var task in item!.Students.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.StudentId.ToString())))
-                {
-                    var schedules = await task;
-                    allStudentSchedules.AddRange(schedules);
+            //    foreach (var task in item!.Students.Select(async stu => await _studentService
+            //    .GetScheduleOfStudent(stu.StudentId.ToString())))
+            //    {
+            //        var schedules = await task;
+            //        allStudentSchedules.AddRange(schedules);
 
-                }
+            //    }
 
-                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
-                {
-                    return BadRequest(new ErrorResponse
-                    {
-                        Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
-                        StatusCode = StatusCodes.Status500InternalServerError,
-                        TimeStamp = DateTime.Now,
-                    });
-                }
+            //    if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
+            //    {
+            //        return BadRequest(new ErrorResponse
+            //        {
+            //            Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
+            //            StatusCode = StatusCodes.Status500InternalServerError,
+            //            TimeStamp = DateTime.Now,
+            //        });
+            //    }
 
-                var request = new CheckoutRequest
-                {
-                    StudentIdList = item.Students.Select(s => s.StudentId).ToList(),
-                    ClassId = item.Class.ClassId,
-                };
+            //    var request = new CheckoutRequest
+            //    {
+            //        StudentIdList = item.Students.Select(s => s.StudentId).ToList(),
+            //        ClassId = item.Class.ClassId,
+            //    };
 
-                requests.Add(request);
+            //    requests.Add(request);
 
-            }
-            await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
-            var response = await _walletTransactionService.CheckoutAsync(requests);
-            await _cartService.DeleteItemInCartOfCurrentParentAsync(cartItemIdList);
+            //}
+            //await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
+            //var response = await _walletTransactionService.CheckoutAsync(requests);
+            //await _cartService.DeleteItemInCartOfCurrentParentAsync(cartItemIdList);
 
-            return Ok(response);
+            //return Ok(response);
+            return Ok("In Fishing");
         }
 
 
         private async Task<IActionResult> ValidCartItem(List<Guid> cartItemIds)
         {
-            var cart = await _cartService.GetDetailCurrentParrentCart();
+            //var cart = await _cartService.GetDetailCurrentParrentCart();
 
-            var invalidItem = cartItemIds.Except(cart.CartItems.Select(s => s.ItemId)).ToList();
-            if (invalidItem.Any())
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Id [{string.Join(", ", invalidItem.ToArray())}] Của Item Không Tồn Tại Trong Giỏ Hàng",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
+            //var invalidItem = cartItemIds.Except(cart.Items.Select(s => s.CartItemId)).ToList();
+            //if (invalidItem.Any())
+            //{
+            //    return BadRequest(new ErrorResponse
+            //    {
+            //        Error = $"Id [{string.Join(", ", invalidItem.ToArray())}] Của Item Không Tồn Tại Trong Giỏ Hàng",
+            //        StatusCode = StatusCodes.Status400BadRequest,
+            //        TimeStamp = DateTime.Now,
+            //    });
+            //}
 
-            var items = cartItemIds.Select(ci => cart.CartItems.Single(c => c.ItemId == ci)).ToList();
+            //var items = cartItemIds.Select(ci => cart.Items.Single(c => c.CartItemId == ci)).ToList();
 
-            var emptyStudentItem = items.Where(x => x.Students.Count() == 0 || x.Class == null).ToList();
-            if (emptyStudentItem.Count() > 0)
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = "Có Một Hoặc Nhiều Item Của Giỏ Hàng Không Có Lớp Hoặc Học Sinh Đăng Ký " +
-                    $"[{string.Join(", ", emptyStudentItem.Select(x => x.ItemId).ToList())}]",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
+            //var emptyStudentItem = items.Where(x => x.Students.Count() == 0 || x.Class == null).ToList();
+            //if (emptyStudentItem.Count() > 0)
+            //{
+            //    return BadRequest(new ErrorResponse
+            //    {
+            //        Error = "Có Một Hoặc Nhiều Item Của Giỏ Hàng Không Có Lớp Hoặc Học Sinh Đăng Ký " +
+            //        $"[{string.Join(", ", emptyStudentItem.Select(x => x.CartItemId).ToList())}]",
+            //        StatusCode = StatusCodes.Status400BadRequest,
+            //        TimeStamp = DateTime.Now,
+            //    });
+            //}
 
-            return Ok(items);
+            //return Ok(items);
+            return Ok("In Fixing");
         }
         private async Task<IActionResult> ValidRequest(Guid classId, List<Guid> studentIds)
         {

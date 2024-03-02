@@ -25,7 +25,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 responses.Add(new ScheduleWithoutLectureResponse
                 {
-                    Id = schedule.Id,
+                    ScheduleId = schedule.Id,
                     DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                     Date = schedule.Date,
                     Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
@@ -72,7 +72,11 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     ClassId = cls.Id,
                     ClassCode = cls.ClassCode!,
+                    ClassName = cls.Course!.Name!,
+                    ClassSubject = cls.Course!.SubjectName!,
+                    Address = cls.City + " " + cls.District + " " + cls.Street,
                     Method = cls.Method!,
+                    ScheduleId = schedule.Id,
                     DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                     Date = schedule.Date,
                     Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
@@ -99,7 +103,7 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     var response = new ScheduleResWithSession
                     {
-                        Id = schedule.Id,
+                        ScheduleId = schedule.Id,
                         DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                         Date = schedule.Date,
                         Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
@@ -128,7 +132,7 @@ namespace MagicLand_System.Mappers.Custom
 
                         var response = new ScheduleResWithSession
                         {
-                            Id = schedule.Id,
+                            ScheduleId = schedule.Id,
                             DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                             Date = schedule.Date,
                             Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),

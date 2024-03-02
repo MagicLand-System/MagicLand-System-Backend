@@ -3,8 +3,9 @@
     public class ClassResponse
     {
         public Guid ClassId { get; set; }
-        public string? ClassCode { get; set; }
-        public string? ClassSubject { get; set; }
+        public string? ClassCode { get; set; } = string.Empty;
+        public string? ClassName { get; set; } = string.Empty;
+        public string? ClassSubject { get; set; } = string.Empty;
         public Guid CourseId { get; set; }
         public double? CoursePrice { get; set; }
         public DateTime StartDate { get; set; }

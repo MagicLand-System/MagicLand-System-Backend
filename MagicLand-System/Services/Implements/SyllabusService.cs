@@ -14,10 +14,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Org.BouncyCastle.Crypto.Engines;
 using System.Globalization;
-using System.Xml;
-using static MagicLand_System.Constants.ApiEndpointConstant;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -27,6 +24,7 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
+        #region thanh_lee code
         public async Task<bool> AddSyllabus(OverallSyllabusRequest request)
         {
             if (request != null)
@@ -50,7 +48,7 @@ namespace MagicLand_System.Services.Implements
         private async Task<Syllabus> GenerateSyllabus(OverallSyllabusRequest request)
         {
             var syllabusesSubjectCode = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(selector: x => x.SubjectCode);
-            var numberversion = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Name.ToLower().Trim().Equals(request.SyllabusName));
+            var numberversion = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Name!.ToLower().Trim().Equals(request.SyllabusName));
             var numberCount = 1;
             if (numberversion != null)
             {
@@ -390,7 +388,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        public async Task<(SyllabusResponse?, SyllabusWithScheduleResponse?)> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId)
+        public async Task<(SyllabusWithInformationResponse?, SyllabusWithScheduleResponse?)> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId)
         {
             var syllabus = await ValidateSyllabus(courseId, true);
 
@@ -401,14 +399,13 @@ namespace MagicLand_System.Services.Implements
                 return (default, SyllabusCustomMapper.fromSyllabusAndClassToSyllabusWithSheduleResponse(syllabus, cls));
             }
 
-            return (_mapper.Map<SyllabusResponse>(syllabus), default);
+            return (_mapper.Map<SyllabusWithInformationResponse>(syllabus), default);
         }
 
         private async Task<Class> ValidateClassForSchedule(Guid courseId, Guid classId)
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
                 include: x => x.Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Slot)
-               .Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Room)
                .Include(x => x.Course)!);
 
             if (cls == null || cls.CourseId != courseId)
@@ -450,10 +447,7 @@ namespace MagicLand_System.Services.Implements
                 syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == id,
                 include: x => x.Include(x => x.Materials)
                .Include(x => x.SyllabusCategory)
-               .Include(x => x.ExamSyllabuses!)
-               .Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
-               .ThenInclude(ses => ses.SessionDescriptions)
-               .Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.QuestionPackage!));
+               .Include(x => x.ExamSyllabuses!));
             }
             else
             {
@@ -461,22 +455,25 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Materials)
                .Include(x => x.Course)
                .Include(x => x.SyllabusCategory)
-               .Include(x => x.ExamSyllabuses!)
-               .Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
-               .ThenInclude(ses => ses.SessionDescriptions)
-               .Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.QuestionPackage!));
+               .Include(x => x.ExamSyllabuses!));
             }
 
+            syllabus.Topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
+            predicate: x => x.SyllabusId == syllabus.Id,
+            orderBy: x => x.OrderBy(x => x.OrderNumber),
+            include: x => x.Include(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+
             return syllabus;
+
         }
 
-        public async Task<(SyllabusResponse?, SyllabusWithCourseResponse?)> LoadSyllabusByIdAsync(Guid id)
+        public async Task<(SyllabusWithInformationResponse?, SyllabusWithCourseResponse?)> LoadSyllabusByIdAsync(Guid id)
         {
             var syllabus = await ValidateSyllabus(id, false);
 
             if (syllabus.Course == null)
             {
-                return (_mapper.Map<SyllabusResponse>(syllabus), default);
+                return (_mapper.Map<SyllabusWithInformationResponse>(syllabus), default);
             }
 
             return (default, _mapper.Map<SyllabusWithCourseResponse>(syllabus));
@@ -491,21 +488,228 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<List<Syllabus>> FetchAllSyllabus()
         {
-            var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(include: x => x.Include(x => x.Materials)
+            var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(orderBy: x => x.OrderBy(x => x.UpdateTime),
+               include: x => x.Include(x => x.Materials)
                .Include(x => x.SyllabusCategory)
-               .Include(x => x.ExamSyllabuses!)
-               .Include(x => x.Course)
-               .Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
-               .ThenInclude(ses => ses.SessionDescriptions)
-               .Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.QuestionPackage!));
+               .Include(x => x.ExamSyllabuses!));
 
-            foreach (var session in syllabuses.SelectMany(syll => syll.Topics!.SelectMany(tp => tp.Sessions!).ToList()).ToList())
+            foreach (var syll in syllabuses)
             {
-                session.QuestionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id);
+                syll.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
+
+                syll.Topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
+                predicate: x => x.SyllabusId == syll.Id,
+                orderBy: x => x.OrderBy(x => x.OrderNumber),
+                include: x => x.Include(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+
+                foreach (var session in syll.Topics.SelectMany(tp => tp.Sessions!))
+                {
+                    session.QuestionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id);
+                }
             }
-        
+
             return syllabuses.ToList();
         }
+
+        public async Task<List<ExamWithQuizResponse>> LoadQuizzesAsync()
+        {
+            var quizzesResponse = new List<ExamWithQuizResponse>();
+
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+               include: x => x.Include(x => x.Syllabus!)
+              .ThenInclude(syll => syll.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
+              .Include(x => x.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!));
+
+            await GenerateQuizzesResponse(quizzesResponse, courses);
+
+            return quizzesResponse;
+        }
+
+        private async Task GenerateQuizzesResponse(List<ExamWithQuizResponse> quizzesResponse, ICollection<Course> courses)
+        {
+            foreach (var course in courses)
+            {
+                if (course.Syllabus == null)
+                {
+                    continue;
+                }
+
+                var sessions = course.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList();
+
+                foreach (var session in sessions)
+                {
+                    await GenerateQuizzes(quizzesResponse, course, session);
+                }
+            }
+        }
+
+        private async Task GenerateQuizzes(List<ExamWithQuizResponse> quizzesResponse, Course course, Session session)
+        {
+            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
+                include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
+                .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
+
+            if (questionPackage == null)
+            {
+                return;
+            }
+
+            var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
+            var quizResponse = QuizCustomMapper.fromSyllabusItemsToQuizWithQuestionResponse(session.NoSession, questionPackage, exam!);
+            quizResponse.SessionId = session.Id;
+            quizResponse.CourseId = course.Id;
+            quizResponse.Date = "Cần Truy Suất Qua Lớp";
+
+            quizzesResponse.Add(quizResponse);
+
+            //GenerateQuizMutipleChoice(quizzesResponse, course, session, questionPackage);
+
+            //GenerateQuizFlashCard(quizFlashCards, course, session, questionPackage);
+        }
+        #region 
+        //private void GenerateQuizFlashCard(List<QuizFlashCardResponse> quizFlashCards, Course course, Session session, QuestionPackage questionPackage)
+        //{
+        //    if (questionPackage.Questions!.SelectMany(quest => quest.FlashCards!).Any())
+        //    {
+        //        var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => exam.ExamOrder == questionPackage.PackageOrder);
+        //        var responseFlashCard = QuizCustomMapper.fromSyllabusItemsToQuizFlashCardResponse(session.NoSession, questionPackage, exam!);
+        //        responseFlashCard.SessionId = session.Id;
+        //        responseFlashCard.CourseId = course.Id;
+
+        //        quizFlashCards.Add(responseFlashCard);
+        //    }
+        //}
+
+        //private void GenerateQuizMutipleChoice(List<QuizResponse> quizzesResponse, Course course, Session session, QuestionPackage questionPackage)
+        //{
+        //    if (questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!).Any())
+        //    {
+        //        var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => exam.ExamOrder == questionPackage.PackageOrder);
+        //        var responseMutipleChoice = QuizCustomMapper.fromSyllabusItemsToQuizMutipleChoiceResponse(session.NoSession, questionPackage, exam!);
+        //        responseMutipleChoice.SessionId = session.Id;
+        //        responseMutipleChoice.CourseId = course.Id;
+
+        //        quizzesResponse.Add(responseMutipleChoice);
+        //    }
+        //}
+        #endregion
+        public async Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id)
+        {
+            //var quizMultipleChoices = new List<QuizMultipleChoiceResponse>();
+            //var quizFlashCards = new List<QuizFlashCardResponse>();
+
+            var quizzesResponse = new List<ExamWithQuizResponse>();
+
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                predicate: x => x.Id == id,
+                include: x => x.Include(x => x.Syllabus!).ThenInclude(syll => syll.Topics!.OrderBy(tp => tp.OrderNumber))
+               .ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
+               .Include(x => x.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!));
+
+            if (!courses.Any())
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại Hoặc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
+            }
+
+            await GenerateQuizzesResponse(quizzesResponse, courses);
+
+            return quizzesResponse;
+        }
+
+        private async Task<Class> ValidateClass(Guid id)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.Id == id, include: x => x.Include(x => x.Course).ThenInclude(c => c!.Syllabus)
+                .ThenInclude(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!
+                .Include(x => x.Course).ThenInclude(c => c!.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!)
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+
+            if (cls == null || cls.Course!.Syllabus == null)
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Lớp Học Không Tồn Tại Hoặc Thuộc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
+            }
+
+            if (cls.Status == ClassStatusEnum.CANCELED.ToString())
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Lớp Học Đã Hủy Không Thể Truy Suất", StatusCodes.Status400BadRequest);
+            }
+
+            return cls;
+        }
+
+        private async Task GenerateExamWithDate(List<ExamResponse> examsResponse, Class cls, Session session)
+        {
+            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
+            include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
+           .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
+
+            if (questionPackage == null)
+            {
+                return;
+            }
+
+            var exam = cls.Course!.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
+            var examResponse = QuizCustomMapper.fromSyllabusItemsToExamResponse(session.NoSession, questionPackage, exam!);
+
+            examResponse.SessionId = session.Id;
+            examResponse.CourseId = cls.Course.Id;
+            examResponse.Date = cls.Schedules.ToList()[session.NoSession - 1].Date.ToString();
+
+            examsResponse.Add(examResponse);
+        }
+
+        public async Task<List<ExamResponse>> LoadExamOfClassByClassIdAsync(Guid id)
+        {
+            var examsResponse = new List<ExamResponse>();
+
+            var cls = await ValidateClass(id);
+
+            foreach (var session in cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
+            {
+                await GenerateExamWithDate(examsResponse, cls, session);
+            }
+
+            return examsResponse;
+        }
+
+        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id, int? examPart)
+        {
+            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Syllabus!));
+            if (exam == null)
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+            if (exam.Method == "Offline")
+            {
+                return default!;
+            }
+
+            var sessions = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Id == exam.SyllabusId, include: x => x.Include(x => x.Topics!)
+            .ThenInclude(tp => tp.Sessions!))).SelectMany(syll => syll.Topics!).SelectMany(tp => tp.Sessions!).ToList();
+
+            var questionPackage = new QuestionPackage();
+            foreach (var ses in sessions)
+            {
+                var qp = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id,
+                    include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
+                   .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
+
+                if (qp != null && StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(qp.ContentName!))
+                {
+                    int part = qp.Type == "flashcard" ? 2 : 1;
+                    examPart ??= 1;
+
+                    if (examPart == part)
+                    {
+                        questionPackage = qp;
+                    }
+                }
+            }
+
+            return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
+        }
+        #endregion
+        #region thuong code
         public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword = null)
         {
             var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(include: x => x.Include<Syllabus, Course>(x => x.Course));
@@ -543,7 +747,7 @@ namespace MagicLand_System.Services.Implements
             {
                 responses = (responses.Where(x => (x.SyllabusName.ToLower().Trim().Contains(keyword.ToLower().Trim()) || x.SubjectCode.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
             }
-            if(responses != null)
+            if (responses != null)
             {
                 responses = (responses.OrderByDescending(x => x.UpdateTime)).ToList();
             }
@@ -707,206 +911,6 @@ namespace MagicLand_System.Services.Implements
             await GenerateExerciseItems(request.QuestionPackageRequests!, sessionInsert);
         }
 
-
-        public async Task<List<ExamWithQuizResponse>> LoadQuizzesAsync()
-        {
-            var quizzesResponse = new List<ExamWithQuizResponse>();
-
-            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
-               include: x => x.Include(x => x.Syllabus!)
-              .ThenInclude(syll => syll.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
-              .Include(x => x.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!));
-
-            await GenerateQuizzesResponse(quizzesResponse, courses);
-
-            return quizzesResponse;
-        }
-
-        private async Task GenerateQuizzesResponse(List<ExamWithQuizResponse> quizzesResponse, ICollection<Course> courses)
-        {
-            foreach (var course in courses)
-            {
-                if (course.Syllabus == null)
-                {
-                    continue;
-                }
-
-                var sessions = course.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList();
-
-                foreach (var session in sessions)
-                {
-                    await GenerateQuizzes(quizzesResponse, course, session);
-                }
-            }
-        }
-
-        private async Task GenerateQuizzes(List<ExamWithQuizResponse> quizzesResponse, Course course, Session session)
-        {
-            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
-                include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
-                .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
-
-            if (questionPackage == null)
-            {
-                return;
-            }
-
-            var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
-            var quizResponse = QuizCustomMapper.fromSyllabusItemsToQuizWithQuestionResponse(session.NoSession, questionPackage, exam!);
-            quizResponse.SessionId = session.Id;
-            quizResponse.CourseId = course.Id;
-            quizResponse.Date = "Cần Truy Suất Qua Lớp";
-
-            quizzesResponse.Add(quizResponse);
-
-            //GenerateQuizMutipleChoice(quizzesResponse, course, session, questionPackage);
-
-            //GenerateQuizFlashCard(quizFlashCards, course, session, questionPackage);
-        }
-
-        //private void GenerateQuizFlashCard(List<QuizFlashCardResponse> quizFlashCards, Course course, Session session, QuestionPackage questionPackage)
-        //{
-        //    if (questionPackage.Questions!.SelectMany(quest => quest.FlashCards!).Any())
-        //    {
-        //        var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => exam.ExamOrder == questionPackage.PackageOrder);
-        //        var responseFlashCard = QuizCustomMapper.fromSyllabusItemsToQuizFlashCardResponse(session.NoSession, questionPackage, exam!);
-        //        responseFlashCard.SessionId = session.Id;
-        //        responseFlashCard.CourseId = course.Id;
-
-        //        quizFlashCards.Add(responseFlashCard);
-        //    }
-        //}
-
-        //private void GenerateQuizMutipleChoice(List<QuizResponse> quizzesResponse, Course course, Session session, QuestionPackage questionPackage)
-        //{
-        //    if (questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!).Any())
-        //    {
-        //        var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => exam.ExamOrder == questionPackage.PackageOrder);
-        //        var responseMutipleChoice = QuizCustomMapper.fromSyllabusItemsToQuizMutipleChoiceResponse(session.NoSession, questionPackage, exam!);
-        //        responseMutipleChoice.SessionId = session.Id;
-        //        responseMutipleChoice.CourseId = course.Id;
-
-        //        quizzesResponse.Add(responseMutipleChoice);
-        //    }
-        //}
-
-        public async Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id)
-        {
-            //var quizMultipleChoices = new List<QuizMultipleChoiceResponse>();
-            //var quizFlashCards = new List<QuizFlashCardResponse>();
-
-            var quizzesResponse = new List<ExamWithQuizResponse>();
-
-            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
-                predicate: x => x.Id == id,
-                include: x => x.Include(x => x.Syllabus!).ThenInclude(syll => syll.Topics!.OrderBy(tp => tp.OrderNumber))
-               .ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
-               .Include(x => x.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!));
-
-            if (!courses.Any())
-            {
-                throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại Hoặc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
-            }
-
-            await GenerateQuizzesResponse(quizzesResponse, courses);
-
-            return quizzesResponse;
-        }
-
-        private async Task<Class> ValidateClass(Guid id)
-        {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
-                predicate: x => x.Id == id, include: x => x.Include(x => x.Course).ThenInclude(c => c!.Syllabus)
-                .ThenInclude(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!
-                .Include(x => x.Course).ThenInclude(c => c!.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)));
-
-            if (cls == null || cls.Course!.Syllabus == null)
-            {
-                throw new BadHttpRequestException($"Id [{id}] Của Lớp Học Không Tồn Tại Hoặc Thuộc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
-            }
-
-            if (cls.Status == ClassStatusEnum.CANCELED.ToString())
-            {
-                throw new BadHttpRequestException($"Id [{id}] Của Lớp Học Đã Hủy Không Thể Truy Suất", StatusCodes.Status400BadRequest);
-            }
-
-            return cls;
-        }
-
-        private async Task GenerateExamWithDate(List<ExamResponse> examsResponse, Class cls, Session session)
-        {
-            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
-            include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
-           .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
-
-            if (questionPackage == null)
-            {
-                return;
-            }
-
-            var exam = cls.Course!.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
-            var examResponse = QuizCustomMapper.fromSyllabusItemsToExamResponse(session.NoSession, questionPackage, exam!);
-
-            examResponse.SessionId = session.Id;
-            examResponse.CourseId = cls.Course.Id;
-            examResponse.Date = cls.Schedules.ToList()[session.NoSession - 1].Date.ToString();
-
-            examsResponse.Add(examResponse);
-        }
-
-        public async Task<List<ExamResponse>> LoadExamOfClassByClassIdAsync(Guid id)
-        {
-            var examsResponse = new List<ExamResponse>();
-
-            var cls = await ValidateClass(id);
-
-            foreach (var session in cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
-            {
-                await GenerateExamWithDate(examsResponse, cls, session);
-            }
-
-            return examsResponse;
-        }
-
-        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id, int examPart)
-        {
-            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Syllabus!));
-            if (exam == null)
-            {
-                throw new BadHttpRequestException($"Id [{id}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
-            }
-            if (exam.Method == "Offline")
-            {
-                return default!;
-            }
-
-            var sessions = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Id == exam.SyllabusId, include: x => x.Include(x => x.Topics!)
-            .ThenInclude(tp => tp.Sessions!))).SelectMany(syll => syll.Topics!).SelectMany(tp => tp.Sessions!).ToList();
-
-            var questionPackage = new QuestionPackage();
-            foreach (var ses in sessions)
-            {
-                var qp = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id,
-                    include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
-                   .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
-
-                if (qp != null && StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(qp.ContentName!))
-                {
-                    int part = 1;
-                    if (qp.Type == "flashcard")
-                    {
-                        part = 2;
-                    }
-                    if (examPart == part)
-                    {
-                        questionPackage = qp;
-                    }
-                }
-            }
-
-            return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
-        }
         public async Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
@@ -1211,10 +1215,10 @@ namespace MagicLand_System.Services.Implements
                 return new List<SyllabusResponseV2>();
             }
             List<SyllabusResponseV2> filterSyllabus = new List<SyllabusResponseV2>();
-            foreach(var syl in allSyllabus)
+            foreach (var syl in allSyllabus)
             {
                 var ix = syl.CourseName.Trim().ToLower().Equals("undefined");
-                if(syl.CourseName.Trim().ToLower().Equals("undefined")  && (syl.EffectiveDate < DateTime.Now))
+                if (syl.CourseName.Trim().ToLower().Equals("undefined") && (syl.EffectiveDate < DateTime.Now))
                 {
                     filterSyllabus.Add(syl);
                 }
@@ -1237,19 +1241,19 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"không tìm thấy question package có id {questionpackageId}", StatusCodes.Status400BadRequest);
             }
-            if(request.ContentName != null)
+            if (request.ContentName != null)
             {
                 questionPackage.ContentName = request.ContentName;
             }
-            if(request.Type != null)
+            if (request.Type != null)
             {
                 questionPackage.Type = request.Type;
             }
-            if(request.Score != null)
+            if (request.Score != null)
             {
                 questionPackage.Score = request.Score;
             }
-            if(request.Title != null)
+            if (request.Title != null)
             {
                 questionPackage.Title = request.Title;
             }
@@ -1287,7 +1291,7 @@ namespace MagicLand_System.Services.Implements
             await _unitOfWork.CommitAsync();
             return true;
         }
+        #endregion
     }
-
 
 }

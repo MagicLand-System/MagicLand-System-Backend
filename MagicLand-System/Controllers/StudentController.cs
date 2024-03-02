@@ -106,7 +106,6 @@ namespace MagicLand_System.Controllers
         }
 
 
-
         #region document API update student
         /// <summary>
         ///  Cho Phép Phụ Huynh Cập Nhập Học Sinh

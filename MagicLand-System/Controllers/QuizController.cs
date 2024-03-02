@@ -117,7 +117,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int examPart)
+        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int? examPart)
         {
             var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, examPart);
             if(responses == default)

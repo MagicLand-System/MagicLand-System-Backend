@@ -3,9 +3,10 @@
     public class LectureScheduleResponse : ScheduleWithoutLectureResponse
     {
         public required Guid ClassId { get; set; }
+        public required string ClassName { get; set; }
+        public required string ClassSubject { get; set; }
         public required string ClassCode { get; set; }
         public required string Method { get; set; }
-        //public Guid SessionId { get; set; } = default;
-        //public int NumberSession { get; set; } = 0;
+        public required string Address { get; set; }
     }
 }

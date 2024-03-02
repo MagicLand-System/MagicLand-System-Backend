@@ -9,7 +9,7 @@ namespace MagicLand_System.Mappers.Syllabuses
     {
         public SyllabusMapper()
         {
-            CreateMap<Syllabus, SyllabusResponse>()
+            CreateMap<Syllabus, SyllabusWithInformationResponse>()
             .ForMember(dest => dest.SyllabusId, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.SyllabusName, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.SyllabusCategory!.Name))
@@ -27,7 +27,7 @@ namespace MagicLand_System.Mappers.Syllabuses
             .ForMember(dest => dest.QuestionPackages, opt => opt.MapFrom(src => QuestionCustomMapper.fromTopicsToQuestionPackageResponse(src.Topics!)))
             .ForMember(dest => dest.Exams, opt => opt.MapFrom(src => ExamSyllabusCustomMapper.fromExamSyllabusesToExamSyllabusResponse(src.ExamSyllabuses!)));
 
-
+       
             CreateMap<Syllabus, SyllabusWithCourseResponse>()
             .ForMember(dest => dest.SyllabusId, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.SyllabusName, opt => opt.MapFrom(src => src.Name))

@@ -367,7 +367,7 @@ namespace MagicLand_System.Services.Implements
                 slot = SlotEnum.Slot1;
             }
 
-            var cls = await CheckingCurrentClass(request.ClassId, slot);
+            var cls = await CheckingCurrentClass(request.StudentAttendanceRequests.Select(sar => sar.StudentId).ToList(), request.ClassId, slot);
 
             var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()).ToList();
 
@@ -384,7 +384,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId)
         {
-            var cls = await CheckingCurrentClass(classId, SlotEnum.Default);
+            var cls = await CheckingCurrentClass(null, classId, SlotEnum.Default);
 
             var schedules = cls.Schedules;
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
@@ -414,13 +414,23 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task<Class> CheckingCurrentClass(Guid classId, SlotEnum slot)
+        private async Task<Class> CheckingCurrentClass(List<Guid>? studentIdList, Guid classId, SlotEnum slot)
         {
-
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
             include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).Include(x => x.Lecture)!
-            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!).Include(x => x.StudentClasses));
 
+            if (studentIdList != null)
+            {
+                foreach (Guid id in studentIdList)
+                {
+                    if (cls.StudentClasses.Any(sc => sc.StudentId == id))
+                    {
+                        continue;
+                    }
+                    throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Không Thuộc Lớp Đang Điểm Danh", StatusCodes.Status400BadRequest);
+                }
+            }
 
             if (cls == null)
             {
@@ -464,23 +474,15 @@ namespace MagicLand_System.Services.Implements
 
                 foreach (var attendance in attendances)
                 {
-                    foreach (var stuAttReq in studentAttendanceRequest)
+                    var student = studentAttendanceRequest.SingleOrDefault(stu => stu.StudentId == attendance.StudentId);
+
+                    if (student == null)
                     {
-                        var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == stuAttReq.StudentId);
-                        if (student == null)
-                        {
-                            throw new BadHttpRequestException($"Id Học Sinh [{stuAttReq.StudentId}] Không Tồn Tại Hoặc Không Học Lớp Đang Điểm Danh", StatusCodes.Status400BadRequest);
-                        }
-
-                        if (stuAttReq.StudentId == attendance.StudentId)
-                        {
-                            attendance.IsPresent = stuAttReq.IsPresent;
-                            continue;
-                        }
-
                         studentNotHaveAttendance.Add(attendance.Student!.FullName!);
                         attendance.IsPresent = false;
+                        continue;
                     }
+                    attendance.IsPresent = student.IsPresent;
                 }
 
                 _unitOfWork.GetRepository<Attendance>().UpdateRange(attendances);

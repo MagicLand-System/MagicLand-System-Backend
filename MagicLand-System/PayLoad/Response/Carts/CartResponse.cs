@@ -3,7 +3,6 @@
     public class CartResponse
     {
         public Guid CartId { get; set; }
-
-        public List<CartItemResponse> CartItems { get; set; } = new List<CartItemResponse>();
+        public List<CartItemResponse> Items { get; set; } = new List<CartItemResponse>();
     }
 }

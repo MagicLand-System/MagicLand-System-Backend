@@ -2,7 +2,7 @@
 
 namespace MagicLand_System.PayLoad.Response.Syllabuses
 {
-    public class SyllabusWithCourseResponse : SyllabusResponse
+    public class SyllabusWithCourseResponse : SyllabusWithInformationResponse
     {
         public CourseSimpleResponse? Course { get; set; } = new CourseSimpleResponse();
     }

@@ -304,11 +304,11 @@ namespace MagicLand_System.Services.Implements
                     RoomResponse = roomResponse,
                     CreatedDate = c.AddedDate.Value,
                 };
-                Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.Course.Id.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.Course.Id.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var syllabusCode = "undefined";
-                var syllabusName = "undefined"; 
-                var syllabusType = "undefined"; 
-                if(course.Syllabus != null)
+                var syllabusName = "undefined";
+                var syllabusType = "undefined";
+                if (course.Syllabus != null)
                 {
                     syllabusCode = course.Syllabus.SubjectCode;
                     syllabusName = course.Syllabus.Name;
@@ -1136,7 +1136,7 @@ namespace MagicLand_System.Services.Implements
                .Include(x => x.StudentClasses)
                .Include(x => x.Course).ThenInclude(c => c!.Syllabus)
                .ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-               .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
+               .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession))
                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
 
@@ -1177,26 +1177,53 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<ICollection<Class>> FetchClasses(PeriodTimeEnum time)
         {
+            var classes = new List<Class>();
+
             if (time != default)
             {
-                return await _unitOfWork.GetRepository<Class>()
-                    .GetListAsync(predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time), include: x => x
-                    .Include(x => x.Lecture)
-                    .Include(x => x.Course!).ThenInclude(c => c.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-                    .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions)
-                    .Include(x => x.StudentClasses)
-                    .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
-                    .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
+                classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time),
+                include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses))).ToList();
+            }
+            else
+            {
+                classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(
+                include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses))).ToList();
             }
 
-            return await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(include: x => x
-                .Include(x => x.Lecture)
-                .Include(x => x.Course!).ThenInclude(c => c.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-                .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions)
-                .Include(x => x.StudentClasses)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
+            foreach (var cls in classes)
+            {
+                cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == cls.CourseId,
+                include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+               .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
+            }
+
+            return classes;
+            #region
+            //return await _unitOfWork.GetRepository<Class>()
+            //   .GetListAsync(predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time), include: x => x
+            //   .Include(x => x.Lecture)
+            //   .Include(x => x.Course!).ThenInclude(c => c.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+            //   .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions)
+            //   .Include(x => x.StudentClasses)
+            //   .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+            //   .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
+
+            //return await _unitOfWork.GetRepository<Class>()
+            //    .GetListAsync(include: x => x
+            //    .Include(x => x.Lecture)
+            //    .Include(x => x.Course!).ThenInclude(c => c.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+            //    .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions)
+            //    .Include(x => x.StudentClasses)
+            //    .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+            //    .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
+            #endregion
         }
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
@@ -1280,7 +1307,7 @@ namespace MagicLand_System.Services.Implements
         {
 
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Id == classId,
-             include: x => x.Include(x => x.Lecture)
+             include: x => x.Include(x => x.Lecture).Include(x => x.Course)
             .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
             .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)
             .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Attendances.Where(att => att.IsPublic == true)).ThenInclude(att => att.Student)!);
@@ -1297,13 +1324,24 @@ namespace MagicLand_System.Services.Implements
                     $" Lớp [{cls.ClassCode}] [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status)}]", StatusCodes.Status400BadRequest);
             }
 
+            return GenerateSchedultAttendance(cls, date);
+        }
+
+        private ScheduleWithAttendanceResponse GenerateSchedultAttendance(Class cls, DateTime date)
+        {
             var schedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == date.Date);
             if (schedule == null)
             {
                 return new ScheduleWithAttendanceResponse();
             }
 
-            return _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
+            var response = _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
+            response.ClassSubject = cls.Course!.SubjectName;
+            response.ClassName = cls.Course!.Name;
+            response.Method = cls.Method;
+            response.ClassCode = cls.ClassCode;
+
+            return response;
         }
 
         #region

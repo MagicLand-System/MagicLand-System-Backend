@@ -191,7 +191,7 @@ namespace MagicLand_System.Services.Implements
                     //    students.Add(student);
                     //}
                     #endregion
-                    return CartCustomMapper.fromCartToCartResponse(currentParrentCart, students, classes);
+                    return default; //CartCustomMapper.fromCartToCartResponse(currentParrentCart, students, classes);
                 }
 
                 return new CartResponse { CartId = currentParrentCart != null ? currentParrentCart.Id : default };

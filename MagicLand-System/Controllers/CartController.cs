@@ -44,7 +44,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpPost(ApiEndpointConstant.CartEnpoint.AddCourseFavoriteList)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
-        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> AddCourseFavoriteList([FromQuery] Guid courseId)
         {

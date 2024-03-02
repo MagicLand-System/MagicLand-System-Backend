@@ -14,6 +14,8 @@ namespace MagicLand_System.PayLoad.Response.Schedules
         public RoomResponse Room { get; set; } = new RoomResponse();
         public LecturerResponse? Lecturer { get; set; }
         public string? ClassCode {  get; set; }
+        public string? ClassName { get; set; }
+        public string? ClassSubject { get; set; }
         public string? Method { get; set;}
     }
 }

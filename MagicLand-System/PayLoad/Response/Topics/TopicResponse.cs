@@ -1,4 +1,4 @@
-﻿using MagicLand_System.PayLoad.Response.Sessions;
+﻿using MagicLand_System.PayLoad.Response.Syllabuses;
 
 namespace MagicLand_System.PayLoad.Response.Topics
 {

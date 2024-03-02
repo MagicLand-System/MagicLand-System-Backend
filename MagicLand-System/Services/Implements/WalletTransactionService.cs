@@ -11,6 +11,7 @@ using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -368,6 +369,11 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.StudentClasses)
                 .Include(x => x.Course)!);
 
+            if(cls == null)
+            {
+                throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]",StatusCodes.Status400BadRequest);
+            }
+
             await ValidateSuitableClass(studentIds, cls);
 
             ValidateSchedule(allStudentSchedules, cls);
@@ -377,11 +383,10 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
         {
-            string status = cls.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()) ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
 
-            if (!cls.Status!.Trim().Equals("UPCOMING"))
+            if (!cls.Status!.Trim().Equals(ClassStatusEnum.UPCOMING.ToString()))
             {
-                throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
+                throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status.Trim())}]",
                     StatusCodes.Status400BadRequest);
             }
 
@@ -413,37 +418,31 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateCoursePrerequisite(Student student, Class cls)
         {
-            //var currentCourseIdPrerRequiredList = (List<Guid>)await _unitOfWork.GetRepository<Course>()
-            //    .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
-            //    predicate: x => x.Classes.Any(c => c.Id.Equals(cls.Id)),
-            //    include: x => x.Include(x => x.CoursePrerequisites));
+            var currentSyllabusPrequisite = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.SyllabusPrerequisites,
+                predicate: x => x.CourseId == cls.CourseId,
+                include: x => x.Include(x => x.SyllabusPrerequisites!));
 
-            //var allCoursePrerIdRequired = new List<Guid>();
+            var allSyllabusPrerIdRequired = await FindAllIdSyllabusPrerRequired(currentSyllabusPrequisite!.Select(csp => csp.PrerequisiteSyllabusId).ToList());
 
-            //var allCoursePrerIdRequiredRender = await RenderAllCoursePrerRequired(currentCourseIdPrerRequiredList);
-            //allCoursePrerIdRequired.AddRange(allCoursePrerIdRequiredRender);
-
-            //if (allCoursePrerIdRequired?.Any() ?? false)
-            //{
-            //    await ValidateCoursePrerProgress(student, cls, allCoursePrerIdRequired);
-            //}
+            if (allSyllabusPrerIdRequired?.Any() ?? false)
+            {
+                await ValidateCoursePrerProgress(student, cls, allSyllabusPrerIdRequired);
+            }
         }
 
-        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allCoursePrerIdRequired)
+        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allSyllabusPrerIdRequired)
         {
             var courseRequiredList = new List<Course>();
 
-            foreach (Guid id in allCoursePrerIdRequired)
+            foreach (Guid id in allSyllabusPrerIdRequired)
             {
-                //var courseRequired = await _unitOfWork.GetRepository<Course>()
-                //   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
-
-                //courseRequiredList.Add(courseRequired);
+                var courseRequired = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == id);
+                courseRequiredList.Add(courseRequired);
             }
 
-            var courseCompleted = await _unitOfWork.GetRepository<Course>()
-               .GetListAsync(predicate: x => x.Classes.Any(c => c.StudentClasses
-               .Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Equals("COMPLETED"))));
+            var courseCompleted = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()))));
 
             if (courseCompleted?.Any() ?? false)
             {
@@ -462,52 +461,48 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        private async Task<List<Guid>> RenderAllCoursePrerRequired(List<Guid> currentCourseIdPrerRequiredList)
+        private async Task<List<Guid>> FindAllIdSyllabusPrerRequired(List<Guid> currentSyllabusIdPreList)
         {
-            var allCoursePrerIdRequired = new List<Guid>();
+            var allSyllabusPreIdRequired = new List<Guid>();
 
-            if (currentCourseIdPrerRequiredList?.Any() ?? false)
+            if (currentSyllabusIdPreList?.Any() ?? false)
             {
-                allCoursePrerIdRequired.AddRange(currentCourseIdPrerRequiredList);
-
-                currentCourseIdPrerRequiredList = await GetSubCoursePrerIdRequired(currentCourseIdPrerRequiredList);
-
-                allCoursePrerIdRequired.AddRange(currentCourseIdPrerRequiredList);
+                allSyllabusPreIdRequired.AddRange(currentSyllabusIdPreList);
+                allSyllabusPreIdRequired.AddRange(await GetIdPreSyllabusOfPreSyllabusIdRequired(currentSyllabusIdPreList));
             }
 
-            return allCoursePrerIdRequired;
+            return allSyllabusPreIdRequired;
         }
 
-        private async Task<List<Guid>> GetSubCoursePrerIdRequired(List<Guid> courseIdRequiredList)
+        private async Task<List<Guid>> GetIdPreSyllabusOfPreSyllabusIdRequired(List<Guid> currentSyllabusIdPreList)
         {
-            var subCoursePrerIdRequiredList = new List<Guid>();
+            var preSyllabusIdOfPreSyllabusList = new List<Guid>();
 
             bool isAll = false;
 
             while (isAll == false)
             {
-                var tempCourseIdRequiredList = new List<Guid>();
+                var tempSyllabusIdRequiredList = new List<Guid>();
 
-                //foreach (Guid id in courseIdRequiredList!)
-                //{
-                //    var coursePrerIdRequired = await _unitOfWork.GetRepository<Course>()
-                //       .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
-                //       //predicate: x => x.CoursePrerequisites.Any(cp => cp.CurrentCourseId == id),
-                //       include: x => x.Include(x => x.CoursePrerequisites));
+                foreach (Guid id in currentSyllabusIdPreList!)
+                {
+                    var preSyllabusesOfPreSyllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                        selector: x => x.SyllabusPrerequisites,
+                        predicate: x => x.SyllabusPrerequisites!.Any(sp => sp.CurrentSyllabusId == id));
 
-                //    if (coursePrerIdRequired?.Any() ?? false)
-                //    {
-                //        tempCourseIdRequiredList.AddRange(coursePrerIdRequired);
-                //    }
-                //}
-                courseIdRequiredList = tempCourseIdRequiredList;
+                    if (preSyllabusesOfPreSyllabus?.Any() ?? false)
+                    {
+                        tempSyllabusIdRequiredList.AddRange(preSyllabusesOfPreSyllabus.Select(psps => psps.PrerequisiteSyllabusId));
+                    }
+                }
+                currentSyllabusIdPreList = tempSyllabusIdRequiredList;
 
-                subCoursePrerIdRequiredList.AddRange(courseIdRequiredList);
+                preSyllabusIdOfPreSyllabusList.AddRange(currentSyllabusIdPreList);
 
-                isAll = courseIdRequiredList.Any() ? false : true;
+                isAll = currentSyllabusIdPreList.Any() ? false : true;
             }
 
-            return subCoursePrerIdRequiredList ??= new List<Guid>();
+            return preSyllabusIdOfPreSyllabusList ??= new List<Guid>();
         }
 
         private void ValidateSchedule(List<StudentScheduleResponse> allStudentSchedules, Class cls)

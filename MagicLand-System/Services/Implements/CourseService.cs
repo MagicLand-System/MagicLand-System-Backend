@@ -17,6 +17,7 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
+        #region thanh_lee code
         public async Task<List<CourseResExtraInfor>> FilterCourseAsync(
             int minYearsOld,
             int maxYearsOld,
@@ -83,12 +84,6 @@ namespace MagicLand_System.Services.Implements
             var coureSubsequents = await GetCoureSubsequents(course);
 
             return CourseCustomMapper.fromCourseToCourseResExtraInfor(course.ToList()[0], coursePrerequisites, coureSubsequents);
-        }
-
-        public async Task<List<SyllabusCategory>> GetCourseCategories()
-        {
-            var categories = await _unitOfWork.GetRepository<SyllabusCategory>().GetListAsync();
-            return categories.ToList();
         }
 
         public async Task<List<CourseResExtraInfor>> GetCoursesAsync(bool isValid)
@@ -162,7 +157,8 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var course in findCourse)
             {
-                var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status!.Equals("Progressing")));
+                var count = (await _unitOfWork.GetRepository<Class>()
+                    .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString())));
                 if (count == null)
                 {
                     course.NumberClassOnGoing = 0;
@@ -179,17 +175,23 @@ namespace MagicLand_System.Services.Implements
         {
             try
             {
-                return await _unitOfWork.GetRepository<Course>()
-               .GetListAsync(include: x => x
-               .Include(x => x.Syllabus!).ThenInclude(syll => syll!.SyllabusPrerequisites)
-               .Include(x => x.Classes)
-               .ThenInclude(c => c.Schedules)
-               .ThenInclude(s => s.Slot)
-               .Include(x => x.SubDescriptionTitles)
-               .ThenInclude(sdt => sdt.SubDescriptionContents)
-               .Include(x => x.Syllabus)
-               .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
-               .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
+                var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                    include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents));
+
+                foreach (var course in courses)
+                {
+                    course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == course.SyllabusId,
+                    include: x => x.Include(x => x.SyllabusPrerequisites!).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber))
+                    .ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                    course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                    predicate: x => x.CourseId == course.Id,
+                    include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+                }
+
+
+                return courses;
             }
             catch (Exception e)
             {
@@ -257,7 +259,8 @@ namespace MagicLand_System.Services.Implements
 
             return listCourseResExtraInfror;
         }
-
+        #endregion
+        #region thuong_code
         public async Task<bool> AddCourseInformation(CreateCourseRequest request)
         {
             if (request != null)
@@ -342,5 +345,12 @@ namespace MagicLand_System.Services.Implements
             }
             return false;
         }
+
+        public async Task<List<SyllabusCategory>> GetCourseCategories()
+        {
+            var categories = await _unitOfWork.GetRepository<SyllabusCategory>().GetListAsync();
+            return categories.ToList();
+        }
+        #endregion
     }
 }

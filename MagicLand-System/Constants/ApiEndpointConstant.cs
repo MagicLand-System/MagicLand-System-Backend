@@ -50,6 +50,7 @@
             public const string MakeUpClass = GetAll + "/{studentId}" + "/{scheduleId}/makeup";
             public const string GetMakeUpClass = GetAll + "/getMakeUpSchedule";
             public const string InsertClasses = GetAll + "/insertClasses";
+            public const string CheckingClassForStudents = GetAll + "/students/checking";
         }
         public static class PromotionEnpoint
         {

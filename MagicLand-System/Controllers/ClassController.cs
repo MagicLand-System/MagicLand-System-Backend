@@ -1,13 +1,15 @@
-﻿    using MagicLand_System.Constants;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml.Utils;
 
 namespace MagicLand_System.Controllers
 {
@@ -15,9 +17,13 @@ namespace MagicLand_System.Controllers
     public class ClassController : BaseController<ClassController>
     {
         private readonly IClassService _classService;
-        public ClassController(ILogger<ClassController> logger, IClassService classService) : base(logger)
+        private readonly IStudentService _studentService;
+        private readonly IWalletTransactionService _walletTransactionService;
+        public ClassController(ILogger<ClassController> logger, IClassService classService, IWalletTransactionService walletTransactionService, IStudentService studentService) : base(logger)
         {
             _classService = classService;
+            _walletTransactionService = walletTransactionService;
+            _studentService = studentService;
         }
 
         #region document API Get Classes
@@ -63,8 +69,6 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
-
-
         #region document API Get Class By Id
         /// <summary>
         ///  Truy Suất Lớp Thông Qua Id Của Lớp
@@ -97,6 +101,45 @@ namespace MagicLand_System.Controllers
                 });
             }
             return Ok(courses);
+        }
+
+        #region document API Checking Class For Students
+        /// <summary>
+        ///  Cho Phép Kiểm Tra Các Học Sinh Có Thỏa Mãn Điều Kiện Để Học Một Lớp Dựa Vào Id của Lớp Và Id Của Các Học Sinh
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học Cần Kiểm Tra</param>
+        /// <param name="studentIdList">Id Của Các Học Sinh Cần Kiểm Tra</param>
+        /// <response code="200">Các Học Sinh Đã Thõa Mãn Điều Kiện</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.CheckingClassForStudents)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckingClassForStudents([FromQuery] Guid classId, [FromQuery] List<Guid> studentIdList)
+        {
+            if (classId == default || studentIdList == null)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
+            var allStudentSchedules = new List<StudentScheduleResponse>();
+            foreach (var task in studentIdList.Select(async stu => await _studentService
+            .GetScheduleOfStudent(stu.ToString())))
+            {
+                var schedules = await task;
+                allStudentSchedules.AddRange(schedules);
+            }
+
+            await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, classId, studentIdList);
+
+            return Ok("Các Học Thỏa Mãn Điều Kiện Để Đăng Ký Vào Lớp");
         }
 
         #region document API Filter Class
@@ -187,7 +230,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ChangeClass)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
-       [Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF")]
         public async Task<IActionResult> ChangeStudentClass([FromQuery] Guid fromClassId, [FromQuery] Guid toClassId, [FromQuery] List<Guid> studentIdList)
         {
             var classes = await _classService.ChangeStudentClassAsync(fromClassId, toClassId, studentIdList);
@@ -199,7 +242,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
         {
             var isSuccess = await _classService.CreateNewClass(request);
-            if (!isSuccess) 
+            if (!isSuccess)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -213,9 +256,9 @@ namespace MagicLand_System.Controllers
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetStaffClass([FromQuery] string? searchString , [FromQuery] string? status)
+        public async Task<IActionResult> GetStaffClass([FromQuery] string? searchString, [FromQuery] string? status)
         {
-            var courses = await _classService.GetAllClass(searchString,status);
+            var courses = await _classService.GetAllClass(searchString, status);
             return Ok(courses);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByIdV2)]
@@ -239,7 +282,7 @@ namespace MagicLand_System.Controllers
                     StatusCode = StatusCodes.Status404NotFound,
                 });
             }
-            return Ok(matchClass);  
+            return Ok(matchClass);
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.AutoCreateClassEndPoint)]
@@ -247,13 +290,13 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> AutoCreate(string courseId)
         {
             var result = await _classService.AutoCreateClassCode(courseId);
-            return Ok(new {ClassCode = result});
+            return Ok(new { ClassCode = result });
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.UpdateClass)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
-        public async Task<IActionResult> UpdateStudent([FromRoute] string id,[FromBody] UpdateClassRequest request)
+        public async Task<IActionResult> UpdateStudent([FromRoute] string id, [FromBody] UpdateClassRequest request)
         {
-            var isSuccess = await _classService.UpdateClass(id, request);   
+            var isSuccess = await _classService.UpdateClass(id, request);
             if (!isSuccess)
             {
                 return BadRequest(new ErrorResponse
@@ -272,9 +315,9 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.LoadClassForAttandance)]
-        public async Task<IActionResult> LoadClasForAttandance(string? searchString ,DateTime dateTime,string? attendanceStatus)
+        public async Task<IActionResult> LoadClasForAttandance(string? searchString, DateTime dateTime, string? attendanceStatus)
         {
-            var result = await _classService.GetAllClassForAttandance(searchString,dateTime,attendanceStatus);
+            var result = await _classService.GetAllClassForAttandance(searchString, dateTime, attendanceStatus);
             return Ok(result);
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.CancelClass)]
@@ -325,9 +368,9 @@ namespace MagicLand_System.Controllers
             return Ok("success");
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetMakeUpClass)]
-        public async Task<IActionResult> GetMakeUpClass(string scheduleId,string studentId,DateTime? dateTime,string? keyword,string? slotId)
+        public async Task<IActionResult> GetMakeUpClass(string scheduleId, string studentId, DateTime? dateTime, string? keyword, string? slotId)
         {
-            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId,studentId,dateTime,keyword,slotId);
+            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId, studentId, dateTime, keyword, slotId);
             return Ok(isSuccess);
         }
         [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClasses)]
@@ -337,4 +380,4 @@ namespace MagicLand_System.Controllers
             return Ok("insert all success");
         }
     }
-}   
+}

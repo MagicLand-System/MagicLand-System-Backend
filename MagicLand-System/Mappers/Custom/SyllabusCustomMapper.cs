@@ -27,11 +27,10 @@ namespace MagicLand_System.Mappers.Custom
                 Description = syllabus.Description,
                 SubjectCode = syllabus.SubjectCode,
                 SyllabusLink = syllabus.SyllabusLink,
-                SyllabusInformations = SessionCustomMapper.fromTopicsToSyllabusInforResponse(syllabus.Topics),
+                SyllabusInformations = SessionCustomMapper.fromTopicsAndSchedulesToSyllabusInforWithDateResponse(syllabus.Topics, cls.Schedules),
                 Materials = MaterialCustomMapper.fromMaterialsToMaterialResponse(syllabus.Materials!),
                 QuestionPackages = QuestionCustomMapper.fromTopicsToQuestionPackageResponse(syllabus.Topics!),
                 Exams = ExamSyllabusCustomMapper.fromExamSyllabusesToExamSyllabusResponse(syllabus.ExamSyllabuses!),
-                Schedules = ScheduleCustomMapper.fromClassRelatedItemsToScheduleResWithSession(cls.Schedules.ToList(), syllabus.Topics!.ToList()),
             };
 
             return response;
