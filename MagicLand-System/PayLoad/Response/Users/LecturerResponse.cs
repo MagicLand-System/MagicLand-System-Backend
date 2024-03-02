@@ -10,5 +10,7 @@
         public string? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public string? Role { get; set; }    
+        public string LecturerField {  get; set; }  
+        public int NumberOfClassesTeaching {  get; set; }   
     }
 }

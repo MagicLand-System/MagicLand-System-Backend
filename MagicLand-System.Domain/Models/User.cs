@@ -25,6 +25,9 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("PersonalWallet")]
         public Guid? PersonalWalletId { get; set; } = null;
         public PersonalWallet? PersonalWallet { get; set; }
+        [ForeignKey("LecturerField")]
+        public Guid? LecturerFieldId { get; set; }
+        public LecturerField? LecturerField { get; set; }
 
 
         public ICollection<Class> Classes { get; set; } = new List<Class>();

@@ -146,6 +146,19 @@ namespace MagicLand_System.Services.Implements
             List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
             foreach (var user in lecturers)
             {
+                var lecturerField = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(user.LecturerFieldId.ToString()),selector : x => x.Name);
+                var cls = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId.ToString().Equals(user.Id.ToString()));
+                var count = 0;
+                if(cls != null)
+                {
+                    count = cls.Count;
+                }
+                var schedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.SubLecturerId.ToString().Equals(user.Id.ToString()));
+                if (schedule != null)
+                {
+                    var sc = schedule.GroupBy(x => x.ClassId).ToList();
+                    count = count +  sc.Count;
+                }
                 LecturerResponse response = new LecturerResponse
                 {
                     FullName = user.FullName,
@@ -155,7 +168,9 @@ namespace MagicLand_System.Services.Implements
                     Gender = user.Gender,
                     Phone = user.Phone,
                     LectureId = user.Id,
-                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()
+                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>(),
+                    LecturerField = lecturerField,
+                    NumberOfClassesTeaching = count,
                 };
                 lecturerResponses.Add(response);
             }

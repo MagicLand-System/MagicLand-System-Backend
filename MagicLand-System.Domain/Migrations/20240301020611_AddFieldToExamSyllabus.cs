@@ -10,19 +10,19 @@ namespace MagicLand_System.Domain.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Duration",
-                table: "ExamSyllabus",
-                type: "nvarchar(max)",
-                nullable: true);
+            //migrationBuilder.AddColumn<string>(
+            //    name: "Duration",
+            //    table: "ExamSyllabus",
+            //    type: "nvarchar(max)",
+            //    nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Duration",
-                table: "ExamSyllabus");
+            //migrationBuilder.DropColumn(
+            //    name: "Duration",
+            //    table: "ExamSyllabus");
         }
     }
 }
