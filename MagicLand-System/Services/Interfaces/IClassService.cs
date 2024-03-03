@@ -5,7 +5,9 @@ using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -24,7 +26,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
         Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList);
         Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime,string? attendanceStatus);
-        Task<List<ClassResponseForLecture>> GetCurrentLectureClassesAsync();
+        Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync();
         Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date);
         Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);
         Task<string> ChangeStudentClassAsync(Guid fromClassId, Guid toClassId, List<Guid> studentIdList);

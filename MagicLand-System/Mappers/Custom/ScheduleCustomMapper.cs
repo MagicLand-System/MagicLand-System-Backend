@@ -3,8 +3,10 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Attendances;
 using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Slots;
 using System.Dynamic;
 
@@ -12,6 +14,24 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class ScheduleCustomMapper
     {
+        public static ScheduleCurrentLectureResponse fromClassAfterMapperToScheduleCurrentLectureResponse(Schedule schedule)
+        {
+            if (schedule == null)
+            {
+                return new ScheduleCurrentLectureResponse();
+            }
+
+            var response = new ScheduleCurrentLectureResponse
+            {
+                ScheduleId = schedule.Id,
+                DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                Date = schedule.Date,
+                Slot = SlotCustomMapper.fromSlotToSlotForLecturerResponse(schedule.Slot!),
+                Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
+            };
+
+            return response;
+        }
 
         public static List<ScheduleWithoutLectureResponse> fromScheduleToScheduleWithOutLectureList(List<Schedule> schedules)
         {

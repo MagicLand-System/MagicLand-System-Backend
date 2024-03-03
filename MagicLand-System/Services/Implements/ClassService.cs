@@ -4,18 +4,22 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
+using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Slots;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -334,7 +338,7 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-            if(result != null)
+            if (result != null)
             {
                 result = result.OrderByDescending(x => x.CreatedDate).ToList();
             }
@@ -1292,7 +1296,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<ClassResponseForLecture>> GetCurrentLectureClassesAsync()
+        public async Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync()
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt(),
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Slot)
@@ -1300,11 +1304,33 @@ namespace MagicLand_System.Services.Implements
 
             if (!classes.Any())
             {
-                throw new BadHttpRequestException("Giáo Viên Hiện Tại Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
 
             var currentClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
-            return currentClasses.Select(ccls => _mapper.Map<ClassResponseForLecture>(ccls)).ToList();
+
+            return GenerateClassSchedule(currentClasses);
+        }
+
+        private List<ClassWithSlotOutSideResponse> GenerateClassSchedule(List<Class> currentClasses)
+        {
+            var responses = new List<ClassWithSlotOutSideResponse>();
+            foreach (var cls in currentClasses)
+            {
+                var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
+                if (currentSchedule == null)
+                {
+                    throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Ở Hiện Tại", StatusCodes.Status400BadRequest);
+                }
+                var response = _mapper.Map<ClassWithSlotOutSideResponse>(cls);
+
+                response.ScheduleInfors = ScheduleCustomMapper.fromClassAfterMapperToScheduleCurrentLectureResponse(currentSchedule);
+                response.SlotOrder = StringHelper.GetSlotNumber(currentSchedule.Slot!.StartTime);
+
+                responses.Add(response);
+            }
+
+            return responses;
         }
 
         public async Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date)

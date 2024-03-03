@@ -1,7 +1,6 @@
-﻿using MagicLand_System.PayLoad.Response.Schedules;
-using MagicLand_System.PayLoad.Response.Slots;
+﻿using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 
-namespace MagicLand_System.PayLoad.Response.Classes
+namespace MagicLand_System.PayLoad.Response.Classes.ForLecturer
 {
     public class ClassResponseForLecture : ClassResponse
     {

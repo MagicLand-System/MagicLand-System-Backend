@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Cart;
+using MagicLand_System.Utils;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -8,6 +9,36 @@ namespace MagicLand_System.Helpers
 {
     public class StringHelper
     {
+        public static string GetSlotNumber(string startTime)
+        {
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot1).Trim())
+            {
+                return "Slot 1";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot2).Trim())
+            {
+                return "Slot 2";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot3).Trim())
+            {
+                return "Slot 3";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot4).Trim())
+            {
+                return "Slot 4";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot5).Trim())
+            {
+                return "Slot 5";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot6).Trim())
+            {
+                return "Slot 6";
+            }
+
+            return "Undefined";
+        }
+
         public static (string, string) SplitStringByNewLine(string input)
         {
             string[] parts = input.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);

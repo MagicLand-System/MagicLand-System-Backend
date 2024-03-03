@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System.PayLoad.Response.Schedules
+﻿namespace MagicLand_System.PayLoad.Response.Schedules.ForLecturer
 {
     public class LectureScheduleResponse : ScheduleWithoutLectureResponse
     {

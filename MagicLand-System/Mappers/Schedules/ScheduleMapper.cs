@@ -5,6 +5,7 @@ using MagicLand_System.Mappers.Attendances;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 
 namespace MagicLand_System.Mappers.Schedules
 {

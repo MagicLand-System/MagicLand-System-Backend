@@ -2,7 +2,9 @@
 {
     public class SlotReponseForLecture
     {
-        public List<string>? Slot { get; set; } = new List<string>();
-        public List<(string, string)>? Time { get; set; } = new List<(string, string)>();
+        public Guid SlotId { get; set; } = default!;
+        public TimeOnly StartTime { get; set; }
+        public TimeOnly EndTime { get; set; }
+
     }
 }

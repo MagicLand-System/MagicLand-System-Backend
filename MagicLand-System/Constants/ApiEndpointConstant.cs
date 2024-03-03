@@ -134,7 +134,7 @@
             public const string TakeStudentAttendance = EndPointBase + "/students/takeAttendance";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
             public const string GetStudentAttendanceOfAllClass = EndPointBase + "/student/classes/attendance";
-            public const string GetCurrentClass = EndPointBase + "/current/classes";
+            public const string GetCurrentClassesSchedule = EndPointBase + "/current/classes";
             public const string GetClassesAttendanceWithDate = EndPointBase + "/class/date/attendances";
             public const string GetLectureSchedule = EndPointBase + "/schedules";
         }

@@ -12,8 +12,8 @@ using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Response.Classes;
 using Microsoft.AspNetCore.Http.HttpResults;
-using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.Background.BackgroundServiceInterfaces;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 
 namespace MagicLand_System.Controllers
 {
@@ -113,20 +113,20 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Current Lecture Classes
         /// <summary>
-        ///  Truy Suất Các Lớp Của Giáo Viên Hiện Tại Có Lịch Học Trong Hôm Nay
+        ///  Truy Suất Slot Lịch Dạy Các Lớp Của Giáo Viên Hiện Tại Có Trong Hôm Nay
         /// </summary>
-        /// <response code="200">Trả Về Danh Sách Lớp Học Thỏa Mãn</response>
+        /// <response code="200">Trả Về Lịch Dạy Của Giáo Viên Trong Hôm Nay</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetCurrentClass)]
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetCurrentClassesSchedule)]
         [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureClasses()
+        public async Task<IActionResult> GetCurrentLetureClassesSchedule()
         {
-            var responses = await _classService.GetCurrentLectureClassesAsync();    
+            var responses = await _classService.GetCurrentLectureClassesScheduleAsync();    
             return Ok(responses);
         }
 
@@ -160,7 +160,7 @@ namespace MagicLand_System.Controllers
 
 
 
-        #region document API Get All Class Attendance
+        #region document API Get All Class Schedules
         /// <summary>
         ///  Truy Suất Lịch Giảng Dạy Của Giáo Viên Hiện Tại
         /// </summary>
