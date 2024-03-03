@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -15,10 +16,10 @@ namespace MagicLand_System.Controllers
         {
             _roomService = roomService;
         }
-        [HttpGet(ApiEndpointConstant.RoomEnpoint.GetAll)]
-        public async Task<IActionResult> GetAll()
+        [HttpPost(ApiEndpointConstant.RoomEnpoint.GetAll)]
+        public async Task<IActionResult> GetAll(FilterRoomRequest? filterRoomRequest)
         {
-            var result = await _roomService.GetRoomList(null,null,null);
+            var result = await _roomService.GetRoomList(filterRoomRequest);
             return Ok(result);
         }
     }

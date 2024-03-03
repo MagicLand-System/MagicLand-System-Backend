@@ -5,6 +5,6 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IRoomService
     {
-        Task<List<Room>> GetRoomList(List<ScheduleRequest>? requests,DateTime? StartDate = null,string? CourseId = null);
+        Task<List<Room>> GetRoomList(FilterRoomRequest? request);
     }
 }

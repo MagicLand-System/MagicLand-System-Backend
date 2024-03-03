@@ -83,9 +83,9 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.User.UserEndPointGetLecturer)]
         [ProducesResponseType(typeof(LecturerResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundObjectResult))]
-        public async Task<IActionResult> GetLecturers()
+        public async Task<IActionResult> GetLecturers(string? courseId)
         {
-            var users = await _userService.GetLecturers();
+            var users = await _userService.GetLecturers(courseId);
             if (users == null)
             {
                 return NotFound(new ErrorResponse
