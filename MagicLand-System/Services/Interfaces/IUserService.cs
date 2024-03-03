@@ -18,7 +18,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<User> GetCurrentUser();
         Task<NewTokenResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest);
         Task<bool> RegisterNewUser(RegisterRequest registerRequest);
-        Task<List<LecturerResponse>> GetLecturers(string? courseId);
+        Task<List<LecturerResponse>> GetLecturers(FilterLecturerRequest? request);
         Task<UserResponse> UpdateUserAsync(UserRequest request);
         Task<List<LectureScheduleResponse>> GetLectureScheduleAsync();
     }
