@@ -135,7 +135,7 @@ namespace MagicLand_System.Services.Implements
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return true; //isSuccess;
         }
-        public async Task<List<LecturerResponse>> GetLecturers()
+        public async Task<List<LecturerResponse>> GetLecturers(string? courseId)
         {
             var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
             if (users == null)
@@ -177,6 +177,25 @@ namespace MagicLand_System.Services.Implements
             if (lecturerResponses.Count == 0)
             {
                 return null;
+            }
+           if(courseId != null)
+            {
+               var type = "all";
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(courseId.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                if (course != null)
+                {
+                    if(course.Syllabus != null)
+                    {
+                        type = course.Syllabus.SyllabusCategory.Name;
+                    }
+                }
+                if(type.Equals("all"))
+                {
+                    return lecturerResponses;
+                } else
+                {
+                    lecturerResponses = lecturerResponses.Where(x => x.LecturerField.Equals(type)).ToList();
+                }
             }
             return lecturerResponses;
         }
