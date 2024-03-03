@@ -770,6 +770,104 @@ namespace MagicLand_System.Services.Implements
             bool isSuccess = await AddSyllabus(request);
             return isSuccess;
         }
+        public async Task<bool> UpdateOverallSyllabus(string id, UpdateOverallSyllabus request)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()));
+            if (syllabus != null)
+            {
+                if (request.EffectiveDate != null)
+                {
+                    string format = "dd/MM/yyyy";
+
+                    var date = DateTime.TryParseExact(request.EffectiveDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
+                        ? (DateTime?)parsedDate
+                        : DateTime.Parse(request.EffectiveDate);
+
+                    syllabus.EffectiveDate = date;
+
+                }
+                syllabus.UpdateTime = DateTime.Now;
+                if (!request.Description.IsNullOrEmpty())
+                {
+                    syllabus.Description = request.Description;
+                }
+                if (request.MinAvgMarkToPass != null)
+                {
+                    syllabus.MinAvgMarkToPass = request.MinAvgMarkToPass;
+                }
+                if (!request.SyllabusLink.IsNullOrEmpty())
+                {
+                    syllabus.SyllabusLink = request.SyllabusLink;
+                }
+                if (!request.SyllabusName.IsNullOrEmpty())
+                {
+                    syllabus.Name = request.SyllabusName;
+                }
+                if (request.ScoringScale != null)
+                {
+                    syllabus.ScoringScale = request.ScoringScale;
+                }
+                if (request.SubjectCode != null)
+                {
+                    syllabus.SubjectCode = request.SubjectCode;
+                }
+                if (syllabus.TimePerSession != null)
+                {
+                    syllabus.TimePerSession = request.TimePerSession;
+                }
+                if (!request.StudentTasks.IsNullOrEmpty())
+                {
+                    syllabus.StudentTasks = request.StudentTasks;
+                }
+                if (!request.Type.IsNullOrEmpty())
+                {
+                    var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>()
+          .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type!.ToLower().Trim()));
+                    syllabus.SyllabusCategoryId = categoryId;
+                }
+                _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syllabus);
+                var isSucess = await _unitOfWork.CommitAsync() > 0;
+                return isSucess;
+            }
+            return false;
+        }
+
+        public async Task<bool> UpdateTopic(string id, UpdateTopicRequest request)
+        {
+            var topic = await _unitOfWork.GetRepository<Topic>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            if (topic == null) { return false; }
+            if (request != null)
+            {
+                if (!request.TopicName.IsNullOrEmpty())
+                {
+                    topic.Name = request.TopicName;
+                }
+                _unitOfWork.GetRepository<Topic>().UpdateAsync(topic);
+                bool isSuc = await _unitOfWork.CommitAsync() > 0;
+            }
+            return false;
+        }
+
+        public async Task<bool> UpdateSession(string id, UpdateSessionRequest request)
+        {
+            var sessionDescription = await _unitOfWork.GetRepository<SessionDescription>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            if (sessionDescription == null) { return false; }
+            if (request != null)
+            {
+                if (!request.Content.IsNullOrEmpty())
+                {
+                    sessionDescription.Content = request.Content;
+                }
+                if (!request.Content.IsNullOrEmpty())
+                {
+                    sessionDescription.Detail = request.Detail;
+                }
+                _unitOfWork.GetRepository<SessionDescription>().UpdateAsync(sessionDescription);
+                bool isSuc = await _unitOfWork.CommitAsync() > 0;
+                return isSuc;
+            }
+            return false;
+        }
         private async Task UpdateGeneralSyllabus(Guid syllabusId, OverallSyllabusRequest request)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabusId.ToString()));
@@ -1311,104 +1409,7 @@ namespace MagicLand_System.Services.Implements
         }
         #endregion
 
-        public async Task<bool> UpdateOverallSyllabus(string id,UpdateOverallSyllabus request)
-        {
-            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()));
-            if (syllabus != null)
-            {
-                if (request.EffectiveDate != null)
-                {
-                    string format = "dd/MM/yyyy";
 
-                    var date = DateTime.TryParseExact(request.EffectiveDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
-                        ? (DateTime?)parsedDate
-                        : DateTime.Parse(request.EffectiveDate);
-
-                    syllabus.EffectiveDate = date;
-
-                }
-                syllabus.UpdateTime = DateTime.Now;
-                if (!request.Description.IsNullOrEmpty())
-                {
-                    syllabus.Description = request.Description;
-                }
-                if (request.MinAvgMarkToPass != null)
-                {
-                    syllabus.MinAvgMarkToPass = request.MinAvgMarkToPass;
-                }
-                if (!request.SyllabusLink.IsNullOrEmpty())
-                {
-                    syllabus.SyllabusLink = request.SyllabusLink;
-                }
-                if (!request.SyllabusName.IsNullOrEmpty())
-                {
-                    syllabus.Name = request.SyllabusName;
-                }
-                if (request.ScoringScale != null)
-                {
-                    syllabus.ScoringScale = request.ScoringScale;
-                }
-                if (request.SubjectCode != null)
-                {
-                    syllabus.SubjectCode = request.SubjectCode;
-                }
-                if (syllabus.TimePerSession != null)
-                {
-                    syllabus.TimePerSession = request.TimePerSession;
-                }
-                if (!request.StudentTasks.IsNullOrEmpty())
-                {
-                    syllabus.StudentTasks = request.StudentTasks;
-                }
-                if (!request.Type.IsNullOrEmpty())
-                {
-                    var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>()
-          .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type!.ToLower().Trim()));
-                    syllabus.SyllabusCategoryId = categoryId;
-                }
-                _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syllabus);
-               var isSucess = await _unitOfWork.CommitAsync() > 0;
-               return isSucess;
-            }
-            return false;   
-        }
-
-        public async Task<bool> UpdateTopic(string id, UpdateTopicRequest request)
-        {
-            var topic = await _unitOfWork.GetRepository<Topic>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
-            if (topic == null) { return false; }
-            if(request != null)
-            {
-                if (!request.TopicName.IsNullOrEmpty())
-                {
-                    topic.Name = request.TopicName;
-                } 
-                _unitOfWork.GetRepository<Topic>().UpdateAsync(topic);
-                bool isSuc = await _unitOfWork.CommitAsync() > 0;
-            }
-            return false;
-        }
-
-        public async Task<bool> UpdateSession(string id, UpdateSessionRequest request)
-        {
-            var sessionDescription = await _unitOfWork.GetRepository<SessionDescription>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
-            if(sessionDescription == null) { return false; }    
-            if (request != null)
-            {
-                if (!request.Content.IsNullOrEmpty())
-                {
-                    sessionDescription.Content = request.Content;
-                }
-                if (!request.Content.IsNullOrEmpty())
-                {
-                    sessionDescription.Detail = request.Detail;
-                }
-                _unitOfWork.GetRepository<SessionDescription>().UpdateAsync(sessionDescription);
-                bool isSuc = await _unitOfWork.CommitAsync() > 0;
-                return isSuc;
-            }
-            return false;
-        }
     }
 
 }
