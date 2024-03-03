@@ -18,7 +18,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.RoomEnpoint.GetAll)]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _roomService.GetRoomList();
+            var result = await _roomService.GetRoomList(null,null,null);
             return Ok(result);
         }
     }

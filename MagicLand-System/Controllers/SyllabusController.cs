@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -177,5 +178,35 @@ namespace MagicLand_System.Controllers
             var result = await _syllabusService.GetStaffSyllabusCanInsert(keyword);
             return Ok(result);
         }
+        [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateOverall)]
+        public async Task<IActionResult> UpdateOverall([FromRoute] string id , UpdateOverallSyllabus request)
+        {
+            var result = await _syllabusService.UpdateOverallSyllabus(id , request);
+            if (!result)
+            {
+                return BadRequest("Update failed");
+            }
+            return Ok("Update Success");
+        }
+        [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateTopic)]
+        public async Task<IActionResult> UpdateTopic([FromRoute] string topicId, UpdateTopicRequest request)
+        {
+            var result = await _syllabusService.UpdateTopic(topicId, request);
+            if (!result)
+            {
+                return BadRequest("Update failed");
+            }
+            return Ok("Update Success");
+        }
+        //[HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateSession)]
+        //public async Task<IActionResult> UpdateSession([FromRoute] string descriptionId, UpdateSessionRequest request)
+        //{
+        //    var result = await _syllabusService.UpdateSession(descriptionId, request);
+        //    if (!result)
+        //    {
+        //        return BadRequest("Update failed");
+        //    }
+        //    return Ok("Update Success");
+        //}
     }
 }

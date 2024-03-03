@@ -285,6 +285,9 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("SyllabusId")
                         .HasColumnType("uniqueidentifier");
 

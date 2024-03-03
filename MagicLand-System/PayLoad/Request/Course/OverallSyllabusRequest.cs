@@ -18,7 +18,7 @@ namespace MagicLand_System.PayLoad.Request.Course
         public int? NumOfSessions { get; set; }
 
         public List<SyllabusRequest> SyllabusRequests { get; set; } = new List<SyllabusRequest>();
-        public List<string> MaterialRequests { get; set; } = new List<string>();
+        public List<MaterialRequest> MaterialRequests { get; set; } = new List<MaterialRequest>();
         public List<ExamSyllabusRequest> ExamSyllabusRequests { get; set; } = new List<ExamSyllabusRequest>(); 
         public List<QuestionPackageRequest>? QuestionPackageRequests { get; set; }
     }

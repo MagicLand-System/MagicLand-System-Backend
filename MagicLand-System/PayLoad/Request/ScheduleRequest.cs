@@ -4,5 +4,6 @@
     {
         public string DateOfWeek {  get; set; }
         public Guid SlotId {  get; set; }
+
     }
 }
