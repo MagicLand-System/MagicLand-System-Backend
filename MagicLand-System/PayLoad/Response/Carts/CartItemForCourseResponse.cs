@@ -3,7 +3,7 @@ using MagicLand_System.PayLoad.Response.Schedules;
 
 namespace MagicLand_System.PayLoad.Response.Carts
 {
-    public class CartItemForCourseResponse : CartItemResponse
+    public class CartItemForCourseResponse : WishListItemResponse
     {
         public required string MainDescription { get; set; }
         public List<SubDescriptionTitleResponse>? SubDescriptionTitle { get; set; }  = new List<SubDescriptionTitleResponse>();

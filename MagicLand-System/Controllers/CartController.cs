@@ -90,7 +90,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpPost(ApiEndpointConstant.CartEnpoint.ModifyCart)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
-        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(WishListResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> ModifyCart([FromBody] CartRequest cartRequest)
         {
@@ -146,7 +146,7 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CartEnpoint.GetCart)]
-        [ProducesResponseType(typeof(CartResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(WishListResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetCart()
         {
@@ -196,6 +196,27 @@ namespace MagicLand_System.Controllers
             await _cartService.DeleteItemInCartOfCurrentParentAsync(itemIdList);
 
             return Ok("Xóa Thành Công");
+        }
+
+
+        #region document API Get All Item In Cart
+        /// <summary>
+        ///  Truy Suất Toàn Bộ WishList Và FavoriteList ( items) Có Trong Giỏ Hàng Của Người Dùng Hiện Tại
+        /// </summary>
+        /// <response code="200">Trả Về Items Trong Giỏ Hàng</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CartEnpoint.GetAll)]
+        [ProducesErrorResponseType(typeof(ErrorResponse))]
+        [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _cartService.GetAllItemsInCartAsync();
+
+            return Ok(result);
         }
     }
 }

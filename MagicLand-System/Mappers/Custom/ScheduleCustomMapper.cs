@@ -72,7 +72,7 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     ClassId = cls.Id,
                     ClassCode = cls.ClassCode!,
-                    ClassName = cls.Course!.Name!,
+                    ClassName = cls.ClassCode!,
                     ClassSubject = cls.Course!.SubjectName!,
                     Address = cls.City + " " + cls.District + " " + cls.Street,
                     Method = cls.Method!,

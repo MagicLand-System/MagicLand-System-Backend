@@ -67,6 +67,7 @@
             public const string GetFavorite = Origin + "/favorite/view";
             public const string DeleteCartItem = Origin + "/item/delete";
             public const string CheckOutCartItem = Origin + "/item/checkout";
+            public const string GetAll = Origin + "/items/all";
             public const string CheckOutCartItemByVnpay = Origin + "/vnpay/item/checkout";
         }
         public static class CourseEnpoint

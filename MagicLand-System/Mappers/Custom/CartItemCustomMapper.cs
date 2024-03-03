@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response.Carts;
+using MagicLand_System.PayLoad.Response.Carts.GeneralCart;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Students;
 
@@ -7,39 +8,29 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class CartItemCustomMapper
     {
-        public static CartItemForClassResponse fromCartItemToCartItemForClassResponse(Guid cartItemId, ClassResExtraInfor cls, Course course, List<Student> students)
+        public static CartItemResponse fromCartItemToCartItemResponse(Course course, Class? cls, Guid itemId)
         {
-            if (cls == null || cartItemId == default || !students.Any() || course == null)
+            if (course == null || itemId == default)
             {
-                return default!;
+                return new CartItemResponse { ItemType = "Unknow"};
             }
 
-            var response = new CartItemForClassResponse
+            var response = new CartItemResponse
             {
-               CartItemId = cartItemId,
-               ItemType = "Class",
-               ItemId = cls.ClassId,
-               Name = cls.ClassName,
-               Code = cls.ClassCode,
-               Subject = cls.ClassSubject,
-               Price = cls.CoursePrice,
-               MinYearOldStudent = course.MinYearOldsStudent!.Value,
-               MaxYearOldStudent = course.MaxYearOldsStudent!.Value,
-               Image = cls.Image,
-               StartDate = cls.StartDate,
-               EndDate = cls.EndDate,
-               Method = cls.Method!,
-               LimitNumberStudent = cls.LimitNumberStudent,
-               LeastNumberStudent = cls.LeastNumberStudent,
-               Video = cls.Video!,
-               Students = students.Select(s => StudentCustomMapper.fromStudentToStudentResponse(s)).ToList(),
-               Lecture = cls.Lecture!,
-               Schedules = cls.Schedules!,
+                CartItemId = itemId,
+                ItemId = cls != null ? cls.Id : course.Id,
+                ItemType = cls != null ? "CLASS" : "COURSE",
+                Name = cls != null ? cls.ClassCode : course.Name,
+                Code = cls != null ? cls.ClassCode : course.Syllabus!.SubjectCode,
+                Subject = course.SubjectName,
+                Price = course.Price,
+                MinYearOldStudent = course.MinYearOldsStudent!.Value,
+                MaxYearOldStudent = course.MinYearOldsStudent!.Value,
+                Image = cls != null ? cls.Image : course.Image    
             };
 
             return response;
         }
-
         public static FavoriteItemResponse fromCartItemToFavoriteItemResponse(Course course, Guid itemId)
         {
             if(course == null || itemId == default)
@@ -55,18 +46,18 @@ namespace MagicLand_System.Mappers.Custom
 
             return response;
         }
-        //public static CartItemResponse fromCartItemToCartItemResponse(Guid cartItemId, ClassResExtraInfor cls, IEnumerable<Student> students)
-        //{
-        //    CartItemResponse response = new CartItemResponse
-        //    {
-        //        CartItemId = cartItemId,
-        //        Students = students.Count() == 0
-        //        ? new List<StudentResponse>()
-        //        : students.Select(s => StudentCustomMapper.fromStudentToStudentResponse(s)).ToList(),
-        //        Class = cls
-        //    };
+        public static WishListItemResponse fromCartItemToCartItemResponse(Guid cartItemId, ClassResExtraInfor cls, IEnumerable<Student> students)
+        {
+            WishListItemResponse response = new WishListItemResponse
+            {
+                ItemId = cartItemId,
+                Students = students.Count() == 0
+                ? new List<StudentResponse>()
+                : students.Select(s => StudentCustomMapper.fromStudentToStudentResponse(s)).ToList(),
+                Class = cls
+            };
 
-        //    return response;
-        //}
+            return response;
+        }
     }
 }

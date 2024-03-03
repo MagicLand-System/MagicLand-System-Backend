@@ -30,57 +30,57 @@ namespace MagicLand_System.Mappers.CustomMapper
             return response;
         }
 
-        //public static CartResponse fromCartToCartResponse(Cart cart, List<Student> students, List<ClassResExtraInfor> cls)
-        //{
-        //    if (cart == null || cart.CartItems == null || cls == null)
-        //    {
-        //        return new CartResponse();
-        //    }
+        public static WishListResponse fromCartToWishListResponse(Cart cart, List<Student> students, List<ClassResExtraInfor> cls)
+        {
+            if (cart == null || cart.CartItems == null || cls == null)
+            {
+                return new WishListResponse();
+            }
 
-        //    // Leave Incase Error
+            // Leave Incase Error
 
-        //    #region
-        //    // Way 1
-        //    //var cartResponses = cart.Carts.Select(cts =>
-        //    //{
-        //    //    var classEntity = cls.FirstOrDefault(cls => cls.Id == cts.ClassId)!;
+            #region
+            // Way 1
+            //var cartResponses = cart.Carts.Select(cts =>
+            //{
+            //    var classEntity = cls.FirstOrDefault(cls => cls.Id == cts.ClassId)!;
 
-        //    //    List<Student> studentsForCartItem = new List<Student>();
-        //    //    foreach (var s in cts.CartItemRelations)
-        //    //    {
-        //    //        studentsForCartItem.Add(students.FirstOrDefault(stu => stu.Id == s.StudentId)!);
-        //    //    }
-        //    //    return fromCartItemToCartItemResponse(cts.Id, classEntity, studentsForCartItem);
-        //    //}).ToList();
+            //    List<Student> studentsForCartItem = new List<Student>();
+            //    foreach (var s in cts.CartItemRelations)
+            //    {
+            //        studentsForCartItem.Add(students.FirstOrDefault(stu => stu.Id == s.StudentId)!);
+            //    }
+            //    return fromCartItemToCartItemResponse(cts.Id, classEntity, studentsForCartItem);
+            //}).ToList();
 
-        //    // Way 2
-        //    //CartResponse response = new CartResponse
-        //    //{
-        //    //    Id = cart.Id,
-        //    //    CartItems = cart.Carts.Select(cts =>
-        //    //    {
-        //    //        var classEntity = cls.FirstOrDefault(cls => cls.Id == cts.ClassId)!;
+            // Way 2
+            //CartResponse response = new CartResponse
+            //{
+            //    Id = cart.Id,
+            //    CartItems = cart.Carts.Select(cts =>
+            //    {
+            //        var classEntity = cls.FirstOrDefault(cls => cls.Id == cts.ClassId)!;
 
-        //    //        var studentsForCartItem = cts.CartItemRelations
-        //    //            .Select(cir => students.FirstOrDefault(stu => stu.Id == cir.StudentId))
-        //    //            .ToList();
+            //        var studentsForCartItem = cts.CartItemRelations
+            //            .Select(cir => students.FirstOrDefault(stu => stu.Id == cir.StudentId))
+            //            .ToList();
 
-        //    //        return fromCartItemToCartItemResponse(cts.Id, classEntity, studentsForCartItem);
-        //    //    }).ToList()
-        //    //};
-        //    #endregion
+            //        return fromCartItemToCartItemResponse(cts.Id, classEntity, studentsForCartItem);
+            //    }).ToList()
+            //};
+            #endregion
 
-        //    CartResponse response = new CartResponse
-        //    {
-        //        CartId = cart.Id,
-        //        Items = cart.CartItems.Select(cts => CartItemCustomMapper.fromCartItemToCartItemResponse(
-        //        cts.Id,
-        //        cls.FirstOrDefault(cls => cls.ClassId == cts.ClassId)!,
-        //        cts.StudentInCarts.Select(sic => students.FirstOrDefault(stu => stu.Id == sic.StudentId))!)).ToList()
-        //    };
+            WishListResponse response = new WishListResponse
+            {
+                CartId = cart.Id,
+                Items = cart.CartItems.Select(cts => CartItemCustomMapper.fromCartItemToCartItemResponse(
+                cts.Id,
+                cls.FirstOrDefault(cls => cls.ClassId == cts.ClassId)!,
+                cts.StudentInCarts.Select(sic => students.FirstOrDefault(stu => stu.Id == sic.StudentId))!)).ToList()
+            };
 
-        //    return response;
-        //}
+            return response;
+        }
 
     }
 }

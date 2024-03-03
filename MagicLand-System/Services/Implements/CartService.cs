@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Mappers.Custom;
 using MagicLand_System.Mappers.CustomMapper;
 using MagicLand_System.PayLoad.Response.Carts;
+using MagicLand_System.PayLoad.Response.Carts.GeneralCart;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -15,6 +17,102 @@ namespace MagicLand_System.Services.Implements
         public CartService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<CartService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
+
+        #region for inform response
+        //public async Task<CartForCourseResponse> AddCourseFavoriteOffCurrentParentAsync(Guid courseId)
+        //{
+        //    var currentParentCart = await FetchCurrentParentCart();
+
+        //    var favoriteResponse = new CartForCourseResponse();
+        //    try
+        //    {
+        //        if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.CourseId == courseId))
+        //        {
+        //            throw new BadHttpRequestException($"Id [{courseId}] Của Khóa Đã Có Trong Danh Sách Yêu Thích", StatusCodes.Status400BadRequest);
+        //        }
+        //        else
+        //        {
+        //            var newItem = new CartItem
+        //            {
+        //                Id = new Guid(),
+        //                CartId = currentParentCart.Id,
+        //                CourseId = courseId,
+        //                DateCreated = DateTime.Now,
+        //            };
+
+        //            await _unitOfWork.GetRepository<CartItem>().InsertAsync(newItem);
+
+        //            favoriteResponse = await _unitOfWork.CommitAsync() > 0
+        //                 ? await GetDetailCurrentParrentFavorite()
+        //                 : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
+        //        }
+
+        //        return favoriteResponse;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new BadHttpRequestException(ex.InnerException != null ? ex.InnerException.Message : ex.Message, StatusCodes.Status500InternalServerError);
+        //    }
+        //}
+
+
+        //public async Task<CartForCourseResponse> GetDetailCurrentParrentFavorite()
+        //{
+        //    try
+        //    {
+        //        var currentParrentCart = await FetchCurrentParentCart();
+
+        //        if (currentParrentCart != null && currentParrentCart.CartItems.Count() > 0)
+        //        {
+        //            var items = new List<CartItemForCourseResponse>();
+
+        //            foreach (var item in currentParrentCart.CartItems)
+        //            {
+        //                if (item.CourseId == default)
+        //                {
+        //                    continue;
+        //                }
+        //                List<string> coursePrer = new List<string>();
+
+        //                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+        //                    predicate: c => c.Id == item.CourseId,
+        //                    include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents)
+        //                    .Include(x => x.Syllabus!.SyllabusPrerequisites!));
+
+        //                foreach (var id in course.Syllabus!.SyllabusPrerequisites!.Select(sp => sp.PrerequisiteSyllabusId))
+        //                {
+        //                    coursePrer.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+        //                    selector: x => x.Course!.Name!,
+        //                    predicate: c => c.Id == id,
+        //                    include: x => x.Include(x => x.Course!)));
+        //                }
+
+        //                var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+        //                    predicate: c => c.CourseId == item.CourseId,
+        //                   include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
+        //                   .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room!));
+
+        //                items.Add(CartItemCustomMapper.fromCartItemToCartItemForCourseResponse(item.Id, classes.ToList(), course, coursePrer));
+        //            }
+
+        //            return new CartForCourseResponse
+        //            {
+        //                CartId = currentParrentCart.Id,
+        //                Items = items,
+        //            };
+        //        }
+
+        //        return new CartForCourseResponse { CartId = currentParrentCart != null ? currentParrentCart.Id : default };
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception(ex.Message);
+        //    }
+        //}
+
+
+        #endregion
         public async Task<FavoriteResponse> AddCourseFavoriteOffCurrentParentAsync(Guid courseId)
         {
             var currentParentCart = await FetchCurrentParentCart();
@@ -51,11 +149,11 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<CartResponse> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId)
+        public async Task<WishListResponse> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId)
         {
             var currentParentCart = await FetchCurrentParentCart();
 
-            var cartReponse = new CartResponse();
+            var cartReponse = new WishListResponse();
             try
             {
                 if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.ClassId == classId))
@@ -119,44 +217,48 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<CartResponse> GetDetailCurrentParrentCart()
+        public async Task<WishListResponse> GetDetailCurrentParrentCart()
         {
             try
             {
                 var currentParrentCart = await FetchCurrentParentCart();
+                var classes = new List<ClassResExtraInfor>();
+                var students = new List<Student>();
 
                 if (currentParrentCart != null && currentParrentCart.CartItems.Count() > 0)
                 {
-                    var validItems = currentParrentCart.CartItems.Where(ci => ci.CourseId == default).ToList();
-
-                    var classes = new List<ClassResExtraInfor>();
-
-                    foreach (var task in validItems.Select(async cartItem => await _unitOfWork.GetRepository<Class>()
-                    .SingleOrDefaultAsync(predicate: x => x.Id == cartItem.ClassId, include: x => x
-                    .Include(x => x.Lecture!)
-                    .Include(x => x.StudentClasses)
-                    .Include(x => x.Course)
-                    .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-                    .ThenInclude(s => s.Slot)!
-                    .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-                    .ThenInclude(s => s.Room)!)))
+                    foreach (var item in currentParrentCart.CartItems)
                     {
-                        var cls = await task;
+                        if (item.CourseId != default)
+                        {
+                            continue;
+                        }
+
+                        var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                            predicate: x => x.Id == item.ClassId,
+                            include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
+                           .Include(x => x.Lecture)
+                           .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
+
+                        cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                            predicate: x => x.Id == cls.CourseId,
+                            include: x => x.Include(x => x.Syllabus!));
+
                         classes.Add(_mapper.Map<ClassResExtraInfor>(cls));
-                    }
 
-                    var students = new List<Student>();
 
-                    foreach (var task in currentParrentCart.CartItems.SelectMany(c => c.StudentInCarts)
+                        foreach (var task in item.StudentInCarts
                         .Where(studentInCart => studentInCart != null)
                         .Select(async studentInCart => await _unitOfWork.GetRepository<Student>()
                         .SingleOrDefaultAsync(predicate: c => c.Id == studentInCart.StudentId)))
-                    {
-                        var student = await task;
-                        students.Add(student);
+                        {
+                            var student = await task;
+                            students.Add(student);
+                        }
                     }
+
                     #region
-                    // Leave InCase Using Back
+                    //Leave InCase Using Back
 
                     //foreach (var cts in cart.Carts)
                     //{
@@ -170,7 +272,7 @@ namespace MagicLand_System.Services.Implements
                     //}
                     //var classes = await Task.WhenAll(cart.Carts.Select(async cts =>
                     //{
-                    //    var classEntity = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == cts.ClassId, 
+                    //    var classEntity = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == cts.ClassId,
                     //        include: x => x.Include(x => x.User).ThenInclude(u => u.Address).Include(x => x.Address!));
 
                     //    return _mapper.Map<ClassResponse>(classEntity);
@@ -191,10 +293,11 @@ namespace MagicLand_System.Services.Implements
                     //    students.Add(student);
                     //}
                     #endregion
-                    return default; //CartCustomMapper.fromCartToCartResponse(currentParrentCart, students, classes);
-                }
+                    return CartCustomMapper.fromCartToWishListResponse(currentParrentCart, students, classes);
+                };
 
-                return new CartResponse { CartId = currentParrentCart != null ? currentParrentCart.Id : default };
+
+                return new WishListResponse { CartId = currentParrentCart != null ? currentParrentCart.Id : default };
 
             }
             catch (Exception ex)
@@ -282,5 +385,67 @@ namespace MagicLand_System.Services.Implements
             }).ToList();
         }
 
+        public async Task<CartResponse> GetAllItemsInCartAsync()
+        {
+            try
+            {
+                var currentParrentCart = await FetchCurrentParentCart();
+
+                if (currentParrentCart != null && currentParrentCart.CartItems.Count() > 0)
+                {
+                    var response = new CartResponse { CartId = currentParrentCart.Id };
+
+                    await GenrateCartItem(currentParrentCart, response);
+
+                    return response;
+                }
+
+                return new CartResponse { CartId = currentParrentCart != null ? currentParrentCart.Id : default };
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        private async Task GenrateCartItem(Cart currentParrentCart, CartResponse response)
+        {
+            foreach (var item in currentParrentCart.CartItems)
+            {
+                var itemResponse = new CartItemResponse { ItemType = "" };
+
+                if (item.CourseId == default)
+                {
+                    var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                        predicate: c => c.Id == item.ClassId,
+                        include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)!);
+
+                    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                        predicate: c => c.Id == cls.CourseId,
+                        include: x => x.Include(x => x.Syllabus)!);
+
+                    itemResponse = CartItemCustomMapper.fromCartItemToCartItemResponse(course, cls, item.Id);
+                    itemResponse.Schedules!.Add(ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls));
+                    response.Items.Add(itemResponse);
+                    continue;
+                }
+
+                if (item.CourseId != default)
+                {
+                    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                      predicate: c => c.Id == item.CourseId,
+                      include: x => x.Include(x => x.Syllabus)!);
+
+                    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                        predicate: c => c.CourseId == item.CourseId,
+                        include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)!);
+
+                    itemResponse = CartItemCustomMapper.fromCartItemToCartItemResponse(course, null, item.Id);
+                    itemResponse.Schedules = classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList();
+                    response.Items.Add(itemResponse);
+                }
+            }
+        }
     }
 }

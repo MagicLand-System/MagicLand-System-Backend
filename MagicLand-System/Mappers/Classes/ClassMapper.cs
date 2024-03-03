@@ -47,7 +47,8 @@ namespace MagicLand_System.Mappers.Classes
 
             CreateMap<Class, ClassResExtraInfor>()
                 .ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Course!.Name))
+                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.ClassCode))
+                .ForMember(dest => dest.ClassCode, opt => opt.MapFrom(src => src.ClassCode))
                 .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
                 .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))

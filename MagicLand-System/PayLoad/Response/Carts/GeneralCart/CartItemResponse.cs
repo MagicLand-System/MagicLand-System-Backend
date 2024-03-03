@@ -1,7 +1,6 @@
-﻿using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System.PayLoad.Response.Students;
+﻿using MagicLand_System.PayLoad.Response.Schedules;
 
-namespace MagicLand_System.PayLoad.Response.Carts
+namespace MagicLand_System.PayLoad.Response.Carts.GeneralCart
 {
     public class CartItemResponse
     {
@@ -15,5 +14,6 @@ namespace MagicLand_System.PayLoad.Response.Carts
         public int MinYearOldStudent { get; set; }
         public int MaxYearOldStudent { get; set; }
         public string? Image { get; set; } = string.Empty;
+        public List<OpeningScheduleResponse>? Schedules { get; set; } = new List<OpeningScheduleResponse>();
     }
 }

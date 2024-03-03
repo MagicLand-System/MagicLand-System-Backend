@@ -5,7 +5,7 @@ using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.PayLoad.Response.Carts
 {
-    public class CartItemForClassResponse : CartItemResponse
+    public class CartItemForClassResponse : CartItemInformResponse
     {
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }

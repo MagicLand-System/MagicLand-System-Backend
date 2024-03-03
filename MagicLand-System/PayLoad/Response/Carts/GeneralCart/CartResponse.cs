@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System.PayLoad.Response.Carts
+﻿namespace MagicLand_System.PayLoad.Response.Carts.GeneralCart
 {
     public class CartResponse
     {

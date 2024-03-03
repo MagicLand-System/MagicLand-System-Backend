@@ -66,24 +66,29 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<CourseResExtraInfor> GetCourseByIdAsync(Guid id)
         {
-            var course = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
-            .Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites)
-            .Include(x => x.Classes)
-            .ThenInclude(c => c.Schedules)
-            .ThenInclude(s => s.Slot)
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Id == id, include: x => x
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents)
-            .Include(x => x.Syllabus)
-            .ThenInclude(cs => cs!.Topics!.OrderBy(tp => tp.OrderNumber))
-            .ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
+            .Include(x => x.Syllabus!));
 
-            var coursePrerequisites = !course.Any()
+            foreach (var course in courses)
+            {
+                course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == course.Id,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+
+                course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == course.Id,
+                include: x => x.Include(x => x.SyllabusPrerequisites).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+            }
+
+            var coursePrerequisites = !courses.Any()
                 ? throw new BadHttpRequestException($"Id [{id}] Khóa Hoc Không Tồn Tại", StatusCodes.Status400BadRequest)
-                : await GetCoursePrerequesites(course);
+                : await GetCoursePrerequesites(courses);
 
-            var coureSubsequents = await GetCoureSubsequents(course);
+            var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return CourseCustomMapper.fromCourseToCourseResExtraInfor(course.ToList()[0], coursePrerequisites, coureSubsequents);
+            return CourseCustomMapper.fromCourseToCourseResExtraInfor(courses.ToList()[0], coursePrerequisites, coureSubsequents);
         }
 
         public async Task<List<CourseResExtraInfor>> GetCoursesAsync(bool isValid)
