@@ -180,7 +180,7 @@ namespace MagicLand_System.Services.Implements
             }
            if(courseId != null)
             {
-               var type = "all";
+                var type = "all";
                 var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(courseId.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 if (course != null)
                 {
