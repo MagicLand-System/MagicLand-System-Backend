@@ -80,7 +80,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = "Created Successfully" });
         }
-        [HttpGet(ApiEndpointConstant.User.UserEndPointGetLecturer)]
+        [HttpPost(ApiEndpointConstant.User.UserEndPointGetLecturer)]
         [ProducesResponseType(typeof(LecturerResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundObjectResult))]
         public async Task<IActionResult> GetLecturers(FilterLecturerRequest? request)
