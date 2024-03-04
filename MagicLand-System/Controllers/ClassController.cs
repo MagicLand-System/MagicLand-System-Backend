@@ -377,7 +377,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetMakeUpClass([FromBody] List<CreateClassesRequest> requests)
         {
             var isSuccess = await _classService.InsertClasses(requests);
-            return Ok("insert all success");
+            return Ok(isSuccess);
         }
     }
 }
