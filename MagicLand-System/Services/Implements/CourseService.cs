@@ -370,6 +370,62 @@ namespace MagicLand_System.Services.Implements
             var categories = await _unitOfWork.GetRepository<SyllabusCategory>().GetListAsync();
             return categories.ToList();
         }
+
+        public async Task<StaffCourseResponse> GetStaffCourseByCourseId(string courseid)
+        {
+            var courseFound = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseid), include: x => x.Include(x => x.SubDescriptionTitles));
+            if (courseFound == null)
+            {
+                throw new BadHttpRequestException("Không tìm thấy khóa thích hợp", StatusCodes.Status400BadRequest);
+            }
+            var courseSyllabus = courseFound.SyllabusId;
+            var subjectname = "undefined";
+            if (courseSyllabus != null)
+            {
+                subjectname = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Name;
+            }
+            var titles = courseFound.SubDescriptionTitles;
+            List<SubDescriptionTitleResponse> desResponse = new List<SubDescriptionTitleResponse>();
+            foreach (var title in titles)
+            {
+                List<SubDescriptionContentResponse> req = new List<SubDescriptionContentResponse>();
+                var content = new SubDescriptionTitleResponse
+                {
+                    Title = title.Title,
+                };
+                var sc = (await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate: x => x.SubDescriptionTitleId.ToString().Equals(title.Id.ToString()))).ToList();
+                foreach (var s in sc)
+                {
+                    req.Add(new SubDescriptionContentResponse
+                    {
+                        Content = s.Content,
+                        Description = s.Description,
+                    });
+                }
+                content.Contents = req;
+                desResponse.Add(content);
+
+            }
+            StaffCourseResponse staffCourseResponse = new StaffCourseResponse
+            {
+                AddedDate = courseFound.AddedDate,
+                Id = courseFound.Id,
+                Image = courseFound.Image,
+                MainDescription = courseFound.MainDescription,
+                MaxYearOldsStudent = courseFound.MaxYearOldsStudent,
+                MinYearOldsStudent = courseFound.MinYearOldsStudent,
+                Name = courseFound.Name,
+                NumberOfSession = courseFound.NumberOfSession,
+                Price = courseFound.Price,
+                Status = courseFound.Status,
+                SubjectName = subjectname,
+                SyllabusId = courseFound.SyllabusId,
+                UpdateDate = courseFound.UpdateDate,
+                SubDescriptionTitles = desResponse,
+            };
+
+            return staffCourseResponse;
+        }
         #endregion
     }
 }
