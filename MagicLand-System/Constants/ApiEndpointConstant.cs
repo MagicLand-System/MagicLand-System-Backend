@@ -129,6 +129,11 @@
             public const string UpdateOverall = EndPointBase + "/{id}/updateOverall";
             public const string UpdateTopic = EndPointBase + "/{topicId}/updateTopic";
             public const string UpdateSession = EndPointBase + "/{descriptionId}/updateSession";
+            public const string GenralInfromation = EndPointBase + "/staff/getGeneralInformation";
+            public const string MaterialInfor = EndPointBase + "/staff/getMaterial";
+            public const string ExamSyllabus = EndPointBase + "/staff/getExamSyllabus";
+            public const string SessionSyllabus = EndPointBase + "/staff/getSessionSyllabus";
+            public const string QuestionSyllabus = EndPointBase + "/staff/getQuestionyllabus";
         }
         public static class LectureEndPoint
         {

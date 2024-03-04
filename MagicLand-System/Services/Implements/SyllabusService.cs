@@ -1069,7 +1069,7 @@ namespace MagicLand_System.Services.Implements
             syllRes.QuestionPackages = await GetStaffQuestionPackageResponses(id);
             return syllRes;
         }
-        private async Task<List<StaffMaterialResponse>> GetMaterialResponse(string id)
+        public async Task<List<StaffMaterialResponse>> GetMaterialResponse(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var materials = await _unitOfWork.GetRepository<Material>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
@@ -1089,7 +1089,7 @@ namespace MagicLand_System.Services.Implements
             }
             return result;
         }
-        private async Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string id)
+        public async Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var examSyllabuses = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
@@ -1116,7 +1116,7 @@ namespace MagicLand_System.Services.Implements
             }
             return result;
         }
-        private async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
+        public async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
@@ -1214,7 +1214,7 @@ namespace MagicLand_System.Services.Implements
                 ContentName = questionpackage.ContentName,
             };
         }
-        private async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
+        public async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sylId), include: x => x.Include(x => x.Topics));
             if (syllabus.Topics.Count() > 0 && syllabus.Topics != null)
@@ -1406,6 +1406,60 @@ namespace MagicLand_System.Services.Implements
             await GenerateQuestionPackgeItems(questionPackage.Id, request.QuestionRequests);
             await _unitOfWork.CommitAsync();
             return true;
+        }
+
+        public async Task<GeneralSyllabusResponse> GetGeneralSyllabusResponse(string syllabusId)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabusId));
+            if (syllabus == null)
+            {
+                return new GeneralSyllabusResponse();
+            }
+            var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()), selector: x => x.Name);
+            List<string> strings = new List<string>();
+            var namePre = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId.ToString().Equals(syllabus.Id.ToString()), selector: x => x.PrerequisiteSyllabusId);
+            if (namePre != null)
+            {
+                foreach (var prerequisite in namePre)
+                {
+                    strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()), selector: x => x.SubjectCode));
+                }
+            }
+            var syllRes = new GeneralSyllabusResponse()
+            {
+                SyllabusLink = syllabus.SyllabusLink,
+                Description = syllabus.Description,
+                Category = cagegory,
+                EffectiveDate = syllabus.EffectiveDate.Value.ToString("dd/MM/yyyy"),
+                MinAvgMarkToPass = syllabus.MinAvgMarkToPass,
+                ScoringScale = syllabus.ScoringScale,
+                StudentTasks = syllabus.StudentTasks,
+                SyllabusName = syllabus.Name,
+                TimePerSession = syllabus.TimePerSession,
+                SubjectCode = syllabus.SubjectCode,
+                SyllabusId = syllabus.Id,
+
+            };
+            if (strings.Count > 0)
+            {
+                syllRes.PreRequisite = strings;
+            }
+            var courseId = syllabus.CourseId;
+            if (courseId == null)
+            {
+                syllRes.LinkedCourse = null;
+            }
+            else
+            {
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()));
+                var courseName = course.Name;
+                syllRes.LinkedCourse = new PayLoad.Response.Courses.LinkedCourse
+                {
+                    CourseId = courseId.Value,
+                    CourseName = courseName
+                };
+            }
+            return syllRes;
         }
         #endregion
 

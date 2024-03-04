@@ -60,6 +60,11 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Ngày bắt đầu không hợp lệ", StatusCodes.Status400BadRequest);
             }
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()));
+            if (course == null)
+            {
+                throw new BadHttpRequestException("không thấy lớp hợp lệ", StatusCodes.Status400BadRequest);
+            }
             Class createdClass = new Class
             {
                 Id = Guid.NewGuid(),
@@ -76,6 +81,7 @@ namespace MagicLand_System.Services.Implements
                 City = "Hồ Chí Minh",
                 Street = "138 Lương Định Của",
                 AddedDate = DateTime.Now,
+                Image = course.Image,
             };
             await _unitOfWork.GetRepository<Class>().InsertAsync(createdClass);
             var isSuccessAtClass = await _unitOfWork.CommitAsync() > 0;
@@ -121,11 +127,7 @@ namespace MagicLand_System.Services.Implements
                     convertedDateOfWeek.Add(DayOfWeek.Saturday);
                 }
             }
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()));
-            if (course == null)
-            {
-                throw new BadHttpRequestException("không thấy lớp hợp lệ", StatusCodes.Status400BadRequest);
-            }
+
             int numberOfSessions = course.NumberOfSession;
             int scheduleAdded = 0;
             DateTime startDate = request.StartDate;
@@ -995,12 +997,19 @@ namespace MagicLand_System.Services.Implements
             }
             return resultList;
         }
-        public async Task<bool> InsertClasses(List<CreateClassesRequest> request)
+        public async Task<InsertClassesResponse> InsertClasses(List<CreateClassesRequest> request)
         {
             if (request == null)
             {
-                return false;
+                throw new BadHttpRequestException("Request không có", StatusCodes.Status400BadRequest);
             }
+            InsertClassesResponse response = new InsertClassesResponse
+            {
+                SuccessRow = 0,
+                FailureRow = 0,
+
+            };
+            List<RowInsertResponse> rows = new List<RowInsertResponse>();
             foreach (var rq in request)
             {
                 var courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Name.Trim().ToLower().Equals(rq.CourseName.Trim().ToLower()), selector: x => x.Id);
@@ -1008,16 +1017,33 @@ namespace MagicLand_System.Services.Implements
                 var lecturerId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().ToLower().Equals(rq.LecturerPhone.Trim().ToLower()), selector: x => x.Id);
                 if (courseId == null)
                 {
-                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại courseName như vậy", StatusCodes.Status400BadRequest);
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Không tìm thấy khóa học có tên như vậy",
+                        IsSucess = false
+                    });
                     continue;
                 }
                 if (roomId == null)
                 {
-                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại roomName như vậy", StatusCodes.Status400BadRequest);
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Không tìm thấy phòng có tên như vậy",
+                        IsSucess = false
+                    });
+                    continue;
                 }
                 if (lecturerId == null)
                 {
-                    throw new BadHttpRequestException($"cột {rq.Index} không tồn tại  lecturer như vậy", StatusCodes.Status400BadRequest);
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Không tìm thấy giáo viên có sđt như vậy",
+                        IsSucess = false
+                    });
+                    continue;
                 }
                 var schedules = rq.ScheduleRequests;
                 List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
@@ -1026,8 +1052,8 @@ namespace MagicLand_System.Services.Implements
                     string[] parts = schedule.ScheduleTime.Split(':');
                     string day = parts[0].Trim(); // Thứ 2
                     string timeRange = parts[1].Trim(); // 15:00 - 20:00
-                    string startTime = timeRange.Split('-')[0].Trim() + ":00"; // 15:00
-                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Equals(startTime.Trim()), selector: x => x.Id);
+                    string startTime = timeRange.Split('-')[0].Trim(); // 15:00
+                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
                     if (slotId == null)
                     {
                         throw new BadHttpRequestException($"cột {rq.Index} không tồn tại slot như v", StatusCodes.Status400BadRequest);
@@ -1073,6 +1099,42 @@ namespace MagicLand_System.Services.Implements
                 var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
                     ? (DateTime?)parsedDate
                     : DateTime.Parse(rq.StartDate);
+                var resultCheck = await CheckValidateSchedule(new FilterLecturerRequest
+                {
+                    CourseId = courseId.ToString(),
+                    Schedules = scheduleRequests,
+                    StartDate = date,
+                },lecturerId.ToString(),roomId.ToString());
+                if (resultCheck.Equals("FBRL"))
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Xuất hiện sự trùng cả giáo viên và phòng học nếu xếp  như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (resultCheck.Equals("FBR"))
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Xuất hiện sự trùng phòng học nếu xếp  như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (resultCheck.Equals("FBL"))
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Xuất hiện sự trùng giảng viên nếu xếp  như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
                 var myRequest = new CreateClassRequest
                 {
                     ClassCode = await AutoCreateClassCode(courseId.ToString()),
@@ -1088,10 +1150,152 @@ namespace MagicLand_System.Services.Implements
                 var isSuccess = await CreateNewClass(myRequest);
                 if (!isSuccess)
                 {
-                    throw new BadHttpRequestException($"{rq.Index} không thể insert", StatusCodes.Status400BadRequest);
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Error = "Có lỗi trong quá trình insert",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                rows.Add(new RowInsertResponse
+                {
+                    Index = rq.Index,
+                    IsSucess = true,
+                });
+            }
+            response.RowInsertResponse = rows;
+            var succ = response.RowInsertResponse.Where(x => x.IsSucess).Count();
+            var fail = response.RowInsertResponse.Where(x => !x.IsSucess).Count();
+            response.SuccessRow = succ;
+            response.FailureRow = fail;
+            return response;
+        }
+        private async Task<string> CheckValidateSchedule(FilterLecturerRequest request,string LecturerId,string RoomId)
+        {
+            List<ScheduleRequest> scheduleRequests = request.Schedules;
+            List<string> daysOfWeek = new List<string>();
+            foreach (ScheduleRequest scheduleRequest in scheduleRequests)
+            {
+                daysOfWeek.Add(scheduleRequest.DateOfWeek);
+            }
+            List<DayOfWeek> convertedDateOfWeek = new List<DayOfWeek>();
+            foreach (var dayOfWeek in daysOfWeek)
+            {
+                if (dayOfWeek.ToLower().Equals("sunday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Sunday);
+                }
+                if (dayOfWeek.ToLower().Equals("monday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Monday);
+                }
+                if (dayOfWeek.ToLower().Equals("tuesday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Tuesday);
+                }
+                if (dayOfWeek.ToLower().Equals("wednesday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Wednesday);
+                }
+                if (dayOfWeek.ToLower().Equals("thursday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Thursday);
+                }
+                if (dayOfWeek.ToLower().Equals("friday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Friday);
+                }
+                if (dayOfWeek.ToLower().Equals("saturday"))
+                {
+                    convertedDateOfWeek.Add(DayOfWeek.Saturday);
                 }
             }
-            return true;
+            var coursex = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()));
+            if (coursex == null)
+            {
+                throw new BadHttpRequestException("không thấy lớp hợp lệ", StatusCodes.Status400BadRequest);
+            }
+            int numberOfSessions = coursex.NumberOfSession;
+            int scheduleAdded = 0;
+            DateTime startDatex = request.StartDate.Value;
+            while (scheduleAdded < numberOfSessions)
+            {
+                if (convertedDateOfWeek.Contains(startDatex.DayOfWeek))
+                {
+
+                    scheduleAdded++;
+                }
+                startDatex = startDatex.AddDays(1);
+            }
+            var endDate = startDatex;
+            List<ScheduleRequest> schedules = request.Schedules;
+            List<ConvertScheduleRequest> convertSchedule = new List<ConvertScheduleRequest>();
+            foreach (var schedule in schedules)
+            {
+                var doW = 1;
+                if (schedule.DateOfWeek.ToLower().Equals("sunday"))
+                {
+                    doW = 1;
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("monday"))
+                {
+                    doW = 2;
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("tuesday"))
+                {
+                    doW = 4;
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("wednesday"))
+                {
+                    doW = 8;
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("thursday"))
+                {
+                    doW = 16;
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("friday"))
+                {
+                    doW = 32;
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("saturday"))
+                {
+                    doW = 64;
+                }
+                convertSchedule.Add(new ConvertScheduleRequest
+                {
+                    DateOfWeek = doW,
+                    SlotId = schedule.SlotId,
+                });
+            }
+            var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include : x => x.Include(x => x.Class));
+            allSchedule = allSchedule.Where(x => (x.Date < endDate && x.Date >= request.StartDate)).ToList();
+            List<Schedule> result = new List<Schedule>();
+            foreach (var convert in convertSchedule)
+            {
+                var newFilter = allSchedule.Where(x => (x.DayOfWeek == convert.DateOfWeek && x.SlotId.ToString().Equals(convert.SlotId.ToString()))).ToList();
+                if (newFilter != null)
+                {
+                    result.AddRange(newFilter);
+                }
+            }
+            var rx1 = result.Where(x => (x.RoomId.ToString().Equals(RoomId) && x.Class.LecturerId.ToString().Equals(LecturerId))).ToList();
+            var rx2 = result.Where(x => x.SubLecturerId != null).Where(x => x.SubLecturerId.ToString().Equals(LecturerId)).Where(x => x.RoomId.ToString().Equals(RoomId)).ToList();
+            if((rx1 != null && rx1.Count > 0) || (rx2 != null && rx2.Count > 0))
+            {
+                return "FBRL";
+            }
+            var rs = result.Where(x => x.RoomId.ToString().Equals(RoomId)).ToList();
+            if(rs != null && rs.Count > 0)
+            {
+                return "FBR";
+            }
+            var rs1 = result.Where(x => (x.Class.LecturerId.ToString().Equals(LecturerId))).ToList();
+            var rs2 = result.Where(x => x.SubLecturerId != null).Where(x => x.SubLecturerId.ToString().Equals(LecturerId)).ToList();
+            if((rs1 != null && rs1.Count > 0) || (rs2 != null && rs2.Count > 0)){
+                return "FBL";
+            }
+            return "S";
         }
         #endregion
         #region thanh_lee_code
