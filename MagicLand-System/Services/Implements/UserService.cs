@@ -135,7 +135,7 @@ namespace MagicLand_System.Services.Implements
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return true; //isSuccess;
         }
-        public async Task<List<LecturerResponse>> GetLecturers(string? courseId)
+        public async Task<List<LecturerResponse>> GetLecturers(FilterLecturerRequest? request)
         {
             var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
             if (users == null)
@@ -146,10 +146,10 @@ namespace MagicLand_System.Services.Implements
             List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
             foreach (var user in lecturers)
             {
-                var lecturerField = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(user.LecturerFieldId.ToString()),selector : x => x.Name);
+                var lecturerField = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(user.LecturerFieldId.ToString()), selector: x => x.Name);
                 var cls = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId.ToString().Equals(user.Id.ToString()));
                 var count = 0;
-                if(cls != null)
+                if (cls != null)
                 {
                     count = cls.Count;
                 }
@@ -157,7 +157,7 @@ namespace MagicLand_System.Services.Implements
                 if (schedule != null)
                 {
                     var sc = schedule.GroupBy(x => x.ClassId).ToList();
-                    count = count +  sc.Count;
+                    count = count + sc.Count;
                 }
                 LecturerResponse response = new LecturerResponse
                 {
@@ -178,24 +178,159 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-           if(courseId != null)
+            if (request != null)
             {
                 var type = "all";
-                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(courseId.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 if (course != null)
                 {
-                    if(course.Syllabus != null)
+                    if (course.Syllabus != null)
                     {
                         type = course.Syllabus.SyllabusCategory.Name;
                     }
                 }
-                if(type.Equals("all"))
+                if (type.Equals("all"))
                 {
                     return lecturerResponses;
-                } else
+                }
+                else
                 {
                     lecturerResponses = lecturerResponses.Where(x => x.LecturerField.Equals(type)).ToList();
                 }
+                if (request.Schedules != null && request.StartDate != null && request.CourseId != null)
+                {
+                    List<ScheduleRequest> scheduleRequests = request.Schedules;
+                    List<string> daysOfWeek = new List<string>();
+                    foreach (ScheduleRequest scheduleRequest in scheduleRequests)
+                    {
+                        daysOfWeek.Add(scheduleRequest.DateOfWeek);
+                    }
+                    List<DayOfWeek> convertedDateOfWeek = new List<DayOfWeek>();
+                    foreach (var dayOfWeek in daysOfWeek)
+                    {
+                        if (dayOfWeek.ToLower().Equals("sunday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Sunday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("monday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Monday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("tuesday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Tuesday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("wednesday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Wednesday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("thursday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Thursday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("friday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Friday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("saturday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Saturday);
+                        }
+                    }
+                    var coursex = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()));
+                    if (coursex == null)
+                    {
+                        throw new BadHttpRequestException("không thấy lớp hợp lệ", StatusCodes.Status400BadRequest);
+                    }
+                    int numberOfSessions = coursex.NumberOfSession;
+                    int scheduleAdded = 0;
+                    DateTime startDatex = request.StartDate.Value;
+                    while (scheduleAdded < numberOfSessions)
+                    {
+                        if (convertedDateOfWeek.Contains(startDatex.DayOfWeek))
+                        {
+
+                            scheduleAdded++;
+                        }
+                        startDatex = startDatex.AddDays(1);
+                    }
+                    var endDate = startDatex;
+                    List<ScheduleRequest> schedules = request.Schedules;
+                    List<ConvertScheduleRequest> convertSchedule = new List<ConvertScheduleRequest>();
+                    foreach (var schedule in schedules)
+                    {
+                        var doW = 1;
+                        if (schedule.DateOfWeek.ToLower().Equals("sunday"))
+                        {
+                            doW = 1;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("monday"))
+                        {
+                            doW = 2;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("tuesday"))
+                        {
+                            doW = 4;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("wednesday"))
+                        {
+                            doW = 8;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("thursday"))
+                        {
+                            doW = 16;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("friday"))
+                        {
+                            doW = 32;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("saturday"))
+                        {
+                            doW = 64;
+                        }
+                        convertSchedule.Add(new ConvertScheduleRequest
+                        {
+                            DateOfWeek = doW,
+                            SlotId = schedule.SlotId,
+                        });
+                    }
+                    var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync();
+                    allSchedule = allSchedule.Where(x => (x.Date < endDate && x.Date >= request.StartDate)).ToList();
+                    List<Schedule> result = new List<Schedule>();
+                    foreach (var convert in convertSchedule)
+                    {
+                        var newFilter = allSchedule.Where(x => (x.DayOfWeek == convert.DateOfWeek && x.SlotId.ToString().Equals(convert.SlotId.ToString()))).ToList();
+                        if (newFilter != null)
+                        {
+                            result.AddRange(newFilter);
+                        }
+                    }
+                    List<Guid> classIds = new List<Guid>();
+                    List<Guid> subLecturerIds = new List<Guid>();
+                    if (result.Count > 0)
+                    {
+                        var groupByClass = result.GroupBy(x => x.ClassId);
+                        classIds = groupByClass.Select(x => x.Key).ToList();
+                        var groupBySubLecturer = result.Where(x => (x.SubLecturerId != null)).GroupBy(x => x.SubLecturerId.Value);
+                        subLecturerIds = groupBySubLecturer.Select(x => x.Key).ToList();
+                    }
+                    List<Guid> LecturerIds = new List<Guid>();
+                    foreach (var classId in classIds)
+                    {
+                        LecturerIds.Add(await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()), selector: x => x.LecturerId));
+                    }
+                    LecturerIds.AddRange(subLecturerIds);
+                    List<LecturerResponse> final = new List<LecturerResponse>();
+                    foreach (var res in lecturerResponses)
+                    {
+                        if (!LecturerIds.Contains(res.LectureId))
+                        {
+                            final.Add(res);
+                        }
+                    }
+                    return final;
+                }
+
             }
             return lecturerResponses;
         }

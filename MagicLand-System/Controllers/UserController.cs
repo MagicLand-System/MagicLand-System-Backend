@@ -80,12 +80,12 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = "Created Successfully" });
         }
-        [HttpGet(ApiEndpointConstant.User.UserEndPointGetLecturer)]
+        [HttpPost(ApiEndpointConstant.User.UserEndPointGetLecturer)]
         [ProducesResponseType(typeof(LecturerResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundObjectResult))]
-        public async Task<IActionResult> GetLecturers(string? courseId)
+        public async Task<IActionResult> GetLecturers(FilterLecturerRequest? request)
         {
-            var users = await _userService.GetLecturers(courseId);
+            var users = await _userService.GetLecturers(request);
             if (users == null)
             {
                 return NotFound(new ErrorResponse
