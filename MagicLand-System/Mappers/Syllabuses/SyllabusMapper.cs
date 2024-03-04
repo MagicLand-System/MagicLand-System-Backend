@@ -27,9 +27,10 @@ namespace MagicLand_System.Mappers.Syllabuses
             .ForMember(dest => dest.QuestionPackages, opt => opt.MapFrom(src => QuestionCustomMapper.fromTopicsToQuestionPackageResponse(src.Topics!)))
             .ForMember(dest => dest.Exams, opt => opt.MapFrom(src => ExamSyllabusCustomMapper.fromExamSyllabusesToExamSyllabusResponse(src.ExamSyllabuses!)));
 
-       
+
             CreateMap<Syllabus, SyllabusWithCourseResponse>()
             .ForMember(dest => dest.SyllabusId, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.UpdateDate, opt => opt.MapFrom(src => src.UpdateTime))
             .ForMember(dest => dest.SyllabusName, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.SyllabusCategory!.Name))
             .ForMember(dest => dest.EffectiveDate, opt => opt.MapFrom(src => src.EffectiveDate))
@@ -46,7 +47,6 @@ namespace MagicLand_System.Mappers.Syllabuses
             .ForMember(dest => dest.QuestionPackages, opt => opt.MapFrom(src => QuestionCustomMapper.fromTopicsToQuestionPackageResponse(src.Topics!)))
             .ForMember(dest => dest.Exams, opt => opt.MapFrom(src => ExamSyllabusCustomMapper.fromExamSyllabusesToExamSyllabusResponse(src.ExamSyllabuses!)))
             .ForMember(dest => dest.Course, opt => opt.MapFrom(src => CourseCustomMapper.fromCourseToCourseSimpleResponse(src.Course!)));
-
 
         }
     }

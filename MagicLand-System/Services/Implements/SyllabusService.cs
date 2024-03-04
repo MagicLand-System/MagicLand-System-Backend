@@ -385,8 +385,9 @@ namespace MagicLand_System.Services.Implements
             {
                 syllabuses = syllabuses.Where(syll => syll.UpdateTime.Date == date || syll.EffectiveDate != null && syll.EffectiveDate.Value.Date == date).ToList();
             }
-
-            return syllabuses.Select(syll => _mapper.Map<SyllabusWithCourseResponse>(syll)).ToList();
+            syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
+            SyllabusWithCourseResponse syllabusWithCourseResponse = new SyllabusWithCourseResponse();
+            return syllabuses.Select(syll => _mapper.Map<SyllabusWithCourseResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
         }
 
 
@@ -787,39 +788,39 @@ namespace MagicLand_System.Services.Implements
 
                 }
                 syllabus.UpdateTime = DateTime.Now;
-                if (!request.Description.IsNullOrEmpty())
+                if (request.Description != null)
                 {
                     syllabus.Description = request.Description;
                 }
                 if (request.MinAvgMarkToPass != null)
                 {
-                    syllabus.MinAvgMarkToPass = request.MinAvgMarkToPass;
+                    syllabus.MinAvgMarkToPass = request.MinAvgMarkToPass.Value;
                 }
-                if (!request.SyllabusLink.IsNullOrEmpty())
+                if (request.SyllabusLink != null)
                 {
                     syllabus.SyllabusLink = request.SyllabusLink;
                 }
-                if (!request.SyllabusName.IsNullOrEmpty())
+                if (request.SyllabusName != null)
                 {
                     syllabus.Name = request.SyllabusName;
                 }
                 if (request.ScoringScale != null)
                 {
-                    syllabus.ScoringScale = request.ScoringScale;
+                    syllabus.ScoringScale = request.ScoringScale.Value;
                 }
                 if (request.SubjectCode != null)
                 {
                     syllabus.SubjectCode = request.SubjectCode;
                 }
-                if (syllabus.TimePerSession != null)
+                if (request.TimePerSession != null)
                 {
-                    syllabus.TimePerSession = request.TimePerSession;
+                    syllabus.TimePerSession = request.TimePerSession.Value;
                 }
-                if (!request.StudentTasks.IsNullOrEmpty())
+                if (request.StudentTasks != null)
                 {
                     syllabus.StudentTasks = request.StudentTasks;
                 }
-                if (!request.Type.IsNullOrEmpty())
+                if (request.Type != null)
                 {
                     var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>()
           .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type!.ToLower().Trim()));
