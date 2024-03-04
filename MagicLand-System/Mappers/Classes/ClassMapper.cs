@@ -30,7 +30,7 @@ namespace MagicLand_System.Mappers.Classes
                 ? ClassMethodEnum.ONLINE.ToString()
                 : ClassMethodEnum.OFFLINE.ToString()))
                 .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()));
 
 
@@ -46,7 +46,7 @@ namespace MagicLand_System.Mappers.Classes
              ? ClassMethodEnum.ONLINE.ToString()
              : ClassMethodEnum.OFFLINE.ToString()))
              .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
-             .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+             .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
              .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()));
 
             CreateMap<Class, ClassResponseForLecture>()
@@ -62,7 +62,7 @@ namespace MagicLand_System.Mappers.Classes
              ? ClassMethodEnum.ONLINE.ToString()
              : ClassMethodEnum.OFFLINE.ToString()))
              .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
-             .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+             .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
              .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()));
 
             CreateMap<Class, ClassResExtraInfor>()
@@ -77,7 +77,7 @@ namespace MagicLand_System.Mappers.Classes
                 ? ClassMethodEnum.ONLINE.ToString()
                 : ClassMethodEnum.OFFLINE.ToString()))
                 .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
                 .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
                 .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromClassRelatedItemsToScheduleResWithSession(
@@ -104,7 +104,7 @@ namespace MagicLand_System.Mappers.Classes
                ? ClassMethodEnum.ONLINE.ToString()
                : ClassMethodEnum.OFFLINE.ToString()))
                .ForMember(dest => dest.NumberStudentRegistered, opt => opt.MapFrom(src => src.StudentClasses.Count()))
-               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.City + " " + src.District + " " + src.Street))
+               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
                .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
                .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToDailyScheduleList(src.Schedules.ToList())));

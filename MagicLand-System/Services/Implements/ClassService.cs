@@ -1323,13 +1323,15 @@ namespace MagicLand_System.Services.Implements
                     throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Ở Hiện Tại", StatusCodes.Status400BadRequest);
                 }
                 var response = _mapper.Map<ClassWithSlotOutSideResponse>(cls);
-
-                response.ScheduleInfors = ScheduleCustomMapper.fromClassAfterMapperToScheduleCurrentLectureResponse(currentSchedule);
+                response.ScheduleId = currentSchedule.Id;
+                response.DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(currentSchedule.DayOfWeek)[0].ToString();
+                response.Date = currentSchedule.Date;
+                response.Slot = SlotCustomMapper.fromSlotToSlotForLecturerResponse(currentSchedule.Slot!);
+                response.Room = RoomCustomMapper.fromRoomToRoomResponse(currentSchedule.Room!);
                 response.SlotOrder = StringHelper.GetSlotNumber(currentSchedule.Slot!.StartTime);
 
                 responses.Add(response);
             }
-
             return responses;
         }
 

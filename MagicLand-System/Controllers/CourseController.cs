@@ -1,8 +1,11 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -35,10 +38,13 @@ namespace MagicLand_System.Controllers
         ///  Truy Suất Các Khóa Học Có Lớp Có Thể Đăng Ký
         /// </summary>
         /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllValid)]
-        [AllowAnonymous]
+        [ProducesResponseType(typeof(CourseResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetCoursesValid()
         {
             var courses = await _courseService.GetCoursesAsync(true);

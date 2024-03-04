@@ -35,11 +35,11 @@ namespace MagicLand_System.Services.Implements
 
             var coursePrerequisitesFilter = await GetCoursePrerequesites(filteredCourses);
             var coureSubsequentsFilter = await GetCoureSubsequents(filteredCourses);
-
-            return filteredCourses.Select(fc => CourseCustomMapper
+            var responses = filteredCourses.Select(fc => CourseCustomMapper
                    .fromCourseToCourseResExtraInfor(fc, coursePrerequisitesFilter
                    .Where(cpf => fc.Syllabus!.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == cpf.Syllabus!.Id)),
                    coureSubsequentsFilter)).ToList();
+            return responses;
         }
 
         private List<Course> FilterProgress(int minYearsOld, int maxYearsOld, int? minNumberSession, int? maxNumberSession, double minPrice, double? maxPrice, string? subject, ICollection<Course> courses)
@@ -115,6 +115,20 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 responses.Add(CourseCustomMapper.fromCourseToCourseResExtraInfor(course, currentCoursePrerequistites, coureSubsequents));
+            }
+
+
+            if (isValid)
+            {
+                var currentUserCart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+                     predicate: x => x.UserId == GetUserIdFromJwt(),
+                     include: x => x.Include(x => x.CartItems.OrderByDescending(ci => ci.DateCreated)).ThenInclude(cts => cts.StudentInCarts));
+
+                foreach (var response in responses)
+                {
+                    response.IsInCart = currentUserCart.CartItems.Any(ci => ci.CourseId == response.CourseId) ? true : false;
+
+                }
             }
 
             return responses;

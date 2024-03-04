@@ -14,25 +14,6 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class ScheduleCustomMapper
     {
-        public static ScheduleCurrentLectureResponse fromClassAfterMapperToScheduleCurrentLectureResponse(Schedule schedule)
-        {
-            if (schedule == null)
-            {
-                return new ScheduleCurrentLectureResponse();
-            }
-
-            var response = new ScheduleCurrentLectureResponse
-            {
-                ScheduleId = schedule.Id,
-                DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
-                Date = schedule.Date,
-                Slot = SlotCustomMapper.fromSlotToSlotForLecturerResponse(schedule.Slot!),
-                Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
-            };
-
-            return response;
-        }
-
         public static List<ScheduleWithoutLectureResponse> fromScheduleToScheduleWithOutLectureList(List<Schedule> schedules)
         {
             if (schedules == null)
