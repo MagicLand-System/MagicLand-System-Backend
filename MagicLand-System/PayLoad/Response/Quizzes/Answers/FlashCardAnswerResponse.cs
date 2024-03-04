@@ -2,10 +2,10 @@
 {
     public class FlashCardAnswerResponse
     {
-        public Guid FirstCardId { get; set; }
-        public string? FirstCardInfor { get; set; } = string.Empty;
-        public Guid SecondCardId { get; set; }
-        public string? SecondCardInfor { get; set; } = string.Empty;
+        public Guid CardId { get; set; }
+        public string? CardDescription { get; set; } = string.Empty;
+        public string? CardImage { get; set; } = string.Empty;
+        public int NumberCoupleIdentify { get; set; }
         public double Score { get; set; }
     }
 }

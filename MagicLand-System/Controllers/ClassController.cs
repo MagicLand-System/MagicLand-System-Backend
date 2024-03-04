@@ -3,6 +3,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
@@ -65,13 +66,98 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetClassByCourseId(Guid id)
         {
-            var courses = await _classService.GetClassesByCourseIdAsync(id);
-            return Ok(courses);
+            var classes = await _classService.GetClassesByCourseIdAsync(id);
+            return Ok(classes);
+        }
+
+        #region document API Checking Valid Student For Class Of Current User
+        /// <summary>
+        ///  Kiểm Tra Các Học Sinh Của Người Dùng Hiện Tại Thỏa Mãn Điều Kiện Để Học Một Lớp Dựa Vào Id Của Lớp
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "classId": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetStudentValid)]
+        [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetValidStudentF([FromQuery] Guid classId)
+        {
+            if (classId == default)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var students = await _studentService.GetStudentsOfCurrentParent();
+            if(students == null)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Phụ Huynh Chưa Thêm Bé Vào Hệ Thống",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var responses = await _classService.GetValidStudentForClassAsync(classId, students);
+            return Ok(responses);
+        }
+
+        #region document API Get Valid Class
+        /// <summary>
+        ///  Truy Suất Các Lớp Kèm Lịch Học Của Một Khóa Học Sinh Có Thể Đăng Ký Dựa Vào Id Của Khóa Học Và Học Sinh
+        /// </summary>
+        /// <param name="courseId">Id Của Khóa Học</param>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "courseId": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///       "studentId": "1a3abb54-d1e8-6ab2-g50a-b22vbab6799b"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetClassValid)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetValidClass([FromQuery] Guid courseId, [FromQuery] Guid studentId)
+        {
+            if(courseId == default || studentId == default)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var classes = await _classService.GetValidClassForStudentAsync(courseId, studentId);
+            return Ok(classes);
         }
 
         #region document API Get Class By Id
         /// <summary>
-        ///  Truy Suất Lớp Thông Qua Id Của Lớp
+        ///  Truy Suất Thông Tin Chi Tiết Lớp Thông Qua Id Của Lớp
         /// </summary>
         /// <remarks>
         /// <param name="id">Id Của Lớp Học</param>

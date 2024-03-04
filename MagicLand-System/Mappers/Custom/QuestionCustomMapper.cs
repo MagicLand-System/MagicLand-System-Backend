@@ -118,27 +118,20 @@ namespace MagicLand_System.Mappers.Custom
 
             var responses = new List<FlashCardAnswerResponse>();
 
-            foreach (var flashCard in flashCards)
+            for (int i = 0; i < flashCards.Count(); i++)
             {
-                var response = new FlashCardAnswerResponse();
-                foreach (var sideFlashCard in flashCard.SideFlashCards!)
+                foreach (var sideFlashCard in flashCards[i].SideFlashCards!)
                 {
-
-                    if (sideFlashCard.Side == "Left")
+                    var response = new FlashCardAnswerResponse
                     {
-                        response.FirstCardId = sideFlashCard.Id;
-                        response.FirstCardInfor = !string.IsNullOrEmpty(sideFlashCard.Image) ? sideFlashCard.Image : sideFlashCard.Description;
-                        continue;
-                    }
-                    if (sideFlashCard.Side == "Right")
-                    {
-                        response.SecondCardId = sideFlashCard.Id;
-                        response.SecondCardInfor = !string.IsNullOrEmpty(sideFlashCard.Image) ? sideFlashCard.Image : sideFlashCard.Description;
-                    }
+                        CardId = sideFlashCard.Id,
+                        CardDescription = !string.IsNullOrEmpty(sideFlashCard.Description) ? sideFlashCard.Description : "",
+                        CardImage = !string.IsNullOrEmpty(sideFlashCard.Image) ? sideFlashCard.Image : "",
+                        Score = flashCards[i].Score / 2,
+                        NumberCoupleIdentify = i,
+                    };
+                    responses.Add(response);
                 }
-
-                response.Score = flashCard.Score;
-                responses.Add(response);
             }
 
             return responses;

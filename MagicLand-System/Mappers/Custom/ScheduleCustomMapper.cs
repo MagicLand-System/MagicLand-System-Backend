@@ -14,6 +14,30 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class ScheduleCustomMapper
     {
+
+        public static ScheduleShortenResponse fromScheduleToScheduleShortenResponse(Class cls)
+        {
+            if (cls == null)
+            {
+                return new ScheduleShortenResponse();
+            }
+
+            var WeekdayNumbers = cls.Schedules.Select(s => s.DayOfWeek).Distinct().ToList().Order();
+
+            var slotInListString = cls.Schedules.Select(s => AddSuffixesTime(s.Slot!.StartTime) + " - " + AddSuffixesTime(s.Slot.EndTime))
+                .Distinct().ToList();
+
+            var response = new ScheduleShortenResponse
+            {
+                Schedule = string.Join("-", WeekdayNumbers.Select(wdn => DateTimeHelper.ConvertDateNumberToDayweek(wdn)).ToList()),
+                Slot = string.Join(" / ", slotInListString),
+                Method = cls.Method,
+            };
+          
+
+            return response;
+        }
+
         public static List<ScheduleWithoutLectureResponse> fromScheduleToScheduleWithOutLectureList(List<Schedule> schedules)
         {
             if (schedules == null)
@@ -36,12 +60,7 @@ namespace MagicLand_System.Mappers.Custom
 
             return responses;
         }
-        public Guid? Id { get; set; }
-        public string? DayOfWeeks { get; set; }
-        public DateTime Date { get; set; }
 
-        public SlotResponse Slot { get; set; } = new SlotResponse();
-        public RoomResponse Room { get; set; } = new RoomResponse();
         public static List<DailySchedule> fromScheduleToDailyScheduleList(List<Schedule> schedules)
         {
             if (schedules == null)
@@ -149,6 +168,8 @@ namespace MagicLand_System.Mappers.Custom
 
             return responses;
         }
+
+
         public static OpeningScheduleResponse fromClassInforToOpeningScheduleResponse(Class cls)
         {
             if (cls == null)

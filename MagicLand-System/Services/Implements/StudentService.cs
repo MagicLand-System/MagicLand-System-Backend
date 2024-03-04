@@ -163,7 +163,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<Student>> GetStudentsOfCurrentParent()
         {
-            var students = await _unitOfWork.GetRepository<Student>().GetListAsync(predicate: x => x.ParentId == GetUserIdFromJwt());
+            var students = await _unitOfWork.GetRepository<Student>().GetListAsync(predicate: x => x.ParentId == GetUserIdFromJwt() && x.IsActive == true);
             return students.ToList();
         }
 

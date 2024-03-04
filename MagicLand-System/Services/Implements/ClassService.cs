@@ -15,6 +15,7 @@ using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Slots;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -1158,9 +1159,12 @@ namespace MagicLand_System.Services.Implements
             return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
         }
 
-        public async Task<List<ClassResExtraInfor>> GetClassesByCourseIdAsync(Guid id)
+        public async Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id)
         {
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == id,
+                include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+                .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)));
 
             var classes = course == null
                 ? throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest)
@@ -1168,18 +1172,16 @@ namespace MagicLand_System.Services.Implements
                 .GetListAsync(predicate: x => x.CourseId == id, include: x => x
                 .Include(x => x.Lecture!)
                 .Include(x => x.StudentClasses)
-                .Include(x => x.Course).ThenInclude(c => c!.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-                .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession))
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
 
-            var responses = classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
+            var responses = new List<ClassWithSlotShorten>();
 
-            foreach (var res in responses)
+            foreach (var cls in classes)
             {
-                res.CoursePrice = course.Price;
+                cls.Course = course;
+                responses.Add(_mapper.Map<ClassWithSlotShorten>(cls));
             }
-
             return responses;
         }
 
@@ -1647,6 +1649,164 @@ namespace MagicLand_System.Services.Implements
                     throw new BadHttpRequestException($"Yêu Cầu Chuyển Lớp Không Hợp Lệ Một Số Id Của Học Sinh Đã Có Trong Id [{classId}] Lớp Sẽ Chuyển", StatusCodes.Status400BadRequest);
                 }
             }
+        }
+
+        public async Task<List<ClassWithSlotShorten>> GetValidClassForStudentAsync(Guid courseId, Guid studentId)
+        {
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == courseId,
+                include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+               .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+
+            if (course == null)
+            {
+                throw new BadHttpRequestException($"Id [{courseId}] Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(
+             predicate: x => x.CourseId == courseId,
+             include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses))).ToList();
+
+            if (!classes.Any())
+            {
+                throw new BadHttpRequestException($"Id [{courseId}] Khóa Học Chưa Có Lớp Học", StatusCodes.Status400BadRequest);
+            }
+
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId);
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id [{courseId}] Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            var classRegistered = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) &&
+                x.Status != ClassStatusEnum.COMPLETED.ToString() && x.Status != ClassStatusEnum.CANCELED.ToString(),
+                include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
+
+            int age = DateTime.Now.Year - student.DateOfBirth.Year;
+            if (age < course.MinYearOldsStudent || age > course.MaxYearOldsStudent)
+            {
+                return new List<ClassWithSlotShorten>();
+            }
+
+            var responses = new List<ClassWithSlotShorten>();
+
+            foreach (var cls in classes)
+            {
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot!));
+
+                cls.Course = course;
+
+                if (cls.StudentClasses.Any(sc => sc.StudentId == studentId))
+                {
+                    continue;
+                }
+
+                if (classRegistered != null)
+                {
+                    var scheduleChecking = cls.Schedules.ToList();
+                    var scheduleRegistered = classRegistered.SelectMany(cr => cr.Schedules).ToList();
+
+                    if (scheduleChecking.Any(scc => scheduleRegistered.Any(scr =>
+                        scc.Date == scr.Date && scc.Slot!.StartTime == scr.Slot!.StartTime)))
+                    {
+                        continue;
+                    }
+                }
+
+                var syllabusRequired = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId == course.SyllabusId);
+                if (syllabusRequired != null)
+                {
+                    var syllabusCompleted = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                        selector: x => x.Course!.Syllabus!.Id,
+                        predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.COMPLETED.ToString());
+
+                    var result = syllabusRequired.All(sylr => syllabusCompleted.Any(sylc => sylr.PrerequisiteSyllabusId == sylc));
+                    if (!result)
+                    {
+                        continue;
+                    }
+                }
+
+                responses.Add(_mapper.Map<ClassWithSlotShorten>(cls));
+            }
+
+            return responses;
+
+        }
+
+        public async Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+             predicate: x => x.Id == classId,
+             include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses)
+             .Include(x => x.Course)!);
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+               orderBy: x => x.OrderBy(x => x.Date),
+               predicate: x => x.ClassId == cls.Id,
+               include: x => x.Include(x => x.Slot!));
+
+            var responses = new List<StudentResponse>();
+
+            foreach (var student in students)
+            {
+                int age = DateTime.Now.Year - student.DateOfBirth.Year;
+                if (age < cls.Course!.MinYearOldsStudent || age > cls.Course!.MaxYearOldsStudent)
+                {
+                    continue;
+                }
+
+                if (cls.StudentClasses.Any(sc => sc.StudentId == student.Id))
+                {
+                    continue;
+                }
+
+                var classRegistered = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id) &&
+                x.Status != ClassStatusEnum.COMPLETED.ToString() && x.Status != ClassStatusEnum.CANCELED.ToString(),
+                include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
+
+                if (classRegistered != null)
+                {
+                    var scheduleChecking = cls.Schedules.ToList();
+                    var scheduleRegistered = classRegistered.SelectMany(cr => cr.Schedules).ToList();
+
+                    if (scheduleChecking.Any(scc => scheduleRegistered.Any(scr =>
+                        scc.Date == scr.Date && scc.Slot!.StartTime == scr.Slot!.StartTime)))
+                    {
+                        continue;
+                    }
+                }
+
+                var syllabusRequired = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(
+                    predicate: x => x.CourseId == cls.CourseId, 
+                    include: x => x.Include(x => x.SyllabusPrerequisites)!)).SelectMany(x => x.SyllabusPrerequisites!.Select(sp => sp.PrerequisiteSyllabusId));
+
+                if (syllabusRequired != null)
+                {
+                    var syllabusCompleted = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                        selector: x => x.Course!.Syllabus!.Id,
+                        predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id) && x.Status == ClassStatusEnum.COMPLETED.ToString());
+
+                    var result = syllabusRequired.All(sylr => syllabusCompleted.Any(sylc => sylr == sylc));
+                    if (!result)
+                    {
+                        continue;
+                    }
+                }
+                responses.Add(_mapper.Map<StudentResponse>(student));
+            }
+
+            return responses;
         }
         #endregion
     }
