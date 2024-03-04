@@ -3,6 +3,7 @@ using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
+using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -29,5 +30,9 @@ namespace MagicLand_System.Services.Interfaces
         Task<bool> UpdateOverallSyllabus(string id,UpdateOverallSyllabus updateOverallSyllabus);
         Task<bool> UpdateTopic(string id,UpdateTopicRequest request);
         Task<bool> UpdateSession(string id,UpdateSessionRequest request);
+        Task<List<StaffMaterialResponse>> GetMaterialResponse(string syllabusId);
+        Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string syllabusId);
+        Task<List<StaffSessionResponse>> GetAllSessionResponses(string syllabusId);
+        Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId);
     }
 }

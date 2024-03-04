@@ -1069,7 +1069,7 @@ namespace MagicLand_System.Services.Implements
             syllRes.QuestionPackages = await GetStaffQuestionPackageResponses(id);
             return syllRes;
         }
-        private async Task<List<StaffMaterialResponse>> GetMaterialResponse(string id)
+        public async Task<List<StaffMaterialResponse>> GetMaterialResponse(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var materials = await _unitOfWork.GetRepository<Material>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
@@ -1089,7 +1089,7 @@ namespace MagicLand_System.Services.Implements
             }
             return result;
         }
-        private async Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string id)
+        public async Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var examSyllabuses = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
@@ -1116,7 +1116,7 @@ namespace MagicLand_System.Services.Implements
             }
             return result;
         }
-        private async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
+        public async Task<List<StaffSessionResponse>> GetAllSessionResponses(string id)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
             var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId.ToString().Equals(syllabus.Id.ToString()));
@@ -1214,7 +1214,7 @@ namespace MagicLand_System.Services.Implements
                 ContentName = questionpackage.ContentName,
             };
         }
-        private async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
+        public async Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId)
         {
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sylId), include: x => x.Include(x => x.Topics));
             if (syllabus.Topics.Count() > 0 && syllabus.Topics != null)
