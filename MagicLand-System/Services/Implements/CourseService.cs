@@ -187,6 +187,7 @@ namespace MagicLand_System.Services.Implements
                     course.NumberClassOnGoing = count.Count();
                 }
             }
+            findCourse = findCourse.OrderByDescending(x => x.UpdateDate).ToList();
             return findCourse;
         }
 

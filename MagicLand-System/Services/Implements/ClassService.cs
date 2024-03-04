@@ -35,14 +35,19 @@ namespace MagicLand_System.Services.Implements
         #region gia_thuong_code
         public async Task<string> AutoCreateClassCode(string courseId)
         {
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId));
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId),include : x => x.Include(x => x.Syllabus));
             if (course == null)
             {
                 return null;
             }
-            var name = course.Name;
-            var words = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string abbreviation = string.Join("", words.Select(word => word[0]));
+            //var name = course.Name;
+            //var words = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            //string abbreviation = string.Join("", words.Select(word => word[0]));
+            if(course.Syllabus == null)
+            {
+                throw new BadHttpRequestException("course chưa gắn syllabys",StatusCodes.Status400BadRequest);
+            }
+            var name = course.Syllabus.SubjectCode;
             var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)));
             int numberOfClass = 0;
             if (classes == null)
@@ -50,7 +55,7 @@ namespace MagicLand_System.Services.Implements
                 numberOfClass = 1;
             }
             numberOfClass = classes.Count + 1;
-            abbreviation = abbreviation + "" + numberOfClass.ToString();
+            var abbreviation = name + "-" + numberOfClass;
             return abbreviation;
         }
 

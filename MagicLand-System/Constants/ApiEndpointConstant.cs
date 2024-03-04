@@ -134,7 +134,7 @@
             public const string MaterialInfor = EndPointBase + "/staff/getMaterial";
             public const string ExamSyllabus = EndPointBase + "/staff/getExamSyllabus";
             public const string SessionSyllabus = EndPointBase + "/staff/getSessionSyllabus";
-            public const string QuestionSyllabus = EndPointBase + "/staff/getQuestionyllabus";
+            public const string QuestionSyllabus = EndPointBase + "/staff/getQuestionSyllabus";
         }
         public static class LectureEndPoint
         {
