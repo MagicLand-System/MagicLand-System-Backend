@@ -126,8 +126,16 @@ namespace MagicLand_System.Services.Implements
 
                 foreach (var response in responses)
                 {
-                    response.IsInCart = currentUserCart.CartItems.Any(ci => ci.CourseId == response.CourseId) ? true : false;
-
+                    var item = currentUserCart.CartItems.SingleOrDefault(ci => ci.CourseId == response.CourseId);
+                    if(item != null)
+                    {
+                        response.IsInCart = true;
+                        response.CartItemId = item.Id;
+                    }
+                    else
+                    {
+                        response.IsInCart = false;
+                    }
                 }
             }
 
