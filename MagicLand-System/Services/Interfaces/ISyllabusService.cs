@@ -34,5 +34,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string syllabusId);
         Task<List<StaffSessionResponse>> GetAllSessionResponses(string syllabusId);
         Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId);
+        Task<GeneralSyllabusResponse> GetGeneralSyllabusResponse(string syllabusId);
     }
 }

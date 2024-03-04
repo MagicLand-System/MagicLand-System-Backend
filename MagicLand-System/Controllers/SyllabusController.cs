@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Syllabuses;
@@ -208,5 +209,35 @@ namespace MagicLand_System.Controllers
         //    }
         //    return Ok("Update Success");
         //}
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.GenralInfromation)]
+        public async Task<IActionResult> GetStaffGeneralSyllabus(string id)
+        {
+            var result = await _syllabusService.GetGeneralSyllabusResponse(id);
+            return Ok(result);
+        }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.MaterialInfor)]
+        public async Task<IActionResult> GetStaffMaterialSyllabus(string id)
+        {
+            var result = await _syllabusService.GetMaterialResponse(id);
+            return Ok(result);
+        }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.ExamSyllabus)]
+        public async Task<IActionResult> GetStaffExamSyllabus(string id)
+        {
+            var result = await _syllabusService.GetStaffExamSyllabusResponses(id);
+            return Ok(result);
+        }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.SessionSyllabus)]
+        public async Task<IActionResult> GetStaffSessionSyllabus(string id)
+        {
+            var result = await _syllabusService.GetAllSessionResponses(id);
+            return Ok(result);
+        }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.QuestionSyllabus)]
+        public async Task<IActionResult> GetStaffQuestionSyllabus(string id)
+        {
+            var result = await _syllabusService.GetStaffQuestionPackageResponses(id);
+            return Ok(result);
+        }
     }
 }

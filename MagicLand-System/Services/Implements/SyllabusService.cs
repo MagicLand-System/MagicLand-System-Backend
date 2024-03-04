@@ -1407,6 +1407,60 @@ namespace MagicLand_System.Services.Implements
             await _unitOfWork.CommitAsync();
             return true;
         }
+
+        public async Task<GeneralSyllabusResponse> GetGeneralSyllabusResponse(string syllabusId)
+        {
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabusId));
+            if (syllabus == null)
+            {
+                return new GeneralSyllabusResponse();
+            }
+            var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()), selector: x => x.Name);
+            List<string> strings = new List<string>();
+            var namePre = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId.ToString().Equals(syllabus.Id.ToString()), selector: x => x.PrerequisiteSyllabusId);
+            if (namePre != null)
+            {
+                foreach (var prerequisite in namePre)
+                {
+                    strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()), selector: x => x.SubjectCode));
+                }
+            }
+            var syllRes = new GeneralSyllabusResponse()
+            {
+                SyllabusLink = syllabus.SyllabusLink,
+                Description = syllabus.Description,
+                Category = cagegory,
+                EffectiveDate = syllabus.EffectiveDate.Value.ToString("dd/MM/yyyy"),
+                MinAvgMarkToPass = syllabus.MinAvgMarkToPass,
+                ScoringScale = syllabus.ScoringScale,
+                StudentTasks = syllabus.StudentTasks,
+                SyllabusName = syllabus.Name,
+                TimePerSession = syllabus.TimePerSession,
+                SubjectCode = syllabus.SubjectCode,
+                SyllabusId = syllabus.Id,
+
+            };
+            if (strings.Count > 0)
+            {
+                syllRes.PreRequisite = strings;
+            }
+            var courseId = syllabus.CourseId;
+            if (courseId == null)
+            {
+                syllRes.LinkedCourse = null;
+            }
+            else
+            {
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()));
+                var courseName = course.Name;
+                syllRes.LinkedCourse = new PayLoad.Response.Courses.LinkedCourse
+                {
+                    CourseId = courseId.Value,
+                    CourseName = courseName
+                };
+            }
+            return syllRes;
+        }
         #endregion
 
 
