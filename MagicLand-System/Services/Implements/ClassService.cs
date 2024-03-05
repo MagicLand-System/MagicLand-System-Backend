@@ -1873,7 +1873,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(
-             predicate: x => x.CourseId == courseId,
+             predicate: x => x.CourseId == courseId && x.Status == ClassStatusEnum.UPCOMING.ToString(),
              include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses))).ToList();
 
             if (!classes.Any())
