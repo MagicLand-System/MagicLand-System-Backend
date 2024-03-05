@@ -1,12 +1,63 @@
 ﻿@page
 @model MagicLand_System_Web.Pages.ClassModel
 @{
+    ViewData["Title"] = "Class";
+    var Message = ViewData["Message"]?.ToString();
 }
-<div class="text-center">
-    <h4 class="display-3"><b>Tạo class trực tiếp</b></h4>
-    <div class="form-group">
-        <label for="quantity">Nhập số lượng </label>
-        <input type="text" id="quantity" name="">
-        <button type="submit">Xử lý</button>
+
+<section class="body-class" style="height: 500px;">
+    <div class="text-center">
+        <h6 class="display-3" style="font-weight: bold"><b>Tạo Nhiều Lớp Học Thuộc Ngẫu Nhiên Các Khóa Học</b></h6>
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-warning">
+                @Message
+            </div>
+        }
+
+        <div class="form-group">
+            <form method="post">
+                <label for="inputField">Nhập Số Lương: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <button type="submit" style="background-color: white; color: black">Xử Lý</button>
+            </form>
+        </div>
+
+        @if (Model.messages != null && Model.messages.Count() > 0)
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            Thứ Tự
+                        </th>
+                        <th>
+                            Thuộc Khóa
+                        </th>
+                        <th>
+                            Trạng Thái
+                        </th>
+                        <th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.messages)
+                    {
+                        <tr>
+                            <td>
+                                @item.Item1
+                            </td>
+                            <td>
+                                @item.Item2
+                            </td>
+                            <td>
+                                @item.Item3
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
-</div>
+</section>
