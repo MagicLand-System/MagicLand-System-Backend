@@ -152,7 +152,8 @@ namespace MagicLand_System.Services.Implements
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
-            .Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites)
+             .Include(x => x.Syllabus)
+            .ThenInclude(x => x.SyllabusPrerequisites!)
             .Include(x => x.Classes)
             .ThenInclude(c => c.Schedules)
             .ThenInclude(s => s.Slot)
@@ -194,7 +195,14 @@ namespace MagicLand_System.Services.Implements
                 {
                     course.NumberClassOnGoing = count.Count();
                 }
+                var coursex = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(course.CourseDetail.Id.ToString()),include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                var name = "undefined";
+                if (coursex.Syllabus != null) {
+                    name = coursex.Syllabus.SyllabusCategory.Name;
+                }
+                course.CourseDetail.Subject = name;
             }
+            
             findCourse = findCourse.OrderByDescending(x => x.UpdateDate).ToList();
             return findCourse;
         }

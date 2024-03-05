@@ -73,9 +73,9 @@ namespace MagicLand_System.Mappers.Custom
             {
                 return new CourseDetailResponse();
             }
-
             CourseDetailResponse response = new CourseDetailResponse
             {
+                Id = course.Id,
                 CourseName = course.Name,
                 Subject = course.SubjectName,
                 SubjectCode = course.Syllabus!.SubjectCode,
