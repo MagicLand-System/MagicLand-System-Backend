@@ -6,7 +6,7 @@
 }
 <section class="body-class" style="height: 500px;">
     <div class="text-center">
-        <h6 class="display-3" style="font-weight: bold"><b>Tạo Nhiều Syllabus</b></h6>
+        <p class="display-3" style="font-weight: bold"><b>Tạo Nhiều Syllabus</b></p>
         @if (!string.IsNullOrEmpty(Message))
         {
             <div class="alert alert-warning">
@@ -31,7 +31,10 @@
                             Thứ Tự
                         </th>
                         <th>
-                            Thuộc Khóa
+                            Tên Giáo Trình
+                        </th>
+                        <th>
+                            Mã Giáo Trình
                         </th>
                         <th>
                             Trạng Thái
@@ -51,12 +54,19 @@
                                 @item.Item2
                             </td>
                             <td>
+                                @item.Item1
+                            </td>
+                            <td>
                                 @item.Item3
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+        }
+        else
+        {
+            <p>Not Working</p>
         }
     </div>
 </section>

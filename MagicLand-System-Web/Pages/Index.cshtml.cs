@@ -1,13 +1,9 @@
 ﻿using Academic_Blog_App.Services.Helper;
-using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -32,9 +28,15 @@ namespace MagicLand_System_Web.Pages
         }
 
         [BindProperty]
-        public List<(string, string, string)> messages { get; set; } = default!;
+        public List<(string, string, string, string)> messages { get; set; } = new List<(string, string, string, string)>();
         public async Task<IActionResult> OnGetAsync()
         {
+            var token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
+            if (token != null)
+            {
+                return Page();
+            }
+
             var loginContent = new StringContent(JsonSerializer.Serialize(new LoginRequest { Phone = "+84971822093" }), Encoding.UTF8, "application/json");
             var userApiResponse = await _httpClient.PostAsync(baseUrl + "/auth", loginContent);
             var userContent = await userApiResponse.Content.ReadAsStringAsync();
@@ -58,8 +60,6 @@ namespace MagicLand_System_Web.Pages
             {
                 ("Nhạc", "NA"),("Ngôn Ngữ", "NN"), ("Toán", "TTD"), ("Nhảy", "NB"), ("Hát", "H"), ("Vật Lý", "VL"), ("Lập Trình", "LT"), ("Hội Họa", "HH")
             };
-
-            var messages = new List<(string, string, string)>();
             Random random = new Random();
 
             for (int i = 0; i < inputField; i++)
@@ -93,7 +93,7 @@ namespace MagicLand_System_Web.Pages
 
                 int statusCode = (int)insertResponse.StatusCode;
 
-                messages.Add(new("Syllabus Thứ Tự " + i, $"{requestData.SyllabusName}", $"{statusCode}"));
+                messages.Add(("Giáo Trình Thứ Tự " + i, $"{requestData.SyllabusName}", $"{requestData.SubjectCode}", $"{statusCode}"));
             }
 
             return Page();
@@ -242,6 +242,7 @@ namespace MagicLand_System_Web.Pages
                     QuestionType = i == 0 ? "Trắc nghiệm" : i == 1 ? "Tùy Chọn" : "Ghép thẻ",
                     Part = i == 0 ? 2 : 1,
                     Method = i == 0 ? "Online" : i == 1 ? "Offline" : "Online",
+                    Duration = i == 0 ? "30" : i == 1 ? "Tại Nhà" : "40",
                 });
             }
 
