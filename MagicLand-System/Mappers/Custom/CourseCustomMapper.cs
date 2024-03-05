@@ -78,6 +78,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseName = course.Name,
                 Subject = course.SubjectName,
+                SubjectCode = course.Syllabus!.SubjectCode,
                 MinAgeStudent = course.MinYearOldsStudent.ToString(),
                 MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
                 AddedDate = course.AddedDate,
