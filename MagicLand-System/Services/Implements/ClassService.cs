@@ -45,7 +45,7 @@ namespace MagicLand_System.Services.Implements
             //string abbreviation = string.Join("", words.Select(word => word[0]));
             if(course.Syllabus == null)
             {
-                throw new BadHttpRequestException("course chưa gắn syllabys",StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("course chưa gắn syllabus",StatusCodes.Status400BadRequest);
             }
             var name = course.Syllabus.SubjectCode;
             var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)));
@@ -196,35 +196,33 @@ namespace MagicLand_System.Services.Implements
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include: x => x.Include(x => x.Lecture).Include(x => x.Course).Include(x => x.Schedules).Include(x => x.StudentClasses));
             classes = (classes.OrderByDescending(x => x.AddedDate)).ToList();
             var cls = classes.First();
-
-            var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
-            var lecturerId = classes.First(x => x.Id == x.Id).LecturerId;
-            var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(roomId.ToString()));
-            var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(lecturerId.ToString()));
-            RoomResponse roomResponse = new RoomResponse
-            {
-                Floor = room.Floor.Value,
-                Capacity = room.Capacity,
-                RoomId = room.Id,
-                Name = room.Name,
-                Status = room.Status,
-                LinkUrl = room.LinkURL,
-
-            };
-            LecturerResponse lecturerResponse = new LecturerResponse
-            {
-                AvatarImage = lecturer.AvatarImage,
-                DateOfBirth = lecturer.DateOfBirth,
-                Email = lecturer.Email,
-                FullName = lecturer.FullName,
-                Gender = lecturer.Gender,
-                LectureId = lecturer.Id,
-                Phone = lecturer.Phone,
-            };
             List<MyClassResponse> result = new List<MyClassResponse>();
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
             {
+                var roomId = classes.First(x => x.Id == x.Id).Schedules.First().RoomId;
+                var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(roomId.ToString()));
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.LecturerId.ToString()));
+                RoomResponse roomResponse = new RoomResponse
+                {
+                    Floor = room.Floor.Value,
+                    Capacity = room.Capacity,
+                    RoomId = room.Id,
+                    Name = room.Name,
+                    Status = room.Status,
+                    LinkUrl = room.LinkURL,
+
+                };
+                LecturerResponse lecturerResponse = new LecturerResponse
+                {
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    Email = lecturer.Email,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    LectureId = lecturer.Id,
+                    Phone = lecturer.Phone,
+                };
                 List<DailySchedule> schedules = new List<DailySchedule>();
                 var DaysOfWeek = c.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
                 foreach (var day in DaysOfWeek)
@@ -331,7 +329,7 @@ namespace MagicLand_System.Services.Implements
                     Image = course.Image,
                     MainDescription = course.MainDescription,
                     MaxYearOldsStudent = course.MaxYearOldsStudent,
-                    MinYearOldsStudent = course.MaxYearOldsStudent,
+                    MinYearOldsStudent = course.MinYearOldsStudent,
                     Name = course.Name,
                     Price = course.Price,
                     SyllabusCode = syllabusCode,
@@ -410,11 +408,12 @@ namespace MagicLand_System.Services.Implements
             {
                 classFound.CourseId = request.CourseId.Value;
             }
-            if (request.LeastNumberStudent <= request.LimitNumberStudent)
+            if (request.LeastNumberStudent >= request.LimitNumberStudent)
             {
                 throw new BadHttpRequestException("số lượng tối thiểu phải nhỏ hơn số lượng tối đa", StatusCodes.Status400BadRequest);
             }
             classFound.Status = "UPCOMING";
+            classFound.AddedDate = DateTime.Now;
             _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             if (!isSuccess)
@@ -786,7 +785,7 @@ namespace MagicLand_System.Services.Implements
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(sessionId));
             var myScheudule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => (!x.Id.ToString().Equals(schedule.Id.ToString()) && x.ClassId.ToString().Equals(schedule.ClassId.ToString())));
             var isExist = myScheudule.Where(x => (x.Date.Date.Day == request.DateTime.Value.Day && x.Date.Month == request.DateTime.Value.Month && x.Date.Year == request.DateTime.Value.Year && x.SlotId.ToString().Equals(request.SlotId.ToString())));
-            if (isExist != null)
+            if (isExist.Count() > 0)
             {
                 throw new BadHttpRequestException("Ngày này đã tồn tại , không thể update", StatusCodes.Status400BadRequest);
             }

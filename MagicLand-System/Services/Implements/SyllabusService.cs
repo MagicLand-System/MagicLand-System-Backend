@@ -1030,6 +1030,11 @@ namespace MagicLand_System.Services.Implements
                     strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()),selector : x => x.SubjectCode));
                 }
             }
+            var count = 0;
+            if(syllabus.NumOfSessions != null)
+            {
+                count = syllabus.NumOfSessions.Value;
+            }
             var syllRes = new StaffSyllabusResponse()
             {
                 SyllabusLink = syllabus.SyllabusLink,
@@ -1043,7 +1048,7 @@ namespace MagicLand_System.Services.Implements
                 TimePerSession = syllabus.TimePerSession,
                 SubjectCode = syllabus.SubjectCode,
                 SyllabusId = syllabus.Id,
-               
+                NumOfSessions = count,
             };
             if(strings.Count > 0)
             {
