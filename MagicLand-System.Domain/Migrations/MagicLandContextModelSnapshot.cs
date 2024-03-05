@@ -473,6 +473,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int?>("Duration")
                         .HasColumnType("int");
 
+                    b.Property<int?>("OrderPackage")
+                        .HasColumnType("int");
+
                     b.Property<int?>("Score")
                         .HasColumnType("int");
 

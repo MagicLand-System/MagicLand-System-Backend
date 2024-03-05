@@ -18,7 +18,7 @@ namespace MagicLand_System.Mappers.Custom
             }
 
             int part = 1;
-            if(questionPackage.Type == "flashcard")
+            if (questionPackage.Type == "flashcard")
             {
                 part = 2;
             }
@@ -59,12 +59,12 @@ namespace MagicLand_System.Mappers.Custom
                 part = 2;
             }
 
-
             var quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
 
             return new ExamResponse
             {
                 ExamPart = part,
+                ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
                 QuizCategory = examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,

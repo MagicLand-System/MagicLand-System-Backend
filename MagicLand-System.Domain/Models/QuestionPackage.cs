@@ -6,6 +6,7 @@ namespace MagicLand_System.Domain.Models
     {
         public Guid Id { get; set; }
         public string? Title { get; set; }
+        public int? OrderPackage { get; set; }
         public string? Type { get; set; }
         public int? Duration { get; set; }
         public int? DeadlineTime { get; set; }

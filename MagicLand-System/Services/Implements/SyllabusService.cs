@@ -232,15 +232,23 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task GenerateExerciseItems(List<QuestionPackageRequest> questionPackageRequest, List<Session> sessions)
         {
+            var identityIndex = new List<(int, int)>();
+
+            var orderSessions = questionPackageRequest.OrderBy(qp => qp.NoOfSession).Select(qp => qp.NoOfSession).ToList();
+            for (int i = 0; i < orderSessions.Count(); i++)
+            {
+                identityIndex.Add((orderSessions[i], i + 1));
+            }
+
             foreach (var qp in questionPackageRequest)
             {
                 Guid newQuestionPackageId = Guid.NewGuid();
-                await GenerateQuestionPackage(sessions, qp, newQuestionPackageId);
+                await GenerateQuestionPackage(sessions, qp, newQuestionPackageId, identityIndex);
                 await GenerateQuestionPackgeItems(newQuestionPackageId, qp.QuestionRequests);
             }
         }
 
-        private async Task GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, Guid newQuestionPackageId)
+        private async Task GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, Guid newQuestionPackageId, List<(int, int)> identityIndex)
         {
             try
             {
@@ -255,6 +263,7 @@ namespace MagicLand_System.Services.Implements
                     ContentName = qp.ContentName,
                     Type = qp.Type,
                     Score = qp.Score,
+                    OrderPackage = identityIndex.Single(index => index.Item1 == order).Item2,
                 };
 
                 await _unitOfWork.GetRepository<QuestionPackage>().InsertAsync(questionPackage);
@@ -1022,12 +1031,12 @@ namespace MagicLand_System.Services.Implements
             }
             var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()), selector: x => x.Name);
             List<string> strings = new List<string>();
-            var namePre = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate : x => x.CurrentSyllabusId.ToString().Equals(syllabus.Id.ToString()),selector : x => x.PrerequisiteSyllabusId);
-            if(namePre != null)
+            var namePre = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId.ToString().Equals(syllabus.Id.ToString()), selector: x => x.PrerequisiteSyllabusId);
+            if (namePre != null)
             {
-                foreach(var prerequisite in namePre)
+                foreach (var prerequisite in namePre)
                 {
-                    strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()),selector : x => x.SubjectCode));
+                    strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()), selector: x => x.SubjectCode));
                 }
             }
             var syllRes = new StaffSyllabusResponse()
@@ -1043,9 +1052,9 @@ namespace MagicLand_System.Services.Implements
                 TimePerSession = syllabus.TimePerSession,
                 SubjectCode = syllabus.SubjectCode,
                 SyllabusId = syllabus.Id,
-               
+
             };
-            if(strings.Count > 0)
+            if (strings.Count > 0)
             {
                 syllRes.PreRequisite = strings;
             }

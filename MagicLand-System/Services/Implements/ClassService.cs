@@ -1378,7 +1378,7 @@ namespace MagicLand_System.Services.Implements
             var classes = course == null
                 ? throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest)
                 : await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(predicate: x => x.CourseId == id, include: x => x
+                .GetListAsync(predicate: x => x.CourseId == id && x.Status == ClassStatusEnum.UPCOMING.ToString(), include: x => x
                 .Include(x => x.Lecture!)
                 .Include(x => x.StudentClasses)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!

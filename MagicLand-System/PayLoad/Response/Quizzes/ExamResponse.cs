@@ -6,6 +6,7 @@ namespace MagicLand_System.PayLoad.Response.Quizes
     {
         public Guid ExamId { get; set; }
         public int ExamPart { get; set; }
+        public string? ExamName { get; set; }
         public string? QuizCategory { get; set; } = string.Empty;
         public string? QuizType { get; set; } = string.Empty;
         public string? QuizName { get; set; }
