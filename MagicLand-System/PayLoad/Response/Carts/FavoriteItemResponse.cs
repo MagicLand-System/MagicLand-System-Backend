@@ -4,7 +4,7 @@ namespace MagicLand_System.PayLoad.Response.Carts
 {
     public class FavoriteItemResponse
     {
-        public Guid ItemId { get; set; }
+        public Guid CartItemId { get; set; }
         public CourseResponse? Course { get; set; } = new CourseResponse();
     }
 }

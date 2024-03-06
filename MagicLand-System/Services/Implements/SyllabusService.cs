@@ -1040,7 +1040,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             var count = 0;
-            if(syllabus.NumOfSessions != null)
+            if (syllabus.NumOfSessions != null)
             {
                 count = syllabus.NumOfSessions.Value;
             }

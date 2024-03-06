@@ -39,6 +39,8 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetClasses([FromQuery] PeriodTimeEnum time)
         {
+
+
             var classes = await _classService.GetClassesAsync(time);
             return Ok(classes);
         }

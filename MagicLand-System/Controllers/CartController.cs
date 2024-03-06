@@ -175,12 +175,12 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///   Cho Phép Xóa Một Hoặc Nhiều Item Trong Giỏ Hàng Hoặc Item Của Danh Sách Quan Tâm
         /// </summary>
-        /// <param name="itemIdList">Id Của Tất Cả Item Càn Xóa </param>
+        /// <param name="cartItemIdList">Id Của Tất Cả Item Cần Xóa </param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "itemId": "77982AA8-5DFE-41AE-3776-08DBEB2BCC68"
+        ///        "cartItemId": "77982AA8-5DFE-41AE-3776-08DBEB2BCC68"
         ///     }
         ///
         /// </remarks>
@@ -191,9 +191,9 @@ namespace MagicLand_System.Controllers
         [HttpDelete(ApiEndpointConstant.CartEnpoint.DeleteCartItem)]
         [ProducesResponseType(typeof(String), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> DeleteCartItem([FromQuery] List<Guid> itemIdList)
+        public async Task<IActionResult> DeleteCartItem([FromQuery] List<Guid> cartItemIdList)
         {
-            await _cartService.DeleteItemInCartOfCurrentParentAsync(itemIdList);
+            await _cartService.DeleteItemInCartOfCurrentParentAsync(cartItemIdList);
 
             return Ok("Xóa Thành Công");
         }

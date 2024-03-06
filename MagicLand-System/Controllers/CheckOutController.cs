@@ -242,7 +242,7 @@ namespace MagicLand_System.Controllers
 
                 itemGenerates.Add(new ItemGenerate
                 {
-                    CartItemId = item.ItemId,
+                    CartItemId = item.CartItemId,
                     ClassId = item.Class.ClassId,
                     StudentIdList = item.Students.Select(stu => stu.StudentId).ToList(),
                 });
@@ -339,7 +339,7 @@ namespace MagicLand_System.Controllers
         {
             var cart = await _cartService.GetDetailCurrentParrentCart();
 
-            var invalidItem = cartItemIds.Except(cart.Items.Select(s => s.ItemId)).ToList();
+            var invalidItem = cartItemIds.Except(cart.Items.Select(s => s.CartItemId)).ToList();
             if (invalidItem.Any())
             {
                 return BadRequest(new ErrorResponse
@@ -350,7 +350,7 @@ namespace MagicLand_System.Controllers
                 });
             }
 
-            var items = cartItemIds.Select(ci => cart.Items.Single(c => c.ItemId == ci)).ToList();
+            var items = cartItemIds.Select(ci => cart.Items.Single(c => c.CartItemId == ci)).ToList();
 
             var emptyStudentItem = items.Where(x => x.Students.Count() == 0 || x.Class == null).ToList();
             if (emptyStudentItem.Count() > 0)
@@ -358,7 +358,7 @@ namespace MagicLand_System.Controllers
                 return BadRequest(new ErrorResponse
                 {
                     Error = "Có Một Hoặc Nhiều Item Của Giỏ Hàng Không Có Lớp Hoặc Học Sinh Đăng Ký " +
-                    $"[{string.Join(", ", emptyStudentItem.Select(x => x.ItemId).ToList())}]",
+                    $"[{string.Join(", ", emptyStudentItem.Select(x => x.CartItemId).ToList())}]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });

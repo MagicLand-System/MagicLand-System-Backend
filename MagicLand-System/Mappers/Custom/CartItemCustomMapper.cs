@@ -40,7 +40,7 @@ namespace MagicLand_System.Mappers.Custom
 
             var response = new FavoriteItemResponse
             {
-                ItemId = itemId,
+                CartItemId = itemId,
                 Course = CourseCustomMapper.fromCourseToCourseResponse(course),
             };
 
@@ -50,7 +50,7 @@ namespace MagicLand_System.Mappers.Custom
         {
             WishListItemResponse response = new WishListItemResponse
             {
-                ItemId = cartItemId,
+                CartItemId = cartItemId,
                 Students = students.Count() == 0
                 ? new List<StudentResponse>()
                 : students.Select(s => StudentCustomMapper.fromStudentToStudentResponse(s)).ToList(),

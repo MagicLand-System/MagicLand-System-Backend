@@ -1,26 +1,20 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Attendance;
-using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
-using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Transactions;
+using Quartz;
 
 
 namespace MagicLand_System.Services.Implements
@@ -31,135 +25,8 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<bool> AddStudent(CreateStudentRequest request)
-        {
-            if (request.DateOfBirth > DateTime.Now.AddYears(-3))
-            {
-                throw new BadHttpRequestException("Hoc sinh phải lớn hơn 3 tuổi", StatusCodes.Status400BadRequest);
-            }
-            var userId = (await GetUserFromJwt()).Id;
-            if (request == null)
-            {
-                throw new BadHttpRequestException("yêu cầu không hợp lệ", StatusCodes.Status400BadRequest);
-            }
-            var student = _mapper.Map<Student>(request);
-            student.ParentId = userId;
-            student.IsActive = true;
-            await _unitOfWork.GetRepository<Student>().InsertAsync(student);
-            var isSuccess = await _unitOfWork.CommitAsync() > 0;
-            return isSuccess;
-        }
+        #region
 
-        public async Task<List<ClassResExtraInfor>> GetClassOfStudent(string studentId, string status)
-        {
-            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
-            if (student == null)
-            {
-                throw new BadHttpRequestException("Học sinh không tồn tại", StatusCodes.Status400BadRequest);
-            }
-            var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
-            if (listClassInstance == null)
-            {
-                return new List<ClassResExtraInfor>();
-            }
-            var classIds = (from classInstance in listClassInstance
-                            group classInstance by classInstance.ClassId into grouped
-                            select new { ClassId = grouped.Key });
-            var myx = classIds.ToList();
-            Class studentClass = null;
-            List<Class> classes = new List<Class>();
-            List<Class> allClass = new List<Class>();
-
-            allClass = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x
-               .Include(x => x.Lecture!)
-               .Include(x => x.StudentClasses)
-               .Include(x => x.Course)
-               .ThenInclude(c => c.Syllabus)
-               .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
-               .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-               .ThenInclude(s => s.Slot)!
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-               .ThenInclude(s => s.Room)!)).ToList();
-            foreach (var classInstance in myx)
-            {
-                if (status.IsNullOrEmpty())
-                {
-                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()));
-                }
-                else
-                {
-                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()) && status.Trim().Equals(x.Status.Trim()));
-                }
-                if (studentClass != null)
-                {
-                    classes.Add(studentClass);
-                }
-            }
-            if (classes.Count == 0)
-            {
-                return new List<ClassResExtraInfor>();
-            }
-            List<ClassResExtraInfor> responses = new List<ClassResExtraInfor>();
-            responses = classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
-            return responses;//responses;   
-        }
-
-        public async Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId)
-        {
-            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
-            if (student == null)
-            {
-                throw new BadHttpRequestException("StudentId is not exist", StatusCodes.Status400BadRequest);
-            }
-            var scheduleIdList = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(student.Id.ToString()), selector: x => x.ScheduleId);
-            //var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
-            if (scheduleIdList == null)
-            {
-                return new List<StudentScheduleResponse>();
-            }
-            //var sessionIds = new List<Guid>();
-            //foreach (var classInstance in listClassInstance)
-            //{
-            //    sessionIds.Add(classInstance.Class.Id);
-            //}
-            //if (sessionIds.Count == 0)
-            //{
-            //    //throw new BadHttpRequestException("Student is in not any schedule", StatusCodes.Status400BadRequest);
-            //    return new List<StudentScheduleResponse>();
-            //}
-            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Class).Include(x => x.Slot).Include(x => x.Room).Include(x => x.Class));
-            var listStudentSchedule = new List<StudentScheduleResponse>();
-            StudentScheduleResponse studentSchedule = null;
-            List<Schedule> scheduleList = new List<Schedule>();
-            foreach (var Id in scheduleIdList)
-            {
-                var listResult = (schedules.Where(s => s.Id == Id)).ToList();
-                scheduleList.AddRange(listResult);
-            }
-            foreach (var schedule in scheduleList)
-            {
-                var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class.LecturerId));
-                var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id);
-                studentSchedule = new StudentScheduleResponse
-                {
-                    StudentName = student.FullName,
-                    Date = schedule.Date,
-                    ClassCode = schedule.Class.ClassCode,
-                    DayOfWeek = schedule.DayOfWeek,
-                    EndTime = schedule.Slot.EndTime,
-                    StartTime = schedule.Slot.StartTime,
-                    LinkURL = schedule.Room.LinkURL,
-                    Method = schedule.Class.Method,
-                    RoomInFloor = schedule.Room.Floor,
-                    RoomName = schedule.Room.Name,
-                    AttendanceStatus = IsPresent == true ? "Có Mặt" : IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
-                    LecturerName = lecturerName,
-                };
-                listStudentSchedule.Add(studentSchedule);
-            }
-            return listStudentSchedule; //listStudentSchedule;
-        }
 
         public async Task<List<Student>> GetStudentsOfCurrentParent()
         {
@@ -200,34 +67,35 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> DeleteStudentAsync(Student student)
         {
-            var classes = new List<ClassResExtraInfor>();
             double refundAmount = 0.0;
             string message = "";
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId == GetUserIdFromJwt());
 
             try
             {
-                classes = await GetClassOfStudent(student.Id.ToString(), ClassStatusEnum.PROGRESSING.ToString());
+                var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                 predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id));
 
-                if (classes.Any())
+                var progressingClasses = classes.Where(cls => cls.Status == ClassStatusEnum.PROGRESSING.ToString()).ToList();
+                if (progressingClasses.Any())
                 {
                     string classCodeString = string.Join(", ", classes.Select(cls => cls.ClassCode).ToList());
 
                     message = $"Xóa Bé [{student.FullName}] Thành Công, " +
                               $"Hệ Thống Không Hoàn Tiền Lớp [{classCodeString}] Do Lớp Đã Bắt Đầu";
 
-                    refundAmount = await HandelRefundTransaction(classes, personalWallet, student, true);
+                    refundAmount = await HandelRefundTransaction(progressingClasses, personalWallet, student, true);
                 }
 
-                classes = await GetClassOfStudent(student.Id.ToString(), ClassStatusEnum.UPCOMING.ToString());
-                if (classes.Any())
+                var upcommingClasses = classes.Where(cls => cls.Status == ClassStatusEnum.UPCOMING.ToString()).ToList();
+                if (upcommingClasses.Any())
                 {
                     string classCodeString = string.Join(", ", classes.Select(cls => cls.ClassCode).ToList());
 
                     message = $"Xóa Bé [{student.FullName}] Thành Công, " +
                               $"Hệ Thống Đã Hoàn Tiền Lớp [{classCodeString}] Do Lớp Chưa Bắt Đầu";
 
-                    refundAmount = await HandelRefundTransaction(classes, personalWallet, student, false);
+                    refundAmount = await HandelRefundTransaction(upcommingClasses, personalWallet, student, false);
                 }
 
                 await DeleteRelatedStudentInfor(student);
@@ -238,7 +106,7 @@ namespace MagicLand_System.Services.Implements
                 _unitOfWork.GetRepository<Student>().UpdateAsync(student);
                 _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
 
-                await _unitOfWork.CommitAsync();
+                _unitOfWork.Commit();
                 return message;
             }
             catch (Exception ex)
@@ -247,7 +115,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        private async Task<double> HandelRefundTransaction(List<ClassResExtraInfor> classes, PersonalWallet personalWallet, Student student, bool isProgressing)
+        private async Task<double> HandelRefundTransaction(List<Class> classes, PersonalWallet personalWallet, Student student, bool isProgressing)
         {
             var currentUser = await GetUserFromJwt();
             var newNotifications = new List<Notification>();
@@ -255,7 +123,7 @@ namespace MagicLand_System.Services.Implements
             double refundAmount = 0.0;
 
             var oldTransactions = (await _unitOfWork.GetRepository<WalletTransaction>()
-          .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id && x.Status == TransactionTypeEnum.Payment.ToString())).ToList();
+           .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id && x.Type == TransactionTypeEnum.Payment.ToString())).ToList();
 
             foreach (var cls in classes)
             {
@@ -267,7 +135,7 @@ namespace MagicLand_System.Services.Implements
 
                         foreach (var pair in result)
                         {
-                            if (pair.Key == AttachValueEnum.ClassId.ToString() && pair.Value[0] == cls.ClassId.ToString())
+                            if (pair.Key == AttachValueEnum.ClassId.ToString() && pair.Value[0] == cls.Id.ToString())
                             {
                                 refundAmount += trans.Money - trans.Discount;
                                 refundTransactions.Add(GenerateRefundTransaction(personalWallet, currentUser.FullName!, refundAmount, cls.ClassCode!, trans.Signature!));
@@ -282,7 +150,7 @@ namespace MagicLand_System.Services.Implements
 
                     string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                     {
-                      ($"{AttachValueEnum.ClassId}", $"{cls.ClassId}"),
+                      ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
                       ($"{AttachValueEnum.StudentId}", $"{student.Id}"),
                       ($"{AttachValueEnum.TransactionId}", $"{trans.Id}"),
                     });
@@ -346,7 +214,9 @@ namespace MagicLand_System.Services.Implements
                 _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(studentAttendance);
             }
 
-            var studentInClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId == student.Id);
+            var studentInClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
+                predicate: x => x.StudentId == student.Id && x.Class!.Status != ClassStatusEnum.CANCELED.ToString());
+
             if (studentInClass.Any())
             {
                 _unitOfWork.GetRepository<StudentClass>().DeleteRangeAsync(studentInClass);
@@ -519,5 +389,135 @@ namespace MagicLand_System.Services.Implements
 
             return students.Select(stu => _mapper.Map<StudentStatisticResponse>(stu)).ToList();
         }
+        #endregion
+        #region gia_thuong code
+        public async Task<bool> AddStudent(CreateStudentRequest request)
+        {
+            if (request.DateOfBirth > DateTime.Now.AddYears(-3))
+            {
+                throw new BadHttpRequestException("Hoc sinh phải lớn hơn 3 tuổi", StatusCodes.Status400BadRequest);
+            }
+            var userId = (await GetUserFromJwt()).Id;
+            if (request == null)
+            {
+                throw new BadHttpRequestException("yêu cầu không hợp lệ", StatusCodes.Status400BadRequest);
+            }
+            var student = _mapper.Map<Student>(request);
+            student.ParentId = userId;
+            student.IsActive = true;
+            await _unitOfWork.GetRepository<Student>().InsertAsync(student);
+            var isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return isSuccess;
+        }
+        public async Task<List<ClassResExtraInfor>> GetClassOfStudent(string studentId, string status)
+        {
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
+            if (student == null)
+            {
+                throw new BadHttpRequestException("Học sinh không tồn tại", StatusCodes.Status400BadRequest);
+            }
+            var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
+            if (listClassInstance == null)
+            {
+                return new List<ClassResExtraInfor>();
+            }
+            var classIds = (from classInstance in listClassInstance
+                            group classInstance by classInstance.ClassId into grouped
+                            select new { ClassId = grouped.Key });
+            var myx = classIds.ToList();
+            Class studentClass = null;
+            List<Class> classes = new List<Class>();
+            List<Class> allClass = new List<Class>();
+
+            allClass = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x
+               .Include(x => x.Lecture!)
+               .Include(x => x.StudentClasses)
+               .Include(x => x.Course)
+               .ThenInclude(c => c.Syllabus)
+               .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
+               .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+               .ThenInclude(s => s.Slot)!
+               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
+               .ThenInclude(s => s.Room)!)).ToList();
+            foreach (var classInstance in myx)
+            {
+                if (status.IsNullOrEmpty())
+                {
+                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()));
+                }
+                else
+                {
+                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()) && status.Trim().Equals(x.Status.Trim()));
+                }
+                if (studentClass != null)
+                {
+                    classes.Add(studentClass);
+                }
+            }
+            if (classes.Count == 0)
+            {
+                return new List<ClassResExtraInfor>();
+            }
+            List<ClassResExtraInfor> responses = new List<ClassResExtraInfor>();
+            responses = classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
+            return responses;//responses;   
+
+        }
+        public async Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId)
+        {
+
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().Equals(studentId)),
+                include: x => x.Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Slot)
+                .Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Room!));
+
+            if (!classes.Any())
+            {
+                return new List<StudentScheduleResponse>();
+            }
+            var listStudentSchedule = new List<StudentScheduleResponse>();
+            foreach (var cls in classes)
+            {
+                var subject = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                       selector: x => x.SubjectName,
+                       predicate: x => x.Id == cls.CourseId);
+
+                foreach (var schedule in cls.Schedules)
+                {
+                    var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class!.LecturerId));
+                    var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id);
+
+                    var studentSchedule = new StudentScheduleResponse
+                    {
+                        Address = cls.Street + " " + cls.District + " " + cls.City,
+                        ClassName = schedule.Class!.ClassCode!,
+                        ClassSubject = subject!,
+                        StudentName = student.FullName!,
+                        Date = schedule.Date,
+                        ClassCode = schedule.Class!.ClassCode!,
+                        DayOfWeek = schedule.DayOfWeek,
+                        EndTime = schedule.Slot!.EndTime,
+                        StartTime = schedule.Slot.StartTime,
+                        LinkURL = schedule.Room!.LinkURL,
+                        Method = schedule.Class.Method,
+                        RoomInFloor = schedule.Room.Floor,
+                        RoomName = schedule.Room.Name,
+                        AttendanceStatus = IsPresent == true ? "Có Mặt" : IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
+                        LecturerName = lecturerName,
+                    };
+                    listStudentSchedule.Add(studentSchedule);
+                }
+            }
+
+            return listStudentSchedule;
+        }
     }
+    #endregion
 }
+
