@@ -90,7 +90,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpPost(ApiEndpointConstant.CartEnpoint.ModifyCart)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
-        [ProducesResponseType(typeof(WishListResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> ModifyCart([FromBody] CartRequest cartRequest)
         {

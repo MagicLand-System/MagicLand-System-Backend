@@ -1,9 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
-using MagicLand_System.Helpers;
-using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
-using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 
 namespace MagicLand_System.Mappers.Custom
 {
@@ -31,11 +28,11 @@ namespace MagicLand_System.Mappers.Custom
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus.Weight,
                 CompleteionCriteria = examSyllabus.CompleteionCriteria,
-                TotalMark = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
+                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalQuestion = questionPackage.Questions!.Count(),
-                Duration = questionPackage.Duration,
-                DeadLine = questionPackage.DeadlineTime,
-                Attempts = questionPackage.AttemptsAllowed,
+                //Duration = questionPackage.Duration,
+                //DeadLine = questionPackage.DeadlineTime,
+                //Attempts = questionPackage.AttemptsAllowed,
                 NoSession = noSession,
                 ExamId = examSyllabus.Id,
                 Quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponse(questionPackage),
@@ -70,11 +67,11 @@ namespace MagicLand_System.Mappers.Custom
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus.Weight,
                 CompleteionCriteria = examSyllabus.CompleteionCriteria,
-                TotalMark = (double)questionPackage.Score!,
+                TotalScore = (double)questionPackage.Score!,
                 TotalQuestion = quizzes.Count(),
-                Duration = questionPackage.Duration,
-                DeadLine = questionPackage.DeadlineTime,
-                Attempts = questionPackage.AttemptsAllowed,
+                //Duration = questionPackage.Duration,
+                //DeadLine = questionPackage.DeadlineTime,
+                //Attempts = questionPackage.AttemptsAllowed,
                 NoSession = noSession,
                 ExamId = examSyllabus.Id,
             };
@@ -102,9 +99,9 @@ namespace MagicLand_System.Mappers.Custom
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus.Weight,
                 CompleteionCriteria = examSyllabus.CompleteionCriteria,
-                TotalMark = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
+                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalQuestion = questionPackage.Questions!.Count(),
-                Attempts = 1,
+                //Attempts = 1,
                 NoSession = noSession,
                 ExamId = examSyllabus.Id,
                 QuestionMultipleChoices = QuestionCustomMapper.fromQuestionPackageToQuestionMultipleChoicesResponse(questionPackage),
@@ -134,9 +131,9 @@ namespace MagicLand_System.Mappers.Custom
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus.Weight,
                 CompleteionCriteria = examSyllabus.CompleteionCriteria,
-                TotalMark = questionPackage.Questions!.SelectMany(quest => quest.FlashCards!.Select(fc => fc.Score)).ToList().Sum(),
+                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.FlashCards!.Select(fc => fc.Score)).ToList().Sum(),
                 TotalQuestion = questionPackage.Questions!.Count(),
-                Attempts = 1,
+                //Attempts = 1,
                 NoSession = noSession,
                 ExamId = examSyllabus.Id,
                 QuestionFlasCards = QuestionCustomMapper.fromQuestionPackageToQuestionFlashCardResponse(questionPackage),

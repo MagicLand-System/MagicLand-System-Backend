@@ -94,7 +94,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "PARENT")]
-        public async Task<IActionResult> GetValidStudentF([FromQuery] Guid classId)
+        public async Task<IActionResult> GetValidStudent([FromQuery] Guid classId)
         {
             if (classId == default)
             {

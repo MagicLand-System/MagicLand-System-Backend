@@ -6,8 +6,8 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface ICartService
     {
-        Task<WishListResponse> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId);
-        Task<FavoriteResponse> AddCourseFavoriteOffCurrentParentAsync(Guid courseId);
+        Task<string> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId);
+        Task<string> AddCourseFavoriteOffCurrentParentAsync(Guid courseId);
         Task<WishListResponse> GetDetailCurrentParrentCart();
         Task<FavoriteResponse> GetDetailCurrentParrentFavorite();
         Task<CartResponse> GetAllItemsInCartAsync();

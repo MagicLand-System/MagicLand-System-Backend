@@ -12,12 +12,12 @@ namespace MagicLand_System.PayLoad.Response.Quizes
         public string? QuizName { get; set; }
         public double Weight { get; set; }
         public double CompleteionCriteria { get; set; }
-        public double TotalMark { get; set; }
+        public double TotalScore { get; set; }
         public int TotalQuestion { get; set; }
-        public double? Duration { get; set; }
-        public int? DeadLine { get; set; }
+        //public double? Duration { get; set; }
+        //public int? DeadLine { get; set; }
         public string? Date { get; set; } = string.Empty;
-        public int? Attempts { get; set; }
+        //public int? Attempts { get; set; }
         public int NoSession { get; set; }
         public Guid SessionId { get; set; }
         public Guid CourseId { get; set; } 
