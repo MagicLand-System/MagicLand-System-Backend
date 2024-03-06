@@ -15,7 +15,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<User>> GetUsers();
         Task<UserExistRespone> CheckUserExistByPhone(string phone);
         Task<LoginResponse> Authentication(LoginRequest loginRequest);
-        Task<User> GetCurrentUser();
+        Task<CurrentLoginResponse> GetCurrentUser();
         Task<NewTokenResponse> RefreshToken(RefreshTokenRequest refreshTokenRequest);
         Task<bool> RegisterNewUser(RegisterRequest registerRequest);
         Task<List<LecturerResponse>> GetLecturers(FilterLecturerRequest? request);

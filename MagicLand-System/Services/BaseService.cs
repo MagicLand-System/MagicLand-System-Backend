@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -41,11 +42,21 @@ namespace MagicLand_System.Services
         {
             return Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
         }
-        protected async Task<User> GetUserFromJwt()
+        protected async Task<CurrentLoginResponse> GetUserFromJwt()
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
             User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.Students).Include(x => x.PersonalWallet));
-            return account;
+            if(account == null)
+            {
+                Student student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+                if(student == null)
+                {
+                    return null;
+                }
+                return new CurrentLoginResponse { Id = student.Id,Name = student.FullName };
+
+            }
+            return new CurrentLoginResponse { Id = account.Id,Name = account.FullName};
         }
     }
 

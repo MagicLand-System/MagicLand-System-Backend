@@ -249,7 +249,8 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<double> HandelRefundTransaction(List<ClassResExtraInfor> classes, PersonalWallet personalWallet, Student student, bool isProgressing)
         {
-            var currentUser = await GetUserFromJwt();
+            var id = (await GetUserFromJwt()).Id;
+            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
             var newNotifications = new List<Notification>();
             var refundTransactions = new List<WalletTransaction>();
             double refundAmount = 0.0;
