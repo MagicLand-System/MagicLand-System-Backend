@@ -4,6 +4,7 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -15,7 +16,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<WalletResponse> GetWalletOfCurrentUser()
         {
-            var currentUser = await GetUserFromJwt();
+            var id = (await GetUserFromJwt()).Id;
+            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()),include: x => x.Include(x => x.PersonalWallet));
             if (currentUser == null)
             {
                 return new WalletResponse();

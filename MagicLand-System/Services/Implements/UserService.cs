@@ -12,6 +12,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -24,25 +25,61 @@ namespace MagicLand_System.Services.Implements
         public async Task<LoginResponse> Authentication(LoginRequest loginRequest)
         {
             var date = DateTime.Now;
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()), include: u => u.Include(u => u.Role));
-            if (user == null)
+            var parts = loginRequest.Phone.Split("_");
+            if (parts.Length == 1) 
             {
+                var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()), include: u => u.Include(u => u.Role));
+                string Role = user.Role.Name;
+                Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
+                var token = JwtUtil.GenerateJwtToken(user,null, guidClaim);
+                LoginResponse loginResponse = new LoginResponse
+                {
+                    Role = Role,
+                    AccessToken = token,
+                    DateOfBirth = user.DateOfBirth,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Gender = user.Gender,
+                    Phone = user.Phone,
+                };
+                return loginResponse;
+
+            }
+            if (parts.Length == 2)
+            {
+                var parentPhone = parts[0];
+                var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : u => u.Phone.Trim().Equals(parentPhone));
+                var students = (await _unitOfWork.GetRepository<Student>().GetListAsync(predicate : x => x.ParentId.ToString().Equals(user.Id.ToString()),include : x => x.Include(x => x.User))).ToArray();
+                if(students != null && students.Length > 0)
+                { 
+                   try
+                    {
+                        students = students.OrderBy(x => x.AddedTime).ToArray();
+                        var order = int.Parse(parts[1]);
+                        var student = students[order - 1];
+                        string Role = "Student";
+                        Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", student.Id);
+                        var token = JwtUtil.GenerateJwtToken(null,student, guidClaim);
+                        LoginResponse loginResponse = new LoginResponse
+                        {
+                            Role = Role,
+                            AccessToken = token,
+                            DateOfBirth = student.DateOfBirth,
+                            Email = student.Email,
+                            FullName = student.FullName,
+                            Gender = student.Gender,
+                            Phone = parts[0] ,
+                        };
+                        return loginResponse;
+                    } 
+                    catch(Exception ex) { }
+                    {
+                        return null;
+                    }
+                }
                 return null;
             }
-            string Role = user.Role.Name;
-            Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
-            var token = JwtUtil.GenerateJwtToken(user, guidClaim);
-            LoginResponse loginResponse = new LoginResponse
-            {
-                Role = Role,
-                AccessToken = token,
-                DateOfBirth = user.DateOfBirth,
-                Email = user.Email,
-                FullName = user.FullName,
-                Gender = user.Gender,
-                Phone = user.Phone,
-            };
-            return loginResponse;
+            return null;
         }
 
         public async Task<UserExistRespone> CheckUserExistByPhone(string phone)
@@ -50,6 +87,38 @@ namespace MagicLand_System.Services.Implements
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()), include: x => x.Include(x => x.Role));
             if (user == null)
             {
+                var parts = phone.Split('_');
+                if (parts.Length == 2) 
+                {
+                    var phoneInput = parts[0];
+                    var userFound = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phoneInput.Trim()), include: x => x.Include(x => x.Role).Include(x => x.Students));
+                    try
+                    {
+                        var count = int.Parse(parts[1].Trim());
+                        if (count - 1  > userFound.Students.Count)
+                        {
+                            return new UserExistRespone
+                            {
+                                IsExist = false,
+                            };
+                        } else
+                        {
+                            return new UserExistRespone
+                            {
+                                IsExist = true,
+                                Role = "student",
+                            };
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        return new UserExistRespone
+                        {
+                            IsExist = false,
+                        };
+                    }
+                }
                 return new UserExistRespone
                 {
                     IsExist = false,
@@ -62,7 +131,7 @@ namespace MagicLand_System.Services.Implements
             };
         }
 
-        public async Task<User> GetCurrentUser()
+        public async Task<CurrentLoginResponse> GetCurrentUser()
         {
             var account = await GetUserFromJwt();
             return account;
@@ -82,8 +151,17 @@ namespace MagicLand_System.Services.Implements
                 return null;
             }
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse(userId), include: u => u.Include(u => u.Role));
-            Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
-            var token = JwtUtil.GenerateJwtToken(user, guidClaim);
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate : x => x.Id == Guid.Parse(userId),include : x => x.Include(x => x.User));
+            Tuple<string, Guid> guidClaim = null;
+            if (student != null)
+            {
+                guidClaim = new Tuple<string, Guid>(userId, student.Id);
+            }
+            if(user != null)
+            {
+                guidClaim = new Tuple<string,Guid>(userId, user.Id);    
+            }
+            var token = JwtUtil.GenerateJwtToken(user,student, guidClaim);
             return new NewTokenResponse { Token = token };
         }
 
@@ -339,13 +417,13 @@ namespace MagicLand_System.Services.Implements
         {
             try
             {
-                var currentUser = await GetUserFromJwt();
-
+                var id = (await GetUserFromJwt()).Id;
+                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
                 if (request.FullName != null)
                 {
                     await UpdateCurrentUserTransaction(request, currentUser);
 
-                    currentUser.FullName = request.FullName!;
+                    currentUser.FullName = request.FullName!;   
                 }
 
                 currentUser.DateOfBirth = request.DateOfBirth != default ? request.DateOfBirth : currentUser.DateOfBirth;
