@@ -40,7 +40,6 @@ namespace MagicLand_System.Mappers.Custom
 
             var response = new FavoriteItemResponse
             {
-                CartItemId = itemId,
                 Course = CourseCustomMapper.fromCourseToCourseResponse(course),
             };
 

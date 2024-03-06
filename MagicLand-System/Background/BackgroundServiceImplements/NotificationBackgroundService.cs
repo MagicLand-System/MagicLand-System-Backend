@@ -34,12 +34,12 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     {
                         int time = currentDate.Day - noti.CreatedAt.Day;
 
-                        if (time >= 5 && time <= 10)
+                        if (time >= 3 && time <= 6)
                         {
                             noti.IsRead = true;
                         }
 
-                        if (time > 10)
+                        if (time > 6)
                         {
                             _unitOfWork.GetRepository<Notification>().DeleteAsync(noti);
                         }

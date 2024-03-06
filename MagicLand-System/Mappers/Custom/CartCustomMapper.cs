@@ -2,6 +2,7 @@
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 
 namespace MagicLand_System.Mappers.CustomMapper
 {
@@ -13,18 +14,21 @@ namespace MagicLand_System.Mappers.CustomMapper
             {
                 return new FavoriteResponse();
             }
-            var favoriteItems = new List<FavoriteItemResponse>();
+            var FavoriteItems = new List<CourseResponse>();
 
             foreach (var item in cartItems)
             {
-                var favoriteItem = CartItemCustomMapper.fromCartItemToFavoriteItemResponse(courses.First(c => c.Id == item.CourseId), item.CourseId);
-                favoriteItems.Add(favoriteItem);
+                var favoriteItem = CourseCustomMapper.fromCourseToCourseResponse(courses.First(c => c.Id == item.CourseId));
+                favoriteItem.IsInCart = true;
+                favoriteItem.CartItemId = item.Id;
+
+                FavoriteItems.Add(favoriteItem);
             }
 
             var response = new FavoriteResponse
             {
                 CartId = cartId,
-                FavoriteItems = favoriteItems,
+                FavoriteItems = FavoriteItems,
             };
 
             return response;
