@@ -42,21 +42,20 @@ namespace MagicLand_System.Services
         {
             return Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
         }
-        protected async Task<CurrentLoginResponse> GetUserFromJwt()
+        protected async Task<(User?,Student?)> GetUserFromJwt()
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
-            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.Students).Include(x => x.PersonalWallet));
+            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role));
             if(account == null)
             {
                 Student student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id);
                 if(student == null)
                 {
-                    return null;
+                    return (null,null);
                 }
-                return new CurrentLoginResponse { Id = student.Id,Name = student.FullName ,Role = "Student"};
-
+                return (null, student);
             }
-            return new CurrentLoginResponse { Id = account.Id,Name = account.FullName,Role = account.Role.Name};
+            return (account,null) ;
         }
     }
 

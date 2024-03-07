@@ -131,7 +131,7 @@ namespace MagicLand_System.Services.Implements
             };
         }
 
-        public async Task<CurrentLoginResponse> GetCurrentUser()
+        public async Task<(User?,Student?)> GetCurrentUser()
         {
             var account = await GetUserFromJwt();
             return account;
@@ -417,7 +417,7 @@ namespace MagicLand_System.Services.Implements
         {
             try
             {
-                var id = (await GetUserFromJwt()).Id;
+                var id = (await GetUserFromJwt()).Item1.Id;
                 var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
                 if (request.FullName != null)
                 {

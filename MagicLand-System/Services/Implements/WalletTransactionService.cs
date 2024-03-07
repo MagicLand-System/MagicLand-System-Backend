@@ -150,7 +150,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<BillPaymentResponse> CheckoutAsync(List<CheckoutRequest> requests)
         {
-            var id = (await GetUserFromJwt()).Id;
+            var id = (await GetUserFromJwt()).Item1.Id;
             var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
@@ -621,7 +621,7 @@ namespace MagicLand_System.Services.Implements
             {
                 string txnRefCode = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.TopUp);
 
-                var id = (await GetUserFromJwt()).Id;
+                var id = (await GetUserFromJwt()).Item1.Id;
                 var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
                 var transactionId = Guid.NewGuid();
 
@@ -854,7 +854,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<(string, double)> GeneratePaymentTransAsync(List<ItemGenerate> items)
         {
-            var id = (await GetUserFromJwt()).Id;
+            var id = (await GetUserFromJwt()).Item1.Id;
             var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
 
             double total = await ConvertItemAndGetTotal(items);

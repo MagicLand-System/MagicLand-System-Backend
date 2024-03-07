@@ -117,7 +117,7 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<double> HandelRefundTransaction(List<Class> classes, PersonalWallet personalWallet, Student student, bool isProgressing)
         {
-            var id = (await GetUserFromJwt()).Id;
+            var id = (await GetUserFromJwt()).Item1.Id;
             var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
             var newNotifications = new List<Notification>();
             var refundTransactions = new List<WalletTransaction>();
@@ -542,7 +542,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Hoc sinh phải lớn hơn 3 tuổi", StatusCodes.Status400BadRequest);
             }
-            var userId = (await GetUserFromJwt()).Id;
+            var userId = (await GetUserFromJwt()).Item1.Id;
             if (request == null)
             {
                 throw new BadHttpRequestException("yêu cầu không hợp lệ", StatusCodes.Status400BadRequest);
