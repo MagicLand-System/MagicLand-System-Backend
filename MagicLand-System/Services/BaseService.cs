@@ -53,10 +53,10 @@ namespace MagicLand_System.Services
                 {
                     return null;
                 }
-                return new CurrentLoginResponse { Id = student.Id,Name = student.FullName };
+                return new CurrentLoginResponse { Id = student.Id,Name = student.FullName ,Role = "Student"};
 
             }
-            return new CurrentLoginResponse { Id = account.Id,Name = account.FullName};
+            return new CurrentLoginResponse { Id = account.Id,Name = account.FullName,Role = account.Role.Name};
         }
     }
 
