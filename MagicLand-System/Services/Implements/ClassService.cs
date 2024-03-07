@@ -20,7 +20,6 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -35,7 +34,7 @@ namespace MagicLand_System.Services.Implements
         #region gia_thuong_code
         public async Task<string> AutoCreateClassCode(string courseId)
         {
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId),include : x => x.Include(x => x.Syllabus));
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId), include: x => x.Include(x => x.Syllabus));
             if (course == null)
             {
                 return null;
@@ -43,9 +42,9 @@ namespace MagicLand_System.Services.Implements
             //var name = course.Name;
             //var words = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             //string abbreviation = string.Join("", words.Select(word => word[0]));
-            if(course.Syllabus == null)
+            if (course.Syllabus == null)
             {
-                throw new BadHttpRequestException("course chưa gắn syllabus",StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("course chưa gắn syllabus", StatusCodes.Status400BadRequest);
             }
             var name = course.Syllabus.SubjectCode;
             var classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)));
@@ -1108,7 +1107,7 @@ namespace MagicLand_System.Services.Implements
                     CourseId = courseId.ToString(),
                     Schedules = scheduleRequests,
                     StartDate = date,
-                },lecturerId.ToString(),roomId.ToString());
+                }, lecturerId.ToString(), roomId.ToString());
                 if (resultCheck.Equals("FBRL"))
                 {
                     rows.Add(new RowInsertResponse
@@ -1175,7 +1174,7 @@ namespace MagicLand_System.Services.Implements
             response.FailureRow = fail;
             return response;
         }
-        private async Task<string> CheckValidateSchedule(FilterLecturerRequest request,string LecturerId,string RoomId)
+        private async Task<string> CheckValidateSchedule(FilterLecturerRequest request, string LecturerId, string RoomId)
         {
             List<ScheduleRequest> scheduleRequests = request.Schedules;
             List<string> daysOfWeek = new List<string>();
@@ -1272,7 +1271,7 @@ namespace MagicLand_System.Services.Implements
                     SlotId = schedule.SlotId,
                 });
             }
-            var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include : x => x.Include(x => x.Class));
+            var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Class));
             allSchedule = allSchedule.Where(x => (x.Date < endDate && x.Date >= request.StartDate)).ToList();
             List<Schedule> result = new List<Schedule>();
             foreach (var convert in convertSchedule)
@@ -1285,18 +1284,19 @@ namespace MagicLand_System.Services.Implements
             }
             var rx1 = result.Where(x => (x.RoomId.ToString().Equals(RoomId) && x.Class.LecturerId.ToString().Equals(LecturerId))).ToList();
             var rx2 = result.Where(x => x.SubLecturerId != null).Where(x => x.SubLecturerId.ToString().Equals(LecturerId)).Where(x => x.RoomId.ToString().Equals(RoomId)).ToList();
-            if((rx1 != null && rx1.Count > 0) || (rx2 != null && rx2.Count > 0))
+            if ((rx1 != null && rx1.Count > 0) || (rx2 != null && rx2.Count > 0))
             {
                 return "FBRL";
             }
             var rs = result.Where(x => x.RoomId.ToString().Equals(RoomId)).ToList();
-            if(rs != null && rs.Count > 0)
+            if (rs != null && rs.Count > 0)
             {
                 return "FBR";
             }
             var rs1 = result.Where(x => (x.Class.LecturerId.ToString().Equals(LecturerId))).ToList();
             var rs2 = result.Where(x => x.SubLecturerId != null).Where(x => x.SubLecturerId.ToString().Equals(LecturerId)).ToList();
-            if((rs1 != null && rs1.Count > 0) || (rs2 != null && rs2.Count > 0)){
+            if ((rs1 != null && rs1.Count > 0) || (rs2 != null && rs2.Count > 0))
+            {
                 return "FBL";
             }
             return "S";
@@ -1362,6 +1362,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time)
         {
+
+
             var classes = await FetchClasses(time);
 
             return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
@@ -1996,7 +1998,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 var syllabusRequired = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(
-                    predicate: x => x.CourseId == cls.CourseId, 
+                    predicate: x => x.CourseId == cls.CourseId,
                     include: x => x.Include(x => x.SyllabusPrerequisites)!)).SelectMany(x => x.SyllabusPrerequisites!.Select(sp => sp.PrerequisiteSyllabusId));
 
                 if (syllabusRequired != null)

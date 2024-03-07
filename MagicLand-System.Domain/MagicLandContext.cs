@@ -215,15 +215,15 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Attendance");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.Student).WithMany(e => e.Attendances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Student).WithMany(e => e.Attendances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<Evaluate>(entity =>
             {
                 entity.ToTable("Evaluate");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Schedule).WithMany(e => e.Evaluates).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.Student).WithMany(e => e.Evaluates).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Evaluates).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Student).WithMany(e => e.Evaluates).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<Notification>(entity =>
             {

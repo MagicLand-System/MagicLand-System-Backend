@@ -211,13 +211,13 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<bool?>("IsValid")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("ScheduleId")
+                    b.Property<Guid>("ScheduleId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("StudentId")
+                    b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -1070,13 +1070,13 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.Schedule", "Schedule")
                         .WithMany("Attendances")
                         .HasForeignKey("ScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.Student", "Student")
                         .WithMany("Attendances")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Schedule");
@@ -1119,12 +1119,14 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.Schedule", "Schedule")
                         .WithMany("Evaluates")
                         .HasForeignKey("ScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.Student", "Student")
                         .WithMany("Evaluates")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Schedule");
 

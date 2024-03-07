@@ -140,6 +140,8 @@
         {
             public const string EndPointBase = ApiEndpoint + "/lectures";
             public const string TakeStudentAttendance = EndPointBase + "/students/takeAttendance";
+            public const string EvaluateStudent = EndPointBase + "/students/evaluate";
+            public const string GetStudentEvaluates = EndPointBase + "/students/get/evaluates";
             public const string GetStudentAttendance = EndPointBase + "/student/attendance";
             public const string GetStudentAttendanceOfAllClass = EndPointBase + "/student/classes/attendance";
             public const string GetCurrentClassesSchedule = EndPointBase + "/current/classes";

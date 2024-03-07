@@ -1,19 +1,15 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.PayLoad.Request.Student;
-using MagicLand_System.PayLoad.Response.Students;
-using MagicLand_System.PayLoad.Response;
-using MagicLand_System.Services.Implements;
+using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request.Attendance;
+using MagicLand_System.PayLoad.Request.Evaluates;
+using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Evaluates;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using MagicLand_System.PayLoad.Request.Attendance;
-using MagicLand_System.PayLoad.Response.Attendances;
-using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Response.Classes;
 using Microsoft.AspNetCore.Http.HttpResults;
-using MagicLand_System.Background.BackgroundServiceInterfaces;
-using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
 {
@@ -64,6 +60,69 @@ namespace MagicLand_System.Controllers
         {
             var response = await _studentService.TakeStudentAttendanceAsync(request, slot);
 
+            return Ok(response);
+        }
+
+        #region document API Get Student Evaluates
+        /// <summary>
+        ///  Truy Suất Danh Sách Đánh Giá Của Các Học Sinh Trong Một Lớp 
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="noSession">Thứ Tự Hiện Của Buổi Học Cần Truy Suất Đánh Giá (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///    "noSession": 6,
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Đánh Giá Của Các Học Sinh</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentEvaluates)]
+        [ProducesResponseType(typeof(EvaluateResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> GetStudentEvaluates([FromQuery] Guid classId, [FromQuery] int? noSession)
+        {
+            var response = await _studentService.GetStudentEvaluatesAsync(classId, noSession);
+            return Ok(response);
+        }
+
+        #region document API Evaluate Students
+        /// <summary>
+        ///  Cho Phép Giảng Viên Đánh Giá Buổi Học Của Các Học Sinh Của Một Lớp, Thông Qua Id Của Lớp Và Id Buổi Học
+        /// </summary>
+        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Đánh Giá, Mức Độ Và Ghi Chú Cho Đánh Giá</param>
+        /// <param name="noSession">Thứ Tự Hiện Tại Của Buổi Học Cần Đánh Giá</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "ClassId":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///    "sessionId": "5229E1A5-79F9-48A5-B8ED-0A53F963Cd31"
+        ///    [
+        ///       {
+        ///          "StudentId":"6ab50a00-08ba-483c-bf5d-0d55b05a2c1a",
+        ///          "Level": 1, 
+        ///          "Note": "Dự Thính",
+        ///        }
+        ///    ]
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Báo Sau Khi Đánh Giá</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPut(ApiEndpointConstant.LectureEndPoint.EvaluateStudent)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> EvaluateStudent([FromBody] EvaluateRequest request, [FromQuery] int noSession)
+        {
+            var response = await _studentService.EvaluateStudentAsync(request, noSession);
             return Ok(response);
         }
 
@@ -126,7 +185,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "LECTURER")]
         public async Task<IActionResult> GetCurrentLetureClassesSchedule()
         {
-            var responses = await _classService.GetCurrentLectureClassesScheduleAsync();    
+            var responses = await _classService.GetCurrentLectureClassesScheduleAsync();
             return Ok(responses);
         }
 

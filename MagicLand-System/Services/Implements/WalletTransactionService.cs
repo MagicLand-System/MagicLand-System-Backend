@@ -151,7 +151,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<BillPaymentResponse> CheckoutAsync(List<CheckoutRequest> requests)
         {
             var id = (await GetUserFromJwt()).Id;
-            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(id.ToString()), include : x => x.Include(x => x.PersonalWallet));
+            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
             double total = await CalculateTotal(requests);
@@ -184,7 +184,7 @@ namespace MagicLand_System.Services.Implements
 
                 string studentNameString = await GenerateStudentNameString(request.StudentIdList);
 
-                var newStudentAttendanceList = await RenderStudentAttendanceList(cls.Id, request.StudentIdList);
+                var newStudentItemScheduleList = await RenderStudentItemScheduleList(cls.Id, request.StudentIdList);
 
                 WalletTransaction newTransaction;
                 List<StudentClass> newStudentInClassList;
@@ -194,7 +194,7 @@ namespace MagicLand_System.Services.Implements
 
                 personalWallet.Balance = personalWallet.Balance - currentRequestTotal;
 
-                await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentAttendanceList, newNotification);
+                await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentItemScheduleList, newNotification);
 
                 string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.ClassCode}]";
                 messageList.Add(message);
@@ -268,7 +268,7 @@ namespace MagicLand_System.Services.Implements
             PersonalWallet personalWallet,
             WalletTransaction newTransaction,
             List<StudentClass> newStudentInClassList,
-            List<Attendance> newStudentAttendanceList,
+            (List<Attendance>, List<Evaluate>) newStudentItemScheduleList,
             Notification newNotification)
         {
             try
@@ -276,12 +276,13 @@ namespace MagicLand_System.Services.Implements
                 if (cls.StudentClasses.Count() + newStudentInClassList.Count() >= cls.LeastNumberStudent)
                 {
                     await UpdateStudentAttendance(cls);
-                    newStudentAttendanceList.ForEach(attendance => attendance.IsPublic = true);
+                    newStudentItemScheduleList.Item1.ForEach(attendance => attendance.IsPublic = true);
                 }
 
                 _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
                 await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(newStudentInClassList);
-                await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendanceList);
+                await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentItemScheduleList.Item1);
+                await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newStudentItemScheduleList.Item2);
                 await _unitOfWork.GetRepository<WalletTransaction>().InsertAsync(newTransaction);
                 await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
 
@@ -336,14 +337,27 @@ namespace MagicLand_System.Services.Implements
             return bill;
         }
 
-        private async Task<List<Attendance>> RenderStudentAttendanceList(Guid classId, List<Guid> studentIds)
+        private async Task<(List<Attendance>, List<Evaluate>)> RenderStudentItemScheduleList(Guid classId, List<Guid> studentIds)
         {
             var studentAttendanceList = new List<Attendance>();
+            var studentEvaluateList = new List<Evaluate>();
 
             var classSchedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Class!.Id == classId);
 
             foreach (var schedule in classSchedules)
             {
+                var studentEvaluate = studentIds.Select(si => new Evaluate
+                {
+                    Id = Guid.NewGuid(),
+                    StudentId = si,
+                    ScheduleId = schedule.Id,
+                    Status = null,
+                    Note = string.Empty,
+                    IsValid = true,
+                }).ToList();
+
+                studentEvaluateList.AddRange(studentEvaluate);
+
                 var studentAttendance = studentIds.Select(si => new Attendance
                 {
                     Id = new Guid(),
@@ -356,7 +370,7 @@ namespace MagicLand_System.Services.Implements
                 studentAttendanceList.AddRange(studentAttendance);
             }
 
-            return studentAttendanceList;
+            return (studentAttendanceList, studentEvaluateList);
         }
 
         public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
@@ -370,9 +384,9 @@ namespace MagicLand_System.Services.Implements
                 .Include(x => x.StudentClasses)
                 .Include(x => x.Course)!);
 
-            if(cls == null)
+            if (cls == null)
             {
-                throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]",StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
             }
 
             await ValidateSuitableClass(studentIds, cls);
@@ -706,7 +720,7 @@ namespace MagicLand_System.Services.Implements
                 if (pair.Key == AttachValueEnum.StudentId.ToString())
                 {
                     var studentIdList = pair.Value.Select(v => Guid.Parse(v)).ToList();
-                    var studentAttendanceList = await RenderStudentAttendanceList(classId, studentIdList);
+                    var studentAttendanceList = await RenderStudentItemScheduleList(classId, studentIdList);
 
                     var studentClassList = studentIdList.Select(id =>
                     new StudentClass
@@ -716,7 +730,8 @@ namespace MagicLand_System.Services.Implements
                         ClassId = classId,
                     }).ToList();
 
-                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList);
+                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList.Item1);
+                    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(studentAttendanceList.Item2);
                     await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentClassList);
                     continue;
                 }
