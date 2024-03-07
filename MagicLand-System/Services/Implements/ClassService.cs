@@ -21,6 +21,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Globalization;
 
 namespace MagicLand_System.Services.Implements
@@ -1362,8 +1363,48 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time)
         {
+            #region
+            //try
+            //{
+            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+            //   include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)));
 
+            //    var evaluates = new List<Evaluate>();
+            //    foreach (var cls in classes)
+            //    {
+            //        var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
+            //            selector: x => x.Student,
+            //            predicate: x => x.ClassId == cls.Id,
+            //            include: x => x.Include(x => x.Student!));
 
+            //        foreach (var schedule in cls.Schedules)
+            //        {
+            //            foreach (var student in students)
+            //            {
+            //                evaluates.Add(new Evaluate
+            //                {
+            //                    Id = Guid.NewGuid(),
+            //                    Status = schedule.Date.Day < DateTime.Now.Day ? EvaluateStatusEnum.NORMAL.ToString() : null,
+            //                    Note = string.Empty,
+            //                    IsValid = cls.Status != ClassStatusEnum.CANCELED.ToString() && cls.Status != ClassStatusEnum.COMPLETED.ToString() ? true : false,
+            //                    ScheduleId = schedule.Id,
+            //                    StudentId = student!.Id,
+            //                });
+            //            }
+            //        }
+
+            //    }
+
+            //    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(evaluates);
+            //    _unitOfWork.Commit();
+            //}
+            //catch (Exception ex)
+            //{
+            //    var s = ex;
+            //}
+
+            //return default!;
+            #endregion
             var classes = await FetchClasses(time);
 
             return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();

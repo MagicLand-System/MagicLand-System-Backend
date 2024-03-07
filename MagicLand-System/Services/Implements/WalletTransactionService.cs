@@ -150,8 +150,12 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<BillPaymentResponse> CheckoutAsync(List<CheckoutRequest> requests)
         {
-            var id = (await GetUserFromJwt()).Item1.Id;
-            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
+            var id = GetUserIdFromJwt();
+            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+            if (currentPayer == null)
+            {
+                throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Và Thực Hiện Lại Giao Dịch", StatusCodes.Status500InternalServerError);
+            }
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
             double total = await CalculateTotal(requests);
@@ -621,8 +625,13 @@ namespace MagicLand_System.Services.Implements
             {
                 string txnRefCode = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.TopUp);
 
-                var id = (await GetUserFromJwt()).Item1.Id;
-                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
+                var id = GetUserIdFromJwt();
+                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+                if (currentUser == null)
+                {
+                    throw new Exception($"Lỗi Hễ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Giao Dịch");
+                }
+
                 var transactionId = Guid.NewGuid();
 
                 var transaction = new WalletTransaction
@@ -854,8 +863,13 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<(string, double)> GeneratePaymentTransAsync(List<ItemGenerate> items)
         {
-            var id = (await GetUserFromJwt()).Item1.Id;
-            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
+            var id = GetUserIdFromJwt();
+            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+
+            if (currentPayer == null)
+            {
+                throw new Exception($"Lỗi Hễ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Giao Dịch");
+            }
 
             double total = await ConvertItemAndGetTotal(items);
             double discountEachItem = CalculateDiscountEachItem(items.Count(), total);

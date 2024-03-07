@@ -55,6 +55,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(SyllabusWithScheduleResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusByCourseId([FromQuery] Guid courseId, [FromQuery] Guid classId)
         {
             (SyllabusResponse?, SyllabusWithScheduleResponse?) response = await _syllabusService.LoadSyllabusByCourseIdAsync(courseId, classId);
@@ -87,6 +88,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadSyllabus)]
         [ProducesResponseType(typeof((SyllabusResponse, SyllabusWithCourseResponse)), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusById([FromQuery] Guid id)
         {
             (SyllabusResponse?, SyllabusWithCourseResponse?) response = await _syllabusService.LoadSyllabusByIdAsync(id);
@@ -110,7 +112,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadSyllabuses)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-       // [Authorize]
+        [Authorize]
         public async Task<IActionResult> LoadSyllabuses()
         {
             var syllabuses = await _syllabusService.LoadSyllabusesAsync();
@@ -141,7 +143,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.SyllabusEndPoint.FilterSyllabus)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> FilterSyllabus([FromQuery] List<string>? keyWords,
             [FromQuery] DateTime? date,
             [FromQuery] double? score)

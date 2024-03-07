@@ -117,8 +117,12 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<double> HandelRefundTransaction(List<Class> classes, PersonalWallet personalWallet, Student student, bool isProgressing)
         {
-            var id = (await GetUserFromJwt()).Item1.Id;
-            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
+            var id = GetUserIdFromJwt();
+            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+            if(currentUser == null)
+            {
+                throw new Exception($"Lỗi Hễ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Giao Dịch");
+            }
             var newNotifications = new List<Notification>();
             var refundTransactions = new List<WalletTransaction>();
             double refundAmount = 0.0;
@@ -428,13 +432,14 @@ namespace MagicLand_System.Services.Implements
                 {
                     var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(
                         predicate: x => x.ScheduleId == schedule.Id && x.StudentId == student.Id);
-                    evaluates.Add(evaluate);
 
                     var evaluateStudent = studentEvaluateRequests.SingleOrDefault(se => se.StudentId == student.Id);
                     if (evaluateStudent == null)
                     {
                         evaluate.Status = EvaluateStatusEnum.NORMAL.ToString();
                         studentNotEvaluate.Add(student.FullName!);
+                        evaluates.Add(evaluate);
+
                         continue;
                     }
 
@@ -442,6 +447,8 @@ namespace MagicLand_System.Services.Implements
                     ? EvaluateStatusEnum.NOTGOOD.ToString() : evaluateStudent.Level == 2
                     ? EvaluateStatusEnum.NORMAL.ToString() : EvaluateStatusEnum.GOOD.ToString();
                     evaluate.Note = evaluateStudent.Note!;
+
+                    evaluates.Add(evaluate);
                 }
 
                 _unitOfWork.GetRepository<Evaluate>().UpdateRange(evaluates);
@@ -474,7 +481,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Thứ Tự Của Buổi Học Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
 
-            var schedule = cls.Schedules.ToList()[noSession + 1];
+            var schedule = cls.Schedules.ToList()[noSession - 1];
             if (schedule.Date.Day > DateTime.Now.Day)
             {
                 throw new BadHttpRequestException($"Số Thứ Tự Buổi Học Thuộc Ngày [{schedule.Date}] Vẫn Chưa Diễn Ra", StatusCodes.Status400BadRequest);
@@ -512,7 +519,7 @@ namespace MagicLand_System.Services.Implements
 
             if (noSession != null)
             {
-                await GetEvaluates(noSession.Value, schedules[noSession.Value], responses);
+                await GetEvaluates(noSession.Value, schedules[noSession.Value - 1], responses);
             }
             else
             {

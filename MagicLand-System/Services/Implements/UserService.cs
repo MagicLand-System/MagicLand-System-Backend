@@ -57,7 +57,7 @@ namespace MagicLand_System.Services.Implements
                         students = students.OrderBy(x => x.AddedTime).ToArray();
                         var order = int.Parse(parts[1]);
                         var student = students[order - 1];
-                        string Role = "Student";
+                        string Role = RoleEnum.STUDENT.ToString();
                         Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", student.Id);
                         var token = JwtUtil.GenerateJwtToken(null,student, guidClaim);
                         LoginResponse loginResponse = new LoginResponse

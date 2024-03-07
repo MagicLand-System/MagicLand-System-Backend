@@ -520,6 +520,25 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
+            string role = GetRoleFromJwt();
+            if (role.ToLower() == RoleEnum.LECTURER.ToString().ToLower())
+            {
+                var coursesOfLecturer = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                    selector: x => x.Id,
+                    predicate: x => x.Classes.Any(cls => cls.LecturerId == GetUserIdFromJwt()));
+
+                syllabuses = syllabuses.Where(syll => coursesOfLecturer.Any(id => id == syll.CourseId)).ToList();
+            }
+
+            if (role.ToLower() == RoleEnum.STUDENT.ToString().ToLower())
+            {
+                var coursesOfStudent = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                    selector: x => x.CourseId,
+                    predicate: x => x.StudentClasses.Any(sc => sc.StudentId == GetUserIdFromJwt()));
+
+                syllabuses = syllabuses.Where(syll => coursesOfStudent.Any(id => id == syll.CourseId)).ToList();
+            }
+
             return syllabuses.ToList();
         }
 
