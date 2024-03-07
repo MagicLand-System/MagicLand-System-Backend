@@ -42,6 +42,7 @@ namespace MagicLand_System.Domain
         public DbSet<FlashCard> FlashCards { get; set; }    
         public DbSet<SideFlashCard> SideFlashCards { get; set; }
         public DbSet<LecturerField> LecturerFields { get; set; }
+        public DbSet<Evaluate> Evaluates { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -214,14 +215,21 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Attendance");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.Student).WithMany(e => e.Attendances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<Evaluate>(entity =>
+            {
+                entity.ToTable("Evaluate");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Evaluates).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany(e => e.Evaluates).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Notification>(entity =>
             {
                 entity.ToTable("Notification");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.TargetUser).WithMany(e => e.Notifications).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.TargetUser).WithMany(e => e.Notifications).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<SessionDescription>(entity => 
             {
