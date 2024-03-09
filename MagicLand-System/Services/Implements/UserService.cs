@@ -155,11 +155,11 @@ namespace MagicLand_System.Services.Implements
             Tuple<string, Guid> guidClaim = null;
             if (student != null)
             {
-                guidClaim = new Tuple<string, Guid>(userId, student.Id);
+                guidClaim = new Tuple<string, Guid>("userId", student.Id);
             }
             if(user != null)
             {
-                guidClaim = new Tuple<string,Guid>(userId, user.Id);    
+                guidClaim = new Tuple<string,Guid>("userId", user.Id);    
             }
             var token = JwtUtil.GenerateJwtToken(user,student, guidClaim);
             return new NewTokenResponse { Token = token };
