@@ -86,7 +86,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         Address = user.Address,
                         AvatarImage = user.AvatarImage,
-                        DateOfBirth = user.DateOfBirth,
+                        DateOfBirth = user.DateOfBirth.Value,
                         Email = user.Email,
                         FullName = user.FullName,
                         Gender = user.Gender,

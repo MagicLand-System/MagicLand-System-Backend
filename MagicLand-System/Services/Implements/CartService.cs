@@ -113,12 +113,13 @@ namespace MagicLand_System.Services.Implements
 
 
         #endregion
-        public async Task<string> AddCourseFavoriteOffCurrentParentAsync(Guid courseId)
+        public async Task<bool> AddCourseFavoriteOffCurrentParentAsync(Guid courseId)
         {
             var currentParentCart = await FetchCurrentParentCart();
 
             //var favoriteResponse = new FavoriteResponse();
-            string message = string.Empty;
+            //string message = string.Empty;
+            bool result = true;
 
             var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                     selector: x => x.Name,
@@ -127,8 +128,9 @@ namespace MagicLand_System.Services.Implements
             {
                 if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.CourseId == courseId))
                 {
+                    return false;
                     //throw new BadHttpRequestException($"Id [{courseId}] Của Khóa Đã Có Trong Danh Sách Yêu Thích", StatusCodes.Status400BadRequest);
-                    return $"Khóa Học [{courseName}] Đã Có Trong Danh Sách Quan Tâm";
+                    //return $"Khóa Học [{courseName}] Đã Có Trong Danh Sách Quan Tâm";
                 }
                 else
                 {
@@ -146,12 +148,14 @@ namespace MagicLand_System.Services.Implements
                     //     ? await GetDetailCurrentParrentFavorite()
                     //     : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
 
-                    message = await _unitOfWork.CommitAsync() > 0
-                            ? $"Bạn Đã Quan Tâm Khóa Học [{courseName}]"
-                            : $"Quan Tâm Khóa Học [{courseName}] Thất Bại, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
-                }
+                    //message = await _unitOfWork.CommitAsync() > 0
+                    //        ? $"Bạn Đã Quan Tâm Khóa Học [{courseName}]"
+                    //        : $"Quan Tâm Khóa Học [{courseName}] Thất Bại, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
 
-                return message;
+                    result = await _unitOfWork.CommitAsync() > 0;
+
+                }
+                return result;
             }
             catch (Exception ex)
             {
@@ -159,11 +163,11 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<string> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId)
+        public async Task<bool> ModifyCartOffCurrentParentAsync(List<Guid> studentIds, Guid classId)
         {
             var currentParentCart = await FetchCurrentParentCart();
 
-            string message = string.Empty;
+            //string message = string.Empty;
             try
             {
                 var classCode = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
@@ -177,7 +181,8 @@ namespace MagicLand_System.Services.Implements
                     if (studentIds.Count() == 0 && currentCartItem!.StudentInCarts.Count() == 0)
                     {
                         //throw new BadHttpRequestException($"Id [{classId}] Của Lớp Đã Có Trong Giỏ Hàng", StatusCodes.Status400BadRequest);
-                        return $"[{classCode}] Đã Có Trong Giỏ Hàng";
+                        //return $"[{classCode}] Đã Có Trong Giỏ Hàng";
+                        return false;
                     }
 
                     if (currentCartItem!.StudentInCarts.Select(sic => sic.StudentId).ToList().SequenceEqual(studentIds))
@@ -193,7 +198,8 @@ namespace MagicLand_System.Services.Implements
                         }
 
                         //throw new BadHttpRequestException($"Bạn Đã Có Bé [{string.Join(", ", studentName)}] Trong Lớp [{classCode}] Ở Giỏ Hàng", StatusCodes.Status400BadRequest);
-                        return $"Bạn Đã Có Bé [{string.Join(", ", studentName)}] Trong Lớp [{classCode}] Ở Giỏ Hàng";
+                        //return $"Bạn Đã Có Bé [{string.Join(", ", studentName)}] Trong Lớp [{classCode}] Ở Giỏ Hàng";
+                        return false;
                     }
 
                     _unitOfWork.GetRepository<StudentInCart>().DeleteRangeAsync(currentCartItem!.StudentInCarts);
@@ -210,9 +216,11 @@ namespace MagicLand_System.Services.Implements
                     //    ? await GetDetailCurrentParrentCart()
                     //    : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
 
-                    message = await _unitOfWork.CommitAsync() > 0
-                    ? $"Thêm Thành Công Lớp [{classCode}] Vào Giỏ Hàng"
-                    : $"Thêm Thất Bại Lớp [{classCode}] Vào Giỏ Hàng, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
+                    //message = await _unitOfWork.CommitAsync() > 0
+                    //? $"Thêm Thành Công Lớp [{classCode}] Vào Giỏ Hàng"
+                    //: $"Thêm Thất Bại Lớp [{classCode}] Vào Giỏ Hàng, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
+
+                    return await _unitOfWork.CommitAsync() > 0;
                 }
                 else
                 {
@@ -238,12 +246,12 @@ namespace MagicLand_System.Services.Implements
                     //     ? await GetDetailCurrentParrentCart()
                     //     : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
 
-                    message = await _unitOfWork.CommitAsync() > 0
-                    ? $"Thêm Thành Công Lớp [{classCode}] Vào Giỏ Hàng"
-                    : $"Thêm Thất Bại Lớp [{classCode}] Vào Giỏ Hàng, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
-                }
+                    //message = await _unitOfWork.CommitAsync() > 0
+                    //? $"Thêm Thành Công Lớp [{classCode}] Vào Giỏ Hàng"
+                    //: $"Thêm Thất Bại Lớp [{classCode}] Vào Giỏ Hàng, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
 
-                return message;
+                    return await _unitOfWork.CommitAsync() > 0;
+                }
             }
             catch (Exception ex)
             {

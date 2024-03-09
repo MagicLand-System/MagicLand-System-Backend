@@ -9,6 +9,24 @@ namespace MagicLand_System.Helpers
 {
     public class StringHelper
     {
+
+        public static string GetStringWithoutSpecificSyntax(string valueInput, string syntax, bool isBefore)
+        {
+            int syntaxIndex = valueInput.IndexOf(syntax);
+
+            if (isBefore && syntaxIndex != -1)
+            {
+                return valueInput.Substring(0, syntaxIndex);
+            }
+
+            if (!isBefore && syntaxIndex != -1 && syntaxIndex < valueInput.Length - 1)
+            {
+                return valueInput.Substring(syntaxIndex + 1);
+            }
+
+            return valueInput;
+        }
+
         public static string GetSlotNumber(string startTime)
         {
             if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot1).Trim())

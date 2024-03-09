@@ -5,16 +5,31 @@ namespace MagicLand_System.Mappers.Custom
 {
     public class SyllabusCustomMapper
     {
+        public static SyllabusInforResponse RenderSyllabusInforResponse(ICollection<Topic> topics)
+        {
+            if (topics == null)
+            {
+                throw new NullReferenceException();
+            }
 
-        public static SyllabusWithScheduleResponse fromSyllabusAndClassToSyllabusWithSheduleResponse(Syllabus syllabus, Class cls)
+            var response = new SyllabusInforResponse
+            {
+                Topics = TopicCustomMapper.fromTopicsToTopicResponses(topics),
+            };
+
+            return response;
+        }
+
+        public static SyllabusResponse fromSyllabusAndClassToSyllabusResponseWithSheduleResponse(Syllabus syllabus, Class cls)
         {
             if (syllabus == null || cls == null)
             {
                 throw new NullReferenceException();
             }
 
-            var response = new SyllabusWithScheduleResponse
+            var response = new SyllabusResponse
             {
+                Course = CourseCustomMapper.fromCourseToCourseSimpleResponse(syllabus.Course!),
                 SyllabusId = syllabus.Id,
                 SyllabusName = syllabus.Name,
                 Category = syllabus.SyllabusCategory!.Name,
@@ -27,10 +42,25 @@ namespace MagicLand_System.Mappers.Custom
                 Description = syllabus.Description,
                 SubjectCode = syllabus.SubjectCode,
                 SyllabusLink = syllabus.SyllabusLink,
-                SyllabusInformations = SessionCustomMapper.fromTopicsAndSchedulesToSyllabusInforWithDateResponse(syllabus.Topics, cls.Schedules),
+                SyllabusInformations = GenerateSyllabusInforResponse(syllabus.Topics!, cls.Schedules),
                 Materials = MaterialCustomMapper.fromMaterialsToMaterialResponse(syllabus.Materials!),
                 QuestionPackages = QuestionCustomMapper.fromTopicsToQuestionPackageResponse(syllabus.Topics!),
                 Exams = ExamSyllabusCustomMapper.fromExamSyllabusesToExamSyllabusResponse(syllabus.ExamSyllabuses!),
+            };
+
+            return response;
+        }
+
+        private static SyllabusInforResponse GenerateSyllabusInforResponse(ICollection<Topic> topics, ICollection<Schedule> schedules)
+        {
+            if (topics == null || schedules == null)
+            {
+                return default!;
+            }
+
+            var response = new SyllabusInforResponse
+            {
+                Topics = TopicCustomMapper.fromTopicsAndScheduleToTopicResponses(topics, schedules),
             };
 
             return response;

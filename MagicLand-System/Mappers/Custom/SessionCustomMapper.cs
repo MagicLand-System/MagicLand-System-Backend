@@ -1,96 +1,70 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Response.Sessions;
-using MagicLand_System.PayLoad.Response.Syllabuses;
-using Quartz;
 
 namespace MagicLand_System.Mappers.Custom
 {
     public class SessionCustomMapper
     {
 
-        public static SyllabusInforWithDateResponse fromTopicsAndSchedulesToSyllabusInforWithDateResponse(ICollection<Topic>? topics, ICollection<Schedule> schedules)
+        public static List<SessionSyllabusResponse> fromSessionAndScheduleToSessionSyllabusResponse(List<Session> sessions, List<Schedule> schedules)
         {
-            if (topics == null || schedules == null)
+            if (sessions == null || schedules == null)
             {
                 return default!;
             }
 
-            var response = new SyllabusInforWithDateResponse
+            var responses = new List<SessionSyllabusResponse>();
+            foreach (var session in sessions)
             {
-                Sessions = fromTopicsAndSchedulesToSessionWithDateResponses(topics, schedules.ToList()),
-            };
-
-            return response;
-        }
-        public static SyllabusInforResponse fromTopicsToSyllabusInforResponse(ICollection<Topic>? topics)
-        {
-            if (topics == null)
-            {
-                return default!;
-            }
-
-            var response = new SyllabusInforResponse
-            {
-                Sessions = fromTopicsToSessionResponses(topics),
-            };
-
-            return response;
-        }
-
-
-        public static List<SessionWithDateResponse> fromTopicsAndSchedulesToSessionWithDateResponses(ICollection<Topic> topics, List<Schedule> schedules)
-        {
-            if (topics == null || schedules == null)
-            {
-                return default!;
-            }
-
-            var responses = new List<SessionWithDateResponse>();
-
-            foreach (var topic in topics)
-            {
-                foreach (var session in topic.Sessions!)
+                var schedule = schedules[session.NoSession - 1];
+                responses.Add(new SessionSyllabusResponse
                 {
-                    int index = session.NoSession - 1;
-                    responses.Add(new SessionWithDateResponse
-                    {
-                        Date = schedules[index].Date,
-                        DateOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedules[index].DayOfWeek)[0].ToString(),
-                        StartTime = TimeOnly.Parse(schedules[index].Slot!.StartTime),
-                        EndTime = TimeOnly.Parse(schedules[index].Slot!.EndTime),
-                        OrderTopic = topic.OrderNumber,
-                        OrderSession = session.NoSession,
-                        TopicName = topic.Name!,
-                        Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions!),
-                    }); ;
-                }
+                    OrderSession = session.NoSession,
+                    Date = schedule.Date.ToString(),
+                    DateOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                    StartTime = TimeOnly.Parse(schedule.Slot!.StartTime),
+                    EndTime = TimeOnly.Parse(schedule.Slot!.EndTime),
+                    Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions!),
+                });
             }
+
             return responses;
         }
+        //public static SyllabusInforResponse fromTopicsToSyllabusInforResponse(ICollection<Topic>? topics)
+        //{
+        //    if (topics == null)
+        //    {
+        //        return default!;
+        //    }
 
-        public static List<SessionResponse> fromTopicsToSessionResponses(ICollection<Topic> topics)
+        //    var response = new SyllabusInforResponse
+        //    {
+        //        Sessions = fromTopicsToSessionResponses(topics),
+        //    };
+
+        //    return response;
+        //}
+
+        public static List<SessionSyllabusResponse> fromSessionsToSessionForSyllabusResponses(ICollection<Session> sessions)
         {
-            if (topics == null)
+            if (sessions == null)
             {
                 return default!;
             }
 
-            var responses = new List<SessionResponse>();
-
-            foreach (var topic in topics)
+            var responses = new List<SessionSyllabusResponse>();
+            foreach (var ses in sessions)
             {
-                foreach (var session in topic.Sessions!)
+                responses.Add(new SessionSyllabusResponse
                 {
-                    responses.Add(new SessionResponse
-                    {
-                        OrderTopic = topic.OrderNumber,
-                        OrderSession = session.NoSession,
-                        TopicName = topic.Name!,
-                        Contents = fromSessionDescriptionsToSessionContentResponse(session.SessionDescriptions!),
-                    });
-                }
+                    OrderSession = ses.NoSession,
+                    Date = "Cần Truy Suất Qua Lớp",
+                    DateOfWeek = "Cần Truy Suất Qua Lớp",
+                    Contents = fromSessionDescriptionsToSessionContentResponse(ses.SessionDescriptions!),
+                });
             }
+
             return responses;
         }
 

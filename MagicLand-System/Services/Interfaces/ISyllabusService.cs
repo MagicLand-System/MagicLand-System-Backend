@@ -1,22 +1,23 @@
-﻿using MagicLand_System.PayLoad.Request.Course;
+﻿using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 
 namespace MagicLand_System.Services.Interfaces
 {
     public interface ISyllabusService
     {
         Task<bool> AddSyllabus(OverallSyllabusRequest request);
-        Task<(SyllabusWithInformationResponse?, SyllabusWithScheduleResponse?)> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId);
-        Task<(SyllabusWithInformationResponse?, SyllabusWithCourseResponse?)> LoadSyllabusByIdAsync(Guid id);
-        Task<List<SyllabusWithCourseResponse>> LoadSyllabusesAsync();
-        Task<List<SyllabusWithCourseResponse>> FilterSyllabusAsync(List<string>? keyWords,DateTime? date,double? score);
+        Task<string> CheckingSyllabusInfor(string value, SyllabusInforEnum infor);
+        Task<SyllabusResponse> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId);
+        Task<SyllabusResponse> LoadSyllabusByIdAsync(Guid id);
+        Task<List<SyllabusResponse>> LoadSyllabusesAsync();
+        Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords, DateTime? date, double? score);
         Task<List<ExamWithQuizResponse>> LoadQuizzesAsync();
         Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id);
         Task<List<ExamResponse>> LoadExamOfClassByClassIdAsync(Guid id);
@@ -27,9 +28,9 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StaffQuestionResponse>> GetStaffQuestions(string questionpackageId);
         Task<List<SyllabusResponseV2>> GetStaffSyllabusCanInsert(string? keyword);
         Task<bool> UpdateQuiz(string questionpackageId, UpdateQuestionPackageRequest request);
-        Task<bool> UpdateOverallSyllabus(string id,UpdateOverallSyllabus updateOverallSyllabus);
-        Task<bool> UpdateTopic(string id,UpdateTopicRequest request);
-        Task<bool> UpdateSession(string id,UpdateSessionRequest request);
+        Task<bool> UpdateOverallSyllabus(string id, UpdateOverallSyllabus updateOverallSyllabus);
+        Task<bool> UpdateTopic(string id, UpdateTopicRequest request);
+        Task<bool> UpdateSession(string id, UpdateSessionRequest request);
         Task<List<StaffMaterialResponse>> GetMaterialResponse(string syllabusId);
         Task<List<StaffExamSyllabusResponse>> GetStaffExamSyllabusResponses(string syllabusId);
         Task<List<StaffSessionResponse>> GetAllSessionResponses(string syllabusId);

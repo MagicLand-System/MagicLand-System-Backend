@@ -14,6 +14,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IClassService
     {
+        Task<List<ClassWithSlotShorten>> GetClassesNotInCartAsync(Guid? courseId);
         Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time);
         Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id);
         Task<List<ClassWithSlotShorten>> GetValidClassForStudentAsync(Guid courseId, Guid studentId);

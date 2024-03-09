@@ -39,7 +39,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            return Ok(new { Message = $"Tồn tại user có số điện thoại {phone}" , Role = isExist.Role});
+            return Ok(new { Message = $"Tồn tại user có số điện thoại {phone}", Role = isExist.Role });
         }
         [HttpGet(ApiEndpointConstant.User.UserEndPointGetCurrentUser)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
@@ -48,7 +48,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetCurrentUser()
         {
             var user = await _userService.GetCurrentUser();
-            if (user == (null, null))
+            if (user == null)
             {
                 return Unauthorized(new ErrorResponse
                 {
@@ -57,11 +57,8 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            if(user.Item1 != null)
-            {
-                return Ok(user.Item1);
-            }
-            return Ok(user.Item2);
+
+            return Ok(user);
         }
         [HttpPost(ApiEndpointConstant.User.UserEndPointRegister)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]

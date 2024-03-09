@@ -1,4 +1,4 @@
-﻿using MagicLand_System.PayLoad.Response.Syllabuses;
+﻿using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 
 namespace MagicLand_System.PayLoad.Response.Sessions
 {

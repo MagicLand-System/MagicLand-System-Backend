@@ -47,7 +47,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         private void CheckingDateTime(Class cls, DateTime currentDate)
         {
-            if (cls.StartDate.Date == currentDate.AddDays(7).Date)
+            if (cls.StartDate.Date == currentDate.AddDays(3).Date)
             {
                 UpdateStudent(cls, ClassStatusEnum.LOCKED.ToString());
                 return;

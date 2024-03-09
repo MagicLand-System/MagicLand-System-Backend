@@ -2,7 +2,6 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Schedules;

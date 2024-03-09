@@ -31,6 +31,7 @@
         public static class ClassEnpoint
         {
             public const string GetAll = ApiEndpoint + "/classes";
+            public const string GetAllClassNotInCart = ApiEndpoint + "/classes/notInCart";
             public const string ClassById = GetAll + "/{id}";
             public const string ClassByCourseId = GetAll + "/course/{id}";
             public const string FilterClass = GetAll + "/filter";
@@ -90,6 +91,7 @@
             public const string StudentEnpointCreate = StudentsEndpoint + "/add";
             public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
             public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
+            public const string GetStudentAccount = StudentsEndpoint + "/getAccount";
             public const string StudentGetCurrentChildren = StudentsEndpoint + "/currentuser";
             public const string UpdateStudent = StudentsEndpoint + "/update";
             public const string DeleteStudent = StudentsEndpoint + "/{id}/delete";
@@ -118,6 +120,7 @@
         public static class SyllabusEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/Syllabus";
+            public const string CheckingSyllabusInfor = ApiEndpoint + "/Syllabus/infor/checking";
             public const string LoadByCourse = EndPointBase + "/getByCourse";
             public const string AddSyllabus = EndPointBase + "/insertSyllabus";
             public const string LoadSyllabus = EndPointBase + "/getById";

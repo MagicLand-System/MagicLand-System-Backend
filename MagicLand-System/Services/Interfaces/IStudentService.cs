@@ -5,16 +5,17 @@ using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.Services.Interfaces
 {
     public interface IStudentService
     {
-        Task<bool> AddStudent(CreateStudentRequest request);
-        Task<List<ClassResExtraInfor>> GetClassOfStudent(String studentId,string status);
+        Task<AccountStudentResponse> AddStudent(CreateStudentRequest request);
+        Task<List<ClassResExtraInfor>> GetClassOfStudent(String studentId, string status);
+        Task<List<AccountStudentResponse>> GetStudentAccountAsync(Guid? id);
         Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId);
         Task<List<Student>> GetStudentsOfCurrentParent();
         Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor, Student oldStudentInfor);

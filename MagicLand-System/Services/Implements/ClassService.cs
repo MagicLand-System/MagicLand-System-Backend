@@ -472,7 +472,7 @@ namespace MagicLand_System.Services.Implements
                     Email = lecturer.Email,
                     Address = lecturer.Address,
                     AvatarImage = lecturer.AvatarImage,
-                    DateOfBirth = lecturer.DateOfBirth,
+                    DateOfBirth = lecturer.DateOfBirth.Value,
                     FullName = lecturer.FullName,
                     Gender = lecturer.Gender,
                     Id = lecturer.Id,
@@ -1366,36 +1366,36 @@ namespace MagicLand_System.Services.Implements
             #region
             //try
             //{
-            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-            //   include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)));
-
-            //    var evaluates = new List<Evaluate>();
-            //    foreach (var cls in classes)
+            //    var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Role!.Name! == RoleEnum.PARENT.ToString());
+            //    var newAccounts = new List<User>();
+            //    foreach (var user in users)
             //    {
-            //        var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
-            //            selector: x => x.Student,
-            //            predicate: x => x.ClassId == cls.Id,
-            //            include: x => x.Include(x => x.Student!));
-
-            //        foreach (var schedule in cls.Schedules)
+            //        var students = await _unitOfWork.GetRepository<Student>().GetListAsync(predicate: x => x.ParentId == user.Id);
+            //        if (students.Any())
             //        {
+            //            int index = 0;
             //            foreach (var student in students)
             //            {
-            //                evaluates.Add(new Evaluate
+            //                index++;
+            //                var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name == RoleEnum.STUDENT.ToString(), selector: x => x.Id);
+            //                newAccounts.Add(new User
             //                {
             //                    Id = Guid.NewGuid(),
-            //                    Status = schedule.Date.Day < DateTime.Now.Day ? EvaluateStatusEnum.NORMAL.ToString() : null,
-            //                    Note = string.Empty,
-            //                    IsValid = cls.Status != ClassStatusEnum.CANCELED.ToString() && cls.Status != ClassStatusEnum.COMPLETED.ToString() ? true : false,
-            //                    ScheduleId = schedule.Id,
-            //                    StudentId = student!.Id,
+            //                    FullName = student.FullName,
+            //                    Phone = user.Phone + "_" + index,
+            //                    Email = student.Email,
+            //                    Gender = student.Gender,
+            //                    AvatarImage = student.AvatarImage,
+            //                    DateOfBirth = student.DateOfBirth,
+            //                    Address = user.Address,
+            //                    RoleId = role,
+            //                    StudentIdAccount = student.Id,
             //                });
             //            }
             //        }
-
             //    }
 
-            //    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(evaluates);
+            //    await _unitOfWork.GetRepository<User>().InsertRangeAsync(newAccounts);
             //    _unitOfWork.Commit();
             //}
             //catch (Exception ex)
@@ -1406,9 +1406,9 @@ namespace MagicLand_System.Services.Implements
             //return default!;
             #endregion
             var classes = await FetchClasses(time);
-
             return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
         }
+
 
         public async Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id)
         {
@@ -2058,6 +2058,22 @@ namespace MagicLand_System.Services.Implements
             }
 
             return responses;
+        }
+
+        public async Task<List<ClassWithSlotShorten>> GetClassesNotInCartAsync(Guid? courseId)
+        {
+            var classes = await FetchClasses(default);
+            if (courseId != null)
+            {
+                classes = classes.Where(cls => cls.CourseId == courseId).ToList();
+            }
+
+            var classesInCartId = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                        selector: x => x.ClassId,
+                        predicate: x => x.Cart!.UserId == GetUserIdFromJwt() && x.ClassId != default);
+
+            classes = classes.Where(cls => !classesInCartId.Contains(cls.Id)).ToList();
+            return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
         }
         #endregion
     }

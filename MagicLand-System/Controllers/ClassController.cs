@@ -72,6 +72,34 @@ namespace MagicLand_System.Controllers
             return Ok(classes);
         }
 
+        #region document API Get Class Not In Cart
+        /// <summary>
+        ///  Truy Suất Các Lớp Học Không Thuộc Giỏ Hàng Của Người Dùng Hiện Tại
+        /// </summary>
+        /// <param name="courseId">Id Của Khóa Học (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "courseId": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllClassNotInCart)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetClassNotInCart([FromQuery] Guid? courseId)
+        {
+            var classes = await _classService.GetClassesNotInCartAsync(courseId);
+            return Ok(classes);
+        }
+
         #region document API Checking Valid Student For Class Of Current User
         /// <summary>
         ///  Kiểm Tra Các Học Sinh Của Người Dùng Hiện Tại Thỏa Mãn Điều Kiện Để Học Một Lớp Dựa Vào Id Của Lớp
@@ -106,7 +134,7 @@ namespace MagicLand_System.Controllers
                 });
             }
             var students = await _studentService.GetStudentsOfCurrentParent();
-            if(students == null)
+            if (students == null)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -144,7 +172,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetValidClass([FromQuery] Guid courseId, [FromQuery] Guid studentId)
         {
-            if(courseId == default || studentId == default)
+            if (courseId == default || studentId == default)
             {
                 return BadRequest(new ErrorResponse
                 {

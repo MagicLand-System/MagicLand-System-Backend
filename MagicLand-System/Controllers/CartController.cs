@@ -4,6 +4,7 @@ using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,8 +39,8 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Trả Về Danh Sách Quan Tâm Sau Khi Thêm</response>
-        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="200">Quan Tâm Thành Công</response>
+        /// <response code="400">Quan Tâm Thất Bại</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
@@ -49,6 +50,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> AddCourseFavoriteList([FromQuery] Guid courseId)
         {
+
             if (await _courseService.GetCourseByIdAsync(courseId) == null)
             {
                 return BadRequest(new ErrorResponse
@@ -60,8 +62,12 @@ namespace MagicLand_System.Controllers
             }
 
             var result = await _cartService.AddCourseFavoriteOffCurrentParentAsync(courseId);
+            if (result)
+            {
+                return Ok();
+            }
 
-            return Ok(result);
+            return BadRequest();
         }
 
 
@@ -84,8 +90,8 @@ namespace MagicLand_System.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Trả Về Giỏ Hàng Sau Khi Thêm</response>
-        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="200">Thêm Thành Công Lớp Học Vào Giỏ Hàng</response>
+        /// <response code="400">Thêm Thất Bại</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
@@ -95,7 +101,8 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> ModifyCart([FromBody] CartRequest cartRequest)
         {
-            if (await _classService.GetClassByIdAsync(cartRequest.ClassId) == null)
+            var cls = await _classService.GetClassByIdAsync(cartRequest.ClassId);
+            if (cls == null)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -104,7 +111,15 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-
+            if (cls.Status != ClassStatusEnum.UPCOMING.ToString())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Chỉ Có Thể Thêm Các Lớp Học [Sắp Diễn Ra] Vào Giỏ Hàng, Lớp Này [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status!)}]",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
             var students = await _studentService.GetStudentsOfCurrentParent();
             var invalidStudentIds = cartRequest.StudentIdList.Except(students.Select(s => s.Id)).ToList();
 
@@ -135,7 +150,11 @@ namespace MagicLand_System.Controllers
             }
 
             var result = await _cartService.ModifyCartOffCurrentParentAsync(cartRequest.StudentIdList, cartRequest.ClassId);
-            return Ok(result);
+            if (result)
+            {
+                return Ok();
+            }
+            return BadRequest();
         }
 
         #region document API get cart

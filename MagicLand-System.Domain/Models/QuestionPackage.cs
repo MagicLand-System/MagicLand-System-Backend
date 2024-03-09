@@ -13,6 +13,7 @@ namespace MagicLand_System.Domain.Models
         public int? Score { get; set; }
         public string? ContentName { get; set; }
         public int? AttemptsAllowed { get; set; }
+        public int? NoSession { get; set; }
 
 
         [ForeignKey("Session")]

@@ -1,5 +1,5 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Syllabuses;
@@ -32,6 +32,40 @@ namespace MagicLand_System.Controllers
             return Ok(message);
         }
 
+        #region document API Checking Syllabus
+        /// <summary>
+        ///  Cho Phép Kiểm Tra Các Thông Tin Của Giáo Trình
+        /// </summary>
+        /// <param name="value">Thông Tin Cần Kiểm Tra</param>
+        /// <param name="infor">Loại Thông Tin</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "value": "TTD1",
+        ///        "infor": "Name"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Thông Báo</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.CheckingSyllabusInfor)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckingSyllabusInfor([FromQuery] string value, [FromQuery] SyllabusInforEnum infor)
+        {
+            if (value == null)
+            {
+                return BadRequest("Thông Tin Yêu Cầu Không Hợp Lệ");
+            }
+            var response = await _syllabusService.CheckingSyllabusInfor(value, infor);
+
+            return Ok(response);
+        }
+
         #region document API Get Syllabus By Item Id
         /// <summary>
         ///  Truy Suất Giáo Trình Thông Qua Id Khóa Học, Hoặc Truy Suất Giáo Trình Cùng Lịch Học Của Lớp
@@ -53,19 +87,14 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadByCourse)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(SyllabusWithScheduleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusByCourseId([FromQuery] Guid courseId, [FromQuery] Guid classId)
         {
-            (SyllabusResponse?, SyllabusWithScheduleResponse?) response = await _syllabusService.LoadSyllabusByCourseIdAsync(courseId, classId);
+            var response = await _syllabusService.LoadSyllabusByCourseIdAsync(courseId, classId);
 
-            if(response.Item1 != default)
-            {
-                return Ok(response.Item1);
-            }
-
-            return Ok(response.Item2);
+            return Ok(response);
         }
 
         #region document API Get Syllabus By Id
@@ -86,19 +115,14 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadSyllabus)]
-        [ProducesResponseType(typeof((SyllabusResponse, SyllabusWithCourseResponse)), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusById([FromQuery] Guid id)
         {
-            (SyllabusResponse?, SyllabusWithCourseResponse?) response = await _syllabusService.LoadSyllabusByIdAsync(id);
+            var response = await _syllabusService.LoadSyllabusByIdAsync(id);
 
-            if (response.Item1 != default)
-            {
-                return Ok(response.Item1);
-            }
-
-            return Ok(response.Item2);
+            return Ok(response);
         }
 
         #region document API Get Syllabuses
@@ -158,9 +182,9 @@ namespace MagicLand_System.Controllers
             return Ok(course);
         }
         [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateSyllabus)]
-        public async Task<IActionResult> UpdateSyll([FromRoute] string id , OverallSyllabusRequest request)
+        public async Task<IActionResult> UpdateSyll([FromRoute] string id, OverallSyllabusRequest request)
         {
-            var isSuccess = await _syllabusService.UpdateSyllabus(request,id);
+            var isSuccess = await _syllabusService.UpdateSyllabus(request, id);
             string message = "Cập Nhật Giáo Trình Sảy Ra Lỗi";
             if (isSuccess)
             {
@@ -181,9 +205,9 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
         [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateOverall)]
-        public async Task<IActionResult> UpdateOverall([FromRoute] string id , UpdateOverallSyllabus request)
+        public async Task<IActionResult> UpdateOverall([FromRoute] string id, UpdateOverallSyllabus request)
         {
-            var result = await _syllabusService.UpdateOverallSyllabus(id , request);
+            var result = await _syllabusService.UpdateOverallSyllabus(id, request);
             if (!result)
             {
                 return BadRequest("Update failed");

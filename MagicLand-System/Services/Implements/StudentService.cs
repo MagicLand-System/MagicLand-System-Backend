@@ -12,6 +12,7 @@ using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -28,6 +29,127 @@ namespace MagicLand_System.Services.Implements
         }
 
         #region thanh_lee code
+        public async Task<AccountStudentResponse> AddStudent(CreateStudentRequest studentRequest)
+        {
+            var currentUser = await ValidateAddNewStudentRequest(studentRequest);
+            try
+            {
+                Guid studentId = Guid.NewGuid();
+                var newStudent = _mapper.Map<Student>(studentRequest);
+                newStudent.ParentId = currentUser!.Id;
+                newStudent.IsActive = true;
+                newStudent.Id = studentId;
+                var accountsIndex = await GetNextAccountIndex(currentUser);
+
+                var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name == RoleEnum.STUDENT.ToString(), selector: x => x.Id);
+                var newStudentAccount = new User
+                {
+                    Id = Guid.NewGuid(),
+                    FullName = studentRequest.FullName,
+                    Phone = currentUser.Phone + "_" + accountsIndex,
+                    Email = studentRequest.Email,
+                    Gender = studentRequest.Gender,
+                    AvatarImage = studentRequest.AvatarImage,
+                    DateOfBirth = studentRequest.DateOfBirth,
+                    Address = currentUser.Address,
+                    RoleId = role,
+                    StudentIdAccount = studentId,
+                };
+
+                await _unitOfWork.GetRepository<Student>().InsertAsync(newStudent);
+                await _unitOfWork.GetRepository<User>().InsertAsync(newStudentAccount);
+                _unitOfWork.Commit();
+
+                var response = _mapper.Map<AccountStudentResponse>(newStudentAccount);
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]" + ex.InnerException != null ? $"[{ex.InnerException}]" : string.Empty,
+                          StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private async Task<int> GetNextAccountIndex(User currentUser)
+        {
+            var currentUserAccountStudents = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Role!.Name == RoleEnum.STUDENT.ToString());
+
+            if (!currentUserAccountStudents.Any())
+            {
+                return 1;
+            }
+            currentUserAccountStudents = currentUserAccountStudents.Where(stu => StringHelper.GetStringWithoutSpecificSyntax(stu.Phone!, "_", true) == currentUser.Phone!).ToList();
+            if (!currentUserAccountStudents.Any())
+            {
+                return 1;
+            }
+
+            var accountsIndex = new List<int>();
+            foreach (var student in currentUserAccountStudents)
+            {
+                accountsIndex.Add(int.Parse(StringHelper.GetStringWithoutSpecificSyntax(student.Phone!, "_", false)));
+            }
+            int maxIndex = accountsIndex.Max();
+
+            return maxIndex + 1;
+        }
+
+        private async Task<User> ValidateAddNewStudentRequest(CreateStudentRequest studentRequest)
+        {
+
+            int age = DateTime.Now.Year - studentRequest.DateOfBirth.Year;
+
+            if (age < 3 || age > 10)
+            {
+                throw new BadHttpRequestException("Tuổi Của Bé Phải Từ 3 Đến 10 Tuổi", StatusCodes.Status400BadRequest);
+            }
+            var students = await GetStudentsOfCurrentParent();
+            if (students.Any(stu => stu.FullName!.Trim().ToLower() == studentRequest.FullName.Trim().ToLower()))
+            {
+                throw new BadHttpRequestException($"Tên [{studentRequest.FullName!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
+            }
+            if (students.Any(stu => stu.Email!.Trim().ToLower() == studentRequest.Email!.Trim().ToLower()))
+            {
+                throw new BadHttpRequestException($"Email [{studentRequest.Email!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
+            }
+
+            var currentUser = await GetUserFromJwt();
+            if (currentUser == null)
+            {
+                throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng, Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Thao Tác",
+                          StatusCodes.Status500InternalServerError);
+            }
+
+            return currentUser;
+        }
+        public async Task<List<AccountStudentResponse>> GetStudentAccountAsync(Guid? id)
+        {
+            var students = await GetStudentsOfCurrentParent();
+            if (!students.Any())
+            {
+                return new List<AccountStudentResponse>();
+            }
+            if (id != null && !students.Any(stu => stu.Id == id))
+            {
+                throw new BadHttpRequestException($"Id [{id} Của Bé Không Tồn Tại]", StatusCodes.Status400BadRequest);
+            }
+
+            var responses = new List<AccountStudentResponse>();
+            foreach (var student in students)
+            {
+                var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.StudentIdAccount == student.Id);
+
+                if (id != null && account != null && account.Id == id)
+                {
+                    responses.Clear();
+                    responses.Add(_mapper.Map<AccountStudentResponse>(account));
+                    break;
+                }
+                responses.Add(_mapper.Map<AccountStudentResponse>(account));
+            }
+            return responses;
+        }
         public async Task<List<Student>> GetStudentsOfCurrentParent()
         {
             var students = await _unitOfWork.GetRepository<Student>().GetListAsync(predicate: x => x.ParentId == GetUserIdFromJwt() && x.IsActive == true);
@@ -119,7 +241,7 @@ namespace MagicLand_System.Services.Implements
         {
             var id = GetUserIdFromJwt();
             var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
-            if(currentUser == null)
+            if (currentUser == null)
             {
                 throw new Exception($"Lỗi Hễ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Giao Dịch");
             }
@@ -543,24 +665,6 @@ namespace MagicLand_System.Services.Implements
         }
         #endregion
         #region gia_thuong code
-        public async Task<bool> AddStudent(CreateStudentRequest request)
-        {
-            if (request.DateOfBirth > DateTime.Now.AddYears(-3))
-            {
-                throw new BadHttpRequestException("Hoc sinh phải lớn hơn 3 tuổi", StatusCodes.Status400BadRequest);
-            }
-            var userId = (await GetUserFromJwt()).Item1.Id;
-            if (request == null)
-            {
-                throw new BadHttpRequestException("yêu cầu không hợp lệ", StatusCodes.Status400BadRequest);
-            }
-            var student = _mapper.Map<Student>(request);
-            student.ParentId = userId;
-            student.IsActive = true;
-            await _unitOfWork.GetRepository<Student>().InsertAsync(student);
-            var isSuccess = await _unitOfWork.CommitAsync() > 0;
-            return isSuccess;
-        }
         public async Task<List<ClassResExtraInfor>> GetClassOfStudent(string studentId, string status)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
@@ -669,8 +773,6 @@ namespace MagicLand_System.Services.Implements
 
             return listStudentSchedule;
         }
-
-
     }
     #endregion
 }

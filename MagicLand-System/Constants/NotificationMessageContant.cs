@@ -15,6 +15,7 @@ namespace MagicLand_System.Constants
         public const string PaymentViaGatewayFailedTitle = "Thanh Toán Đăng Ký Lớp Học Không Thành Công";
         public const string RefundTitle = "Hoàn Tiền Từ Hệ Thống";
         public const string NoRefundTitle = "Không Hoàn Tiền Từ Hệ Thống";
+        public const string LastDayRegisterTitle = "Hạn Cuối Đăng Ký";
 
 
         public static string ChangeClassRequestBody(string classCode, string studentName)
@@ -57,6 +58,11 @@ namespace MagicLand_System.Constants
         public static string NoRefundBody(string classCode, string money, string studentName)
         {
             return $"Hệ Thống Sẽ Không Hoàn Trả {money} Số Tiền Đăng Ký Lớp {classCode} Của Học Sinh {studentName} Đã Hủy Đăng Ký, Do Lớp Đã Bắt Đầu Và Số Buổi Học Còn Lại Của Bé Cũng Bị Hủy";
+        }
+
+        public static string LastDayRegisterBody(string classCode)
+        {
+            return $"Hôm Nay Là Hạn Cuối Đăng Ký Lớp Học {classCode}, Hãy Nhanh Tay Đăng Ký Cho Bé Vào Lớp, Lớp Sẽ Xóa Khỏi Giỏ Hàng Khi Hết Hạn";
         }
     }
 }

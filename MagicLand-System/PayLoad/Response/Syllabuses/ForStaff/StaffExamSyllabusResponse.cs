@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System.PayLoad.Response.Syllabuses
+﻿namespace MagicLand_System.PayLoad.Response.Syllabuses.ForStaff
 {
     public class StaffExamSyllabusResponse
     {

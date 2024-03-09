@@ -13,6 +13,7 @@ namespace MagicLand_System.Domain.Models
         public string? AvatarImage { get; set; }
         public DateTime? DateOfBirth { get; set; } = null;
         public string? Address { get; set; }
+        public Guid? StudentIdAccount { get; set; }
 
         [ForeignKey("Role")]
         public Guid RoleId { get; set; }

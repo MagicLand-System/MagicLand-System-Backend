@@ -16,7 +16,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<WalletResponse> GetWalletOfCurrentUser()
         {
-            var id = (await GetUserFromJwt()).Item1.Id;
+            var id = GetUserIdFromJwt();
             var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()),include: x => x.Include(x => x.PersonalWallet));
             if (currentUser == null)
             {

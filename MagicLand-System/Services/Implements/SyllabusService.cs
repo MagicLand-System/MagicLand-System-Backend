@@ -11,6 +11,7 @@ using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
+using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -45,22 +46,25 @@ namespace MagicLand_System.Services.Implements
             }
             return false;
         }
-
+        public async Task<string> CheckingSyllabusInfor(string value, SyllabusInforEnum infor)
+        {
+            try
+            {
+                var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
+                ValidateSyllabus(value, infor, syllabuses);
+                return "Thông Tin Giáo Trình Hợp Lệ";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
         private async Task<Syllabus> GenerateSyllabus(OverallSyllabusRequest request)
         {
-            var syllabusesSubjectCode = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(selector: x => x.SubjectCode);
-            var numberversion = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Name!.ToLower().Trim().Equals(request.SyllabusName));
-            var numberCount = 1;
-            if (numberversion != null)
-            {
-                numberCount = numberversion.Count + 1;
-            }
-            string newSyllabusCode = request.SubjectCode! + "0" + numberCount;
+            var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
 
-            if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(newSyllabusCode)))
-            {
-                throw new BadHttpRequestException($"Mã Giáo Trình Đã Tồn Tại", StatusCodes.Status400BadRequest);
-            }
+            ValidateSyllabus(request.SyllabusName!, SyllabusInforEnum.Name, syllabuses);
+            ValidateSyllabus(request.SubjectCode!, SyllabusInforEnum.Code, syllabuses);
 
             Guid newSyllabusId = Guid.NewGuid();
 
@@ -73,7 +77,7 @@ namespace MagicLand_System.Services.Implements
                 Name = request.SyllabusName,
                 ScoringScale = request.ScoringScale,
                 StudentTasks = request.StudentTasks,
-                SubjectCode = newSyllabusCode,
+                SubjectCode = request.SubjectCode + "01",
                 SyllabusLink = request.SyllabusLink,
                 TimePerSession = request.TimePerSession,
                 NumOfSessions = request.NumOfSessions,
@@ -131,6 +135,26 @@ namespace MagicLand_System.Services.Implements
             await _unitOfWork.GetRepository<Syllabus>().InsertAsync(syllabus);
             await _unitOfWork.GetRepository<Material>().InsertRangeAsync(syllabus.Materials);
             return syllabus;
+        }
+
+        private void ValidateSyllabus(string value, SyllabusInforEnum infor, List<Syllabus> syllabuses)
+        {
+            if (infor == SyllabusInforEnum.Default || infor == SyllabusInforEnum.Code)
+            {
+                var syllabusesSubjectCode = syllabuses.Select(syll => syll.SubjectCode!.Substring(0, syll.SubjectCode.Length - 2)).ToList();
+                if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(value)))
+                {
+                    throw new BadHttpRequestException($"Mã Giáo Trình [{value}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
+                }
+            }
+            if (infor == SyllabusInforEnum.Name)
+            {
+                var syllabusesName = syllabuses.Select(syll => StringHelper.TrimStringAndNoSpace(syll.Name!)).ToList();
+                if (syllabusesName.Any(sn => sn == StringHelper.TrimStringAndNoSpace(value)))
+                {
+                    throw new BadHttpRequestException($"Tên Giáo Trình [{value}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
+                }
+            }
         }
 
         private async Task GenerateSyllabusItems(OverallSyllabusRequest request, Guid syllabusId)
@@ -225,30 +249,24 @@ namespace MagicLand_System.Services.Implements
 
                 return sessionList;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.InnerException}]", StatusCodes.Status400BadRequest);
+                throw;
             }
         }
         private async Task GenerateExerciseItems(List<QuestionPackageRequest> questionPackageRequest, List<Session> sessions)
         {
-            var identityIndex = new List<(int, int)>();
-
-            var orderSessions = questionPackageRequest.OrderBy(qp => qp.NoOfSession).Select(qp => qp.NoOfSession).ToList();
-            for (int i = 0; i < orderSessions.Count(); i++)
+            int orderPackage = 0;
+            foreach (var qp in questionPackageRequest.OrderBy(qp => qp.NoOfSession))
             {
-                identityIndex.Add((orderSessions[i], i + 1));
-            }
-
-            foreach (var qp in questionPackageRequest)
-            {
+                orderPackage++;
                 Guid newQuestionPackageId = Guid.NewGuid();
-                await GenerateQuestionPackage(sessions, qp, newQuestionPackageId, identityIndex);
+                await GenerateQuestionPackage(sessions, qp, newQuestionPackageId, orderPackage);
                 await GenerateQuestionPackgeItems(newQuestionPackageId, qp.QuestionRequests);
             }
         }
 
-        private async Task GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, Guid newQuestionPackageId, List<(int, int)> identityIndex)
+        private async Task GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, Guid newQuestionPackageId, int orderPackage)
         {
             try
             {
@@ -263,14 +281,15 @@ namespace MagicLand_System.Services.Implements
                     ContentName = qp.ContentName,
                     Type = qp.Type,
                     Score = qp.Score,
-                    OrderPackage = identityIndex.Single(index => index.Item1 == order).Item2,
+                    OrderPackage = orderPackage,
+                    NoSession = qp.NoOfSession,
                 };
 
                 await _unitOfWork.GetRepository<QuestionPackage>().InsertAsync(questionPackage);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.InnerException}]", StatusCodes.Status400BadRequest);
+                throw;
             }
         }
 
@@ -372,7 +391,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<SyllabusWithCourseResponse>> FilterSyllabusAsync(List<string>? keyWords, DateTime? date, double? score)
+        public async Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords, DateTime? date, double? score)
         {
             score ??= double.MaxValue;
 
@@ -395,30 +414,29 @@ namespace MagicLand_System.Services.Implements
                 syllabuses = syllabuses.Where(syll => syll.UpdateTime.Date == date || syll.EffectiveDate != null && syll.EffectiveDate.Value.Date == date).ToList();
             }
             syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
-            SyllabusWithCourseResponse syllabusWithCourseResponse = new SyllabusWithCourseResponse();
-            return syllabuses.Select(syll => _mapper.Map<SyllabusWithCourseResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+
+            return syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
         }
 
 
-        public async Task<(SyllabusWithInformationResponse?, SyllabusWithScheduleResponse?)> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId)
+        public async Task<SyllabusResponse> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId)
         {
             var syllabus = await ValidateSyllabus(courseId, true);
 
             if (classId != default)
             {
                 var cls = await ValidateClassForSchedule(courseId, classId);
-
-                return (default, SyllabusCustomMapper.fromSyllabusAndClassToSyllabusWithSheduleResponse(syllabus, cls));
+                return SyllabusCustomMapper.fromSyllabusAndClassToSyllabusResponseWithSheduleResponse(syllabus, cls);
             }
 
-            return (_mapper.Map<SyllabusWithInformationResponse>(syllabus), default);
+            return _mapper.Map<SyllabusResponse>(syllabus);
         }
 
         private async Task<Class> ValidateClassForSchedule(Guid courseId, Guid classId)
         {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-                include: x => x.Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Slot)
-               .Include(x => x.Course)!);
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.Id == classId,
+                include: x => x.Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Slot)!);
 
             if (cls == null || cls.CourseId != courseId)
             {
@@ -465,10 +483,11 @@ namespace MagicLand_System.Services.Implements
             {
                 syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == id,
                 include: x => x.Include(x => x.Materials)
-               .Include(x => x.Course)
                .Include(x => x.SyllabusCategory)
                .Include(x => x.ExamSyllabuses!));
             }
+
+            syllabus.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabus.Id);
 
             syllabus.Topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
             predicate: x => x.SyllabusId == syllabus.Id,
@@ -479,23 +498,18 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        public async Task<(SyllabusWithInformationResponse?, SyllabusWithCourseResponse?)> LoadSyllabusByIdAsync(Guid id)
+        public async Task<SyllabusResponse> LoadSyllabusByIdAsync(Guid id)
         {
             var syllabus = await ValidateSyllabus(id, false);
 
-            if (syllabus.Course == null)
-            {
-                return (_mapper.Map<SyllabusWithInformationResponse>(syllabus), default);
-            }
-
-            return (default, _mapper.Map<SyllabusWithCourseResponse>(syllabus));
+            return _mapper.Map<SyllabusResponse>(syllabus);
 
         }
 
-        public async Task<List<SyllabusWithCourseResponse>> LoadSyllabusesAsync()
+        public async Task<List<SyllabusResponse>> LoadSyllabusesAsync()
         {
             var syllabuses = await FetchAllSyllabus();
-            return syllabuses.Select(syll => _mapper.Map<SyllabusWithCourseResponse>(syll)).ToList();
+            return syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).ToList();
         }
 
         private async Task<List<Syllabus>> FetchAllSyllabus()
@@ -586,7 +600,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var exam = course.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
-            var quizResponse = QuizCustomMapper.fromSyllabusItemsToQuizWithQuestionResponse(session.NoSession, questionPackage, exam!);
+            var quizResponse = QuizCustomMapper.fromSyllabusItemsToQuizWithQuestionResponse(session.NoSession, questionPackage, exam);
             quizResponse.SessionId = session.Id;
             quizResponse.CourseId = course.Id;
             quizResponse.Date = "Cần Truy Suất Qua Lớp";
@@ -703,12 +717,12 @@ namespace MagicLand_System.Services.Implements
             return examsResponse;
         }
 
-        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id, int? examPart)
+        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, int? examPart)
         {
-            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Syllabus!));
+            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == examId, include: x => x.Include(x => x.Syllabus!));
             if (exam == null)
             {
-                throw new BadHttpRequestException($"Id [{id}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
             }
             if (exam.Method == "Offline")
             {
@@ -733,6 +747,10 @@ namespace MagicLand_System.Services.Implements
                     if (examPart == part)
                     {
                         questionPackage = qp;
+                    }
+                    else
+                    {
+                        throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Có Dạng Đề [{examPart}]", StatusCodes.Status400BadRequest);
                     }
                 }
             }
@@ -1495,6 +1513,7 @@ namespace MagicLand_System.Services.Implements
             }
             return syllRes;
         }
+
         #endregion
 
 

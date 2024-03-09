@@ -209,7 +209,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("QuestionPackage");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<Session>(e => e.QuestionPackageId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<Session>(e => e.QuestionPackageId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Attendance>(entity =>
             {

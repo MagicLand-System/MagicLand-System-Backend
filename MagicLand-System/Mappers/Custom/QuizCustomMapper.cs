@@ -7,9 +7,9 @@ namespace MagicLand_System.Mappers.Custom
     public class QuizCustomMapper
     {
 
-        public static ExamWithQuizResponse fromSyllabusItemsToQuizWithQuestionResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus examSyllabus)
+        public static ExamWithQuizResponse fromSyllabusItemsToQuizWithQuestionResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus? examSyllabus)
         {
-            if (questionPackage == null || examSyllabus == null)
+            if (questionPackage == null)
             {
                 return new ExamWithQuizResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
@@ -23,18 +23,18 @@ namespace MagicLand_System.Mappers.Custom
             var response = new ExamWithQuizResponse
             {
                 ExamPart = part,
-                QuizCategory = examSyllabus.Category,
+                QuizCategory = examSyllabus == null ? "Review" : examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus.Weight,
-                CompleteionCriteria = examSyllabus.CompleteionCriteria,
+                Weight = examSyllabus == null ? 0 : examSyllabus.Weight ,
+                CompleteionCriteria = examSyllabus == null ? 0 : examSyllabus.CompleteionCriteria,
                 TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalQuestion = questionPackage.Questions!.Count(),
                 //Duration = questionPackage.Duration,
                 //DeadLine = questionPackage.DeadlineTime,
                 //Attempts = questionPackage.AttemptsAllowed,
                 NoSession = noSession,
-                ExamId = examSyllabus.Id,
+                ExamId = questionPackage.Id,
                 Quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponse(questionPackage),
 
             };

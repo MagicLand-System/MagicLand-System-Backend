@@ -34,12 +34,12 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     {
                         int time = currentDate.Day - noti.CreatedAt.Day;
 
-                        if (time >= 3 && time <= 6)
+                        if (time >= 2 && time <= 4)
                         {
                             noti.IsRead = true;
                         }
 
-                        if (time > 6)
+                        if (time > 4)
                         {
                             _unitOfWork.GetRepository<Notification>().DeleteAsync(noti);
                         }
@@ -98,7 +98,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                             {
                                 if (stu.CanChangeClass)
                                 {
-                                    GenerateNotification(currentDate, newNotifications, NotificationMessageContant.ChangeClassRequestTitle,
+                                    GenerateNotificationInCondition(currentDate, newNotifications, NotificationMessageContant.ChangeClassRequestTitle,
                                         NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
                                         currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, stu.StudentId, cls.Image!);
                                 }
@@ -133,14 +133,14 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         continue;
                     }
 
-                    GenerateNotification(currentDate, newNotifications, NotificationMessageContant.MakeUpAttendanceTitle,
+                    GenerateNotificationInCondition(currentDate, newNotifications, NotificationMessageContant.MakeUpAttendanceTitle,
                            NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
                            currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, attendance.StudentId, cls.Image!);
                 }
             }
         }
 
-        private void GenerateNotification(DateTime currentDate, List<Notification> newNotifications, string title, string body, string type, Guid classId, Guid studentId, string image)
+        private void GenerateNotificationInCondition(DateTime currentDate, List<Notification> newNotifications, string title, string body, string type, Guid classId, Guid studentId, string image)
         {
             newNotifications.Add(new Notification
             {
@@ -156,6 +156,77 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                  ($"{AttachValueEnum.ClassId}", $"{classId}"),
                  ($"{AttachValueEnum.StudentId}", $"{studentId}"),
                 })
+            });
+        }
+
+        public async Task<string> CreateNotificationForLastRegisterTime()
+        {
+            try
+            {
+                using (var scope = _serviceScopeFactory.CreateScope())
+                {
+                    var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
+                    var currentDate = DateTime.Now;
+                    var newNotifications = new List<Notification>();
+
+                    var usersId = await _unitOfWork.GetRepository<User>().GetListAsync(selector: x => x.Id, predicate: x => x.Role!.Name == RoleEnum.PARENT.ToString());
+                    foreach (var userId in usersId)
+                    {
+                        var items = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                            predicate: x => x.Cart!.UserId == userId && x.ClassId != default);
+
+                        foreach (var item in items)
+                        {
+                            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == item.ClassId);
+                            if (cls.Status != ClassStatusEnum.UPCOMING.ToString())
+                            {
+                                continue;
+                            }
+
+                            if (cls.StartDate.AddDays(-4).Date == currentDate.Date)
+                            {
+                                string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                                {
+                                  ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                                });
+
+                                GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.LastDayRegisterTitle, NotificationMessageContant.LastDayRegisterBody(cls.ClassCode!),
+                                    NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, actionData);
+                            }
+
+                            if (cls.StartDate.AddDays(-3).Date == currentDate.Date)
+                            {
+                                _unitOfWork.GetRepository<CartItem>().DeleteAsync(item);
+                            }
+
+                        }
+                    }
+
+                    await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
+                    _unitOfWork.Commit();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Create New Notifications Got An Error: [{ex.Message}]";
+            }
+            return "Create New Notifications Success";
+        }
+
+        private void GenerateNotification(DateTime currentDate, List<Notification> newNotifications, Guid targetUser, string title, string body, string type, string image, string actionData)
+        {
+            newNotifications.Add(new Notification
+            {
+                Id = new Guid(),
+                Title = title,
+                Body = body,
+                Priority = type,
+                Image = image,
+                CreatedAt = currentDate,
+                IsRead = false,
+                ActionData = actionData,
+                UserId = targetUser,
             });
         }
     }

@@ -101,11 +101,12 @@ namespace MagicLand_System.Controllers
         ///  Truy Suất Các Câu Hỏi (Quiz) Trong Bộ Đề Của Một Bài Kiểm Tra Dựa Vào Id Của Bài Kiểm Tra, *Các Câu Hỏi Sẽ Được Truy Suất Ngẫu Nhiên Và Thỏa Mãn Số Điểm Của Bài Kiểm Tra*
         /// </summary>
         /// <param name="id">Id Của Bài Kiểm Tra</param>
-        /// <param name="examPart">Phần Kiểm Tra (Thứ Tự bài Kiểm Tra) </param>
+        /// <param name="examPart">Phần Đề Của Bài Kiểm Tra (Dạng Kiểm Tra)</param>
         /// <remarks>
         /// Sample request:
         ///{     
-        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"  
+        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
+        ///    "examPart": 1
         ///}
         /// </remarks>
         /// <response code="200">Trả Về Quiz Của Bài Kiểm Tra</response>

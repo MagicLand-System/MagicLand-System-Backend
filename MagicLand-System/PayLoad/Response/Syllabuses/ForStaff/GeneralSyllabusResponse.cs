@@ -1,6 +1,6 @@
 ﻿using MagicLand_System.PayLoad.Response.Courses;
 
-namespace MagicLand_System.PayLoad.Response.Syllabuses
+namespace MagicLand_System.PayLoad.Response.Syllabuses.ForStaff
 {
     public class GeneralSyllabusResponse
     {
