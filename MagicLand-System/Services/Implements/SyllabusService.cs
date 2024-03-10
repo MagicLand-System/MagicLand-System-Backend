@@ -35,6 +35,21 @@ namespace MagicLand_System.Services.Implements
                 {
                     var syllabus = await GenerateSyllabus(request);
 
+                    var exams = request.ExamSyllabusRequests.Where(exam => exam.Method.Trim().ToLower() == "offline").ToList();
+                    var sessionContentRequests = request.SyllabusRequests.SelectMany(sr => sr.SessionRequests.SelectMany(sr => sr.SessionContentRequests)).ToList();
+                    //foreach (var contentDetail in sessionContentRequests.Select(scr => scr.Content))
+                    //{
+                    //    foreach(var exam in exams)
+                    //    {
+                    //        if(exam.ContentName.Trim().ToLower() == contentDetail.Trim().ToLower())
+                    //        {
+                    //            request.QuestionPackageRequests.Add(new QuestionPackageRequest
+                    //            {
+
+                    //            });
+                    //        }
+                    //    }
+                    //}
                     await GenerateSyllabusItems(request, syllabus.Id);
 
                     return await _unitOfWork.CommitAsync() > 0;
@@ -46,25 +61,37 @@ namespace MagicLand_System.Services.Implements
             }
             return false;
         }
-        public async Task<string> CheckingSyllabusInfor(string value, SyllabusInforEnum infor)
+        public async Task<string> CheckingSyllabusInfor(string name, string code)
         {
-            try
+            string message = "Thông Tin Giáo Trình Hợp Lệ";
+            int invalid = 0;
+
+            var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
+            var syllabusesSubjectCode = syllabuses.Select(syll => syll.SubjectCode!.Substring(0, syll.SubjectCode.Length - 2)).ToList();
+            if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(code)))
             {
-                var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
-                ValidateSyllabus(value, infor, syllabuses);
-                return "Thông Tin Giáo Trình Hợp Lệ";
+                message = $"Mã Giáo Trình Đã Tồn Tại";
+                invalid++;
+
             }
-            catch (Exception ex)
+
+            var syllabusesName = syllabuses.Select(syll => StringHelper.TrimStringAndNoSpace(syll.Name!).ToLower()).ToList();
+            if (syllabusesName.Any(sn => sn == StringHelper.TrimStringAndNoSpace(name).ToLower()))
             {
-                return ex.Message;
+                message = $"Tên Giáo Trình Đã Tồn Tại";
+                invalid++;
             }
+            if (invalid >= 2)
+            {
+                message = $"Tên Giáo Trình Và Mã Giáo Trình Đã Tồn Tại";
+            }
+            return message;
         }
         private async Task<Syllabus> GenerateSyllabus(OverallSyllabusRequest request)
         {
             var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
 
-            ValidateSyllabus(request.SyllabusName!, SyllabusInforEnum.Name, syllabuses);
-            ValidateSyllabus(request.SubjectCode!, SyllabusInforEnum.Code, syllabuses);
+            ValidateSyllabus(request, syllabuses);
 
             Guid newSyllabusId = Guid.NewGuid();
 
@@ -137,23 +164,18 @@ namespace MagicLand_System.Services.Implements
             return syllabus;
         }
 
-        private void ValidateSyllabus(string value, SyllabusInforEnum infor, List<Syllabus> syllabuses)
+        private void ValidateSyllabus(OverallSyllabusRequest request, List<Syllabus> syllabuses)
         {
-            if (infor == SyllabusInforEnum.Default || infor == SyllabusInforEnum.Code)
+            var syllabusesSubjectCode = syllabuses.Select(syll => syll.SubjectCode!.Substring(0, syll.SubjectCode.Length - 2)).ToList();
+            if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(request.SubjectCode!)))
             {
-                var syllabusesSubjectCode = syllabuses.Select(syll => syll.SubjectCode!.Substring(0, syll.SubjectCode.Length - 2)).ToList();
-                if (syllabusesSubjectCode.Any(ssc => StringHelper.TrimStringAndNoSpace(ssc!) == StringHelper.TrimStringAndNoSpace(value)))
-                {
-                    throw new BadHttpRequestException($"Mã Giáo Trình [{value}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
-                }
+                throw new BadHttpRequestException($"Mã Giáo Trình [{request.SubjectCode!}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
             }
-            if (infor == SyllabusInforEnum.Name)
+
+            var syllabusesName = syllabuses.Select(syll => StringHelper.TrimStringAndNoSpace(syll.Name!)).ToList();
+            if (syllabusesName.Any(sn => sn == StringHelper.TrimStringAndNoSpace(request.SyllabusName!)))
             {
-                var syllabusesName = syllabuses.Select(syll => StringHelper.TrimStringAndNoSpace(syll.Name!)).ToList();
-                if (syllabusesName.Any(sn => sn == StringHelper.TrimStringAndNoSpace(value)))
-                {
-                    throw new BadHttpRequestException($"Tên Giáo Trình [{value}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
-                }
+                throw new BadHttpRequestException($"Tên Giáo Trình [{request.SyllabusName!}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
             }
         }
 
@@ -264,6 +286,7 @@ namespace MagicLand_System.Services.Implements
                 await GenerateQuestionPackage(sessions, qp, newQuestionPackageId, orderPackage);
                 await GenerateQuestionPackgeItems(newQuestionPackageId, qp.QuestionRequests);
             }
+
         }
 
         private async Task GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, Guid newQuestionPackageId, int orderPackage)
@@ -746,7 +769,7 @@ namespace MagicLand_System.Services.Implements
 
                     if (examPart == part)
                     {
-                        questionPackage = qp;
+                        return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(qp);
                     }
                     else
                     {
@@ -754,8 +777,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
             }
-
-            return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
+            return default!;
         }
         #endregion
         #region thuong code

@@ -36,18 +36,18 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Cho Phép Kiểm Tra Các Thông Tin Của Giáo Trình
         /// </summary>
-        /// <param name="value">Thông Tin Cần Kiểm Tra</param>
-        /// <param name="infor">Loại Thông Tin</param>
+        /// <param name="name">Tên Giáo Trình</param>
+        /// <param name="code">Mã Giáo Trình</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "value": "TTD1",
-        ///        "infor": "Name"
+        ///        "name": "Toán Tư Duy",
+        ///        "code": "TTD1"
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Trả Thông Báo</response>
+        /// <response code="200">Trả Ra Thông Báo</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
@@ -55,13 +55,13 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> CheckingSyllabusInfor([FromQuery] string value, [FromQuery] SyllabusInforEnum infor)
+        public async Task<IActionResult> CheckingSyllabusInfor([FromQuery] string name, [FromQuery] string code)
         {
-            if (value == null)
+            if (name == null && code == null)
             {
                 return BadRequest("Thông Tin Yêu Cầu Không Hợp Lệ");
             }
-            var response = await _syllabusService.CheckingSyllabusInfor(value, infor);
+            var response = await _syllabusService.CheckingSyllabusInfor(name!, code);
 
             return Ok(response);
         }

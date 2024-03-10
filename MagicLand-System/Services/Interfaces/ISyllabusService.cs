@@ -13,7 +13,7 @@ namespace MagicLand_System.Services.Interfaces
     public interface ISyllabusService
     {
         Task<bool> AddSyllabus(OverallSyllabusRequest request);
-        Task<string> CheckingSyllabusInfor(string value, SyllabusInforEnum infor);
+        Task<string> CheckingSyllabusInfor(string name, string code);
         Task<SyllabusResponse> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId);
         Task<SyllabusResponse> LoadSyllabusByIdAsync(Guid id);
         Task<List<SyllabusResponse>> LoadSyllabusesAsync();

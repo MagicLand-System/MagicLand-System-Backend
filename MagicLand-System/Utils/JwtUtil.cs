@@ -16,12 +16,10 @@ namespace MagicLand_System.Utils
         }
         public static string GenerateJwtToken(User account, Tuple<string, Guid> guidClaim)
         {
-
             IConfiguration config = new ConfigurationBuilder()
-           .SetBasePath(Directory.GetCurrentDirectory())
-           .AddJsonFile("appsettings.json", true, true)
+              .SetBasePath(Directory.GetCurrentDirectory())
+              .AddJsonFile("appsettings.json", true, true)
            .Build();
-
             JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
             SymmetricSecurityKey secrectKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]));
             var credentials = new SigningCredentials(secrectKey, SecurityAlgorithms.HmacSha256Signature);

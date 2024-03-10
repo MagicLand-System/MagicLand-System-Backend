@@ -32,9 +32,22 @@ namespace MagicLand_System.Services.Implements
                 predicate: u => u.Phone!.Trim().Equals(loginRequest.Phone.Trim()),
                 include: u => u.Include(u => u.Role!));
 
+
             if (user == null)
             {
                 return default!;
+            }
+
+            if (user.Role!.Name == RoleEnum.STUDENT.ToString())
+            {
+                var isActive = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(
+               selector: x => x.IsActive,
+               predicate: x => x.Id == user.Id);
+
+                if (!isActive.Value)
+                {
+                    throw new BadHttpRequestException("Tài Khoản Đã Ngưng Hoạt Động", StatusCodes.Status400BadRequest);
+                }
             }
 
             Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
@@ -95,39 +108,41 @@ namespace MagicLand_System.Services.Implements
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()), include: x => x.Include(x => x.Role));
             if (user == null)
             {
-                var parts = phone.Split('_');
-                if (parts.Length == 2)
-                {
-                    var phoneInput = parts[0];
-                    var userFound = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phoneInput.Trim()), include: x => x.Include(x => x.Role).Include(x => x.Students));
-                    try
-                    {
-                        var count = int.Parse(parts[1].Trim());
-                        if (count - 1 > userFound.Students.Count)
-                        {
-                            return new UserExistRespone
-                            {
-                                IsExist = false,
-                            };
-                        }
-                        else
-                        {
-                            return new UserExistRespone
-                            {
-                                IsExist = true,
-                                Role = "student",
-                            };
-                        }
+                #region
+                //var parts = phone.Split('_');
+                //if (parts.Length == 2)
+                //{
+                //    var phoneInput = parts[0];
+                //    var userFound = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phoneInput.Trim()), include: x => x.Include(x => x.Role).Include(x => x.Students));
+                //    try
+                //    {
+                //        var count = int.Parse(parts[1].Trim());
+                //        if (count - 1 > userFound.Students.Count)
+                //        {
+                //            return new UserExistRespone
+                //            {
+                //                IsExist = false,
+                //            };
+                //        }
+                //        else
+                //        {
+                //            return new UserExistRespone
+                //            {
+                //                IsExist = true,
+                //                Role = "student",
+                //            };
+                //        }
 
-                    }
-                    catch (Exception ex)
-                    {
-                        return new UserExistRespone
-                        {
-                            IsExist = false,
-                        };
-                    }
-                }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        return new UserExistRespone
+                //        {
+                //            IsExist = false,
+                //        };
+                //    }
+                //}
+                #endregion
                 return new UserExistRespone
                 {
                     IsExist = false,
@@ -164,7 +179,7 @@ namespace MagicLand_System.Services.Implements
 
             if (user != null)
             {
-                guidClaim = new Tuple<string, Guid>(userId, user.Id);
+                guidClaim = new Tuple<string, Guid>("userId", user.Id);
             }
             var token = JwtUtil.GenerateJwtToken(user, guidClaim);
             return new NewTokenResponse { Token = token };
@@ -424,7 +439,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var id = GetUserIdFromJwt();
                 var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
-                if(currentUser == null)
+                if (currentUser == null)
                 {
                     throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng, Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Thao Tác", StatusCodes.Status400BadRequest);
                 }
