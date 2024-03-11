@@ -18,7 +18,7 @@ namespace MagicLand_System.Domain.Models
         public Guid QuestionPacketId { get; set; }
         public QuestionPackage? QuestionPackage { get; set; }
 
-        public List<MutipleChoiceAnswer>? MutipleChoiceAnswers { get; set; }
+        public List<MultipleChoice>? MutipleChoices { get; set; }
         public List<FlashCard>? FlashCards { get; set; }
     }
 }

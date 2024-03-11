@@ -364,7 +364,7 @@ namespace MagicLand_System.Services.Implements
 
                 var studentAttendance = studentIds.Select(si => new Attendance
                 {
-                    Id = new Guid(),
+                    Id = Guid.NewGuid(),
                     StudentId = si,
                     ScheduleId = schedule.Id,
                     IsPresent = null,

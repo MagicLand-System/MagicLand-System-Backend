@@ -127,7 +127,7 @@ namespace MagicLand_System.Services.Implements
                 foreach (var response in responses)
                 {
                     var item = currentUserCart.CartItems.SingleOrDefault(ci => ci.CourseId == response.CourseId);
-                    if(item != null)
+                    if (item != null)
                     {
                         response.IsInCart = true;
                         response.CartItemId = item.Id;
@@ -233,6 +233,44 @@ namespace MagicLand_System.Services.Implements
             }
 
             return listCourseResExtraInfror;
+        }
+
+        public async Task<List<CourseResExtraInfor>> GetCurrentStudentCoursesAsync()
+        {
+            var currentStudent = await GetUserFromJwt();
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                predicate: x => x.Classes.Any(cls => cls.StudentClasses.Any(sc => sc.StudentId == currentStudent.StudentIdAccount)),
+                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents));
+
+            var coursePrerequisites = await GetCoursePrerequesites(courses);
+            var coureSubsequents = await GetCoureSubsequents(courses);
+
+            var responses = new List<CourseResExtraInfor>();
+
+            foreach (var course in courses)
+            {
+                course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.Id == course.SyllabusId,
+                include: x => x.Include(x => x.SyllabusPrerequisites!).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber))
+                .ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == course.Id && x.StudentClasses.Any(sc => sc.StudentId == currentStudent.StudentIdAccount),
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+
+                var currentCoursePrerequistites = new List<Course>();
+                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
+                {
+                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
+                    {
+                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
+                    }
+                }
+
+                responses.Add(CourseCustomMapper.fromCourseToCourseResExtraInfor(course, currentCoursePrerequistites, coureSubsequents));
+            }
+
+            return responses;
         }
         #endregion
         #region thuong_code

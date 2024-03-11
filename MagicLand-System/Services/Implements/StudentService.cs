@@ -109,7 +109,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Tên [{studentRequest.FullName!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
             }
-            if (students.Any(stu => stu.Email!.Trim().ToLower() == studentRequest.Email!.Trim().ToLower()))
+            if (students.Any(stu => stu.Email != null && (stu.Email.Trim().ToLower() == studentRequest.Email!.Trim().ToLower())))
             {
                 throw new BadHttpRequestException($"Email [{studentRequest.Email!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
             }
@@ -158,6 +158,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor, Student oldStudentInfor)
         {
+            var studentAccount = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.StudentIdAccount == newStudentInfor.StudentId);
             if (newStudentInfor.DateOfBirth != default)
             {
                 int age = DateTime.Now.Year - newStudentInfor.DateOfBirth.Year;
@@ -167,6 +168,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 oldStudentInfor.DateOfBirth = newStudentInfor.DateOfBirth;
+                studentAccount.DateOfBirth = newStudentInfor.DateOfBirth;
             }
             try
             {
@@ -175,7 +177,13 @@ namespace MagicLand_System.Services.Implements
                 oldStudentInfor.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
                 oldStudentInfor.AvatarImage = newStudentInfor.AvatarImage ?? oldStudentInfor.AvatarImage;
 
+                studentAccount.FullName = newStudentInfor.FullName ?? oldStudentInfor.FullName;
+                studentAccount.Gender = newStudentInfor.Gender ?? oldStudentInfor.Gender;
+                studentAccount.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
+                studentAccount.AvatarImage = newStudentInfor.AvatarImage ?? oldStudentInfor.AvatarImage;
+
                 _unitOfWork.GetRepository<Student>().UpdateAsync(oldStudentInfor);
+                _unitOfWork.GetRepository<User>().UpdateAsync(studentAccount);
                 await _unitOfWork.CommitAsync();
 
                 return _mapper.Map<StudentResponse>(oldStudentInfor);

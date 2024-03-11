@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.Helpers;
+using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Sessions;
 
 namespace MagicLand_System.Mappers.Custom
@@ -61,6 +62,7 @@ namespace MagicLand_System.Mappers.Custom
                     OrderSession = ses.NoSession,
                     Date = "Cần Truy Suất Qua Lớp",
                     DateOfWeek = "Cần Truy Suất Qua Lớp",
+                    Quiz = null,
                     Contents = fromSessionDescriptionsToSessionContentResponse(ses.SessionDescriptions!),
                 });
             }

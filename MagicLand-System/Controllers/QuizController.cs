@@ -8,6 +8,7 @@ using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -96,6 +97,39 @@ namespace MagicLand_System.Controllers
             return Ok(responses);
         }
 
+        #region document API Get Exams Of Current Student In Time
+        /// <summary>
+        ///  Truy Suất Các Bài Kiểm Tra Của Bé Trong Khoảng Thời Gian Trước Và Sau Ngày Hiện Tại
+        /// </summary>
+        /// <param name="numberOfDay">Số Ngày Trước Và Sau Ngày Hiện Tại Cần Truy Suất</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "numberOfDay": 3
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Các Bài Kiểm Tra</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetExamOffCurrentStudentByTime)]
+        [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize(Roles = "STUDENT")]
+        public async Task<IActionResult> GetExamsOfCurrentStudentByTime([FromQuery] int numberOfDay)
+        {
+
+            if (numberOfDay < 0 || numberOfDay > 30)
+            {
+                return BadRequest("Số Ngày Không Hợp Lệ");
+            }
+
+            var responses = await _syllabusService.LoadExamOfCurrentStudentAsync(numberOfDay);
+
+            return Ok(responses);
+        }
+
         #region document API Get Quizzes By Class Id
         /// <summary>
         ///  Truy Suất Các Câu Hỏi (Quiz) Trong Bộ Đề Của Một Bài Kiểm Tra Dựa Vào Id Của Bài Kiểm Tra, *Các Câu Hỏi Sẽ Được Truy Suất Ngẫu Nhiên Và Thỏa Mãn Số Điểm Của Bài Kiểm Tra*
@@ -121,7 +155,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int? examPart)
         {
             var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, examPart);
-            if(responses == default)
+            if (responses == default)
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");
             }
@@ -135,10 +169,10 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
         [HttpPut(ApiEndpointConstant.QuizEndPoint.UpdateQuizForStaff)]
-        public async Task<IActionResult> UpdateQuizForStaff([FromRoute] string questionpackageId,UpdateQuestionPackageRequest request)
+        public async Task<IActionResult> UpdateQuizForStaff([FromRoute] string questionpackageId, UpdateQuestionPackageRequest request)
         {
-            var result = await _syllabusService.UpdateQuiz(questionpackageId,request);
-            if(!result)
+            var result = await _syllabusService.UpdateQuiz(questionpackageId, request);
+            if (!result)
             {
                 return Ok("Update quiz gặp lỗi");
             }

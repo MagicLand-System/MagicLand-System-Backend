@@ -87,7 +87,6 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadByCourse)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusByCourseId([FromQuery] Guid courseId, [FromQuery] Guid classId)

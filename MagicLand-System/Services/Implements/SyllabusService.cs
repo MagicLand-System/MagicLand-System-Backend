@@ -35,32 +35,44 @@ namespace MagicLand_System.Services.Implements
                 {
                     var syllabus = await GenerateSyllabus(request);
 
-                    var exams = request.ExamSyllabusRequests.Where(exam => exam.Method.Trim().ToLower() == "offline").ToList();
-                    var sessionContentRequests = request.SyllabusRequests.SelectMany(sr => sr.SessionRequests.SelectMany(sr => sr.SessionContentRequests)).ToList();
-                    //foreach (var contentDetail in sessionContentRequests.Select(scr => scr.Content))
-                    //{
-                    //    foreach(var exam in exams)
-                    //    {
-                    //        if(exam.ContentName.Trim().ToLower() == contentDetail.Trim().ToLower())
-                    //        {
-                    //            request.QuestionPackageRequests.Add(new QuestionPackageRequest
-                    //            {
+                    AddOffLineQuestionPackage(request);
 
-                    //            });
-                    //        }
-                    //    }
-                    //}
                     await GenerateSyllabusItems(request, syllabus.Id);
 
                     return await _unitOfWork.CommitAsync() > 0;
                 }
                 catch (Exception ex)
                 {
-                    throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message + ex.InnerException}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"{ex.Message + ex.InnerException}", StatusCodes.Status400BadRequest);
                 }
             }
             return false;
         }
+
+        private void AddOffLineQuestionPackage(OverallSyllabusRequest request)
+        {
+            var offlineExams = request.ExamSyllabusRequests
+                .Where(exam => exam.Method.Trim().ToLower() == "offline")
+                .ToList();
+
+            var sessionsRequest = request.SyllabusRequests
+                .SelectMany(sr => sr.SessionRequests)
+                .ToList();
+
+            request.QuestionPackageRequests!.AddRange(
+                from session in sessionsRequest
+                from content in session.SessionContentRequests
+                join exam in offlineExams on content.Content.Trim().ToLower() equals exam.ContentName.Trim().ToLower()
+                select new QuestionPackageRequest
+                {
+                    ContentName = exam.ContentName,
+                    NoOfSession = session.Order,
+                    Type = "options",
+                    Title = "Làm Tại Nhà",
+                    Score = 0,
+                });
+        }
+
         public async Task<string> CheckingSyllabusInfor(string name, string code)
         {
             string message = "Thông Tin Giáo Trình Hợp Lệ";
@@ -243,8 +255,10 @@ namespace MagicLand_System.Services.Implements
                         NoSession = ses.Order,
                     });
 
+                    int orderContent = 0;
                     foreach (var cont in ses.SessionContentRequests)
                     {
+                        orderContent++;
                         var detailStrings = cont.SessionContentDetails.ToArray();
                         var stringFinal = "";
                         for (int i = 0; i < detailStrings.Length; i++)
@@ -262,6 +276,7 @@ namespace MagicLand_System.Services.Implements
                             Detail = stringFinal,
                             SessionId = newSessionId,
                             Content = cont.Content,
+                            Order = orderContent,
                         });
                     }
                 }
@@ -279,12 +294,15 @@ namespace MagicLand_System.Services.Implements
         private async Task GenerateExerciseItems(List<QuestionPackageRequest> questionPackageRequest, List<Session> sessions)
         {
             int orderPackage = 0;
-            foreach (var qp in questionPackageRequest.OrderBy(qp => qp.NoOfSession))
+            foreach (var qp in questionPackageRequest.OrderBy(qp => qp.NoOfSession).ToList())
             {
                 orderPackage++;
                 Guid newQuestionPackageId = Guid.NewGuid();
                 await GenerateQuestionPackage(sessions, qp, newQuestionPackageId, orderPackage);
-                await GenerateQuestionPackgeItems(newQuestionPackageId, qp.QuestionRequests);
+                if (qp.QuestionRequests != null)
+                {
+                    await GenerateQuestionPackgeItems(newQuestionPackageId, qp.QuestionRequests);
+                }
             }
 
         }
@@ -392,12 +410,12 @@ namespace MagicLand_System.Services.Implements
 
         private async Task GenerateMutipleChoice(QuestionRequest quest, Guid newQuestionId)
         {
-            var mutipleChoiceAnswers = new List<MutipleChoiceAnswer>();
+            var mutipleChoiceAnswers = new List<MultipleChoice>();
             if (quest.MutipleChoiceAnswerRequests != null)
             {
                 foreach (var answer in quest.MutipleChoiceAnswerRequests)
                 {
-                    mutipleChoiceAnswers.Add(new MutipleChoiceAnswer
+                    mutipleChoiceAnswers.Add(new MultipleChoice
                     {
                         Description = answer.Description,
                         Img = answer.Img,
@@ -409,7 +427,7 @@ namespace MagicLand_System.Services.Implements
 
             if (mutipleChoiceAnswers != null && mutipleChoiceAnswers.Count > 0)
             {
-                await _unitOfWork.GetRepository<MutipleChoiceAnswer>().InsertRangeAsync(mutipleChoiceAnswers);
+                await _unitOfWork.GetRepository<MultipleChoice>().InsertRangeAsync(mutipleChoiceAnswers);
                 await _unitOfWork.CommitAsync();
             }
         }
@@ -449,7 +467,23 @@ namespace MagicLand_System.Services.Implements
             if (classId != default)
             {
                 var cls = await ValidateClassForSchedule(courseId, classId);
-                return SyllabusCustomMapper.fromSyllabusAndClassToSyllabusResponseWithSheduleResponse(syllabus, cls);
+                var response = SyllabusCustomMapper.fromSyllabusAndClassToSyllabusResponseWithSheduleResponse(syllabus, cls);
+                foreach (var session in response.SyllabusInformations!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
+                {
+                    var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                        predicate: x => x.NoSession == session.OrderSession);
+                    if (quiz != null)
+                    {
+                        session.Quiz = new QuizInforResponse
+                        {
+                            ExamId = quiz.Id,
+                            ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
+                            ExamPart = quiz.Type!.Trim().ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1,
+                            QuizName = quiz.Title!,
+                        };
+                    }
+                }
+                return response;
             }
 
             return _mapper.Map<SyllabusResponse>(syllabus);
@@ -515,7 +549,7 @@ namespace MagicLand_System.Services.Implements
             syllabus.Topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
             predicate: x => x.SyllabusId == syllabus.Id,
             orderBy: x => x.OrderBy(x => x.OrderNumber),
-            include: x => x.Include(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+            include: x => x.Include(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.SessionDescriptions!.OrderBy(sd => sd.Order)));
 
             return syllabus;
 
@@ -549,7 +583,7 @@ namespace MagicLand_System.Services.Implements
                 syll.Topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
                 predicate: x => x.SyllabusId == syll.Id,
                 orderBy: x => x.OrderBy(x => x.OrderNumber),
-                include: x => x.Include(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+                include: x => x.Include(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)).ThenInclude(ses => ses.SessionDescriptions!.OrderBy(sd => sd.Order)));
 
                 foreach (var session in syll.Topics.SelectMany(tp => tp.Sessions!))
                 {
@@ -614,7 +648,7 @@ namespace MagicLand_System.Services.Implements
         private async Task GenerateQuizzes(List<ExamWithQuizResponse> quizzesResponse, Course course, Session session)
         {
             var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
-                include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
+                include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoices!)
                 .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
 
             if (questionPackage == null)
@@ -686,11 +720,11 @@ namespace MagicLand_System.Services.Implements
 
         private async Task<Class> ValidateClass(Guid id)
         {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
-                predicate: x => x.Id == id, include: x => x.Include(x => x.Course).ThenInclude(c => c!.Syllabus)
-                .ThenInclude(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!
-                .Include(x => x.Course).ThenInclude(c => c!.Syllabus).ThenInclude(syll => syll!.ExamSyllabuses!)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Course).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+
+            cls.Course!.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+            predicate: x => x.CourseId == cls.CourseId,
+            include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
 
             if (cls == null || cls.Course!.Syllabus == null)
             {
@@ -708,7 +742,7 @@ namespace MagicLand_System.Services.Implements
         private async Task GenerateExamWithDate(List<ExamResponse> examsResponse, Class cls, Session session)
         {
             var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
-            include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
+            include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoices!)
            .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
 
             if (questionPackage == null)
@@ -717,13 +751,72 @@ namespace MagicLand_System.Services.Implements
             }
 
             var exam = cls.Course!.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
-            var examResponse = QuizCustomMapper.fromSyllabusItemsToExamResponse(session.NoSession, questionPackage, exam!);
+            var examResponse = QuizCustomMapper.fromSyllabusItemsToExamResponse(questionPackage, exam);
 
             examResponse.SessionId = session.Id;
             examResponse.CourseId = cls.Course.Id;
             examResponse.Date = cls.Schedules.ToList()[session.NoSession - 1].Date.ToString();
 
             examsResponse.Add(examResponse);
+        }
+
+        public async Task<List<ExamExtraInfor>> LoadExamOfCurrentStudentAsync(int numberOfDate)
+        {
+            var studentId = (await GetUserFromJwt()).StudentIdAccount;
+            if (studentId == null)
+            {
+                throw new BadHttpRequestException("Lỗi Hệ Thống Không Thể Xác Thực Người Dùng, Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Thao Tác",
+                    StatusCodes.Status500InternalServerError);
+            }
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.UPCOMING.ToString(),
+                include: x => x.Include(x => x.Course).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            if (!classes.Any())
+            {
+                throw new BadHttpRequestException("Bé Chưa Tham Gia Lớp Học Nào", StatusCodes.Status400BadRequest);
+            }
+            var responses = new List<ExamExtraInfor>();
+            foreach (var cls in classes)
+            {
+                var examsResponse = new List<ExamResponse>();
+
+                cls.Course!.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == cls.CourseId,
+                include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
+
+                foreach (var session in cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
+                {
+                    await GenerateExamWithDate(examsResponse, cls, session);
+                }
+
+                foreach (var exam in examsResponse)
+                {
+                    if (DateTime.Parse(exam.Date!).Date >= DateTime.Now.AddDays(-numberOfDate).Date && DateTime.Parse(exam.Date!).Date <= DateTime.Now.AddDays(+numberOfDate).Date)
+                    {
+                        responses.Add(new ExamExtraInfor
+                        {
+                            ExamId = exam.ExamId,
+                            ExamPart = exam.ExamPart,
+                            ExamName = exam.ExamName,
+                            QuizCategory = exam.QuizCategory,
+                            QuizType = exam.QuizType,
+                            QuizName = exam.QuizName,
+                            Weight = exam.Weight,
+                            CompleteionCriteria = exam.CompleteionCriteria,
+                            TotalScore = exam.TotalScore,
+                            TotalQuestion = exam.TotalQuestion,
+                            Date = exam.Date,
+                            NoSession = exam.NoSession,
+                            SessionId = exam.SessionId,
+                            CourseId = exam.CourseId,
+                            ClassId = cls.Id,
+                            ClassName = cls.ClassCode,
+                        });
+                    }
+                }
+            }
+
+            return responses;
         }
 
         public async Task<List<ExamResponse>> LoadExamOfClassByClassIdAsync(Guid id)
@@ -742,42 +835,37 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, int? examPart)
         {
-            var exam = await _unitOfWork.GetRepository<ExamSyllabus>().SingleOrDefaultAsync(predicate: x => x.Id == examId, include: x => x.Include(x => x.Syllabus!));
-            if (exam == null)
+            var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                predicate: x => x.Id == examId,
+                include: x => x.Include(x => x.Questions!));
+
+            if (quiz == null)
             {
                 throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Tồn Tại", StatusCodes.Status400BadRequest);
             }
-            if (exam.Method == "Offline")
+
+            if (quiz.Score == 0)
             {
                 return default!;
             }
 
-            var sessions = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(predicate: x => x.Id == exam.SyllabusId, include: x => x.Include(x => x.Topics!)
-            .ThenInclude(tp => tp.Sessions!))).SelectMany(syll => syll.Topics!).SelectMany(tp => tp.Sessions!).ToList();
-
-            var questionPackage = new QuestionPackage();
-            foreach (var ses in sessions)
+            foreach (var question in quiz.Questions!)
             {
-                var qp = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id,
-                    include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoiceAnswers!)
-                   .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
-
-                if (qp != null && StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(qp.ContentName!))
+                var multipleChoices = await _unitOfWork.GetRepository<MultipleChoice>().GetListAsync(predicate: x => x.QuestionId == question.Id);
+                if (multipleChoices.Any())
                 {
-                    int part = qp.Type == "flashcard" ? 2 : 1;
-                    examPart ??= 1;
-
-                    if (examPart == part)
-                    {
-                        return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(qp);
-                    }
-                    else
-                    {
-                        throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Có Dạng Đề [{examPart}]", StatusCodes.Status400BadRequest);
-                    }
+                    question.MutipleChoices = multipleChoices.ToList();
+                    continue;
+                }
+                var flashCards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.QuestionId == question.Id, include: x => x.Include(x => x.SideFlashCards!));
+                if (flashCards.Any())
+                {
+                    question.FlashCards = flashCards.ToList();
                 }
             }
-            return default!;
+
+
+            return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(quiz)!;
         }
         #endregion
         #region thuong code
@@ -1046,20 +1134,20 @@ namespace MagicLand_System.Services.Implements
             List<Question> questions = new List<Question>();
             foreach (var questionpack in questionPackages)
             {
-                var question = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionpack.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoiceAnswers));
+                var question = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionpack.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoices));
                 questions.AddRange(question);
             }
             List<FlashCard> flashCards = new List<FlashCard>();
-            List<MutipleChoiceAnswer> mutipleChoiceAnswers = new List<MutipleChoiceAnswer>();
+            List<MultipleChoice> mutipleChoiceAnswers = new List<MultipleChoice>();
             foreach (var question in questions)
             {
                 if (question.FlashCards.Count > 0)
                 {
                     flashCards.AddRange(question.FlashCards);
                 }
-                if (question.MutipleChoiceAnswers.Count > 0)
+                if (question.MutipleChoices.Count > 0)
                 {
-                    mutipleChoiceAnswers.AddRange(question.MutipleChoiceAnswers);
+                    mutipleChoiceAnswers.AddRange(question.MutipleChoices);
                 }
             }
             List<SideFlashCard> sideFlashCards = new List<SideFlashCard>();
@@ -1070,7 +1158,7 @@ namespace MagicLand_System.Services.Implements
             }
             _unitOfWork.GetRepository<SideFlashCard>().DeleteRangeAsync(sideFlashCards);
             _unitOfWork.GetRepository<FlashCard>().DeleteRangeAsync(flashCards);
-            _unitOfWork.GetRepository<MutipleChoiceAnswer>().DeleteRangeAsync(mutipleChoiceAnswers);
+            _unitOfWork.GetRepository<MultipleChoice>().DeleteRangeAsync(mutipleChoiceAnswers);
             _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
             _unitOfWork.GetRepository<QuestionPackage>().DeleteRangeAsync(questionPackages);
             _unitOfWork.GetRepository<SessionDescription>().DeleteRangeAsync(sessionDescriptions);
@@ -1341,7 +1429,7 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<StaffAnswerResponse> GetAnswerResponse(string questionId)
         {
-            var multiples = await _unitOfWork.GetRepository<MutipleChoiceAnswer>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
+            var multiples = await _unitOfWork.GetRepository<MultipleChoice>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
             var flashcards = await _unitOfWork.GetRepository<FlashCard>().GetListAsync(predicate: x => x.QuestionId.ToString().Equals(questionId));
             StaffAnswerResponse response = new StaffAnswerResponse();
             List<StaffMultipleChoiceResponse> multipleChoiceResponses = new List<StaffMultipleChoiceResponse>();
@@ -1451,19 +1539,19 @@ namespace MagicLand_System.Services.Implements
             await _unitOfWork.CommitAsync();
             List<Question> questions = new List<Question>();
 
-            var questionx = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionPackage.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoiceAnswers));
+            var questionx = await _unitOfWork.GetRepository<Question>().GetListAsync(predicate: x => x.QuestionPacketId.ToString().Equals(questionPackage.Id.ToString()), include: x => x.Include(x => x.FlashCards).Include(x => x.MutipleChoices));
             questions.AddRange(questionx);
             List<FlashCard> flashCards = new List<FlashCard>();
-            List<MutipleChoiceAnswer> mutipleChoiceAnswers = new List<MutipleChoiceAnswer>();
+            List<MultipleChoice> mutipleChoiceAnswers = new List<MultipleChoice>();
             foreach (var question in questions)
             {
                 if (question.FlashCards.Count > 0)
                 {
                     flashCards.AddRange(question.FlashCards);
                 }
-                if (question.MutipleChoiceAnswers.Count > 0)
+                if (question.MutipleChoices.Count > 0)
                 {
-                    mutipleChoiceAnswers.AddRange(question.MutipleChoiceAnswers);
+                    mutipleChoiceAnswers.AddRange(question.MutipleChoices);
                 }
             }
             List<SideFlashCard> sideFlashCards = new List<SideFlashCard>();
@@ -1474,7 +1562,7 @@ namespace MagicLand_System.Services.Implements
             }
             _unitOfWork.GetRepository<SideFlashCard>().DeleteRangeAsync(sideFlashCards);
             _unitOfWork.GetRepository<FlashCard>().DeleteRangeAsync(flashCards);
-            _unitOfWork.GetRepository<MutipleChoiceAnswer>().DeleteRangeAsync(mutipleChoiceAnswers);
+            _unitOfWork.GetRepository<MultipleChoice>().DeleteRangeAsync(mutipleChoiceAnswers);
             _unitOfWork.GetRepository<Question>().DeleteRangeAsync(questions);
             await _unitOfWork.CommitAsync();
             await GenerateQuestionPackgeItems(questionPackage.Id, request.QuestionRequests);
@@ -1535,6 +1623,7 @@ namespace MagicLand_System.Services.Implements
             }
             return syllRes;
         }
+
 
         #endregion
 

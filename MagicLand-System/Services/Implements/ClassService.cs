@@ -1366,38 +1366,77 @@ namespace MagicLand_System.Services.Implements
             #region
             //try
             //{
-            //    var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Role!.Name! == RoleEnum.PARENT.ToString());
-            //    var newAccounts = new List<User>();
-            //    foreach (var user in users)
+            //    var syllId = Guid.Parse("9c2f43b2-ddef-453d-811d-b2091ac45d01");
+            //    var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+            //    predicate: x => x.Id == syllId,
+            //    include: x => x.Include(x => x.ExamSyllabuses!));
+
+
+            //    var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
+            //        orderBy: x => x.OrderBy(x => x.OrderNumber),
+            //        predicate: x => x.SyllabusId == syll.Id,
+            //        include: x => x.Include(x => x.Sessions!.OrderBy(x => x.NoSession)).ThenInclude(x => x.SessionDescriptions!));
+
+            //    var questionPackages = new List<QuestionPackage>();
+            //    var sessions = topics.SelectMany(x => x.Sessions!).ToList();
+            //    foreach (var ses in sessions)
             //    {
-            //        var students = await _unitOfWork.GetRepository<Student>().GetListAsync(predicate: x => x.ParentId == user.Id);
-            //        if (students.Any())
+            //        var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
+            //        if (questionPackage != null)
             //        {
-            //            int index = 0;
-            //            foreach (var student in students)
+            //            questionPackage.NoSession = ses.NoSession;
+            //            questionPackages.Add(questionPackage);
+            //        }
+            //    }
+            //    foreach (var exam in syll.ExamSyllabuses!)
+            //    {
+            //        if (exam.Method!.Trim().ToLower() == "offline")
+            //        {
+            //            foreach (var ses in sessions)
             //            {
-            //                index++;
-            //                var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name == RoleEnum.STUDENT.ToString(), selector: x => x.Id);
-            //                newAccounts.Add(new User
+            //                foreach (string content in ses.SessionDescriptions.Select(sd => sd.Content.Trim().ToLower()))
             //                {
-            //                    Id = Guid.NewGuid(),
-            //                    FullName = student.FullName,
-            //                    Phone = user.Phone + "_" + index,
-            //                    Email = student.Email,
-            //                    Gender = student.Gender,
-            //                    AvatarImage = student.AvatarImage,
-            //                    DateOfBirth = student.DateOfBirth,
-            //                    Address = user.Address,
-            //                    RoleId = role,
-            //                    StudentIdAccount = student.Id,
-            //                });
+            //                    if (content == exam.ContentName!.Trim().ToLower())
+            //                    {
+            //                        questionPackages.Add(new QuestionPackage
+            //                        {
+            //                            Id = Guid.NewGuid(),
+            //                            SessionId = ses.Id,
+            //                            ContentName = exam.ContentName,
+            //                            NoSession = ses.NoSession,
+            //                            Type = "options",
+            //                            Title = "Làm Tại Nhà",
+            //                            Score = 0,
+            //                        });
+            //                    }
+            //                }
+
             //            }
             //        }
             //    }
 
-            //    await _unitOfWork.GetRepository<User>().InsertRangeAsync(newAccounts);
-            //    _unitOfWork.Commit();
+            //    questionPackages = questionPackages.OrderBy(qp => qp.NoSession).ToList();
+            //    for (int i = 0; i < questionPackages.Count(); i++)
+            //    {
+            //        questionPackages[i].OrderPackage = i + 1;
+            //    }
+
+            //    if (questionPackages.Any(q => q.Score == 0))
+            //    {
+            //        var packageOffline = questionPackages.First(q => q.Score == 0);
+            //        if (packageOffline != null)
+            //        {
+            //            await _unitOfWork.GetRepository<QuestionPackage>().InsertAsync(packageOffline);
+            //        }
+            //    }
+
+            //    var packageUpdate = questionPackages.Where(q => q.Score != 0).ToList();
+
+
+            //    _unitOfWork.GetRepository<QuestionPackage>().UpdateRange(packageUpdate);
+            //    await _unitOfWork.CommitAsync();
             //}
+
             //catch (Exception ex)
             //{
             //    var s = ex;

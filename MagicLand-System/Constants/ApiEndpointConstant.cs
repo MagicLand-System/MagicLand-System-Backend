@@ -77,6 +77,7 @@
         {
             public const string GetAll = ApiEndpoint + "/courses";
             public const string GetAllValid = ApiEndpoint + "/courses/validRegister";
+            public const string GetCurrentStudentCourses = ApiEndpoint + "/courses/currentStudent";
             public const string SearchCourse = GetAll + "/search";
             public const string CourseById = GetAll + "/{id}";
             public const string FilterCourse = GetAll + "/filter";
@@ -183,6 +184,7 @@
             public const string EndPointBase = ApiEndpoint + "/exams/quizzes";
             public const string GetQuizOverallByCourseId = ApiEndpoint + "/exams/quizzes/course";
             public const string GetExamOffClassByClassId = ApiEndpoint + "/exams/class";
+            public const string GetExamOffCurrentStudentByTime = ApiEndpoint + "/exams/student/byTime";
             public const string GetQuizOffExamByExamId = ApiEndpoint + "/exam/quiz";
             public const string GetQuizForStaff = ApiEndpoint + "/{id}/staff/get";
             public const string UpdateQuizForStaff = ApiEndpoint + "/{questionpackageId}/update";

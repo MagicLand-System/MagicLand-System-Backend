@@ -2,7 +2,7 @@
 
 namespace MagicLand_System.Domain.Models
 {
-    public class MutipleChoiceAnswer
+    public class MultipleChoice
     {
         public Guid Id { get; set; }
         public string? Description { get; set; }

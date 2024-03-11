@@ -41,8 +41,8 @@ namespace MagicLand_System.Services.Implements
             if (user.Role!.Name == RoleEnum.STUDENT.ToString())
             {
                 var isActive = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(
-               selector: x => x.IsActive,
-               predicate: x => x.Id == user.Id);
+                selector: x => x.IsActive,
+                predicate: x => x.Id == user.StudentIdAccount);
 
                 if (!isActive.Value)
                 {

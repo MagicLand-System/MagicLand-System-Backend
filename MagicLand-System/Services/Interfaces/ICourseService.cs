@@ -6,6 +6,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface ICourseService
     {
+        Task<List<CourseResExtraInfor>> GetCurrentStudentCoursesAsync();
         Task<List<CourseResExtraInfor>> GetCoursesAsync(bool isValid);
         Task<CourseResExtraInfor> GetCourseByIdAsync(Guid id);
         Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord);

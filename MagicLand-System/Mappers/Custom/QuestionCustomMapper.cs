@@ -54,14 +54,14 @@ namespace MagicLand_System.Mappers.Custom
                     QuestionId = question.Id,
                     QuestionDescription = question.Description,
                     QuestionImage = question.Img,
-                    Answers = fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoiceAnswers!),
+                    Answers = fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoices!),
                 });
             }
 
             return responses;
         }
 
-        public static List<MutilpleChoiceAnswerResponse> fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(List<MutipleChoiceAnswer> answers)
+        public static List<MutilpleChoiceAnswerResponse> fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(List<MultipleChoice> answers)
         {
             if (answers == null)
             {
@@ -153,7 +153,7 @@ namespace MagicLand_System.Mappers.Custom
                     QuestionId = question.Id,
                     QuestionDescription = question.Description,
                     QuestionImage = question.Img,
-                    AnswersMutipleChoicesInfor = question.MutipleChoiceAnswers!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoiceAnswers!) : default,
+                    AnswersMutipleChoicesInfor = question.MutipleChoices!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(question.MutipleChoices!) : default,
                     AnwserFlashCarsInfor = question.FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(question.FlashCards!) : default,
                 };
 
@@ -163,11 +163,11 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<QuizResponse> fromQuestionPackageToQuizResponseInLimitScore(QuestionPackage package)
+        public static List<QuizResponse>? fromQuestionPackageToQuizResponseInLimitScore(QuestionPackage package)
         {
-            if (package == null)
+            if (package == null || package.Score == 0)
             {
-                return default!;
+                return null;
             }
 
             Random random = new Random();
@@ -187,18 +187,37 @@ namespace MagicLand_System.Mappers.Custom
 
                 usedIndices.Add(randomQuestionIndex);
 
+                var currentQuestion = questions![randomQuestionIndex];
+                var answerMutipleChoicesInfor = new List<MutilpleChoiceAnswerResponse>();
+                var answerFlashCarsInfor = new List<FlashCardAnswerResponse>();
+
+                if (currentQuestion.MutipleChoices != null && currentQuestion.MutipleChoices.Any())
+                {
+                    answerMutipleChoicesInfor = fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(currentQuestion.MutipleChoices!);
+                    totalMark += currentQuestion.MutipleChoices!.Select(mc => mc.Score).Sum();
+                }
+                if (currentQuestion.FlashCards != null && currentQuestion.FlashCards.Any())
+                {
+                    int coupleFlashCardLeft = (int)(package.Score - totalMark)!;
+                    var listFlashCard = new List<FlashCard>();
+
+                    for (int i = 0; i < coupleFlashCardLeft && i < currentQuestion.FlashCards.Count(); i++)
+                    {
+                        listFlashCard.Add(currentQuestion.FlashCards[i]);
+                    }
+                    answerFlashCarsInfor = fromFlashCardToFlashCardAnswerResponse(listFlashCard);
+
+                    totalMark += listFlashCard.Select(fc => fc.Score).Sum();
+                }
+
                 var response = new QuizResponse
                 {
-                    QuestionId = questions![randomQuestionIndex].Id,
-                    QuestionDescription = questions![randomQuestionIndex].Description,
-                    QuestionImage = questions![randomQuestionIndex].Img,
-                    AnswersMutipleChoicesInfor = questions![randomQuestionIndex].MutipleChoiceAnswers!.Any() ? fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(questions![randomQuestionIndex].MutipleChoiceAnswers!) : default,
-                    AnwserFlashCarsInfor = questions![randomQuestionIndex].FlashCards!.Any() ? fromFlashCardToFlashCardAnswerResponse(questions![randomQuestionIndex].FlashCards!) : default,
+                    QuestionId = currentQuestion.Id,
+                    QuestionDescription = currentQuestion.Description,
+                    QuestionImage = currentQuestion.Img,
+                    AnswersMutipleChoicesInfor = answerMutipleChoicesInfor,
+                    AnwserFlashCarsInfor = answerFlashCarsInfor,
                 };
-
-                totalMark += questions![randomQuestionIndex].MutipleChoiceAnswers!.Any()
-                    ? questions![randomQuestionIndex].MutipleChoiceAnswers!.Select(mc => mc.Score).Sum()
-                    : questions![randomQuestionIndex].FlashCards!.Select(fc => fc.Score).Sum();
 
                 if (totalMark == package.Score)
                 {

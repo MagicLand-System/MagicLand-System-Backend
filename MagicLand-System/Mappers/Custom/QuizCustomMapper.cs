@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 
@@ -26,9 +27,9 @@ namespace MagicLand_System.Mappers.Custom
                 QuizCategory = examSyllabus == null ? "Review" : examSyllabus.Category,
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus == null ? 0 : examSyllabus.Weight ,
+                Weight = examSyllabus == null ? 0 : examSyllabus.Weight,
                 CompleteionCriteria = examSyllabus == null ? 0 : examSyllabus.CompleteionCriteria,
-                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
+                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalQuestion = questionPackage.Questions!.Count(),
                 //Duration = questionPackage.Duration,
                 //DeadLine = questionPackage.DeadlineTime,
@@ -42,19 +43,14 @@ namespace MagicLand_System.Mappers.Custom
             return response;
         }
 
-        public static ExamResponse fromSyllabusItemsToExamResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus examSyllabus)
+        public static ExamResponse fromSyllabusItemsToExamResponse(QuestionPackage questionPackage, ExamSyllabus? examSyllabus)
         {
-            if (questionPackage == null || examSyllabus == null)
+            if (questionPackage == null)
             {
                 return new ExamWithQuizResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
 
-
-            int part = 1;
-            if (questionPackage.Type == "flashcard")
-            {
-                part = 2;
-            }
+            int part = questionPackage.Type == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
 
             var quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
 
@@ -62,18 +58,18 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
-                QuizCategory = examSyllabus.Category,
+                QuizCategory = examSyllabus != null ? examSyllabus.Category : QuizTypeEnum.review.ToString(),
                 QuizType = questionPackage.Type,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus.Weight,
-                CompleteionCriteria = examSyllabus.CompleteionCriteria,
+                Weight = examSyllabus != null ? examSyllabus.Weight : 0,
+                CompleteionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria : null,
                 TotalScore = (double)questionPackage.Score!,
-                TotalQuestion = quizzes.Count(),
+                TotalQuestion = quizzes != null ? quizzes.Count() : 0,
                 //Duration = questionPackage.Duration,
                 //DeadLine = questionPackage.DeadlineTime,
                 //Attempts = questionPackage.AttemptsAllowed,
-                NoSession = noSession,
-                ExamId = examSyllabus.Id,
+                NoSession = questionPackage.NoSession!.Value,
+                ExamId = questionPackage.Id,
             };
         }
 
@@ -99,7 +95,7 @@ namespace MagicLand_System.Mappers.Custom
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus.Weight,
                 CompleteionCriteria = examSyllabus.CompleteionCriteria,
-                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoiceAnswers!.Select(mutiple => mutiple.Score).ToList()).Sum(),
+                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalQuestion = questionPackage.Questions!.Count(),
                 //Attempts = 1,
                 NoSession = noSession,
