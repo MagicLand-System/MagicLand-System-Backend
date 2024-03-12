@@ -27,6 +27,8 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
+       
+
         public static List<TopicResponse> fromTopicsAndScheduleToTopicResponses(ICollection<Topic> topics, ICollection<Schedule> schedules)
         {
             if (topics == null)

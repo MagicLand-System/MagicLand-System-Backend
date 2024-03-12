@@ -4,9 +4,13 @@ public class StudentScheduleResponse
     public required string StudentName { get; set; }
     public required string ClassCode { get; set; }
     public required string ClassName { get; set; }
+    public required Guid ClassId { get; set; }
+    public required Guid CourseId { get; set; }
     public required string ClassSubject { get; set; }
     public required string Address { get; set; }
-    public int DayOfWeek { get; set; }
+    public required Guid TopicId { get; set; }
+    public required Guid SessionId { get; set; }
+    public string DayOfWeek { get; set; }
     public DateTime Date { get; set; }
     public string? StartTime { get; set; }
     public string? EndTime { get; set; }

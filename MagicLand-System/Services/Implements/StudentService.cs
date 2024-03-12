@@ -597,7 +597,6 @@ namespace MagicLand_System.Services.Implements
 
             if (cls.Status!.ToString().Trim() != ClassStatusEnum.PROGRESSING.ToString())
             {
-                string statusError = cls.Status!.ToString().Trim() == ClassStatusEnum.UPCOMING.ToString() ? "Sắp Diễn Ra" : "Đã Hoàn Thành";
 
                 throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.ClassCode}] [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status).Trim()}]", StatusCodes.Status400BadRequest);
             }
@@ -748,28 +747,51 @@ namespace MagicLand_System.Services.Implements
             var listStudentSchedule = new List<StudentScheduleResponse>();
             foreach (var cls in classes)
             {
+                var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(cls.LecturerId));
+
                 var subject = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                        selector: x => x.SubjectName,
                        predicate: x => x.Id == cls.CourseId);
 
-                foreach (var schedule in cls.Schedules)
+                var topics = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    selector: x => x.Topics,
+                    predicate: x => x.CourseId == cls.CourseId,
+                    include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                var identifySession = new List<(int, Guid, Guid)>();
+
+                int sessionIndex = 0;
+                foreach (var topic in topics!)
                 {
-                    var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(schedule.Class!.LecturerId));
+                    foreach (var session in topic.Sessions!)
+                    {
+                        sessionIndex++;
+                        identifySession.Add(new(sessionIndex, topic.Id, session.Id));
+                    }
+                }
+
+                for (int i = 0; i < cls.Schedules.Count(); i++)
+                {
+                    var schedule = cls.Schedules.ToList()[i];
                     var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id);
 
                     var studentSchedule = new StudentScheduleResponse
                     {
                         Address = cls.Street + " " + cls.District + " " + cls.City,
-                        ClassName = schedule.Class!.ClassCode!,
+                        ClassName = cls.ClassCode!,
+                        ClassId = cls.Id,
+                        CourseId = cls.CourseId,
                         ClassSubject = subject!,
                         StudentName = student.FullName!,
                         Date = schedule.Date,
-                        ClassCode = schedule.Class!.ClassCode!,
-                        DayOfWeek = schedule.DayOfWeek,
+                        ClassCode = cls.ClassCode!,
+                        TopicId = identifySession.Find(x => x.Item1 == i + 1).Item2,
+                        SessionId = identifySession.Find(x => x.Item1 == i + 1).Item3,
+                        DayOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                         EndTime = schedule.Slot!.EndTime,
                         StartTime = schedule.Slot.StartTime,
                         LinkURL = schedule.Room!.LinkURL,
-                        Method = schedule.Class.Method,
+                        Method = cls.Method,
                         RoomInFloor = schedule.Room.Floor,
                         RoomName = schedule.Room.Name,
                         AttendanceStatus = IsPresent == true ? "Có Mặt" : IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",

@@ -70,6 +70,30 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
+        public static List<SessionSyllabusResponse> fromSessionsAndScheduleToSessionForSyllabusResponses(ICollection<Session> sessions, ICollection<Schedule> schedules)
+        {
+            if (sessions == null)
+            {
+                return default!;
+            }
+
+            var responses = new List<SessionSyllabusResponse>();
+            foreach (var ses in sessions)
+            {
+                var schedule = schedules.ToList()[ses.NoSession - 1];
+
+                responses.Add(new SessionSyllabusResponse
+                {
+                    OrderSession = ses.NoSession,
+                    Date = schedule.Date.ToString(),
+                    DateOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                    Quiz = null,
+                    Contents = fromSessionDescriptionsToSessionContentResponse(ses.SessionDescriptions!),
+                });
+            }
+
+            return responses;
+        }
 
         public static List<SessionContentReponse> fromSessionDescriptionsToSessionContentResponse(ICollection<SessionDescription> descriptions)
         {

@@ -11,11 +11,13 @@ using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Slots;
 using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Topics;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -1618,6 +1620,7 @@ namespace MagicLand_System.Services.Implements
                 response.ScheduleId = currentSchedule.Id;
                 response.DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(currentSchedule.DayOfWeek)[0].ToString();
                 response.Date = currentSchedule.Date;
+                response.NoSession = cls.Schedules.ToList().IndexOf(currentSchedule) + 1;
                 response.Slot = SlotCustomMapper.fromSlotToSlotForLecturerResponse(currentSchedule.Slot!);
                 response.Room = RoomCustomMapper.fromRoomToRoomResponse(currentSchedule.Room!);
                 response.SlotOrder = StringHelper.GetSlotNumber(currentSchedule.Slot!.StartTime);
@@ -2113,6 +2116,51 @@ namespace MagicLand_System.Services.Implements
 
             classes = classes.Where(cls => !classesInCartId.Contains(cls.Id)).ToList();
             return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+        }
+
+        public async Task<TopicResponse> GetTopicLearningAsync(Guid classId, int topicOrder)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                         predicate: x => x.Id == classId,
+                         include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            var topic = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.Topics!.SingleOrDefault(tp => tp.OrderNumber == topicOrder),
+                predicate: x => x.CourseId == cls.CourseId,
+                include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
+               .ThenInclude(ses => ses.SessionDescriptions!.OrderBy(sd => sd.Order)));
+
+            var response = new TopicResponse
+            {
+                OrderTopic = topic!.OrderNumber,
+                TopicName = topic.Name,
+                Sessions = SessionCustomMapper.fromSessionsAndScheduleToSessionForSyllabusResponses(topic.Sessions!, cls.Schedules),
+            };
+
+            foreach (var session in response.Sessions)
+            {
+                var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                predicate: x => x.NoSession == session.OrderSession);
+
+                if (quiz != null)
+                {
+                    int part = quiz.Type == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
+                    session.Quiz = new QuizInforResponse
+                    {
+                        ExamId = quiz.Id,
+                        ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
+                        ExamPart = part,
+                        QuizName = quiz.Title,
+                    };
+                }
+            }
+
+            return response;
         }
         #endregion
     }

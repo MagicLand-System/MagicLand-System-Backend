@@ -53,6 +53,7 @@
             public const string InsertClasses = GetAll + "/insertClasses";
             public const string CheckingClassForStudents = GetAll + "/students/checking";
             public const string GetClassValid = GetAll + "/valid";
+            public const string GetTopicLearning = GetAll + "/topic/learning";
             public const string GetStudentValid = GetAll + "/students/valid";
         }
         public static class PromotionEnpoint

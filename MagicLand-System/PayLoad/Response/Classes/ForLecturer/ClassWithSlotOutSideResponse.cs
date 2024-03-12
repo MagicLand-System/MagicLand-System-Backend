@@ -8,6 +8,7 @@ namespace MagicLand_System.PayLoad.Response.Classes.ForLecturer
     {
         public string? CourseName { get; set; }
         public string? SlotOrder { get; set; }
+        public int NoSession { get; set; }
         public Guid? ScheduleId { get; set; }
         public string? DayOfWeeks { get; set; }
         public DateTime Date { get; set; }

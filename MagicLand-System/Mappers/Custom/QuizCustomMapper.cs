@@ -68,7 +68,7 @@ namespace MagicLand_System.Mappers.Custom
                 //Duration = questionPackage.Duration,
                 //DeadLine = questionPackage.DeadlineTime,
                 //Attempts = questionPackage.AttemptsAllowed,
-                NoSession = questionPackage.NoSession!.Value,
+                NoSession = questionPackage.NoSession != null ? questionPackage.NoSession.Value : 0,
                 ExamId = questionPackage.Id,
             };
         }

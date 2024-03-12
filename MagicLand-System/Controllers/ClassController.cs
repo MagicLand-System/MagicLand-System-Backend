@@ -5,6 +5,7 @@ using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Topics;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
@@ -99,6 +100,41 @@ namespace MagicLand_System.Controllers
             var classes = await _classService.GetClassesNotInCartAsync(courseId);
             return Ok(classes);
         }
+
+        #region document API Get Topic Learning  
+        /// <summary>
+        ///  Truy Suất Nội Dung Chủ Đề Dựa Vào Thử Tự Chủ Đề
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="orderTopic">Thứ Tự Của Chủ Đề</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "classId": "fded66d4-c3e7-4721-b509-e71feab6723a",
+        ///        "orderTopic": 3
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Nội Dung Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetTopicLearning)]
+        [ProducesResponseType(typeof(TopicResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        //[Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetTopicLearning([FromQuery] Guid classId, [FromQuery] int orderTopic)
+        {
+            if (orderTopic == 0 || orderTopic < 0 || orderTopic > 30)
+            {
+                return BadRequest("Thứ Tự Chủ Đề Không Hợp Lệ");
+            }
+            var response = await _classService.GetTopicLearningAsync(classId, orderTopic);
+            return Ok(response);
+        }
+
 
         #region document API Checking Valid Student For Class Of Current User
         /// <summary>

@@ -55,22 +55,26 @@ namespace MagicLand_System.Services.Implements
                 .Where(exam => exam.Method.Trim().ToLower() == "offline")
                 .ToList();
 
-            var sessionsRequest = request.SyllabusRequests
-                .SelectMany(sr => sr.SessionRequests)
-                .ToList();
+            if (offlineExams.Any())
+            {
+                var sessionsRequest = request.SyllabusRequests
+               .SelectMany(sr => sr.SessionRequests)
+               .ToList();
 
-            request.QuestionPackageRequests!.AddRange(
-                from session in sessionsRequest
-                from content in session.SessionContentRequests
-                join exam in offlineExams on content.Content.Trim().ToLower() equals exam.ContentName.Trim().ToLower()
-                select new QuestionPackageRequest
-                {
-                    ContentName = exam.ContentName,
-                    NoOfSession = session.Order,
-                    Type = "options",
-                    Title = "Làm Tại Nhà",
-                    Score = 0,
-                });
+                request.QuestionPackageRequests!.AddRange(
+                    from session in sessionsRequest
+                    from content in session.SessionContentRequests
+                    join exam in offlineExams on content.Content.Trim().ToLower() equals exam.ContentName.Trim().ToLower()
+                    select new QuestionPackageRequest
+                    {
+                        ContentName = exam.ContentName,
+                        NoOfSession = session.Order,
+                        Type = "options",
+                        Title = "Làm Tại Nhà",
+                        Score = 0,
+                    });
+            }
+           
         }
 
         public async Task<string> CheckingSyllabusInfor(string name, string code)

@@ -9,6 +9,7 @@ using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Topics;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -17,6 +18,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassWithSlotShorten>> GetClassesNotInCartAsync(Guid? courseId);
         Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time);
         Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id);
+        Task<TopicResponse> GetTopicLearningAsync(Guid classId, int topicOrder);
         Task<List<ClassWithSlotShorten>> GetValidClassForStudentAsync(Guid courseId, Guid studentId);
         Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students);
         Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
