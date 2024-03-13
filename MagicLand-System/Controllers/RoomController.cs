@@ -22,5 +22,11 @@ namespace MagicLand_System.Controllers
             var result = await _roomService.GetRoomList(filterRoomRequest);
             return Ok(result);
         }
+        [HttpGet(ApiEndpointConstant.RoomEnpoint.RoomByAdmin)]
+        public async Task<IActionResult> GetByAdmin(DateTime? startDate , DateTime? endDate, string? searchString,string? slotId)
+        {
+            var result = await _roomService.GetAdminRoom(startDate,endDate,searchString,slotId);
+            return Ok(result);
+        }
     }
 }
