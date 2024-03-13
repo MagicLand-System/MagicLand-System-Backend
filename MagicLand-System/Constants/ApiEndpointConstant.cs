@@ -55,6 +55,7 @@
             public const string GetClassValid = GetAll + "/valid";
             public const string GetTopicLearning = GetAll + "/topic/learning";
             public const string GetStudentValid = GetAll + "/students/valid";
+            public const string GetFromClassCode = GetAll + "/classCode";
         }
         public static class PromotionEnpoint
         {
