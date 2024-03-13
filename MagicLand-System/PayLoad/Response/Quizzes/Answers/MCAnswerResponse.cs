@@ -1,6 +1,6 @@
 ﻿namespace MagicLand_System.PayLoad.Response.Quizzes.Answers
 {
-    public class MutilpleChoiceAnswerResponse
+    public class MCAnswerResponse
     {
         public Guid AnswerId { get; set; }
         public string? AnswerDescription { get; set; } = string.Empty;

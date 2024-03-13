@@ -1,9 +1,11 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Request.Quizzes;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Customs;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
+using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -17,10 +19,12 @@ namespace MagicLand_System.Controllers
     public class QuizController : BaseController<QuizController>
     {
         private readonly ISyllabusService _syllabusService;
+        private readonly IQuizService _quizService;
 
-        public QuizController(ILogger<QuizController> logger, ISyllabusService syllabusService) : base(logger)
+        public QuizController(ILogger<QuizController> logger, ISyllabusService syllabusService, IQuizService quizService) : base(logger)
         {
             _syllabusService = syllabusService;
+            _quizService = quizService;
         }
 
         #region document API Get Exams With Quiz
@@ -151,7 +155,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizOffExamByExamId)]
         [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        [AllowAnonymous]
+        [Authorize(Roles = "STUDENT")]
         public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int? examPart)
         {
             var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, examPart);
@@ -159,6 +163,83 @@ namespace MagicLand_System.Controllers
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");
             }
+
+            return Ok(responses);
+        }
+
+        #region document API Get Grade Quiz Multiple Choice
+        /// <summary>
+        ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Trắc Nghiệm] Của Học Sinh Hiện Tại
+        /// </summary>
+        /// <param name="quizMCStudentWork">Chứa Thông Tin Bài Kiểm Tra Trắc Nghiệm Và Bài Làm Của Học Sinh (Câu Hỏi Và Câu Trả Lời)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    [
+        ///      {
+        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
+        ///        "answerId" : "417997AC-AFD7-4363-BFE5-6CDD46D4712B"
+        ///      },
+        ///      ]
+        /// </remarks>
+        /// <response code="200">Trả Về Kết Quả Của Bài Kiểm Tra</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.QuizEndPoint.GradeQuizMC)]
+        [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize(Roles = "STUDENT")]
+        public async Task<IActionResult> GradeQuizMC([FromBody] QuizMCRequest quizMCStudentWork)
+        {
+            var responses = await _quizService.GradeQuizMCAsync(quizMCStudentWork);
+
+            return Ok(responses);
+        }
+
+        #region document API Get Grade Quiz Flash Card
+        /// <summary>
+        ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Nối Thẻ] Của Học Sinh Hiện Tại
+        /// </summary>
+        /// <param name="quizFCStudentWork">Chứa Thông Tin Bài Kiểm Tra Nối Thẻ Và Bài Làm Của Học Sinh (Câu Hỏi Và Câu Trả Lời)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    [
+        ///      {
+        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
+        ///         "answers" : [
+        ///                       {
+        ///                         "firstCardId":"35885C01-B2FA-46AE-93F2-CFAF519D9FB9",
+        ///                          "secondCardId":"9054F907-6AEB-4BC9-8AB3-9E0F405200DD"
+        ///                       }
+        ///                    ]
+        ///        },
+        ///     ]
+        /// </remarks>
+        /// <response code="200">Trả Về Kết Quả Của Bài Kiểm Tra</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.QuizEndPoint.GradeQuizFC)]
+        [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize(Roles = "STUDENT")]
+        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor, [FromBody] List<FCStudentQuestion> StudentQuestionResults)
+        {
+            var quizFCStudentWork = new QuizFCRequest
+            {
+                ClassId = quizInfor.ClassId,
+                ExamId = quizInfor.ExamId,
+                StudentQuestionResults = StudentQuestionResults,
+            };
+            var responses = await _quizService.GradeQuizFCAsync(quizFCStudentWork);
 
             return Ok(responses);
         }

@@ -183,6 +183,8 @@
         public static class QuizEndPoint
         {
             public const string EndPointBase = ApiEndpoint + "/exams/quizzes";
+            public const string GradeQuizMC = ApiEndpoint + "/exam/quiz/multipleChoice/grade";
+            public const string GradeQuizFC = ApiEndpoint + "/exam/quiz/flashCard/grade";
             public const string GetQuizOverallByCourseId = ApiEndpoint + "/exams/quizzes/course";
             public const string GetExamOffClassByClassId = ApiEndpoint + "/exams/class";
             public const string GetExamOffCurrentStudentByTime = ApiEndpoint + "/exams/student/byTime";

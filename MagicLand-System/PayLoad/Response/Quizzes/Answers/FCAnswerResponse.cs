@@ -1,6 +1,6 @@
 ﻿namespace MagicLand_System.PayLoad.Response.Quizzes.Answers
 {
-    public class FlashCardAnswerResponse
+    public class FCAnswerResponse
     {
         public Guid CardId { get; set; }
         public string? CardDescription { get; set; } = string.Empty;

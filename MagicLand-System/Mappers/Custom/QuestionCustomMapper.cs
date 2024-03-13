@@ -38,18 +38,18 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<QuestionMutipleChoiceResponse> fromQuestionPackageToQuestionMultipleChoicesResponse(QuestionPackage package)
+        public static List<QuestionMCResponse> fromQuestionPackageToQuestionMultipleChoicesResponse(QuestionPackage package)
         {
             if (package == null)
             {
                 return default!;
             }
 
-            var responses = new List<QuestionMutipleChoiceResponse>();
+            var responses = new List<QuestionMCResponse>();
 
             foreach (var question in package.Questions!)
             {
-                responses.Add(new QuestionMutipleChoiceResponse
+                responses.Add(new QuestionMCResponse
                 {
                     QuestionId = question.Id,
                     QuestionDescription = question.Description,
@@ -61,18 +61,18 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<MutilpleChoiceAnswerResponse> fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(List<MultipleChoice> answers)
+        public static List<MCAnswerResponse> fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(List<MultipleChoice> answers)
         {
             if (answers == null)
             {
                 return default!;
             }
 
-            var responses = new List<MutilpleChoiceAnswerResponse>();
+            var responses = new List<MCAnswerResponse>();
 
             foreach (var answer in answers)
             {
-                responses.Add(new MutilpleChoiceAnswerResponse
+                responses.Add(new MCAnswerResponse
                 {
                     AnswerId = answer.Id,
                     AnswerDescription = answer.Description,
@@ -84,14 +84,14 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<QuestionFlashCardResponse> fromQuestionPackageToQuestionFlashCardResponse(QuestionPackage package)
+        public static List<QuestionFCResponse> fromQuestionPackageToQuestionFlashCardResponse(QuestionPackage package)
         {
             if (package == null)
             {
                 return default!;
             }
 
-            var responses = new List<QuestionFlashCardResponse>();
+            var responses = new List<QuestionFCResponse>();
 
             //foreach (var question in package.Questions!)
             //{
@@ -109,20 +109,20 @@ namespace MagicLand_System.Mappers.Custom
             return responses;
         }
 
-        public static List<FlashCardAnswerResponse> fromFlashCardToFlashCardAnswerResponse(List<FlashCard> flashCards)
+        public static List<FCAnswerResponse> fromFlashCardToFlashCardAnswerResponse(List<FlashCard> flashCards)
         {
             if (flashCards == null)
             {
                 return default!;
             }
 
-            var responses = new List<FlashCardAnswerResponse>();
+            var responses = new List<FCAnswerResponse>();
 
             for (int i = 0; i < flashCards.Count(); i++)
             {
                 foreach (var sideFlashCard in flashCards[i].SideFlashCards!)
                 {
-                    var response = new FlashCardAnswerResponse
+                    var response = new FCAnswerResponse
                     {
                         CardId = sideFlashCard.Id,
                         CardDescription = !string.IsNullOrEmpty(sideFlashCard.Description) ? sideFlashCard.Description : "",
@@ -188,8 +188,8 @@ namespace MagicLand_System.Mappers.Custom
                 usedIndices.Add(randomQuestionIndex);
 
                 var currentQuestion = questions![randomQuestionIndex];
-                var answerMutipleChoicesInfor = new List<MutilpleChoiceAnswerResponse>();
-                var answerFlashCarsInfor = new List<FlashCardAnswerResponse>();
+                var answerMutipleChoicesInfor = new List<MCAnswerResponse>();
+                var answerFlashCarsInfor = new List<FCAnswerResponse>();
 
                 if (currentQuestion.MutipleChoices != null && currentQuestion.MutipleChoices.Any())
                 {

@@ -235,7 +235,7 @@ namespace MagicLand_System.Services.Implements
             return listCourseResExtraInfror;
         }
 
-        public async Task<List<CourseResExtraInfor>> GetCurrentStudentCoursesAsync()
+        public async Task<List<CourseResExtraInforV2>> GetCurrentStudentCoursesAsync()
         {
             var currentStudent = await GetUserFromJwt();
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
@@ -245,7 +245,7 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            var responses = new List<CourseResExtraInfor>();
+            var responses = new List<CourseResExtraInforV2>();
 
             foreach (var course in courses)
             {
@@ -267,7 +267,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                responses.Add(CourseCustomMapper.fromCourseToCourseResExtraInfor(course, currentCoursePrerequistites, coureSubsequents));
+                responses.Add(CourseCustomMapper.fromCourseToCourseResExtraInforV2(course, currentCoursePrerequistites, coureSubsequents));
             }
 
             return responses;

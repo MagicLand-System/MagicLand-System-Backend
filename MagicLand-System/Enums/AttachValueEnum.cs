@@ -6,5 +6,6 @@
         StudentId,
         CartItemId,
         TransactionId,
+        CourseId,
     }
 }

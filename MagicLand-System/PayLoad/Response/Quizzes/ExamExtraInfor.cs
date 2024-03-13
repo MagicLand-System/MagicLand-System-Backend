@@ -6,6 +6,9 @@ namespace MagicLand_System.PayLoad.Response.Quizzes
     {
         public required Guid ClassId { get; set; }
         public string? ClassName { get; set; } = string.Empty;
+        public string? Method { get; set; } = string.Empty;
+        public string? RoomName { get; set; } = string.Empty;
+        public string? Status { get; set; } = string.Empty;
 
     }
 }

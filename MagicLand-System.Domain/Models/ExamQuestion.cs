@@ -19,7 +19,10 @@ namespace MagicLand_System.Domain.Models
         public Guid TestResultId { get; set; }
         public TestResult? TestResult { get; set; }
 
-        public ICollection<MultipleChoiceAnswer>? MultipleChoiceAnswers { get; set; }
+        [ForeignKey("MultipleChoiceAnswer")]
+        public Guid? MultipleChoiceAnswerId { get; set; }
+        public MultipleChoiceAnswer? MultipleChoiceAnswer { get; set; }
+
         public ICollection<FlashCardAnswer>? FlashCardAnswers { get; set; }
     }
 }

@@ -5,6 +5,6 @@ namespace MagicLand_System.PayLoad.Response.Quizzes
 {
     public class QuizMultipleChoiceResponse : ExamResponse
     {
-       public List<QuestionMutipleChoiceResponse>? QuestionMultipleChoices { get; set; } = new List<QuestionMutipleChoiceResponse>();
+       public List<QuestionMCResponse>? QuestionMultipleChoices { get; set; } = new List<QuestionMCResponse>();
     }
 }

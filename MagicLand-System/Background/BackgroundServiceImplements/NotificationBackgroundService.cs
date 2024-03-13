@@ -34,12 +34,12 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     {
                         int time = currentDate.Day - noti.CreatedAt.Day;
 
-                        if (time >= 2 && time <= 4)
+                        if (time >= 1)
                         {
                             noti.IsRead = true;
                         }
 
-                        if (time > 4)
+                        if (time >= 2)
                         {
                             _unitOfWork.GetRepository<Notification>().DeleteAsync(noti);
                         }
@@ -228,6 +228,56 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 ActionData = actionData,
                 UserId = targetUser,
             });
+        }
+
+
+        public async Task<string> CreateNotificationForRemindRegisterCourse()
+        {
+            try
+            {
+                using (var scope = _serviceScopeFactory.CreateScope())
+                {
+                    var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
+                    var currentDate = DateTime.Now;
+                    var newNotifications = new List<Notification>();
+
+                    var usersId = await _unitOfWork.GetRepository<User>().GetListAsync(selector: x => x.Id, predicate: x => x.Role!.Name == RoleEnum.PARENT.ToString());
+                    foreach (var userId in usersId)
+                    {
+                        var items = await _unitOfWork.GetRepository<CartItem>().GetListAsync(
+                            predicate: x => x.Cart!.UserId == userId && x.CourseId != default);
+
+                        foreach (var item in items)
+                        {
+                            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == item.CourseId, include: x => x.Include(x => x.Classes));
+
+                            if (course.Classes.Any(sc => sc.Status == ClassStatusEnum.UPCOMING.ToString()))
+                            {
+                                if (currentDate.Day % 2 == 0)
+                                {
+                                    string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                                    {
+                                      ($"{AttachValueEnum.CourseId}", $"{course.Id}"),
+                                    });
+
+                                    GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.RemindRegisterCourseTitle,
+                                        NotificationMessageContant.RemindRegisterCourseBody(course.Name!),
+                                   NotificationPriorityEnum.REMIND.ToString(), course.Image!, actionData);
+                                }
+                            }
+                        }
+                    }
+
+                    await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
+                    _unitOfWork.Commit();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Create New Notifications Got An Error: [{ex.Message}]";
+            }
+            return "Create New Notifications Success";
         }
     }
 }

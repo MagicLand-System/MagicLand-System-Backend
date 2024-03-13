@@ -5,6 +5,6 @@ namespace MagicLand_System.PayLoad.Response.Quizzes
 {
     public class QuizFlashCardResponse : ExamResponse
     {
-        public List<QuestionFlashCardResponse>? QuestionFlasCards { get; set; } = new List<QuestionFlashCardResponse>();
+        public List<QuestionFCResponse>? QuestionFlasCards { get; set; } = new List<QuestionFCResponse>();
     }
 }

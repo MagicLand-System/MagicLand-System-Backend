@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240313102338_addTempEntityFlashCard")]
+    partial class addTempEntityFlashCard
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,7 +241,7 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("MultipleChoiceAnswerId")
+                    b.Property<Guid>("MultipleChoiceAnswerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Question")
@@ -259,8 +262,7 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("MultipleChoiceAnswerId")
-                        .IsUnique()
-                        .HasFilter("[MultipleChoiceAnswerId] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("TestResultId");
 
@@ -1401,7 +1403,8 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasOne("MagicLand_System.Domain.Models.MultipleChoiceAnswer", "MultipleChoiceAnswer")
                         .WithOne("ExamQuestion")
                         .HasForeignKey("MagicLand_System.Domain.Models.ExamQuestion", "MultipleChoiceAnswerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MagicLand_System.Domain.Models.TestResult", "TestResult")
                         .WithMany("ExamQuestions")

@@ -16,6 +16,7 @@ namespace MagicLand_System.Constants
         public const string RefundTitle = "Hoàn Tiền Từ Hệ Thống";
         public const string NoRefundTitle = "Không Hoàn Tiền Từ Hệ Thống";
         public const string LastDayRegisterTitle = "Hạn Cuối Đăng Ký";
+        public const string RemindRegisterCourseTitle = "Nhanh Tay Đăng Ký Lớp Học";
 
 
         public static string ChangeClassRequestBody(string classCode, string studentName)
@@ -63,6 +64,11 @@ namespace MagicLand_System.Constants
         public static string LastDayRegisterBody(string classCode)
         {
             return $"Hôm Nay Là Hạn Cuối Đăng Ký Lớp Học {classCode}, Hãy Nhanh Tay Đăng Ký Cho Bé Vào Lớp, Lớp Sẽ Xóa Khỏi Giỏ Hàng Khi Hết Hạn";
+        }
+
+        public static string RemindRegisterCourseBody(string courseName)
+        {
+            return $"Khóa Học {courseName} Vẫn Đang Có Các Lớp Đang Mở Và Còn Thời Hạn Đăng Ký, Hãy Nhanh Tay Đăng Ký Cho Bé Vào Lớp";
         }
     }
 }

@@ -17,16 +17,16 @@ namespace MagicLand_System.Domain.Models
         public int TotalMark { get; set; }
         public int CorrectMark { get; set; }
         public double TotalScore { get; set; }
+        public double ScoreEarned { get; set; }
         public string? ExamStatus { get; set; }
+        public int NoAttempt { get; set; }
 
 
         [ForeignKey("StudentClass")]
         public Guid StudentClassId { get; set; }
         public StudentClass? StudentClass { get; set; }
 
-
         public ICollection<ExamQuestion> ExamQuestions { get; set; } = new List<ExamQuestion>();
-
 
     }
 }

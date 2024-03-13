@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -47,6 +48,13 @@ namespace MagicLand_System.Domain
         public DbSet<ExamQuestion> examQuestions { get; set; }
         public DbSet<MultipleChoiceAnswer> MultipleChoiceAnswers { get; set; }
         public DbSet<FlashCardAnswer> FlashCardAnswers { get; set; }
+        /// <summary>
+        /// Temp Entity
+        /// </summary>
+        public DbSet<TempQuiz> tempQuizzes { get; set; }
+        public DbSet<TempQuestion> TempQuestions { get; set; }
+        public DbSet<TempMCAnswer> TempMCAnswers { get; set; }
+        public DbSet<TempFCAnswer> TempFCAnswers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -296,18 +304,43 @@ namespace MagicLand_System.Domain
                 entity.ToTable("ExamQuestion");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.TestResult).WithMany(e => e.ExamQuestions).HasForeignKey(e => e.TestResultId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.MultipleChoiceAnswer).WithOne(e => e.ExamQuestion).HasForeignKey<MultipleChoiceAnswer>(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Restrict);
+
             });
             modelBuilder.Entity<MultipleChoiceAnswer>(entity =>
             {
                 entity.ToTable("MultipleChoiceAnswer");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.ExamQuestion).WithMany(e => e.MultipleChoiceAnswers).HasForeignKey(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.ExamQuestion).WithOne(e => e.MultipleChoiceAnswer).HasForeignKey<ExamQuestion>(e => e.MultipleChoiceAnswerId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<FlashCardAnswer>(entity =>
             {
                 entity.ToTable("FlashCardAnswer");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.ExamQuestion).WithMany(e => e.FlashCardAnswers).HasForeignKey(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempQuiz>(entity =>
+            {
+                entity.ToTable("TempQuiz");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<TempQuestion>(entity =>
+            {
+                entity.ToTable("TempQuestion");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TempQuiz).WithMany(e => e.Questions).HasForeignKey(e => e.TempQuizId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempMCAnswer>(entity =>
+            {
+                entity.ToTable("TempMCAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TempQuestion).WithMany(e => e.MCAnswers).HasForeignKey(e => e.TempQuestionId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempFCAnswer>(entity =>
+            {
+                entity.ToTable("TempFCAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TempQuestion).WithMany(e => e.FCAnswers).HasForeignKey(e => e.TempQuestionId).OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

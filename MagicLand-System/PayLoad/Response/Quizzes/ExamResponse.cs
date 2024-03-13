@@ -13,7 +13,7 @@ namespace MagicLand_System.PayLoad.Response.Quizes
         public double Weight { get; set; }
         public double? CompleteionCriteria { get; set; }
         public double TotalScore { get; set; }
-        public int TotalQuestion { get; set; }
+        public int TotalMark { get; set; }
         //public double? Duration { get; set; }
         //public int? DeadLine { get; set; }
         public string? Date { get; set; } = string.Empty;

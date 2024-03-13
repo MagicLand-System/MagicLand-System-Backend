@@ -159,7 +159,7 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCurrentStudentCourses)]
-        [ProducesResponseType(typeof(CourseResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CourseResExtraInforV2), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "STUDENT")]
         public async Task<IActionResult> GetCurrentStudentCourses()

@@ -13,8 +13,8 @@ namespace MagicLand_System.PayLoad.Request.Student
         public DateTime DateOfBirth { get; set; } = default;
         public string? Gender { get; set; }
         public string? AvatarImage { get; set; }
-        [EmailAddress(ErrorMessage = "Định Dạng Email Không Hợp Lệ")]
-        public string? Email { get; set; }
+        //[EmailAddress(ErrorMessage = "Định Dạng Email Không Hợp Lệ")]
+        //public string? Email { get; set; }
 
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
@@ -74,7 +75,7 @@ namespace MagicLand_System.Services.Implements
                         Score = 0,
                     });
             }
-           
+
         }
 
         public async Task<string> CheckingSyllabusInfor(string name, string code)
@@ -759,7 +760,8 @@ namespace MagicLand_System.Services.Implements
 
             examResponse.SessionId = session.Id;
             examResponse.CourseId = cls.Course.Id;
-            examResponse.Date = cls.Schedules.ToList()[session.NoSession - 1].Date.ToString();
+            examResponse.Date = cls.Schedules.ToList()[session.NoSession - 1].Date.ToString("yyyy-MM-ddTHH:mm:ss");
+
 
             examsResponse.Add(examResponse);
         }
@@ -773,8 +775,9 @@ namespace MagicLand_System.Services.Implements
                     StatusCodes.Status500InternalServerError);
             }
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.UPCOMING.ToString(),
-                include: x => x.Include(x => x.Course).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)!);
+
             if (!classes.Any())
             {
                 throw new BadHttpRequestException("Bé Chưa Tham Gia Lớp Học Nào", StatusCodes.Status400BadRequest);
@@ -795,7 +798,32 @@ namespace MagicLand_System.Services.Implements
 
                 foreach (var exam in examsResponse)
                 {
-                    if (DateTime.Parse(exam.Date!).Date >= DateTime.Now.AddDays(-numberOfDate).Date && DateTime.Parse(exam.Date!).Date <= DateTime.Now.AddDays(+numberOfDate).Date)
+                    string status = string.Empty;
+                    var examDate = DateTime.Parse(exam.Date!).Date;
+                    var currentDate = DateTime.Now.Date;
+
+                    var test = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
+                    if (test != null)
+                    {
+                        status = "Đã Hoàn Thành";
+                    }
+                    else
+                    {
+                        if (examDate < currentDate)
+                        {
+                            status = "Hết Hạn Làm Bài";
+                        }
+                        if (examDate == currentDate)
+                        {
+                            status = "Hôm Nay";
+                        }
+                        if (examDate > currentDate)
+                        {
+                            status = examDate.Day - currentDate.Day + " Ngày Tới";
+                        }
+                    }
+
+                    if (examDate >= currentDate.AddDays(-numberOfDate).Date && examDate <= currentDate.AddDays(+numberOfDate).Date)
                     {
                         responses.Add(new ExamExtraInfor
                         {
@@ -808,13 +836,16 @@ namespace MagicLand_System.Services.Implements
                             Weight = exam.Weight,
                             CompleteionCriteria = exam.CompleteionCriteria,
                             TotalScore = exam.TotalScore,
-                            TotalQuestion = exam.TotalQuestion,
+                            TotalMark = exam.TotalMark,
                             Date = exam.Date,
                             NoSession = exam.NoSession,
+                            RoomName = cls.Schedules.ToList()[exam.NoSession - 1].Room!.Name,
                             SessionId = exam.SessionId,
                             CourseId = exam.CourseId,
                             ClassId = cls.Id,
                             ClassName = cls.ClassCode,
+                            Method = cls.Method,
+                            Status = status,
                         });
                     }
                 }
@@ -868,8 +899,98 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
+            var responses = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(quiz)!;
 
-            return QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(quiz)!;
+            await GenereateTempExam(examId, quiz, responses);
+            return responses;
+        }
+
+        private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)
+        {
+            try
+            {
+
+                int totalMark = 0;
+                if (responses.SelectMany(r => r.AnwserFlashCarsInfor!).ToList().Any())
+                {
+                    totalMark = responses.Sum(r => r.AnwserFlashCarsInfor!.Count()) / 2;
+                }
+                else
+                {
+                    totalMark = responses.Count();
+                }
+                var tempQuestions = new List<TempQuestion>();
+                var tempMCAnswers = new List<TempMCAnswer>();
+                var tempFCAnswers = new List<TempFCAnswer>();
+
+                Guid tempQuizId = Guid.NewGuid();
+                var tempQuiz = new TempQuiz
+                {
+                    Id = tempQuizId,
+                    ExamId = examId,
+                    StudentId = (await GetUserFromJwt()).StudentIdAccount!.Value,
+                    TotalMark = totalMark,
+                    ExamType = quiz.Type,
+                    CreatedTime = DateTime.Now,
+                    IsGraded = false,
+                };
+                foreach (var res in responses)
+                {
+                    Guid tempQuestionId = Guid.NewGuid();
+                    tempQuestions.Add(new TempQuestion
+                    {
+                        Id = tempQuestionId,
+                        QuestionId = res.QuestionId,
+                        TempQuizId = tempQuizId,
+                    });
+
+                    var multipleChoiceAnswers = res.AnswersMutipleChoicesInfor;
+                    if (multipleChoiceAnswers != null)
+                    {
+                        foreach (var answer in multipleChoiceAnswers)
+                        {
+                            tempMCAnswers.Add(new TempMCAnswer
+                            {
+                                Id = Guid.NewGuid(),
+                                AnswerId = answer.AnswerId,
+                                Score = answer.Score,
+                                TempQuestionId = tempQuestionId,
+                            });
+                        }
+                    }
+                    var flasCardAnswers = res.AnwserFlashCarsInfor;
+                    if (flasCardAnswers != null)
+                    {
+                        foreach (var answer in flasCardAnswers)
+                        {
+                            tempFCAnswers.Add(new TempFCAnswer
+                            {
+                                Id = Guid.NewGuid(),
+                                CardId = answer.CardId,
+                                Score = answer.Score,
+                                NumberCoupleIdentify = answer.NumberCoupleIdentify,
+                                TempQuestionId = tempQuestionId,
+                            });
+                        }
+                    }
+                }
+
+                await _unitOfWork.GetRepository<TempQuiz>().InsertAsync(tempQuiz);
+                await _unitOfWork.GetRepository<TempQuestion>().InsertRangeAsync(tempQuestions);
+                if (tempMCAnswers.Any())
+                {
+                    await _unitOfWork.GetRepository<TempMCAnswer>().InsertRangeAsync(tempMCAnswers);
+                }
+                if (tempFCAnswers.Any())
+                {
+                    await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
+                }
+                _unitOfWork.Commit();
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
+            }
         }
         #endregion
         #region thuong code

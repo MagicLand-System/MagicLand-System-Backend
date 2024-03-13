@@ -67,6 +67,33 @@ namespace MagicLand_System.Mappers.Custom
             return response;
         }
 
+        public static CourseResExtraInforV2 fromCourseToCourseResExtraInforV2(
+      Course course,
+      IEnumerable<Course> coursePrerequisites,
+      ICollection<Course> coureSubsequents)
+        {
+            if (course == null)
+            {
+                return new CourseResExtraInforV2();
+            }
+
+            var response = new CourseResExtraInforV2
+            {
+                CourseId = course.Id,
+                Image = course.Image,
+                Price = (decimal)course.Price,
+                MainDescription = course.MainDescription,
+                SubDescriptionTitle = course.SubDescriptionTitles
+                .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
+                CourseDetail = fromCourseInforToCourseDetailResponse(course, coursePrerequisites),
+                Schedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
+                RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
+                UpdateDate = course.UpdateDate,
+            };
+
+            return response;
+        }
+
         public static CourseDetailResponse fromCourseInforToCourseDetailResponse(Course course, IEnumerable<Course>? coursePrerequisites)
         {
             if (course == null)

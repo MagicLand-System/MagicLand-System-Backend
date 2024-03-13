@@ -9,9 +9,8 @@ namespace MagicLand_System.PayLoad.Request.Student
         [MinLength(5, ErrorMessage = "Tên Bé Nên Có Ít Nhất 5 Ký Tự")]
         public required string FullName { get; set; }
         public required DateTime DateOfBirth { get; set; }
-        public string? Gender { get; set; }
-        public string? AvatarImage { get; set; }
-        [EmailAddress(ErrorMessage = "Định Dạng Email Không Hợp Lệ")]
-        public string? Email { get; set; }
+        public string? Gender { get; set; } = string.Empty;
+        public string? AvatarImage { get; set; } = string.Empty;
+        //public string? Email { get; set; } = string.Empty;
     }
 }

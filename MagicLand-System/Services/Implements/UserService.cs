@@ -57,7 +57,7 @@ namespace MagicLand_System.Services.Implements
                 Role = user.Role!.Name,
                 AccessToken = token,
                 DateOfBirth = user.DateOfBirth,
-                Email = user.Email,
+                Email = user.Email != null ? user.Email : string.Empty,
                 FullName = user.FullName,
                 Gender = user.Gender,
                 Phone = user.Phone!,
@@ -489,10 +489,15 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<LectureScheduleResponse>> GetLectureScheduleAsync()
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
-                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!)
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room!)
-               .Include(x => x.Course!));
+                include: x => x.Include(x => x.Course!));
 
+            foreach (var cls in classes)
+            {
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
+            }
             if (!classes.Any())
             {
                 throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);

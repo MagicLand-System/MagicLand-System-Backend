@@ -47,7 +47,7 @@ namespace MagicLand_System.Services.Implements
                     Id = Guid.NewGuid(),
                     FullName = studentRequest.FullName,
                     Phone = currentUser.Phone + "_" + accountsIndex,
-                    Email = studentRequest.Email,
+                    Email = string.Empty, // studentRequest.Email != null ? studentRequest.Email :
                     Gender = studentRequest.Gender,
                     AvatarImage = studentRequest.AvatarImage,
                     DateOfBirth = studentRequest.DateOfBirth,
@@ -109,10 +109,10 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Tên [{studentRequest.FullName!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
             }
-            if (students.Any(stu => stu.Email != null && (stu.Email.Trim().ToLower() == studentRequest.Email!.Trim().ToLower())))
-            {
-                throw new BadHttpRequestException($"Email [{studentRequest.Email!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
-            }
+            //if (students.Any(stu => stu.Email != null && (stu.Email.Trim().ToLower() == studentRequest.Email!.Trim().ToLower())))
+            //{
+            //    throw new BadHttpRequestException($"Email [{studentRequest.Email!}] Của Bé Đã Bị Trùng", StatusCodes.Status400BadRequest);
+            //}
 
             var currentUser = await GetUserFromJwt();
             if (currentUser == null)
@@ -174,12 +174,12 @@ namespace MagicLand_System.Services.Implements
             {
                 oldStudentInfor.FullName = newStudentInfor.FullName ?? oldStudentInfor.FullName;
                 oldStudentInfor.Gender = newStudentInfor.Gender ?? oldStudentInfor.Gender;
-                oldStudentInfor.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
+                //oldStudentInfor.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
                 oldStudentInfor.AvatarImage = newStudentInfor.AvatarImage ?? oldStudentInfor.AvatarImage;
 
                 studentAccount.FullName = newStudentInfor.FullName ?? oldStudentInfor.FullName;
                 studentAccount.Gender = newStudentInfor.Gender ?? oldStudentInfor.Gender;
-                studentAccount.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
+                //studentAccount.Email = newStudentInfor.Email ?? oldStudentInfor.Email;
                 studentAccount.AvatarImage = newStudentInfor.AvatarImage ?? oldStudentInfor.AvatarImage;
 
                 _unitOfWork.GetRepository<Student>().UpdateAsync(oldStudentInfor);
