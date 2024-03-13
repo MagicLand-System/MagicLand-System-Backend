@@ -2,16 +2,71 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
+using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 
 namespace MagicLand_System.Services.Implements
 {
-    public class RoomService :  BaseService<RoomService>,IRoomService
+    public class RoomService : BaseService<RoomService>, IRoomService
     {
         public RoomService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<RoomService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+        }
+
+        public async Task<List<AdminRoomResponse>> GetAdminRoom(DateTime? startDate, DateTime? endDate,string? searchString, string? slotId)
+        {
+            var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync(include : x => x.Include(x => x.Schedules).ThenInclude(x => x.Slot).Include(x => x.Schedules).ThenInclude(x => x.Class));
+            List<AdminRoomResponse> responses = new List<AdminRoomResponse>();
+            foreach (var room in rooms)
+            {
+                var schedules = room.Schedules;
+                if(rooms.Count > 0) 
+                {
+                    foreach (var schedule in schedules)
+                    {
+                        var response = new AdminRoomResponse
+                        {
+                            Capacity = room.Capacity,
+                            Date = schedule.Date,
+                            EndTime = schedule.Slot.EndTime,
+                            StartTime = schedule.Slot.StartTime,
+                            Floor = room.Floor,
+                            LinkURL = room.LinkURL,
+                            Name = room.Name,
+                            ClassCode = schedule.Class.ClassCode,
+                        };
+                        responses.Add(response);
+                    }
+                }
+            }
+            if (responses.Count > 0)
+            {
+                if(searchString != null)
+                {
+                    responses = responses.Where(x =>( x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim()) || x.ClassCode.ToLower().Trim().Contains(searchString.ToLower().Trim()))).ToList();
+                }
+                
+                if(startDate != null)
+                {
+                    responses = responses.Where(x => x.Date >= startDate).ToList();
+                }
+                if(endDate != null)
+                {
+                    endDate = endDate.Value.AddHours(23); 
+                    responses = responses.Where(x => x.Date <= endDate).ToList();
+                }
+                if(slotId != null)
+                {
+                    var startTime = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(slotId), selector: x => x.StartTime);
+                    responses = responses.Where(x => x.StartTime.Equals(startTime)).ToList();
+                } 
+                responses = responses.OrderByDescending(x => x.Date).ThenBy(x => x.Name).ToList();
+
+            }
+            return responses;
         }
 
         public async Task<List<Room>> GetRoomList(FilterRoomRequest? request)
