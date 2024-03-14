@@ -1304,6 +1304,57 @@ namespace MagicLand_System.Services.Implements
             }
             return "S";
         }
+        public async Task<ClassFromClassCode> GetClassFromClassCode(string classCode)
+        {
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.ClassCode.Equals(classCode),include : x => x.Include(x => x.Course));
+            if(classCode == null)
+            {
+                return new ClassFromClassCode();
+            }
+            var course = classx.Course;
+            StaffCourseResponse staffCourseResponse = new StaffCourseResponse
+            {
+                AddedDate = course.AddedDate,
+                Id = course.Id,
+                Image = course.Image,
+                MainDescription = course.MainDescription,
+                MaxYearOldsStudent = course.MaxYearOldsStudent,
+                MinYearOldsStudent = course.MinYearOldsStudent,
+                Name = course.Name,
+                NumberOfSession = course.NumberOfSession,
+                Price = course.Price,
+                UpdateDate = course.UpdateDate,
+                Status = course.Status, 
+            };
+            var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == classx.LecturerId, include: x => x.Include(x => x.LecturerField));
+            var lecturerResponse = new LecturerResponse
+            {
+                Email = lecturer.Email,
+                FullName = lecturer.FullName,
+                AvatarImage = lecturer.AvatarImage,
+                DateOfBirth = lecturer.DateOfBirth,
+                Gender = lecturer.Gender,
+                LecturerField = lecturer.LecturerField.Name,
+                Phone = lecturer.Phone,
+                Role = "Lecturer",
+                LectureId = lecturer.Id,
+            };
+            ClassFromClassCode classFromClassCode = new ClassFromClassCode
+            {
+                AddedDate = classx.AddedDate,
+                EndDate = classx.EndDate,
+                Image = classx.Image,
+                LecturerResponse = lecturerResponse,
+                LeastNumberStudent = classx.LeastNumberStudent,
+                LimitNumberStudent = classx.LimitNumberStudent,
+                Method = classx.Method,
+                StaffCourseResponse = staffCourseResponse,
+                StartDate = classx.StartDate,
+                Status = classx.Status,
+                Video = classx.Video,
+            };
+            return classFromClassCode;
+        }
         #endregion
         #region thanh_lee_code
         public async Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time)
@@ -2162,6 +2213,7 @@ namespace MagicLand_System.Services.Implements
 
             return response;
         }
+
         #endregion
     }
 }

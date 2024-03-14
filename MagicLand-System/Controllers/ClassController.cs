@@ -531,5 +531,11 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.InsertClasses(requests);
             return Ok(isSuccess);
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetFromClassCode)]
+        public async Task<IActionResult> GetClassFromClassCode(string classCode)
+        {
+            var result = await _classService.GetClassFromClassCode(classCode);
+            return Ok(result);
+        }
     }
 }
