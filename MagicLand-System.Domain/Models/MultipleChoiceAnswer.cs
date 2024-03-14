@@ -16,6 +16,8 @@ namespace MagicLand_System.Domain.Models
         public Guid CorrectAnswerId { get; set; }
         public string? CorrectAnswer { get; set; } = string.Empty;
         public string? CorrectAnswerImage { get; set; } = string.Empty;
+        public string? Status { get; set; }
+        public double Score { get; set; }
 
 
         [ForeignKey("ExamQuestion")]

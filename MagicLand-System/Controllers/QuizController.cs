@@ -167,11 +167,52 @@ namespace MagicLand_System.Controllers
             return Ok(responses);
         }
 
+        #region document API Grade Quiz OffLine
+        /// <summary>
+        ///  Lưu Điểm Bài Kiểm Tra Làm Tại Nhà Của Các Học Sinh
+        /// </summary>
+        /// <param name="quizInfor">Chứa Thông Tin Của Bài Kiểm Tra Làm Tại Nhà</param>
+        /// <param name="studentExamGrades">Chứa Id Của Các Học Sinh Và Điểm Của Giáo Viên</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    [
+        ///      {
+        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
+        ///        "answerId" : "417997AC-AFD7-4363-BFE5-6CDD46D4712B"
+        ///      },
+        ///      ]
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Báo</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.QuizEndPoint.GradeQuizOffLine)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> GradeQuizOffLine([FromQuery] QuizRequest quizInfor, [FromBody] List<StudentExamGrade> studentExamGrades)
+        {
+            var examOffLineStudentWork = new ExamOffLineRequest
+            {
+                ClassId = quizInfor.ClassId,
+                ExamId = quizInfor.ExamId,
+                StudentQuizGardes = studentExamGrades,
+            };
+            var response = await _quizService.GradeExamOffLineAsync(examOffLineStudentWork);
+
+            return Ok(response);
+        }
+
         #region document API Get Grade Quiz Multiple Choice
         /// <summary>
         ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Trắc Nghiệm] Của Học Sinh Hiện Tại
         /// </summary>
-        /// <param name="quizMCStudentWork">Chứa Thông Tin Bài Kiểm Tra Trắc Nghiệm Và Bài Làm Của Học Sinh (Câu Hỏi Và Câu Trả Lời)</param>
+        /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra Trắc Nghiệm</param>
+        /// <param name="studentWorkResults">Chứa Câu Hỏi Và Câu Trả Lời Của Học Sinh</param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -193,9 +234,46 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizMC([FromBody] QuizMCRequest quizMCStudentWork)
+        public async Task<IActionResult> GradeQuizMC([FromQuery] QuizRequest quizInfor, [FromBody] List<MCStudentAnswer> studentWorkResults)
         {
-            var responses = await _quizService.GradeQuizMCAsync(quizMCStudentWork);
+            var duplicateQuestions = studentWorkResults
+                .GroupBy(x => x.QuestionId)
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g)
+                .Distinct();
+
+            var duplicateAnswers = studentWorkResults
+               .GroupBy(x => x.AnswerId)
+               .Where(g => g.Count() > 1)
+               .SelectMany(g => g)
+               .Distinct();
+
+            if (duplicateQuestions != null && duplicateQuestions.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Có Nhiều Hơn Các Id Của Câu Hỏi Bị Trùng Lặp [{string.Join(", ", duplicateQuestions.Select(dq => dq.QuestionId))}]",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            if (duplicateAnswers != null && duplicateAnswers.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Có Nhiều Hơn Các Id Của Câu Trả Lời Bị Trùng Lặp [{string.Join(", ", duplicateAnswers.Select(dq => dq.AnswerId))}]",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
+            var quizMcStudentWork = new QuizMCRequest
+            {
+                ClassId = quizInfor.ClassId,
+                ExamId = quizInfor.ExamId,
+                StudentQuestionResults = studentWorkResults,
+            };
+            var responses = await _quizService.GradeQuizMCAsync(quizMcStudentWork);
 
             return Ok(responses);
         }
@@ -204,7 +282,8 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Nối Thẻ] Của Học Sinh Hiện Tại
         /// </summary>
-        /// <param name="quizFCStudentWork">Chứa Thông Tin Bài Kiểm Tra Nối Thẻ Và Bài Làm Của Học Sinh (Câu Hỏi Và Câu Trả Lời)</param>
+        /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra Nối Thẻ </param>
+        /// <param name="studentWorkResults">Chứa Câu Hỏi Và Cặp Thẻ Đã Ghép Của Học Sinh</param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -231,18 +310,80 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor, [FromBody] List<FCStudentQuestion> StudentQuestionResults)
+        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor, [FromBody] List<FCStudentQuestion> studentWorkResults)
         {
+            var studentAnswers = studentWorkResults.SelectMany(sr => sr.Answers).ToList();
+
+            var duplicateCards = new List<Guid>();
+
+            var duplicateQuestions = studentWorkResults
+               .GroupBy(x => x.QuestionId)
+               .Where(g => g.Count() > 1)
+               .SelectMany(g => g)
+               .Distinct();
+
+            duplicateCards.AddRange(studentAnswers
+           .GroupBy(x => x.FirstCardId)
+           .Where(g => g.Count() > 1)
+           .SelectMany(g => g)
+           .Distinct().Select(x => x.FirstCardId));
+
+            duplicateCards.AddRange(studentAnswers
+            .GroupBy(x => x.SecondCardId)
+            .Where(g => g.Count() > 1)
+            .SelectMany(g => g)
+            .Distinct().Select(x => x.SecondCardId));
+
+            if (duplicateQuestions != null && duplicateQuestions.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Có Nhiều Hơn Các Id Của Câu Hỏi Bị Trùng Lặp [{string.Join(", ", duplicateQuestions.Select(dq => dq.QuestionId))}]",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            if (duplicateCards != null && duplicateCards.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Có Nhiều Hơn Các Id Của Thẻ Bị Trùng Lặp [{string.Join(", ", duplicateCards)}]",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
             var quizFCStudentWork = new QuizFCRequest
             {
                 ClassId = quizInfor.ClassId,
                 ExamId = quizInfor.ExamId,
-                StudentQuestionResults = StudentQuestionResults,
+                StudentQuestionResults = studentWorkResults,
             };
             var responses = await _quizService.GradeQuizFCAsync(quizFCStudentWork);
 
             return Ok(responses);
         }
+
+        #region document API Get Test Result
+        /// <summary>
+        ///  Truy Suất Kết Quả Các Bài Kiểm Tra Đã Làm Của Học Sinh Hiện Tại
+        /// </summary>
+        /// <response code="200">Trả Về Chi Tiết Các Bài Kiểm Tra</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetCurrentStudentQuizDone)]
+        [ProducesResponseType(typeof(QuizResultExtraInforResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize(Roles = "STUDENT")]
+        public async Task<IActionResult> GetCurrentStudentQuizDone()
+        {
+            var responses = await _quizService.GetCurrentStudentQuizDoneAsync();
+
+            return Ok(responses);
+        }
+
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizForStaff)]
         public async Task<IActionResult> GetQuizForStaff([FromRoute] string id)
         {

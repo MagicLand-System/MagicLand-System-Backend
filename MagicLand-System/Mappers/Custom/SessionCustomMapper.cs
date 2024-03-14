@@ -22,7 +22,7 @@ namespace MagicLand_System.Mappers.Custom
                 responses.Add(new SessionSyllabusResponse
                 {
                     OrderSession = session.NoSession,
-                    Date = schedule.Date.ToString(),
+                    Date = schedule.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                     StartTime = TimeOnly.Parse(schedule.Slot!.StartTime),
                     EndTime = TimeOnly.Parse(schedule.Slot!.EndTime),
@@ -85,7 +85,7 @@ namespace MagicLand_System.Mappers.Custom
                 responses.Add(new SessionSyllabusResponse
                 {
                     OrderSession = ses.NoSession,
-                    Date = schedule.Date.ToString(),
+                    Date = schedule.Date.ToString("yyyy-MM-ddTHH:mm:ss"),
                     DateOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                     Quiz = null,
                     Contents = fromSessionDescriptionsToSessionContentResponse(ses.SessionDescriptions!),

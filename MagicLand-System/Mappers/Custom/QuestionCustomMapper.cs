@@ -200,10 +200,17 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     int coupleFlashCardLeft = (int)(package.Score - totalMark)!;
                     var listFlashCard = new List<FlashCard>();
+                    var usedCouple = new HashSet<int>();
 
                     for (int i = 0; i < coupleFlashCardLeft && i < currentQuestion.FlashCards.Count(); i++)
                     {
-                        listFlashCard.Add(currentQuestion.FlashCards[i]);
+                        int randomCouple;
+                        do
+                        {
+                            randomCouple = random.Next(0, currentQuestion.FlashCards.Count());
+                        } while (usedCouple.Contains(randomCouple));
+
+                        listFlashCard.Add(currentQuestion.FlashCards[randomCouple]);
                     }
                     answerFlashCarsInfor = fromFlashCardToFlashCardAnswerResponse(listFlashCard);
 

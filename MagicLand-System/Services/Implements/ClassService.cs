@@ -2155,7 +2155,7 @@ namespace MagicLand_System.Services.Implements
                         ExamId = quiz.Id,
                         ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
                         ExamPart = part,
-                        QuizName = quiz.Title,
+                        QuizName = quiz.Title!,
                     };
                 }
             }

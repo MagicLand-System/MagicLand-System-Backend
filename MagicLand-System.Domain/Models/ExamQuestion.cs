@@ -10,10 +10,10 @@ namespace MagicLand_System.Domain.Models
     public class ExamQuestion
     {
         public Guid Id { get; set; }
+        public Guid QuestionId { get; set; }
         public string? Question { get; set; } = string.Empty;
         public string? QuestionImage { get; set; } = string.Empty;
-        public string? Status { get; set; }
-        public double Score { get; set; }
+
 
         [ForeignKey("TestResult")]
         public Guid TestResultId { get; set; }
