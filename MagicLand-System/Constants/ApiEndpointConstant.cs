@@ -20,6 +20,7 @@
             public const string CheckOutClassByVnpay = UsersEndpoint + "/vnpay/checkout";
             public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
             public const string UpdateUser = UsersEndpoint + "/update";
+            public const string GetByAdmin = UsersEndpoint + "/getByAdmin";
         }
         public static class Authentication
         {

@@ -21,5 +21,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<LecturerResponse>> GetLecturers(FilterLecturerRequest? request);
         Task<UserResponse> UpdateUserAsync(UserRequest request);
         Task<List<LectureScheduleResponse>> GetLectureScheduleAsync();
+        Task<List<AdminLecturerResponse>> GetAdminLecturerResponses(DateTime? startDate , DateTime? EndDate , string? searchString,string? slotId);
     }
 }
