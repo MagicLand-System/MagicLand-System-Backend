@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
@@ -530,12 +531,6 @@ namespace MagicLand_System.Controllers
         {
             var isSuccess = await _classService.InsertClasses(requests);
             return Ok(isSuccess);
-        }
-        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetFromClassCode)]
-        public async Task<IActionResult> GetClassFromClassCode(string classCode)
-        {
-            var result = await _classService.GetClassFromClassCode(classCode);
-            return Ok(result);
         }
     }
 }

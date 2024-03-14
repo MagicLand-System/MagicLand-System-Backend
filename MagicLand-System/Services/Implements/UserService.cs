@@ -290,7 +290,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (type.Equals("all"))
                 {
-                    return lecturerResponses;
+                    lecturerResponses =  lecturerResponses;
                 }
                 else
                 {

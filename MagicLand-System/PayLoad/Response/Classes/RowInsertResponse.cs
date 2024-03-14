@@ -4,6 +4,6 @@
     {
         public int Index {  get; set; } 
         public bool IsSucess {  get; set; } 
-        public string? Error {  get; set; } 
+        public string? Messsage {  get; set; } 
     }
 }
