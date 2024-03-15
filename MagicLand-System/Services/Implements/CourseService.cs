@@ -51,9 +51,10 @@ namespace MagicLand_System.Services.Implements
              ? throw new BadHttpRequestException("Độ Tuổi Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
              : courses.Where(x => x.MinYearOldsStudent >= minYearsOld && x.MaxYearOldsStudent <= maxYearsOld).ToList();
 
-            filteredCourses = minPrice > maxPrice || minPrice < 0 || maxPrice < 0
-            ? throw new BadHttpRequestException("Gía Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
-            : filteredCourses.Where(x => x.Price >= minPrice && x.Price <= maxPrice).ToList();
+            //filteredCourses = minPrice > maxPrice || minPrice < 0 || maxPrice < 0
+            //? throw new BadHttpRequestException("Gía Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
+            //: 
+            ////: filteredCourses.Where(x => x.Price >= minPrice && x.Price <= maxPrice).ToList();
 
             filteredCourses = filteredCourses.Where(x => x.NumberOfSession >= minNumberSession && x.NumberOfSession <= maxNumberSession).ToList();
 
@@ -288,7 +289,7 @@ namespace MagicLand_System.Services.Implements
                     MinYearOldsStudent = request.MinAge,
                     MainDescription = request.MainDescription,
                     Name = request.CourseName,
-                    Price = request.Price,
+                    //Price = request.Price,
                     UpdateDate = DateTime.Now,
                     Status = "UPCOMING",
                     SyllabusId = Guid.Parse(request.SyllabusId),
@@ -410,7 +411,7 @@ namespace MagicLand_System.Services.Implements
                 MinYearOldsStudent = courseFound.MinYearOldsStudent,
                 Name = courseFound.Name,
                 NumberOfSession = courseFound.NumberOfSession,
-                Price = courseFound.Price,
+                //Price = courseFound.Price,
                 Status = courseFound.Status,
                 SubjectName = subjectname,
                 SyllabusId = courseFound.SyllabusId,
@@ -480,6 +481,39 @@ namespace MagicLand_System.Services.Implements
 
             findCourse = findCourse.OrderByDescending(x => x.UpdateDate).ToList();
             return findCourse;
+        }
+
+        private async Task<bool> GenerateCoursePrice()
+        {
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync();
+            List<CoursePrice> coursePrices = new List<CoursePrice>();
+            foreach(var course in courses)
+            {
+                coursePrices.Add(new CoursePrice
+                {
+                    CourseId = course.Id,
+                    EffectiveDate = DateTime.Parse("2023/12/24"),
+                    Id = Guid.NewGuid(),
+                    Price = 100000,
+                });
+                coursePrices.Add(new CoursePrice
+                {
+                    CourseId = course.Id,
+                    EffectiveDate = DateTime.Parse("2023/03/10"),
+                    Id = Guid.NewGuid(),
+                    Price = 150000,
+                });
+                coursePrices.Add(new CoursePrice
+                {
+                    CourseId = course.Id,
+                    EffectiveDate = DateTime.Parse("2023/03/20"),
+                    Id = Guid.NewGuid(),
+                    Price = 200000,
+                });
+            }
+            await _unitOfWork.GetRepository<CoursePrice>().InsertRangeAsync(coursePrices);
+           bool isSuccess = await _unitOfWork.CommitAsync() > 0 ;
+            return isSuccess;
         }
         #endregion
     }

@@ -55,6 +55,7 @@ namespace MagicLand_System.Domain
         public DbSet<TempQuestion> TempQuestions { get; set; }
         public DbSet<TempMCAnswer> TempMCAnswers { get; set; }
         public DbSet<TempFCAnswer> TempFCAnswers { get; set; }
+        public DbSet<CoursePrice> CoursePrices { get; set; }    
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -341,6 +342,12 @@ namespace MagicLand_System.Domain
                 entity.ToTable("TempFCAnswer");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.TempQuestion).WithMany(e => e.FCAnswers).HasForeignKey(e => e.TempQuestionId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<CoursePrice>(entity =>
+            {
+                entity.ToTable("CoursePrice");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Course).WithMany(e => e.CoursePrices).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

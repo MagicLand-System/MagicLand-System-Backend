@@ -53,7 +53,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         ClassCode = classx.ClassCode,
                         ClassId = classx.Id,
-                        CoursePrice = classx.Course.Price,
+                        //CoursePrice = classx.Course.Price,
                         //ClassSubject = classx.Course.CourseCategory.Name,
                         LeastNumberStudent = classx.LeastNumberStudent,
                         LimitNumberStudent = classx.LimitNumberStudent,

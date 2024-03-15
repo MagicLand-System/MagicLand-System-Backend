@@ -182,9 +182,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int>("NumberOfSession")
                         .HasColumnType("int");
 
-                    b.Property<double>("Price")
-                        .HasColumnType("float");
-
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
@@ -200,6 +197,28 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Course", (string)null);
+                });
+
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CoursePrice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("CoursePrice", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Evaluate", b =>
@@ -1386,6 +1405,17 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Lecture");
                 });
 
+            modelBuilder.Entity("MagicLand_System.Domain.Models.CoursePrice", b =>
+                {
+                    b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
+                        .WithMany("CoursePrices")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
             modelBuilder.Entity("MagicLand_System.Domain.Models.Evaluate", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Schedule", "Schedule")
@@ -1807,6 +1837,8 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
                 {
                     b.Navigation("Classes");
+
+                    b.Navigation("CoursePrices");
 
                     b.Navigation("SubDescriptionTitles");
 
