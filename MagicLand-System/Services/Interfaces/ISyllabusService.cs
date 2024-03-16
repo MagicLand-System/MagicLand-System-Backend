@@ -14,7 +14,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<bool> AddSyllabus(OverallSyllabusRequest request);
         Task<string> CheckingSyllabusInfor(string name, string code);
-        Task<SyllabusResponse> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId);
+        Task<SyllabusResponse> LoadSyllabusDynamicIdAsync(Guid courseId, Guid classId);
         Task<SyllabusResponse> LoadSyllabusByIdAsync(Guid id);
         Task<List<SyllabusResponse>> LoadSyllabusesAsync();
         Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords, DateTime? date, double? score);

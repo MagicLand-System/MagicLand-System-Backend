@@ -7,6 +7,8 @@
         public string Type { get; set; }
         public string Title { get; set; }
         public int Score { get; set; }
+        //public int? Duration { get; set; }
+        //public int? Attempt { get; set; }
         public List<QuestionRequest> QuestionRequests {  get; set; }    
 
     }

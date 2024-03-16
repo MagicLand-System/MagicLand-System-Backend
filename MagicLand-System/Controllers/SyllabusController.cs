@@ -91,7 +91,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> LoadSyllabusByCourseId([FromQuery] Guid courseId, [FromQuery] Guid classId)
         {
-            var response = await _syllabusService.LoadSyllabusByCourseIdAsync(courseId, classId);
+            var response = await _syllabusService.LoadSyllabusDynamicIdAsync(courseId, classId);
 
             return Ok(response);
         }

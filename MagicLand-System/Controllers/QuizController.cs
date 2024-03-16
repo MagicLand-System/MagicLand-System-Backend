@@ -7,7 +7,9 @@ using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Syllabuses;
+using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -424,6 +426,44 @@ namespace MagicLand_System.Controllers
 
             return Ok(responses);
         }
+
+        #region document API Setting Exam
+        /// <summary>
+        ///  Cho Phép Giáo Viên Cập Nhập Thông Tin Bài Kiểm Tra
+        /// </summary>
+        /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra Nối Thẻ </param>
+        /// <param name="studentWorkResults">Chứa Câu Hỏi Và Cặp Thẻ Đã Ghép Của Học Sinh</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    [
+        ///      {
+        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
+        ///         "answers" : [
+        ///                       {
+        ///                         "firstCardId":"35885C01-B2FA-46AE-93F2-CFAF519D9FB9",
+        ///                          "secondCardId":"9054F907-6AEB-4BC9-8AB3-9E0F405200DD"
+        ///                       }
+        ///                    ]
+        ///        },
+        ///     ]
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Báo</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        //[HttpGet(ApiEndpointConstant.LectureEndPoint.)]
+        //[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        //[ProducesErrorResponseType(typeof(BadRequest))]
+        //[Authorize(Roles = "LECTURER")]
+        //public async Task<IActionResult> SettingExam()
+        //{
+        //    var response = await _quizService.();
+        //    return Ok(response);
+        //}
 
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizForStaff)]
         public async Task<IActionResult> GetQuizForStaff([FromRoute] string id)

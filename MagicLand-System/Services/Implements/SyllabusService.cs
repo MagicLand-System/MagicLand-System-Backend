@@ -18,6 +18,7 @@ using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -36,7 +37,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     var syllabus = await GenerateSyllabus(request);
 
-                    AddOffLineQuestionPackage(request);
+                    SettingQuestionPackageRequest(request);
 
                     await GenerateSyllabusItems(request, syllabus.Id);
 
@@ -50,11 +51,20 @@ namespace MagicLand_System.Services.Implements
             return false;
         }
 
-        private void AddOffLineQuestionPackage(OverallSyllabusRequest request)
+        private void SettingQuestionPackageRequest(OverallSyllabusRequest request)
         {
+            //foreach (var qp in request.QuestionPackageRequests!)
+            //{
+            //    var exam = request.ExamSyllabusRequests.Find(es => StringHelper.TrimStringAndNoSpace(es.ContentName) == StringHelper.TrimStringAndNoSpace(qp.ContentName));
+            //    Regex regex = new Regex(@"\d+");
+            //    Match match = regex.Match(exam!.Duration!);
+
+            //    qp.Attempt = 1;
+            //    qp.Duration = int.Parse(match.Value);
+            //}
             var offlineExams = request.ExamSyllabusRequests
-                .Where(exam => exam.Method.Trim().ToLower() == "offline")
-                .ToList();
+            .Where(exam => exam.Method.Trim().ToLower() == "offline")
+            .ToList();
 
             if (offlineExams.Any())
             {
@@ -73,9 +83,10 @@ namespace MagicLand_System.Services.Implements
                         Type = "options",
                         Title = "Làm Tại Nhà",
                         Score = 0,
+                        //Attempt = 1,
+                        //Duration = 0,
                     });
             }
-
         }
 
         public async Task<string> CheckingSyllabusInfor(string name, string code)
@@ -465,7 +476,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        public async Task<SyllabusResponse> LoadSyllabusByCourseIdAsync(Guid courseId, Guid classId)
+        public async Task<SyllabusResponse> LoadSyllabusDynamicIdAsync(Guid courseId, Guid classId)
         {
             var syllabus = await ValidateSyllabus(courseId, true);
 
@@ -477,6 +488,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
                         predicate: x => x.NoSession == session.OrderSession);
+
                     if (quiz != null)
                     {
                         session.Quiz = new QuizInforResponse

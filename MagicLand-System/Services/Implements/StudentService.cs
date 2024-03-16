@@ -692,9 +692,9 @@ namespace MagicLand_System.Services.Implements
             foreach (var cls in classes)
             {
                 cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-                predicate: x => x.Id == cls.CourseId,
-                include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-               .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+                predicate: x => x.Id == cls.CourseId);
+                // include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+                //.ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
 
                 cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                 orderBy: x => x.OrderBy(x => x.Date),
@@ -711,6 +711,11 @@ namespace MagicLand_System.Services.Implements
             {
                 return new List<ClassWithSlotShorten>();
             }
+            foreach (var res in responses)
+            {
+                res.CoursePrice = await GetPriceInTemp(res.ClassId, true);
+            }
+
             return responses;
 
         }
@@ -789,6 +794,92 @@ namespace MagicLand_System.Services.Implements
             }
 
             return listStudentSchedule;
+        }
+
+        public async Task<List<StudentLearningProgress>> GetStudentLearningProgressAsync(Guid studentId, Guid classId)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Id == classId,
+                include: x => x.Include(x => x.Schedules.OrderBy(x => x.Date)));
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id Của Lớp Học Và Id Của Học Sinh Không Tồn Tại Hoặc Học Sinh Không Thuộc Lớp Đang Truy Suất ", StatusCodes.Status400BadRequest);
+            }
+
+            if (cls.Status == ClassStatusEnum.COMPLETED.ToString() || cls.Status == ClassStatusEnum.CANCELED.ToString())
+            {
+                throw new BadHttpRequestException($"Không Thể Truy Suất Tiến Độ Từ Lớp Học [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status)}] ",
+                StatusCodes.Status400BadRequest);
+            }
+
+            int totalQuiz = 0, quizDone = 0, learningProgress = 0, attendanceProgress = 0, examProgress = 0;
+
+            var sessions = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.Topics!.SelectMany(x => x.Sessions!),
+                predicate: x => x.CourseId == cls.CourseId)).OrderBy(x => x.NoSession).ToList();
+
+            foreach (var session in sessions)
+            {
+                var quizId = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.SessionId == session.Id);
+                if (quizId != default)
+                {
+                    totalQuiz++;
+                    var isQuizDone = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == quizId && x.StudentClass!.StudentId == studentId);
+                    if (isQuizDone is not null)
+                    {
+                        quizDone++;
+                    }
+                }
+            }
+            examProgress = (quizDone * 100) / totalQuiz;
+
+            var schedules = cls.Schedules.ToList();
+            DateTime currentDate = DateTime.Now.Date;
+            for (int i = 0; i < schedules.Count(); i++)
+            {
+                DateTime scheduleDate = schedules[i].Date.Date;
+                TimeSpan difference = scheduleDate - currentDate;
+
+                int day = difference.Days;
+
+                if (day < 0)
+                {
+                    continue;
+                }
+                if (day == 0)
+                {
+                    learningProgress = ((i + 1) * 100) / schedules.Count();
+                    break;
+                }
+                if (day > 1)
+                {
+                    learningProgress = (i * 100) / schedules.Count();
+                    break;
+                }
+            }
+
+            int totalAttendance = 0;
+            foreach (var schedule in schedules)
+            {
+                var isAttendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(
+                    selector: x => x.IsPresent,
+                    predicate: x => x.ScheduleId == schedule.Id && x.StudentId == studentId);
+
+                if (isAttendance != null && isAttendance.Value)
+                {
+                    totalAttendance++;
+                }
+            }
+            attendanceProgress = (totalAttendance * 100) / schedules.Count();
+
+            return new List<StudentLearningProgress>
+            {
+                new StudentLearningProgress{ProgressName = "Attendance", PercentageProgress = attendanceProgress},
+                new StudentLearningProgress{ProgressName = "Learning", PercentageProgress = learningProgress},
+                new StudentLearningProgress{ProgressName = "Exam", PercentageProgress = examProgress},
+            };
+
         }
     }
     #endregion

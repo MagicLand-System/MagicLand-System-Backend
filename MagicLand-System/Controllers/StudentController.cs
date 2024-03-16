@@ -354,5 +354,35 @@ namespace MagicLand_System.Controllers
             var response = await _studentService.GetStatisticNewStudentRegisterAsync(time);
             return Ok(response);
         }
+
+        #region document API Get Student All Student Learning Progress
+        /// <summary>
+        ///  Cho Phép Phụ Huynh Truy Suất Phần Trăm Các Tiến Độ Của Bé Trong Một Lớp
+        /// </summary>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "studentId": "3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///        "classId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB0a"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Phần Trăm Tiến Độ Của Học Sinh</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.StudentEndpoint.GetStudentLearningProgress)]
+        [ProducesResponseType(typeof(StudentLearningProgress), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetStudentLearningProgress([FromQuery] Guid studentId, [FromQuery] Guid classId)
+        {
+            var result = await _studentService.GetStudentLearningProgressAsync(studentId, classId);
+            return Ok(result);
+        }
     }
 }

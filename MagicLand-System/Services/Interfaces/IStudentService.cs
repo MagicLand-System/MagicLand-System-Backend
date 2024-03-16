@@ -13,6 +13,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IStudentService
     {
+        Task<List<StudentLearningProgress>> GetStudentLearningProgressAsync(Guid studentId, Guid classId);
         Task<AccountStudentResponse> AddStudent(CreateStudentRequest request);
         Task<List<ClassWithSlotShorten>> GetClassOfStudent(String studentId, string status);
         Task<List<AccountStudentResponse>> GetStudentAccountAsync(Guid? id);
