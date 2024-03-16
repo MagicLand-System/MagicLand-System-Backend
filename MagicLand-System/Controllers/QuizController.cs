@@ -6,6 +6,7 @@ using MagicLand_System.PayLoad.Response.Customs;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -380,6 +381,46 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetCurrentStudentQuizDone()
         {
             var responses = await _quizService.GetCurrentStudentQuizDoneAsync();
+
+            return Ok(responses);
+        }
+
+        #region document API Get Final Result
+        /// <summary>
+        ///  Truy Suất Kết Quả Tổng Kết Của Các Học Sinh
+        /// </summary>
+        /// <response code="200">Trả Về Danh Sách Bảng Điểm Tổng Kết</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetFinalResult)]
+        [ProducesResponseType(typeof(FinalResultResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize]
+        public async Task<IActionResult> GetFinalResult([FromQuery] List<Guid> studentIdList)
+        {
+            if(studentIdList == null)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
+            var invalidIds = studentIdList.Where(id => id == default).ToList();
+            if (invalidIds.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Id [{string.Join(", ", invalidIds)}] Học Sinh Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var responses = await _quizService.GetFinalResultAsync(studentIdList);
 
             return Ok(responses);
         }

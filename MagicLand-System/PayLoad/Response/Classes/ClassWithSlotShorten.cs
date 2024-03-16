@@ -7,6 +7,7 @@ namespace MagicLand_System.PayLoad.Response.Classes
     {
         public string? CourseName { get; set; } = "Undefine";
         public UserResponse? Lecture { get; set; } = default!;
-        public ScheduleShortenResponse? Schedules { get; set; } = new ScheduleShortenResponse();
+        //public ScheduleShortenResponse? Schedules { get; set; } = new ScheduleShortenResponse();
+        public List<ScheduleShortenResponse> Schedules { get; set; } = new List<ScheduleShortenResponse>();
     }
 }

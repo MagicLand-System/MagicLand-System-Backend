@@ -3,8 +3,10 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity;
 using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -719,6 +721,185 @@ namespace MagicLand_System.Services.Implements
             }
 
             return responses;
+        }
+
+        public async Task<List<FinalResultResponse>> GetFinalResultAsync(List<Guid> studentIdList)
+        {
+            var responses = new List<FinalResultResponse>();
+
+            foreach (Guid studentId in studentIdList)
+            {
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId);
+                if (student == null)
+                {
+                    throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
+                }
+
+                if (!student.IsActive!.Value)
+                {
+                    throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Đã Ngưng Hoạt Động", StatusCodes.Status400BadRequest);
+                }
+
+                var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                    predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id) && x.Status != ClassStatusEnum.CANCELED.ToString(),
+                    include: x => x.Include(x => x.Course!));
+
+                if (classes == null || !classes.Any())
+                {
+                    throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Chưa Tham Gia Bất Kỳ Lớp Học Của Khóa Học Nào", StatusCodes.Status400BadRequest);
+                }
+
+                await GenerateFinalResult(responses, student, classes);
+            }
+            return responses;
+        }
+
+        private async Task GenerateFinalResult(List<FinalResultResponse> responses, Student student, ICollection<Class> classes)
+        {
+            foreach (var cls in classes)
+            {
+                var identifyQuizExams = await GenerateIdentifyQuizExam(cls.CourseId);
+
+                var finalResult = new FinalResultResponse
+                {
+                    ClassId = cls.Id,
+                    CourseId = cls.CourseId,
+                    StudentId = student.Id,
+                    ClassName = cls.ClassCode,
+                    CourseName = cls.Course!.Name,
+                    StudentName = student!.FullName,
+                };
+
+                var allTestResult = (await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(
+                    selector: x => x.TestResults,
+                    predicate: x => x.ClassId == cls.Id && x.StudentId == student.Id)).ToList();
+
+                var finalTestResults = new List<FinalTestResultResponse>();
+
+                double participationWeight = 0.0, attendanceResult = 0.0, evaluateResult = 0.0;
+                foreach (var quizExam in identifyQuizExams)
+                {
+                    if (quizExam.Item2 == null)
+                    {
+                        participationWeight = quizExam.Item1.Weight;
+                        await CalculateParticipation(attendanceResult, evaluateResult, cls.Schedules.ToList(), student.Id);
+                    }
+                    else
+                    {
+                        finalTestResults.Add(GenerateFinalTestResult(allTestResult, quizExam));
+                    }
+                }
+
+                SettingLastResultInfor(finalResult, finalTestResults,
+                (attendanceResult / cls.Schedules.Count()) + (evaluateResult / cls.Schedules.Count()), participationWeight);
+
+                responses.Add(finalResult);
+            }
+        }
+
+        private async Task CalculateParticipation(double attendanceResult, double evaluateResult, List<Schedule> schedules, Guid studentId)
+        {
+            foreach (var schedule in schedules)
+            {
+                var isPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(
+                    selector: x => x.IsPresent,
+                    predicate: x => x.StudentId == studentId && x.ScheduleId == schedule.Id);
+
+                var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(
+                    selector: x => x.Status,
+                    predicate: x => x.StudentId == studentId && x.ScheduleId == schedule.Id);
+
+                attendanceResult += isPresent != null && isPresent.Value ? 10 : 0;
+
+                if (evaluate != null)
+                {
+                    evaluateResult += evaluate == EvaluateStatusEnum.NOTGOOD.ToString() ? 5
+                    : evaluate == EvaluateStatusEnum.NORMAL.ToString() ? 7 : 10;
+                }
+                else
+                {
+                    evaluateResult += 0;
+                }
+            }
+        }
+        private void SettingLastResultInfor(FinalResultResponse finalResult, List<FinalTestResultResponse> finalTestResults, double participationScore, double participationWeight)
+        {
+            var participationResult = new Participation
+            {
+                Weight = participationWeight,
+                Score = participationScore,
+                ScoreWeight = CalculateScoreWeight(participationWeight, participationScore),
+            };
+
+            var total = finalTestResults.Sum(ft => ft.ScoreWeight) + participationResult.ScoreWeight;
+            string status = total >= 5 ? "Passed" : "Not Passed";
+            if (finalTestResults.Any(ft => ft.Score == 0))
+            {
+                status = "Not Passed";
+            }
+
+            finalResult.Average = total;
+            finalResult.Status = status;
+            finalResult.QuizzesResults = finalTestResults;
+            finalResult.ParticipationResult = participationResult;
+
+
+        }
+
+        private FinalTestResultResponse GenerateFinalTestResult(List<TestResult> allTestResult, (ExamSyllabus, QuestionPackage) quizExam)
+        {
+            var finalTestResult = new FinalTestResultResponse();
+
+            var testResults = allTestResult.Where(tr => tr.ExamId == quizExam.Item2.Id).ToList();
+            if (testResults is not null)
+            {
+                var testResult = testResults.OrderByDescending(x => x.NoAttempt).First();
+                double weight = quizExam.Item1.Part == 2 ? quizExam.Item1.Weight / 2 : quizExam.Item1.Weight;
+
+                finalTestResult.ExamId = quizExam.Item2.Id;
+                finalTestResult.QuizName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
+                finalTestResult.QuizType = quizExam.Item2.Type;
+                finalTestResult.QuizCategory = quizExam.Item1.Category;
+                finalTestResult.Weight = weight;
+                finalTestResult.Score = testResult.ScoreEarned;
+                finalTestResult.ScoreWeight = CalculateScoreWeight(weight, testResult.ScoreEarned);
+
+            }
+            return finalTestResult;
+        }
+
+        private async Task<List<(ExamSyllabus, QuestionPackage)>> GenerateIdentifyQuizExam(Guid courseId)
+        {
+            var identifyQuizExams = new List<(ExamSyllabus, QuestionPackage)>();
+
+            var exams = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.ExamSyllabuses,
+                predicate: x => x.CourseId == courseId);
+
+            var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.Topics!.SelectMany(tp => tp.Sessions!),
+                predicate: x => x.CourseId == courseId);
+
+            foreach (var session in sessions)
+            {
+                var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                    predicate: x => x.SessionId == session.Id && x.Type != QuizTypeEnum.options.ToString());
+
+                if (quiz is not null)
+                {
+                    var examOfQuiz = exams!.ToList().Find(e => StringHelper.TrimStringAndNoSpace(e.ContentName!) == StringHelper.TrimStringAndNoSpace(quiz.ContentName!));
+
+                    identifyQuizExams.Add(new(examOfQuiz!, quiz));
+                }
+            }
+   //partifivation
+
+            return identifyQuizExams;
+        }
+
+        public double CalculateScoreWeight(double percentage, double score)
+        {
+            return (score * percentage) / 100;
         }
     }
 }

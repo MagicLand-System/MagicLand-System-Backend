@@ -2,6 +2,7 @@
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
@@ -102,9 +103,28 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
 
-
+        #region document API Get Current Student Class
+        /// <summary>
+        ///  Truy Suất Các Lớp Học Của Học Sinh
+        /// </summary>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <param name="status">Trạng Thái Của Lớp Học (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "studentId": "3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///        "status": "Upcoming"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Tin Lớp Của Bé</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
         [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentEndpointGetClass)]
-        [ProducesResponseType(typeof(StudentClassResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
         public async Task<IActionResult> GetClassFromStudent([FromQuery] string studentId, [FromQuery] string status = null)

@@ -15,6 +15,36 @@ namespace MagicLand_System.Mappers.Custom
     public class ScheduleCustomMapper
     {
 
+        public static List<ScheduleShortenResponse> fromScheduleToScheduleShortenResponses(Class cls)
+        {
+            if (cls == null)
+            {
+                return new List<ScheduleShortenResponse>();
+            }
+
+            var responses = new List<ScheduleShortenResponse>();
+            var weekdayNumbers = new List<(int, string)>();
+
+            var schedules = cls.Schedules.ToList();
+            foreach (var schedule in schedules)
+            {
+                weekdayNumbers.Add(new(schedule.DayOfWeek, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime));
+            }
+
+            weekdayNumbers = weekdayNumbers.Distinct().OrderBy(x => x.Item1).ToList();
+            foreach (var item in weekdayNumbers)
+            {
+                responses.Add(new ScheduleShortenResponse
+                {
+                    Schedule = DateTimeHelper.ConvertDateNumberToDayweek(item.Item1),
+                    Slot = item.Item2,
+                    Method = cls.Method,
+                });
+            }
+
+            return responses;
+        }
+
         public static ScheduleShortenResponse fromScheduleToScheduleShortenResponse(Class cls)
         {
             if (cls == null)
@@ -24,7 +54,7 @@ namespace MagicLand_System.Mappers.Custom
 
             var WeekdayNumbers = cls.Schedules.Select(s => s.DayOfWeek).Distinct().ToList().Order();
 
-            var slotInListString = cls.Schedules.Select(s => AddSuffixesTime(s.Slot!.StartTime) + " - " + AddSuffixesTime(s.Slot.EndTime))
+            var slotInListString = cls.Schedules.Select(s => s.Slot!.StartTime + " - " + s.Slot.EndTime)
                 .Distinct().ToList();
 
             var response = new ScheduleShortenResponse
@@ -33,7 +63,7 @@ namespace MagicLand_System.Mappers.Custom
                 Slot = string.Join(" / ", slotInListString),
                 Method = cls.Method,
             };
-          
+
 
             return response;
         }
@@ -179,7 +209,7 @@ namespace MagicLand_System.Mappers.Custom
 
             var WeekdayNumbers = cls.Schedules.Select(s => s.DayOfWeek).Distinct().ToList().Order();
 
-            var slotInListString = cls.Schedules.Select(s => AddSuffixesTime(s.Slot!.StartTime) + " - " + AddSuffixesTime(s.Slot.EndTime))
+            var slotInListString = cls.Schedules.Select(s => s.Slot!.StartTime + " - " + s.Slot.EndTime)
                 .Distinct().ToList();
 
 

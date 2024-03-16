@@ -51,11 +51,13 @@ namespace MagicLand_System.Controllers
         ///  Truy Suất Toàn Bộ Lớp Của Một Khóa
         /// </summary>
         /// <param name="id">Id Của Khóa Học</param>
+        /// <param name="classStatus">Trạng Thái Của Lớp Học</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "id": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///        "id": "fded66d4-c3e7-4721-b509-e71feab6723a",
+        ///        "classStatus":"UPCOMING",
         ///     }
         ///
         /// </remarks>
@@ -64,12 +66,12 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
-        [ProducesResponseType(typeof(ClassResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetClassByCourseId(Guid id)
+        public async Task<IActionResult> GetClassByCourseId(Guid id, [FromQuery] ClassStatusEnum classStatus)
         {
-            var classes = await _classService.GetClassesByCourseIdAsync(id);
+            var classes = await _classService.GetClassesByCourseIdAsync(id, classStatus);
             return Ok(classes);
         }
 

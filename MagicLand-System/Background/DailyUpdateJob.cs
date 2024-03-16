@@ -11,10 +11,10 @@ namespace MagicLand_System.Background
     public class DailyUpdateJob : IJob
     {
         private readonly ILogger<DailyUpdateJob> _logger;
-        private readonly IClassBackroundService _classBackgroundService;
+        private readonly IClassBackgroundService _classBackgroundService;
         private readonly ITransactionBackgroundService _transactionBackgroundService;
         private readonly INotificationBackgroundService _notificationBackgroundService;
-        public DailyUpdateJob(ILogger<DailyUpdateJob> logger, IClassBackroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService, INotificationBackgroundService notificationBackgroundService)
+        public DailyUpdateJob(ILogger<DailyUpdateJob> logger, IClassBackgroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService, INotificationBackgroundService notificationBackgroundService)
         {
             _logger = logger;
             _classBackgroundService = classBackgroundService;

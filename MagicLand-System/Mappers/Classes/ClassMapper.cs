@@ -106,7 +106,8 @@ namespace MagicLand_System.Mappers.Classes
               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
               .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
-              .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToScheduleShortenResponse(src)));
+              //.ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToScheduleShortenResponse(src)));
+              .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToScheduleShortenResponses(src)));
 
 
             CreateMap<Class, ClassWithDailyScheduleRes>()

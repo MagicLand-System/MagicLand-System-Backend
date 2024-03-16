@@ -672,59 +672,46 @@ namespace MagicLand_System.Services.Implements
         }
         #endregion
         #region gia_thuong code
-        public async Task<List<ClassResExtraInfor>> GetClassOfStudent(string studentId, string status)
+        public async Task<List<ClassWithSlotShorten>> GetClassOfStudent(string studentId, string status)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
             if (student == null)
             {
                 throw new BadHttpRequestException("Học sinh không tồn tại", StatusCodes.Status400BadRequest);
             }
-            var listClassInstance = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Class));
-            if (listClassInstance == null)
-            {
-                return new List<ClassResExtraInfor>();
-            }
-            var classIds = (from classInstance in listClassInstance
-                            group classInstance by classInstance.ClassId into grouped
-                            select new { ClassId = grouped.Key });
-            var myx = classIds.ToList();
-            Class studentClass = null;
-            List<Class> classes = new List<Class>();
-            List<Class> allClass = new List<Class>();
 
-            allClass = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x
-               .Include(x => x.Lecture!)
-               .Include(x => x.StudentClasses)
-               .Include(x => x.Course)
-               .ThenInclude(c => c.Syllabus)
-               .ThenInclude(cs => cs!.Topics.OrderBy(cs => cs.OrderNumber))
-               .ThenInclude(tp => tp.Sessions.OrderBy(tp => tp.NoSession))
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-               .ThenInclude(s => s.Slot)!
-               .Include(x => x.Schedules.OrderBy(sc => sc.Date))
-               .ThenInclude(s => s.Room)!)).ToList();
-            foreach (var classInstance in myx)
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().ToLower() == studentId.ToLower()),
+                include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses!));
+
+            if (classes is null)
             {
-                if (status.IsNullOrEmpty())
-                {
-                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()));
-                }
-                else
-                {
-                    studentClass = allClass.SingleOrDefault(x => x.Id.ToString().Equals(classInstance.ClassId.ToString()) && status.Trim().Equals(x.Status.Trim()));
-                }
-                if (studentClass != null)
-                {
-                    classes.Add(studentClass);
-                }
+                return new List<ClassWithSlotShorten>();
             }
-            if (classes.Count == 0)
+
+            foreach (var cls in classes)
             {
-                return new List<ClassResExtraInfor>();
+                cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == cls.CourseId,
+                include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
+               .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
             }
-            List<ClassResExtraInfor> responses = new List<ClassResExtraInfor>();
-            responses = classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
-            return responses;//responses;   
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                classes = classes.Where(cls => StringHelper.TrimStringAndNoSpace(cls.Status!) == StringHelper.TrimStringAndNoSpace(status)).ToList();
+            }
+            var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+            if (!responses.Any())
+            {
+                return new List<ClassWithSlotShorten>();
+            }
+            return responses;
 
         }
         public async Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId)

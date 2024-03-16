@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
-    public class ClassBackgroundService : IClassBackroundService
+    public class ClassBackgroundService : IClassBackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
 

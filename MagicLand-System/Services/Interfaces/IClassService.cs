@@ -16,12 +16,12 @@ namespace MagicLand_System.Services.Interfaces
     public interface IClassService
     {
         Task<List<ClassWithSlotShorten>> GetClassesNotInCartAsync(Guid? courseId);
-        Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time);
-        Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id);
+        Task<List<ClassWithSlotShorten>> GetClassesAsync(PeriodTimeEnum time);
+        Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id, ClassStatusEnum status);
         Task<TopicResponse> GetTopicLearningAsync(Guid classId, int topicOrder);
         Task<List<ClassWithSlotShorten>> GetValidClassForStudentAsync(Guid courseId, Guid studentId);
         Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students);
-        Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
+        Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);
         Task<bool> CreateNewClass(CreateClassRequest request);
         Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null);

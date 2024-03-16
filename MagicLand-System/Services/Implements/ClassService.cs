@@ -1306,8 +1306,8 @@ namespace MagicLand_System.Services.Implements
         }
         public async Task<ClassFromClassCode> GetClassFromClassCode(string classCode)
         {
-            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.ClassCode.Equals(classCode),include : x => x.Include(x => x.Course));
-            if(classCode == null)
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.ClassCode.Equals(classCode), include: x => x.Include(x => x.Course));
+            if (classCode == null)
             {
                 return new ClassFromClassCode();
             }
@@ -1324,7 +1324,7 @@ namespace MagicLand_System.Services.Implements
                 NumberOfSession = course.NumberOfSession,
                 Price = course.Price,
                 UpdateDate = course.UpdateDate,
-                Status = course.Status, 
+                Status = course.Status,
             };
             var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == classx.LecturerId, include: x => x.Include(x => x.LecturerField));
             var lecturerResponse = new LecturerResponse
@@ -1357,7 +1357,7 @@ namespace MagicLand_System.Services.Implements
         }
         #endregion
         #region thanh_lee_code
-        public async Task<List<ClassResExtraInfor>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time)
+        public async Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time)
         {
             var classes = await FetchClasses(time);
 
@@ -1395,7 +1395,7 @@ namespace MagicLand_System.Services.Implements
 
             classes = classes.Where(c => c.LeastNumberStudent >= leastNumberStudent || c.LimitNumberStudent == limitStudent).ToList();
 
-            return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
+            return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
         }
 
         public async Task<ClassResExtraInfor> GetClassByIdAsync(Guid id)
@@ -1414,7 +1414,7 @@ namespace MagicLand_System.Services.Implements
             return _mapper.Map<ClassResExtraInfor>(cls);
         }
 
-        public async Task<List<ClassResExtraInfor>> GetClassesAsync(PeriodTimeEnum time)
+        public async Task<List<ClassWithSlotShorten>> GetClassesAsync(PeriodTimeEnum time)
         {
             #region
             //try
@@ -1498,34 +1498,37 @@ namespace MagicLand_System.Services.Implements
             //return default!;
             #endregion
             var classes = await FetchClasses(time);
-            return classes.Select(c => _mapper.Map<ClassResExtraInfor>(c)).ToList();
+            return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
         }
 
 
-        public async Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id)
+        public async Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id, ClassStatusEnum status)
         {
             var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                 predicate: x => x.Id == id,
                 include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
                 .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)));
-
-            var classes = course == null
-                ? throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest)
-                : await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(predicate: x => x.CourseId == id && x.Status == ClassStatusEnum.UPCOMING.ToString(), include: x => x
-                .Include(x => x.Lecture!)
-                .Include(x => x.StudentClasses)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
-
-            var responses = new List<ClassWithSlotShorten>();
+            if (course is null)
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == id,
+                include: x => x.Include(x => x.Lecture!).Include(x => x.StudentClasses));
 
             foreach (var cls in classes)
             {
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot).Include(x => x.Room)!);
+
                 cls.Course = course;
-                responses.Add(_mapper.Map<ClassWithSlotShorten>(cls));
             }
-            return responses;
+            status = status == ClassStatusEnum.DEFAULT ? ClassStatusEnum.UPCOMING : status;
+            classes = classes.Where(cls => cls.Status == status.ToString()).ToList();
+
+            return classes.Select(cls => _mapper.Map<ClassWithSlotShorten>(cls)).ToList(); ;
         }
 
         private async Task<ICollection<Class>> FetchClasses(PeriodTimeEnum time)
