@@ -8,7 +8,7 @@ namespace MagicLand_System.PayLoad.Response.Courses
         public bool? IsInCart { get; set; }
         public Guid? CartItemId { get; set; }
         public string? Image { get; set; }
-        public decimal? Price { get; set; }
+        public double? Price { get; set; }
         public string? MainDescription { get; set; }
 
         public List<SubDescriptionTitleResponse>? SubDescriptionTitle { get; set; }

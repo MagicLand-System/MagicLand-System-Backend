@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
@@ -31,7 +32,7 @@ namespace MagicLand_System.Services.Implements
 
             var courses = await GetDefaultCourse();
 
-            var filteredCourses = FilterProgress(minYearsOld, maxYearsOld, minNumberSession, maxNumberSession, minPrice, maxPrice, subject, courses);
+            var filteredCourses = await FilterProgress(minYearsOld, maxYearsOld, minNumberSession, maxNumberSession, minPrice, maxPrice, subject, courses);
 
             var coursePrerequisitesFilter = await GetCoursePrerequesites(filteredCourses);
             var coureSubsequentsFilter = await GetCoureSubsequents(filteredCourses);
@@ -39,10 +40,16 @@ namespace MagicLand_System.Services.Implements
                    .fromCourseToCourseResExtraInfor(fc, coursePrerequisitesFilter
                    .Where(cpf => fc.Syllabus!.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == cpf.Syllabus!.Id)),
                    coureSubsequentsFilter)).ToList();
+
+            foreach (var res in responses)
+            {
+                res.Price = await GetPriceInTemp(res.CourseId, false);
+            }
+
             return responses;
         }
 
-        private List<Course> FilterProgress(int minYearsOld, int maxYearsOld, int? minNumberSession, int? maxNumberSession, double minPrice, double? maxPrice, string? subject, ICollection<Course> courses)
+        private async Task<List<Course>> FilterProgress(int minYearsOld, int maxYearsOld, int? minNumberSession, int? maxNumberSession, double minPrice, double? maxPrice, string? subject, ICollection<Course> courses)
         {
             maxNumberSession ??= int.MaxValue;
             maxPrice ??= double.MaxValue;
@@ -51,10 +58,25 @@ namespace MagicLand_System.Services.Implements
              ? throw new BadHttpRequestException("Độ Tuổi Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
              : courses.Where(x => x.MinYearOldsStudent >= minYearsOld && x.MaxYearOldsStudent <= maxYearsOld).ToList();
 
-            //filteredCourses = minPrice > maxPrice || minPrice < 0 || maxPrice < 0
-            //? throw new BadHttpRequestException("Gía Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest)
-            //: 
-            ////: filteredCourses.Where(x => x.Price >= minPrice && x.Price <= maxPrice).ToList();
+
+            var fiteredPriceCourse = new List<Course>();
+            if (minPrice > maxPrice || minPrice < 0 || maxPrice < 0)
+            {
+                throw new BadHttpRequestException("Gía Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+            else
+            {
+                foreach (var course in filteredCourses)
+                {
+                    var price = await GetClassPrice(course.Id);
+                    if (price >= minPrice && price <= maxPrice)
+                    {
+                        fiteredPriceCourse.Add(course);
+                    }
+                }
+            }
+
+            filteredCourses = fiteredPriceCourse.Any() ? fiteredPriceCourse : filteredCourses;
 
             filteredCourses = filteredCourses.Where(x => x.NumberOfSession >= minNumberSession && x.NumberOfSession <= maxNumberSession).ToList();
 
@@ -89,7 +111,9 @@ namespace MagicLand_System.Services.Implements
 
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            return CourseCustomMapper.fromCourseToCourseResExtraInfor(courses.ToList()[0], coursePrerequisites, coureSubsequents);
+            var response = CourseCustomMapper.fromCourseToCourseResExtraInfor(courses.ToList()[0], coursePrerequisites, coureSubsequents);
+            response.Price = await GetPriceInTemp(response.CourseId, false);
+            return response;
         }
 
         public async Task<List<CourseResExtraInfor>> GetCoursesAsync(bool isValid)
@@ -114,7 +138,6 @@ namespace MagicLand_System.Services.Implements
                         currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
                     }
                 }
-
                 responses.Add(CourseCustomMapper.fromCourseToCourseResExtraInfor(course, currentCoursePrerequistites, coureSubsequents));
             }
 
@@ -137,7 +160,13 @@ namespace MagicLand_System.Services.Implements
                     {
                         response.IsInCart = false;
                     }
+
                 }
+            }
+
+            foreach (var res in responses)
+            {
+                res.Price = await GetPriceInTemp(res.CourseId, false);
             }
 
             return responses;
@@ -165,7 +194,6 @@ namespace MagicLand_System.Services.Implements
                     predicate: x => x.CourseId == course.Id,
                     include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
                 }
-
 
                 return courses;
             }
@@ -230,12 +258,17 @@ namespace MagicLand_System.Services.Implements
             var listCourseResExtraInfror = new List<CourseResExtraInfor>();
             foreach (Guid id in courseRegisteredIdList)
             {
-                listCourseResExtraInfror.Add(await GetCourseByIdAsync(id));
+                var course = await GetCourseByIdAsync(id);
+                course.Price = await GetPriceInTemp(id, false);
+                listCourseResExtraInfror.Add(course);
             }
 
             return listCourseResExtraInfror;
         }
 
+
+        #endregion
+        #region thuong_code
         public async Task<List<CourseResExtraInforV2>> GetCurrentStudentCoursesAsync()
         {
             var currentStudent = await GetUserFromJwt();
@@ -273,8 +306,6 @@ namespace MagicLand_System.Services.Implements
 
             return responses;
         }
-        #endregion
-        #region thuong_code
         public async Task<bool> AddCourseInformation(CreateCourseRequest request)
         {
             if (request != null)
@@ -359,7 +390,7 @@ namespace MagicLand_System.Services.Implements
                 return isSuccess;
             }
             return false;
-        } 
+        }
 
         public async Task<List<SyllabusCategory>> GetCourseCategories()
         {
@@ -488,7 +519,7 @@ namespace MagicLand_System.Services.Implements
         {
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync();
             List<CoursePrice> coursePrices = new List<CoursePrice>();
-            foreach(var course in courses)
+            foreach (var course in courses)
             {
                 coursePrices.Add(new CoursePrice
                 {
@@ -513,7 +544,7 @@ namespace MagicLand_System.Services.Implements
                 });
             }
             await _unitOfWork.GetRepository<CoursePrice>().InsertRangeAsync(coursePrices);
-           bool isSuccess = await _unitOfWork.CommitAsync() > 0 ;
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
         }
         #endregion

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -59,23 +60,32 @@ namespace MagicLand_System.Services
         protected async Task<double> GetClassPrice(Guid classId)
         {
             double result = 0;
-            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id == classId);
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classx.CourseId.ToString()),include : x => x.Include(x => x.CoursePrices));
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId);
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classx.CourseId.ToString()), include: x => x.Include(x => x.CoursePrices));
             var prices = course.CoursePrices;
             var classDate = classx.AddedDate;
             var priceList = prices.OrderBy(x => x.EffectiveDate).ToArray();
-            if(classDate < priceList[0].EffectiveDate)
+            if (classDate < priceList[0].EffectiveDate)
             {
                 return result;
             }
-            for ( var i = 0; i < priceList.Length - 1; i++)
+            for (var i = 0; i < priceList.Length - 1; i++)
             {
-                if (priceList[i].EffectiveDate <= classDate && classDate < priceList[i+1].EffectiveDate)
+                if (priceList[i].EffectiveDate <= classDate && classDate < priceList[i + 1].EffectiveDate)
                 {
                     return result = priceList[i].Price;
                 }
             }
             return priceList[priceList.Length - 1].Price;
+        }
+
+        protected async Task<double> GetPriceInTemp(Guid id, bool isClass)
+        {
+            if (isClass)
+            {
+                return await _unitOfWork.GetRepository<TempItemPrice>().SingleOrDefaultAsync(predicate: x => x.ClassId == id, selector: x => x.Price);
+            }
+            return await _unitOfWork.GetRepository<TempItemPrice>().SingleOrDefaultAsync(predicate: x => x.CourseId == id, selector: x => x.Price);
         }
     }
 

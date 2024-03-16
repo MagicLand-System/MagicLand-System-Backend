@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
-using MagicLand_System.Domain.Models.TempEntity;
+using MagicLand_System.Domain.Models.TempEntity.Class;
+using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -48,6 +49,7 @@ namespace MagicLand_System.Domain
         public DbSet<ExamQuestion> examQuestions { get; set; }
         public DbSet<MultipleChoiceAnswer> MultipleChoiceAnswers { get; set; }
         public DbSet<FlashCardAnswer> FlashCardAnswers { get; set; }
+        public DbSet<CoursePrice> CoursePrices { get; set; }
         /// <summary>
         /// Temp Entity
         /// </summary>
@@ -55,7 +57,7 @@ namespace MagicLand_System.Domain
         public DbSet<TempQuestion> TempQuestions { get; set; }
         public DbSet<TempMCAnswer> TempMCAnswers { get; set; }
         public DbSet<TempFCAnswer> TempFCAnswers { get; set; }
-        public DbSet<CoursePrice> CoursePrices { get; set; }    
+        public DbSet<TempItemPrice> TempItemPrices { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -348,6 +350,11 @@ namespace MagicLand_System.Domain
                 entity.ToTable("CoursePrice");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Course).WithMany(e => e.CoursePrices).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempItemPrice>(entity =>
+            {
+                entity.ToTable("TempItemPrice");
+                entity.HasKey(e => e.Id);
             });
         }
     }

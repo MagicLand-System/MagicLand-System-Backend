@@ -23,7 +23,6 @@ namespace MagicLand_System.Mappers.Custom
                 Name = cls != null ? cls.ClassCode : course.Name,
                 Code = cls != null ? cls.ClassCode : course.Syllabus!.SubjectCode,
                 Subject = course.SubjectName,
-                //Price = course.Price,
                 MinYearOldStudent = course.MinYearOldsStudent!.Value,
                 MaxYearOldStudent = course.MinYearOldsStudent!.Value,
                 Image = cls != null ? cls.Image : course.Image    

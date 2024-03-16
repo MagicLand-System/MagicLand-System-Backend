@@ -286,7 +286,10 @@ namespace MagicLand_System.Services.Implements
                             predicate: x => x.Id == cls.CourseId,
                             include: x => x.Include(x => x.Syllabus!));
 
-                        classes.Add(_mapper.Map<ClassResExtraInfor>(cls));
+                        var response = _mapper.Map<ClassResExtraInfor>(cls);
+                        response.CoursePrice = await GetPriceInTemp(cls.Id, true);
+
+                        classes.Add(response);
 
 
                         foreach (var task in item.StudentInCarts
@@ -373,8 +376,13 @@ namespace MagicLand_System.Services.Implements
                         courses.Add(course);
 
                     }
+                    var response = CartCustomMapper.fromCartToFavoriteResponse(currentParrentCart.Id, itemFavorites, courses);
+                    foreach (var fv in response.FavoriteItems)
+                    {
+                        fv.Price = await GetPriceInTemp(fv.CourseId, false);
+                    }
 
-                    return CartCustomMapper.fromCartToFavoriteResponse(currentParrentCart.Id, itemFavorites, courses);
+                    return response;
                 }
 
                 return new FavoriteResponse { CartId = currentParrentCart != null ? currentParrentCart.Id : default };
@@ -473,6 +481,8 @@ namespace MagicLand_System.Services.Implements
 
                     itemResponse = CartItemCustomMapper.fromCartItemToCartItemResponse(course, cls, item.Id);
                     itemResponse.Schedules!.Add(ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls));
+                    itemResponse.Price = await GetPriceInTemp(cls.Id, true);
+
                     response.Items.Add(itemResponse);
                     continue;
                 }
@@ -489,6 +499,8 @@ namespace MagicLand_System.Services.Implements
 
                     itemResponse = CartItemCustomMapper.fromCartItemToCartItemResponse(course, null, item.Id);
                     itemResponse.Schedules = classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList();
+                    itemResponse.Price = await GetPriceInTemp(course.Id, false);
+
                     response.Items.Add(itemResponse);
                 }
             }

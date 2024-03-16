@@ -5,17 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MagicLand_System.Domain.Models
+namespace MagicLand_System.Domain.Models.TempEntity.Class
 {
-    public class CoursePrice
+    public class TempItemPrice
     {
         public Guid Id { get; set; }
-        public double Price { get; set; }
-        public DateTime EffectiveDate { get; set; }
-
-
-        [ForeignKey("Course")]
+        public Guid ClassId { get; set; }
         public Guid CourseId { get; set; }
-        public Course? Course { get; set; }
+        public double Price { get; set; }
+
     }
 }

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
-using MagicLand_System.Domain.Models.TempEntity;
+using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Quizzes;

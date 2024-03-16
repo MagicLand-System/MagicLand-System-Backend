@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
 
-namespace MagicLand_System.Domain.Models.TempEntity
+namespace MagicLand_System.Domain.Models.TempEntity.Quiz
 {
     public class TempFCAnswer
     {

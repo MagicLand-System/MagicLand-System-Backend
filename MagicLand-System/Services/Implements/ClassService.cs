@@ -2,6 +2,7 @@
 using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
@@ -1379,8 +1380,14 @@ namespace MagicLand_System.Services.Implements
             limitStudent ??= int.MaxValue;
 
             classes = classes.Where(c => c.LeastNumberStudent >= leastNumberStudent || c.LimitNumberStudent == limitStudent).ToList();
+            var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
 
-            return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+            foreach (var response in responses)
+            {
+                response.CoursePrice = await GetClassPrice(response.ClassId);
+            }
+
+            return responses;
         }
 
         public async Task<ClassResExtraInfor> GetClassByIdAsync(Guid id)
@@ -1396,7 +1403,10 @@ namespace MagicLand_System.Services.Implements
                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Slot)!
                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
 
-            return _mapper.Map<ClassResExtraInfor>(cls);
+            var response = _mapper.Map<ClassResExtraInfor>(cls);
+            response.CoursePrice = await GetClassPrice(cls.Id);
+
+            return response;
         }
 
         public async Task<List<ClassWithSlotShorten>> GetClassesAsync(PeriodTimeEnum time)
@@ -1404,75 +1414,50 @@ namespace MagicLand_System.Services.Implements
             #region
             //try
             //{
-            //    var syllId = Guid.Parse("9c2f43b2-ddef-453d-811d-b2091ac45d01");
-            //    var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-            //    predicate: x => x.Id == syllId,
-            //    include: x => x.Include(x => x.ExamSyllabuses!));
+            //var deleteClasses = new List<Class>();
+            //var deleteSyllabuses = new List<Syllabus>();
+            //var deleteCourses = new List<Course>();
 
+            //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
 
-            //    var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(
-            //        orderBy: x => x.OrderBy(x => x.OrderNumber),
-            //        predicate: x => x.SyllabusId == syll.Id,
-            //        include: x => x.Include(x => x.Sessions!.OrderBy(x => x.NoSession)).ThenInclude(x => x.SessionDescriptions!));
-
-            //    var questionPackages = new List<QuestionPackage>();
-            //    var sessions = topics.SelectMany(x => x.Sessions!).ToList();
-            //    foreach (var ses in sessions)
+            //foreach (var syll in syllabuses)
+            //{
+            //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
+            //    if (course == null)
             //    {
-            //        var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
-            //        if (questionPackage != null)
+            //        deleteSyllabuses.Add(syll);
+            //        continue;
+            //    }
+            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
+            //    if (classes == null && !classes.Any())
+            //    {
+            //        deleteCourses.Add(course);
+            //        deleteSyllabuses.Add(syll);
+            //        continue;
+            //    }
+            //    int classCount = 0;
+            //    foreach (var cls in classes)
+            //    {
+            //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
+            //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
             //        {
-            //            questionPackage.NoSession = ses.NoSession;
-            //            questionPackages.Add(questionPackage);
+            //            classCount++;
+            //            deleteClasses.Add(cls);
             //        }
             //    }
-            //    foreach (var exam in syll.ExamSyllabuses!)
+            //    if (classCount == classes.Count())
             //    {
-            //        if (exam.Method!.Trim().ToLower() == "offline")
-            //        {
-            //            foreach (var ses in sessions)
-            //            {
-            //                foreach (string content in ses.SessionDescriptions.Select(sd => sd.Content.Trim().ToLower()))
-            //                {
-            //                    if (content == exam.ContentName!.Trim().ToLower())
-            //                    {
-            //                        questionPackages.Add(new QuestionPackage
-            //                        {
-            //                            Id = Guid.NewGuid(),
-            //                            SessionId = ses.Id,
-            //                            ContentName = exam.ContentName,
-            //                            NoSession = ses.NoSession,
-            //                            Type = "options",
-            //                            Title = "Làm Tại Nhà",
-            //                            Score = 0,
-            //                        });
-            //                    }
-            //                }
-
-            //            }
-            //        }
+            //        deleteCourses.Add(course);
+            //        deleteSyllabuses.Add(syll);
             //    }
+            //}
 
-            //    questionPackages = questionPackages.OrderBy(qp => qp.NoSession).ToList();
-            //    for (int i = 0; i < questionPackages.Count(); i++)
-            //    {
-            //        questionPackages[i].OrderPackage = i + 1;
-            //    }
-
-            //    if (questionPackages.Any(q => q.Score == 0))
-            //    {
-            //        var packageOffline = questionPackages.First(q => q.Score == 0);
-            //        if (packageOffline != null)
-            //        {
-            //            await _unitOfWork.GetRepository<QuestionPackage>().InsertAsync(packageOffline);
-            //        }
-            //    }
-
-            //    var packageUpdate = questionPackages.Where(q => q.Score != 0).ToList();
+            //_unitOfWork.GetRepository<Class>().DeleteRangeAsync(deleteClasses);
+            //_unitOfWork.GetRepository<Course>().DeleteRangeAsync(deleteCourses);
+            //_unitOfWork.GetRepository<Syllabus>().DeleteRangeAsync(deleteSyllabuses);
+            //await _unitOfWork.CommitAsync();
 
 
-            //    _unitOfWork.GetRepository<QuestionPackage>().UpdateRange(packageUpdate);
-            //    await _unitOfWork.CommitAsync();
             //}
 
             //catch (Exception ex)
@@ -1483,7 +1468,15 @@ namespace MagicLand_System.Services.Implements
             //return default!;
             #endregion
             var classes = await FetchClasses(time);
-            return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+            var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+
+            foreach (var res in responses)
+            {
+                res.CoursePrice = await GetPriceInTemp(res.ClassId, true);
+            }
+            //responses.ForEach(async res => await GetPriceInTemp(res.ClassId, true));
+
+            return responses;
         }
 
 
@@ -1513,7 +1506,14 @@ namespace MagicLand_System.Services.Implements
             status = status == ClassStatusEnum.DEFAULT ? ClassStatusEnum.UPCOMING : status;
             classes = classes.Where(cls => cls.Status == status.ToString()).ToList();
 
-            return classes.Select(cls => _mapper.Map<ClassWithSlotShorten>(cls)).ToList(); ;
+            var responses = classes.Select(cls => _mapper.Map<ClassWithSlotShorten>(cls)).ToList();
+
+            foreach (var res in responses)
+            {
+                res.CoursePrice = await GetPriceInTemp(res.ClassId, true);
+            }
+
+            return responses;
         }
 
         private async Task<ICollection<Class>> FetchClasses(PeriodTimeEnum time)
@@ -1534,15 +1534,23 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var cls in classes)
             {
-                cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-                predicate: x => x.Id == cls.CourseId,
-                include: x => x.Include(x => x.Syllabus).ThenInclude(cs => cs!.Topics!.OrderBy(cs => cs.OrderNumber))
-               .ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession)).ThenInclude(ses => ses.SessionDescriptions!));
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == cls.CourseId);
 
-                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
-                orderBy: x => x.OrderBy(x => x.Date),
-                predicate: x => x.ClassId == cls.Id,
-                include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
+                var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    predicate: x => x.CourseId == cls.CourseId,
+                    include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession))
+                   .ThenInclude(ses => ses.SessionDescriptions!.OrderBy(ses => ses.Order)));
+
+                var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                    orderBy: x => x.OrderBy(x => x.Date),
+                    predicate: x => x.ClassId == cls.Id,
+                    include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
+
+                cls.Course = course;
+                cls.Schedules = schedules;
+                cls.Course.Syllabus = syllabus;
+
             }
 
             return classes;
@@ -1642,10 +1650,10 @@ namespace MagicLand_System.Services.Implements
 
             var currentClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
 
-            return GenerateClassSchedule(currentClasses);
+            return await GenerateClassSchedule(currentClasses);
         }
 
-        private List<ClassWithSlotOutSideResponse> GenerateClassSchedule(List<Class> currentClasses)
+        private async Task<List<ClassWithSlotOutSideResponse>> GenerateClassSchedule(List<Class> currentClasses)
         {
             var responses = new List<ClassWithSlotOutSideResponse>();
             foreach (var cls in currentClasses)
@@ -1663,6 +1671,8 @@ namespace MagicLand_System.Services.Implements
                 response.Slot = SlotCustomMapper.fromSlotToSlotForLecturerResponse(currentSchedule.Slot!);
                 response.Room = RoomCustomMapper.fromRoomToRoomResponse(currentSchedule.Room!);
                 response.SlotOrder = StringHelper.GetSlotNumber(currentSchedule.Slot!.StartTime);
+
+                response.CoursePrice = await GetPriceInTemp(cls.Id, true);
 
                 responses.Add(response);
             }
@@ -2062,10 +2072,10 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
                 }
-
-                responses.Add(_mapper.Map<ClassWithSlotShorten>(cls));
+                var response = _mapper.Map<ClassWithSlotShorten>(cls);
+                response.CoursePrice = await GetPriceInTemp(response.ClassId, true);
+                responses.Add(response);
             }
-
             return responses;
 
         }
@@ -2154,7 +2164,13 @@ namespace MagicLand_System.Services.Implements
                         predicate: x => x.Cart!.UserId == GetUserIdFromJwt() && x.ClassId != default);
 
             classes = classes.Where(cls => !classesInCartId.Contains(cls.Id)).ToList();
-            return classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+            var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+            foreach(var res in responses)
+            {
+                res.CoursePrice = await GetClassPrice(res.ClassId);
+            }
+
+            return responses;
         }
 
         public async Task<TopicResponse> GetTopicLearningAsync(Guid classId, int topicOrder)

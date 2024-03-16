@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MagicLand_System.Domain.Models.TempEntity
+namespace MagicLand_System.Domain.Models.TempEntity.Quiz
 {
     public class TempQuiz
     {

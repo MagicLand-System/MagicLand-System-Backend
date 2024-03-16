@@ -25,7 +25,6 @@ namespace MagicLand_System.Mappers.Classes
                 .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
                 .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
-                //.ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
                 .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
                 ? ClassMethodEnum.ONLINE.ToString()
                 : ClassMethodEnum.OFFLINE.ToString()))
