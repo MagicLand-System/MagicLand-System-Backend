@@ -336,7 +336,7 @@ namespace MagicLand_System.Services.Implements
                 //    }
                 //}
                 course.SubDescriptionTitles = subDescriptionTitles;
-                var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.SyllabusId), include: x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions));
+                var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.SyllabusId), include: x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions).Include(x => x.SyllabusCategory));
                 var NumOfSess = 0;
                 List<Session> sessions = new List<Session>();
                 foreach (var sess in syll.Topics)
@@ -347,7 +347,8 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 course.NumberOfSession = sessions.Count;
-                course.SubjectName = syll.SubjectCode;
+                //course.SubjectName = syll.SubjectCode;
+                course.SubjectName = syll.SyllabusCategory.Name;
                 syll.CourseId = course.Id;
                 await _unitOfWork.GetRepository<Course>().InsertAsync(course);
                 await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
@@ -358,7 +359,7 @@ namespace MagicLand_System.Services.Implements
                 return isSuccess;
             }
             return false;
-        }
+        } 
 
         public async Task<List<SyllabusCategory>> GetCourseCategories()
         {
