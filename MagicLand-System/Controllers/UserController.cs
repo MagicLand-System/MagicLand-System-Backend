@@ -132,6 +132,12 @@ namespace MagicLand_System.Controllers
 
             return Ok(response);
         }
+        [HttpGet(ApiEndpointConstant.User.GetByAdmin)]
+        public async Task<IActionResult> GetByAdmin(DateTime? startDate , DateTime? endDate , string? searchString, string? slotId)
+        {
+            var result = await _userService.GetAdminLecturerResponses(startDate, endDate, searchString,slotId);
+            return Ok(result);
+        }
 
     }
 }

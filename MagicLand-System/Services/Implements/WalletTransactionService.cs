@@ -184,8 +184,8 @@ namespace MagicLand_System.Services.Implements
                     .Include(x => x.Schedules)
                     .Include(x => x.StudentClasses));
 
-                var currentRequestTotal = cls.Course!.Price * request.StudentIdList.Count();
-
+                //var currentRequestTotal = cls.Course!.Price * request.StudentIdList.Count();
+                var currentRequestTotal = 0.0;
                 string studentNameString = await GenerateStudentNameString(request.StudentIdList);
 
                 var newStudentItemScheduleList = await RenderStudentItemScheduleList(cls.Id, request.StudentIdList);
@@ -548,10 +548,10 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var request in requests)
             {
-                var price = await _unitOfWork.GetRepository<Class>()
-                .SingleOrDefaultAsync(selector: x => x.Course!.Price, predicate: x => x.Id.Equals(request.ClassId), include: x => x.Include(x => x.Course)!);
+                //var price = await _unitOfWork.GetRepository<Class>()
+                //.SingleOrDefaultAsync(selector: x => x.Course!.Price, predicate: x => x.Id.Equals(request.ClassId), include: x => x.Include(x => x.Course)!);
 
-                total += request.StudentIdList.Count() * price;
+                //total += request.StudentIdList.Count() * price;
             }
 
             return total;
@@ -889,14 +889,14 @@ namespace MagicLand_System.Services.Implements
 
                     string signature = txnRefCode + StringHelper.GenerateAttachValueForTxnRefCode(item);
 
-                    var currentRequestTotal = cls.Course!.Price * item.StudentIdList.Count();
+                    //var currentRequestTotal = cls.Course!.Price * item.StudentIdList.Count();
                     var studentNameString = await GenerateStudentNameString(item.StudentIdList);
 
                     var newTransaction = new WalletTransaction
                     {
                         Id = new Guid(),
                         TransactionCode = string.Empty,
-                        Money = currentRequestTotal,
+                        //Money = currentRequestTotal,
                         Discount = discountEachItem,
                         Type = TransactionTypeEnum.Payment.ToString(),
                         Method = TransactionMethodEnum.Vnpay.ToString(),

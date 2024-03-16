@@ -47,7 +47,7 @@ namespace MagicLand_System.Services.Implements
             {
                 if(searchString != null)
                 {
-                    responses = responses.Where(x =>( x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim()) || x.ClassCode.ToLower().Trim().Contains(searchString.ToLower().Trim()))).ToList();
+                    responses = responses.Where(x =>( x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim()))).ToList();
                 }
                 
                 if(startDate != null)

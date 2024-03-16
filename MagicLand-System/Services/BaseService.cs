@@ -56,6 +56,27 @@ namespace MagicLand_System.Services
             return account;
             //return (account, default);
         }
+        protected async Task<double> GetClassPrice(Guid classId)
+        {
+            double result = 0;
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id == classId);
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classx.CourseId.ToString()),include : x => x.Include(x => x.CoursePrices));
+            var prices = course.CoursePrices;
+            var classDate = classx.AddedDate;
+            var priceList = prices.OrderBy(x => x.EffectiveDate).ToArray();
+            if(classDate < priceList[0].EffectiveDate)
+            {
+                return result;
+            }
+            for ( var i = 0; i < priceList.Length - 1; i++)
+            {
+                if (priceList[i].EffectiveDate <= classDate && classDate < priceList[i+1].EffectiveDate)
+                {
+                    return result = priceList[i].Price;
+                }
+            }
+            return priceList[priceList.Length - 1].Price;
+        }
     }
 
 }
