@@ -5,6 +5,7 @@
         flashcard,
         multipleChoice,
         options,
-        review
+        review,
+        participation,
     }
 }

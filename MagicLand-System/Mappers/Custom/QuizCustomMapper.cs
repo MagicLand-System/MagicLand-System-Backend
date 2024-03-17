@@ -76,7 +76,7 @@ namespace MagicLand_System.Mappers.Custom
                 CompleteionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria : null,
                 TotalScore = (double)questionPackage.Score!,
                 TotalMark = totalMark,
-                //Duration = questionPackage.Duration,
+                Duration = questionPackage.Duration != null ?  questionPackage.Duration.Value : 300,
                 //DeadLine = questionPackage.DeadlineTime,
                 //Attempts = questionPackage.AttemptsAllowed,
                 NoSession = questionPackage.NoSession != null ? questionPackage.NoSession.Value : 0,

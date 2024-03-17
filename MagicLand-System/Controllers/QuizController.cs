@@ -79,13 +79,15 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Exams Of Class By Class Id
         /// <summary>
-        ///  Truy Suất Các Bài Kiểm Tra Của Một Lớp Học
+        ///  Truy Suất Các Bài Kiểm Tra Của Một Lớp Học, Nếu Có Id Của Học Sinh Sẽ Kiểm Tra Và Truất Thông Tin Bài Tập Của Học Sinh Đó
         /// </summary>
         /// <param name="id">Id Của Lớp Học</param>
+        /// <param name="studentId">Id Của Học Sinh (Option)</param>
         /// <remarks>
         /// Sample request:
         ///{     
-        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d"  
+        ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
+        ///    "studentId": "EC4C3593-7C58-423C-A87A-CEF2A391C57a"
         ///}
         /// </remarks>
         /// <response code="200">Trả Về Các Bài Kiểm Tra Của Lớp Học</response>
@@ -97,9 +99,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid id)
+        public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid id, [FromQuery] Guid? studentId)
         {
-            var responses = await _syllabusService.LoadExamOfClassByClassIdAsync(id);
+            var responses = await _syllabusService.LoadExamOfClassByClassIdAsync(id, studentId);
 
             return Ok(responses);
         }
@@ -402,7 +404,7 @@ namespace MagicLand_System.Controllers
         [Authorize]
         public async Task<IActionResult> GetFinalResult([FromQuery] List<Guid> studentIdList)
         {
-            if(studentIdList == null)
+            if (studentIdList == null)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -429,10 +431,12 @@ namespace MagicLand_System.Controllers
 
         #region document API Setting Exam
         /// <summary>
-        ///  Cho Phép Giáo Viên Cập Nhập Thông Tin Bài Kiểm Tra
+        ///  Cho Phép Giáo Viên Thiết Lập Hoặc Cập Nhập Thông Tin Thời Gian Bài Kiểm Tra
         /// </summary>
-        /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra Nối Thẻ </param>
-        /// <param name="studentWorkResults">Chứa Câu Hỏi Và Cặp Thẻ Đã Ghép Của Học Sinh</param>
+        /// <param name="quizInfor">Thông Tin Bài Kiểm Tra</param>
+        /// <param name="quizStartTime">Thời Gian Bắt Đầu</param>
+        /// <param name="quizEndTime">Thời Gian Kết Thúc</param>
+        /// <param name="attemptAllowed">Số Lần Thử</param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -440,13 +444,9 @@ namespace MagicLand_System.Controllers
         ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
         ///    [
         ///      {
-        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
-        ///         "answers" : [
-        ///                       {
-        ///                         "firstCardId":"35885C01-B2FA-46AE-93F2-CFAF519D9FB9",
-        ///                          "secondCardId":"9054F907-6AEB-4BC9-8AB3-9E0F405200DD"
-        ///                       }
-        ///                    ]
+        ///        "quizStartTime": "9:45",
+        ///        "quizEndTime": "10:15",
+        ///        "attempAllowed" : 2,
         ///        },
         ///     ]
         /// </remarks>
@@ -455,15 +455,21 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        //[HttpGet(ApiEndpointConstant.LectureEndPoint.)]
-        //[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        //[ProducesErrorResponseType(typeof(BadRequest))]
-        //[Authorize(Roles = "LECTURER")]
-        //public async Task<IActionResult> SettingExam()
-        //{
-        //    var response = await _quizService.();
-        //    return Ok(response);
-        //}
+        [HttpPost(ApiEndpointConstant.LectureEndPoint.SettingQuizTime)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> SettingExam([FromBody] QuizRequest quizInfor, [FromQuery] TimeOnly quizStartTime, [FromQuery] TimeOnly quizEndTime, [FromQuery] int attemptAllowed)
+        {
+            var settingInfor = new SettingQuizTimeRequest
+            {
+                QuizStartTime = quizStartTime,
+                QuizEndTime = quizEndTime,
+                AttemptAllowed = attemptAllowed,
+            };
+            var response = await _quizService.SettingExamTimeAsync(quizInfor.ExamId, quizInfor.ClassId, settingInfor);
+            return Ok(response);
+        }
 
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizForStaff)]
         public async Task<IActionResult> GetQuizForStaff([FromRoute] string id)

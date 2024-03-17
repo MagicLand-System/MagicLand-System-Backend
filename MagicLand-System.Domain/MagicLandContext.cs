@@ -58,6 +58,7 @@ namespace MagicLand_System.Domain
         public DbSet<TempMCAnswer> TempMCAnswers { get; set; }
         public DbSet<TempFCAnswer> TempFCAnswers { get; set; }
         public DbSet<TempItemPrice> TempItemPrices { get; set; }
+        public DbSet<TempQuizTime> TempQuizTimes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -354,6 +355,11 @@ namespace MagicLand_System.Domain
             modelBuilder.Entity<TempItemPrice>(entity =>
             {
                 entity.ToTable("TempItemPrice");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<TempQuizTime>(entity =>
+            {
+                entity.ToTable("TempQuizTime");
                 entity.HasKey(e => e.Id);
             });
         }

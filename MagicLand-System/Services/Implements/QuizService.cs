@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
@@ -10,6 +11,7 @@ using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 using System.Linq;
 
 namespace MagicLand_System.Services.Implements
@@ -244,12 +246,27 @@ namespace MagicLand_System.Services.Implements
         private async Task<int> GetAttempt(Guid examId, Guid? currentStudentId, Class cls)
         {
             int noAttempt = 1;
-            var isExamHasDone = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+            var isExamHasDone = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+                orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                 predicate: x => x.StudentClass!.StudentId == currentStudentId && x.StudentClass.ClassId == cls.Id && x.ExamId == examId);
+
+            var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
+                predicate: x => x.ExamId == examId && x.ClassId == cls.Id);
 
             if (isExamHasDone != null)
             {
-                noAttempt = isExamHasDone.NoAttempt + 1;
+                if (quizTime is null)
+                {
+                    throw new BadHttpRequestException($"Bạn Đã Làm Vượt Quá Số Lần Cho Phép Của Bài Kiểm Tra", StatusCodes.Status400BadRequest);
+                }
+                if (quizTime is not null && (isExamHasDone.Count() < quizTime.AttemptAllowed))
+                {
+                    noAttempt = isExamHasDone.First().NoAttempt++;
+                }
+                if (quizTime is not null && (isExamHasDone.Count() >= quizTime.AttemptAllowed))
+                {
+                    throw new BadHttpRequestException($"Bạn Đã Làm Vượt Quá Số Lần Cho Phép Của Bài Kiểm Tra", StatusCodes.Status400BadRequest);
+                }
             }
 
             return noAttempt;
@@ -658,39 +675,8 @@ namespace MagicLand_System.Services.Implements
                     var multipleChoiceAnswerResult = new MCAnswerResultResponse();
                     var flashCardAnswerResults = new List<FCAnswerResultResponse>();
 
-                    var multipleChoiceAnswer = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().SingleOrDefaultAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
-                    if (multipleChoiceAnswer != null)
-                    {
-                        multipleChoiceAnswerResult.StudentAnswerId = multipleChoiceAnswer.AnswerId;
-                        multipleChoiceAnswerResult.StudentAnswerDescription = multipleChoiceAnswer.Answer;
-                        multipleChoiceAnswerResult.StudentAnswerImage = multipleChoiceAnswer.AnswerImage;
-                        multipleChoiceAnswerResult.CorrectAnswerId = multipleChoiceAnswer.CorrectAnswerId;
-                        multipleChoiceAnswerResult.CorrectAnswerDescription = multipleChoiceAnswer.CorrectAnswer;
-                        multipleChoiceAnswerResult.CorrectAnswerImage = multipleChoiceAnswer.CorrectAnswerImage;
-                        multipleChoiceAnswer.Status = multipleChoiceAnswer.Status;
-                        multipleChoiceAnswer.Score = multipleChoiceAnswer.Score;
-                    }
-                    var flashCardAnswers = await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
-                    if (flashCardAnswers != null)
-                    {
-                        foreach (var fc in flashCardAnswers)
-                        {
-                            flashCardAnswerResults.Add(new FCAnswerResultResponse
-                            {
-                                StudentFirstCardAnswerId = fc.LeftCardAnswerId,
-                                StudentFirstCardAnswerDecription = fc.LeftCardAnswer,
-                                StudentFirstCardAnswerImage = fc.LeftCardAnswerImage,
-                                StudentSecondCardAnswerId = fc.RightCardAnswerId,
-                                StudentSecondCardAnswerDescription = fc.RightCardAnswer,
-                                StudentSecondCardAnswerImage = fc.RightCardAnswerImage,
-                                CorrectSecondCardAnswerId = fc.CorrectRightCardAnswerId,
-                                CorrectSecondCardAnswerDescription = fc.CorrectRightCardAnswer,
-                                CorrectSecondCardAnswerImage = fc.CorrectRightCardAnswerImage,
-                                Status = fc.Status,
-                                Score = fc.Score,
-                            });
-                        }
-                    }
+                    var multipleChoiceAnswer = await GetMCStudentResult(examQuestion, multipleChoiceAnswerResult);
+                    var flashCardAnswers = await GetFCStudentResult(examQuestion, flashCardAnswerResults);
 
                     studentWorks.Add(new QuestionResultResponse
                     {
@@ -721,6 +707,51 @@ namespace MagicLand_System.Services.Implements
             }
 
             return responses;
+        }
+
+        private async Task<ICollection<FlashCardAnswer>?> GetFCStudentResult(ExamQuestion examQuestion, List<FCAnswerResultResponse> flashCardAnswerResults)
+        {
+            var flashCardAnswers = await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
+            if (flashCardAnswers != null)
+            {
+                foreach (var fc in flashCardAnswers)
+                {
+                    flashCardAnswerResults.Add(new FCAnswerResultResponse
+                    {
+                        StudentFirstCardAnswerId = fc.LeftCardAnswerId,
+                        StudentFirstCardAnswerDecription = fc.LeftCardAnswer,
+                        StudentFirstCardAnswerImage = fc.LeftCardAnswerImage,
+                        StudentSecondCardAnswerId = fc.RightCardAnswerId,
+                        StudentSecondCardAnswerDescription = fc.RightCardAnswer,
+                        StudentSecondCardAnswerImage = fc.RightCardAnswerImage,
+                        CorrectSecondCardAnswerId = fc.CorrectRightCardAnswerId,
+                        CorrectSecondCardAnswerDescription = fc.CorrectRightCardAnswer,
+                        CorrectSecondCardAnswerImage = fc.CorrectRightCardAnswerImage,
+                        Status = fc.Status,
+                        Score = fc.Score,
+                    });
+                }
+            }
+
+            return flashCardAnswers;
+        }
+
+        private async Task<MultipleChoiceAnswer?> GetMCStudentResult(ExamQuestion examQuestion, MCAnswerResultResponse multipleChoiceAnswerResult)
+        {
+            var multipleChoiceAnswer = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().SingleOrDefaultAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
+            if (multipleChoiceAnswer != null)
+            {
+                multipleChoiceAnswerResult.StudentAnswerId = multipleChoiceAnswer.AnswerId;
+                multipleChoiceAnswerResult.StudentAnswerDescription = multipleChoiceAnswer.Answer;
+                multipleChoiceAnswerResult.StudentAnswerImage = multipleChoiceAnswer.AnswerImage;
+                multipleChoiceAnswerResult.CorrectAnswerId = multipleChoiceAnswer.CorrectAnswerId;
+                multipleChoiceAnswerResult.CorrectAnswerDescription = multipleChoiceAnswer.CorrectAnswer;
+                multipleChoiceAnswerResult.CorrectAnswerImage = multipleChoiceAnswer.CorrectAnswerImage;
+                multipleChoiceAnswer.Status = multipleChoiceAnswer.Status;
+                multipleChoiceAnswer.Score = multipleChoiceAnswer.Score;
+            }
+
+            return multipleChoiceAnswer;
         }
 
         public async Task<List<FinalResultResponse>> GetFinalResultAsync(List<Guid> studentIdList)
@@ -779,7 +810,7 @@ namespace MagicLand_System.Services.Implements
                 double participationWeight = 0.0, attendanceResult = 0.0, evaluateResult = 0.0;
                 foreach (var quizExam in identifyQuizExams)
                 {
-                    if (quizExam.Item2 == null)
+                    if (quizExam.Item2 == null || quizExam.Item2 == default)
                     {
                         participationWeight = quizExam.Item1.Weight;
                         await CalculateParticipation(attendanceResult, evaluateResult, cls.Schedules.ToList(), student.Id);
@@ -887,12 +918,17 @@ namespace MagicLand_System.Services.Implements
 
                 if (quiz is not null)
                 {
+                    if (quiz.Type == QuizTypeEnum.review.ToString())
+                    {
+                        continue;
+                    }
                     var examOfQuiz = exams!.ToList().Find(e => StringHelper.TrimStringAndNoSpace(e.ContentName!) == StringHelper.TrimStringAndNoSpace(quiz.ContentName!));
 
                     identifyQuizExams.Add(new(examOfQuiz!, quiz));
                 }
             }
-   //partifivation
+            var participationExam = exams!.First(e => StringHelper.TrimStringAndNoSpace(e.Category!) == StringHelper.TrimStringAndNoSpace(QuizTypeEnum.participation.ToString()));
+            identifyQuizExams.Add(new(participationExam, default!));
 
             return identifyQuizExams;
         }
@@ -900,6 +936,88 @@ namespace MagicLand_System.Services.Implements
         public double CalculateScoreWeight(double percentage, double score)
         {
             return (score * percentage) / 100;
+        }
+
+        public async Task<string> SettingExamTimeAsync(Guid examId, Guid classId, SettingQuizTimeRequest settingInfor)
+        {
+            await ValidateSettingRequest(examId, classId, settingInfor);
+            try
+            {
+                var oldQuizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(predicate: x => x.ClassId == classId && x.ExamId == examId);
+                if (oldQuizTime != null)
+                {
+                    oldQuizTime.ExamStartTime = settingInfor.QuizStartTime!.Value.ToTimeSpan();
+                    oldQuizTime.ExamEndTime = settingInfor.QuizEndTime!.Value.ToTimeSpan();
+                    oldQuizTime.AttemptAllowed = settingInfor.AttemptAllowed!.Value;
+
+                    _unitOfWork.GetRepository<TempQuizTime>().UpdateAsync(oldQuizTime);
+                    _unitOfWork.Commit();
+                    return "Cập Nhập Thành Công";
+                }
+                var quizTime = new TempQuizTime
+                {
+                    Id = Guid.NewGuid(),
+                    ClassId = classId,
+                    ExamId = examId,
+                    ExamStartTime = settingInfor.QuizStartTime!.Value.ToTimeSpan(),
+                    ExamEndTime = settingInfor.QuizEndTime!.Value.ToTimeSpan(),
+                    AttemptAllowed = settingInfor.AttemptAllowed!.Value,
+                };
+
+                await _unitOfWork.GetRepository<TempQuizTime>().InsertAsync(quizTime);
+                _unitOfWork.Commit();
+
+                return "Thiết Lập Thành Công";
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]" + ex.InnerException != null ? $" InnerEx [{ex.InnerException}]" : string.Empty,
+                StatusCodes.Status500InternalServerError);
+            }
+
+        }
+
+        private async Task ValidateSettingRequest(Guid examId, Guid classId, SettingQuizTimeRequest settingInfor)
+        {
+            var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                     selector: x => x.CourseId,
+                     predicate: x => x.Id == classId);
+            if (courseId == default)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    selector: x => x.Topics!.SelectMany(tp => tp.Sessions!.Select(ses => ses.Id)),
+                    predicate: x => x.CourseId == courseId);
+
+            bool isValid = false;
+            foreach (var id in sessions)
+            {
+                var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                    selector: x => x.Id,
+                    predicate: x => x.SessionId == id);
+
+                if (quiz != default && quiz == examId)
+                {
+                    isValid = true;
+                    break;
+                }
+            }
+
+            if (!isValid)
+            {
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Tồn Tại Hoặc Không Thuộc Id Lớp Học Đang Yêu Cầu", StatusCodes.Status400BadRequest);
+            }
+
+            if (settingInfor.AttemptAllowed < 0 || settingInfor.AttemptAllowed > 10)
+            {
+                throw new BadHttpRequestException($"Số Lần Làm Quiz Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+            if (settingInfor.QuizStartTime == default && settingInfor.QuizEndTime == default)
+            {
+                throw new BadHttpRequestException($"Thời Gian Cài Đặt Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
         }
     }
 }

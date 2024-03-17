@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System.PayLoad.Response.Quizzes
+﻿namespace MagicLand_System.PayLoad.Response.Quizzes.Staff
 {
     public class StaffMultipleChoiceResponse
     {

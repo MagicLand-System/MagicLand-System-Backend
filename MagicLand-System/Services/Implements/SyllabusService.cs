@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
@@ -10,6 +11,7 @@ using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
+using MagicLand_System.PayLoad.Response.Quizzes.Staff;
 using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
@@ -53,15 +55,6 @@ namespace MagicLand_System.Services.Implements
 
         private void SettingQuestionPackageRequest(OverallSyllabusRequest request)
         {
-            //foreach (var qp in request.QuestionPackageRequests!)
-            //{
-            //    var exam = request.ExamSyllabusRequests.Find(es => StringHelper.TrimStringAndNoSpace(es.ContentName) == StringHelper.TrimStringAndNoSpace(qp.ContentName));
-            //    Regex regex = new Regex(@"\d+");
-            //    Match match = regex.Match(exam!.Duration!);
-
-            //    qp.Attempt = 1;
-            //    qp.Duration = int.Parse(match.Value);
-            //}
             var offlineExams = request.ExamSyllabusRequests
             .Where(exam => exam.Method.Trim().ToLower() == "offline")
             .ToList();
@@ -83,8 +76,7 @@ namespace MagicLand_System.Services.Implements
                         Type = "options",
                         Title = "Làm Tại Nhà",
                         Score = 0,
-                        //Attempt = 1,
-                        //Duration = 0,
+                        Duration = 0,
                     });
             }
         }
@@ -340,6 +332,7 @@ namespace MagicLand_System.Services.Implements
                     Score = qp.Score,
                     OrderPackage = orderPackage,
                     NoSession = qp.NoOfSession,
+                    Duration = qp.Duration,
                 };
 
                 await _unitOfWork.GetRepository<QuestionPackage>().InsertAsync(questionPackage);
@@ -491,12 +484,22 @@ namespace MagicLand_System.Services.Implements
 
                     if (quiz != null)
                     {
+                        var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
+                        predicate: x => x.ExamId == quiz.Id && x.ClassId == classId);
+
+                        var startTime = DateTime.Parse(session.Date!).Date.Add(session.StartTime!.Value.ToTimeSpan());
+                        var endTime = DateTime.Parse(session.Date!).Date.Add(session.EndTime!.Value.ToTimeSpan());
+
                         session.Quiz = new QuizInforResponse
                         {
                             ExamId = quiz.Id,
                             ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
                             ExamPart = quiz.Type!.Trim().ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1,
                             QuizName = quiz.Title!,
+                            Attempts = quizTime != null ? quizTime.AttemptAllowed : 1,
+                            QuizDuration = quiz.Duration != null ? quiz.Duration.Value : 300,
+                            QuizStartTime = quizTime != null && quizTime.ExamStartTime != default ? startTime.Date.Add(quizTime.ExamStartTime) : startTime,
+                            QuizEndTime = quizTime != null && quizTime.ExamEndTime != default ? endTime.Date.Add(quizTime.ExamEndTime) : endTime,
                         };
                     }
                 }
@@ -735,9 +738,20 @@ namespace MagicLand_System.Services.Implements
             return quizzesResponse;
         }
 
-        private async Task<Class> ValidateClass(Guid id)
+        private async Task<Class> ValidateClass(Guid classId, Guid? studentId)
         {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Course).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.Id == classId,
+                include: x => x.Include(x => x.Course).Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)!);
+
+            if (studentId != null && studentId != default)
+            {
+                var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == classId && x.StudentId == studentId.Value);
+                if (studentClass is null)
+                {
+                    throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Không Thuộc Lớp Học Đang Truy Suất", StatusCodes.Status400BadRequest);
+                }
+            }
 
             cls.Course!.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
             predicate: x => x.CourseId == cls.CourseId,
@@ -745,12 +759,12 @@ namespace MagicLand_System.Services.Implements
 
             if (cls == null || cls.Course!.Syllabus == null)
             {
-                throw new BadHttpRequestException($"Id [{id}] Của Lớp Học Không Tồn Tại Hoặc Thuộc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Không Tồn Tại Hoặc Thuộc Khóa Học Không Thuộc Về Bất Cứ Giáo Trình Nào", StatusCodes.Status400BadRequest);
             }
 
             if (cls.Status == ClassStatusEnum.CANCELED.ToString())
             {
-                throw new BadHttpRequestException($"Id [{id}] Của Lớp Học Đã Hủy Không Thể Truy Suất", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Đã Hủy Không Thể Truy Suất", StatusCodes.Status400BadRequest);
             }
 
             return cls;
@@ -769,11 +783,19 @@ namespace MagicLand_System.Services.Implements
 
             var exam = cls.Course!.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
             var examResponse = QuizCustomMapper.fromSyllabusItemsToExamResponse(questionPackage, exam);
+            var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(predicate: x => x.ExamId == questionPackage.Id && x.ClassId == cls.Id);
+
+            var schedule = cls.Schedules.ToList()[session.NoSession - 1];
+            var date = schedule.Date.ToString("yyyy-MM-ddTHH:mm:ss");
+            var startTime = DateTime.Parse(date).Date.Add(TimeSpan.Parse(schedule.Slot!.StartTime));
+            var endTime = DateTime.Parse(date).Date.Add(TimeSpan.Parse(schedule.Slot!.EndTime));
 
             examResponse.SessionId = session.Id;
             examResponse.CourseId = cls.Course.Id;
-            examResponse.Date = cls.Schedules.ToList()[session.NoSession - 1].Date.ToString("yyyy-MM-ddTHH:mm:ss");
-
+            examResponse.Date = date;
+            examResponse.AttemptAlloweds = quizTime != null ? quizTime.AttemptAllowed : 1;
+            examResponse.ExamStartTime = quizTime != null && quizTime.ExamStartTime != default ? startTime.Date.Add(quizTime.ExamStartTime) : startTime;
+            examResponse.ExamEndTime = quizTime != null && quizTime.ExamEndTime != default ? endTime.Date.Add(quizTime.ExamEndTime) : endTime;
 
             examsResponse.Add(examResponse);
         }
@@ -786,9 +808,8 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Lỗi Hệ Thống Không Thể Xác Thực Người Dùng, Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Thao Tác",
                     StatusCodes.Status500InternalServerError);
             }
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
-                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)!);
+
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.PROGRESSING.ToString());
 
             if (!classes.Any())
             {
@@ -799,6 +820,12 @@ namespace MagicLand_System.Services.Implements
             {
                 var examsResponse = new List<ExamResponse>();
 
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                    orderBy: x => x.OrderBy(x => x.Date),
+                    predicate: x => x.ClassId == cls.Id,
+                    include: x => x.Include(x => x.Slot).Include(x => x.Room)!);
+
+
                 cls.Course!.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.CourseId == cls.CourseId,
                 include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
@@ -808,76 +835,93 @@ namespace MagicLand_System.Services.Implements
                     await GenerateExamWithDate(examsResponse, cls, session);
                 }
 
-                foreach (var exam in examsResponse)
-                {
-                    string status = string.Empty;
-                    var examDate = DateTime.Parse(exam.Date!).Date;
-                    var currentDate = DateTime.Now.Date;
-
-                    var test = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
-                    if (test != null)
-                    {
-                        status = "Đã Hoàn Thành";
-                    }
-                    else
-                    {
-                        if (examDate < currentDate)
-                        {
-                            status = "Hết Hạn Làm Bài";
-                        }
-                        if (examDate == currentDate)
-                        {
-                            status = "Hôm Nay";
-                        }
-                        if (examDate > currentDate)
-                        {
-                            status = examDate.Day - currentDate.Day + " Ngày Tới";
-                        }
-                    }
-
-                    if (examDate >= currentDate.AddDays(-numberOfDate).Date && examDate <= currentDate.AddDays(+numberOfDate).Date)
-                    {
-                        responses.Add(new ExamExtraInfor
-                        {
-                            ExamId = exam.ExamId,
-                            ExamPart = exam.ExamPart,
-                            ExamName = exam.ExamName,
-                            QuizCategory = exam.QuizCategory,
-                            QuizType = exam.QuizType,
-                            QuizName = exam.QuizName,
-                            Weight = exam.Weight,
-                            CompleteionCriteria = exam.CompleteionCriteria,
-                            TotalScore = exam.TotalScore,
-                            TotalMark = exam.TotalMark,
-                            Date = exam.Date,
-                            NoSession = exam.NoSession,
-                            RoomName = cls.Schedules.ToList()[exam.NoSession - 1].Room!.Name,
-                            SessionId = exam.SessionId,
-                            CourseId = exam.CourseId,
-                            ClassId = cls.Id,
-                            ClassName = cls.ClassCode,
-                            Method = cls.Method,
-                            Status = status,
-                        });
-                    }
-                }
+                await SettingExamInfor(numberOfDate, studentId.Value, responses, cls, examsResponse);
             }
 
             return responses;
         }
 
-        public async Task<List<ExamResponse>> LoadExamOfClassByClassIdAsync(Guid id)
+        private async Task SettingExamInfor(int numberOfDate, Guid studentId, List<ExamExtraInfor> responses, Class cls, List<ExamResponse> examsResponse)
+        {
+            foreach (var exam in examsResponse)
+            {
+                string status = string.Empty;
+                var examDate = DateTime.Parse(exam.Date!).Date;
+                var currentDate = DateTime.Now.Date;
+
+                var test = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
+                if (test != null)
+                {
+                    status = "Đã Hoàn Thành";
+                }
+                else
+                {
+                    if (examDate < currentDate)
+                    {
+                        status = "Hết Hạn Làm Bài";
+                    }
+                    if (examDate == currentDate)
+                    {
+                        status = "Hôm Nay";
+                    }
+                    if (examDate > currentDate)
+                    {
+                        status = examDate.Day - currentDate.Day + " Ngày Tới";
+                    }
+                }
+
+                if (examDate >= currentDate.AddDays(-numberOfDate).Date && examDate <= currentDate.AddDays(+numberOfDate).Date)
+                {
+                    responses.Add(new ExamExtraInfor
+                    {
+                        ExamId = exam.ExamId,
+                        ExamPart = exam.ExamPart,
+                        ExamName = exam.ExamName,
+                        QuizCategory = exam.QuizCategory,
+                        QuizType = exam.QuizType,
+                        QuizName = exam.QuizName,
+                        Weight = exam.Weight,
+                        CompleteionCriteria = exam.CompleteionCriteria,
+                        TotalScore = exam.TotalScore,
+                        TotalMark = exam.TotalMark,
+                        Date = exam.Date,
+                        NoSession = exam.NoSession,
+                        RoomName = cls.Schedules.ToList()[exam.NoSession - 1].Room!.Name,
+                        SessionId = exam.SessionId,
+                        CourseId = exam.CourseId,
+                        ClassId = cls.Id,
+                        ClassName = cls.ClassCode,
+                        Method = cls.Method,
+                        Status = status,
+                    });
+                }
+            }
+        }
+
+        public async Task<List<ExamWithScore>> LoadExamOfClassByClassIdAsync(Guid classId, Guid? studentId)
         {
             var examsResponse = new List<ExamResponse>();
 
-            var cls = await ValidateClass(id);
+            var cls = await ValidateClass(classId, studentId);
 
             foreach (var session in cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
             {
                 await GenerateExamWithDate(examsResponse, cls, session);
             }
+            var responses = examsResponse.Select(x => _mapper.Map<ExamWithScore>(x)).ToList();
 
-            return examsResponse;
+            if (studentId != null && studentId != default)
+            {
+                foreach (var res in responses)
+                {
+                    var isQuizDone = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                        predicate: x => x.StudentClass!.ClassId == classId && x.StudentClass.StudentId == studentId && x.ExamId == res.ExamId);
+
+                    res.Score = isQuizDone == null ? null : isQuizDone.ScoreEarned;
+                }
+            }
+
+            return responses;
         }
 
         public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, int? examPart)
@@ -1509,7 +1553,7 @@ namespace MagicLand_System.Services.Implements
                 Deadline = questionpackage.DeadlineTime,
                 Duration = questionpackage.Duration,
                 Score = questionpackage.Score.Value,
-                AttemptsAllowed = questionpackage.AttemptsAllowed,
+                //AttemptsAllowed = questionpackage.
                 ContentName = questionpackage.ContentName,
             };
         }

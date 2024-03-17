@@ -2165,7 +2165,7 @@ namespace MagicLand_System.Services.Implements
 
             classes = classes.Where(cls => !classesInCartId.Contains(cls.Id)).ToList();
             var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
-            foreach(var res in responses)
+            foreach (var res in responses)
             {
                 res.CoursePrice = await GetClassPrice(res.ClassId);
             }
@@ -2204,6 +2204,12 @@ namespace MagicLand_System.Services.Implements
 
                 if (quiz != null)
                 {
+                    var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
+                        predicate: x => x.ExamId == quiz.Id && x.ClassId == classId);
+
+                    var startTime = DateTime.Parse(session.Date!).Date.Add(session.StartTime!.Value.ToTimeSpan());
+                    var endTime = DateTime.Parse(session.Date!).Date.Add(session.EndTime!.Value.ToTimeSpan());
+
                     int part = quiz.Type == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
                     session.Quiz = new QuizInforResponse
                     {
@@ -2211,6 +2217,10 @@ namespace MagicLand_System.Services.Implements
                         ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
                         ExamPart = part,
                         QuizName = quiz.Title!,
+                        QuizDuration = quiz.Duration != null ? quiz.Duration.Value : 300,
+                        Attempts = quizTime != null ? quizTime.AttemptAllowed : 1,
+                        QuizStartTime = quizTime != null && quizTime.ExamStartTime != default ? startTime.Date.Add(quizTime.ExamStartTime) : startTime,
+                        QuizEndTime = quizTime != null && quizTime.ExamEndTime != default ? endTime.Date.Add(quizTime.ExamEndTime) : endTime,
                     };
                 }
             }

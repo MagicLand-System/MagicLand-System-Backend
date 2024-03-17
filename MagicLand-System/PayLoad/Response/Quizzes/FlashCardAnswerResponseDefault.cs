@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Response.Quizzes.Staff;
 
 namespace MagicLand_System.PayLoad.Response.Quizzes
 {

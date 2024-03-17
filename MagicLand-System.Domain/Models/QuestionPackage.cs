@@ -10,11 +10,8 @@ namespace MagicLand_System.Domain.Models
         public string? Type { get; set; }
         public int? Duration { get; set; }
         public int? DeadlineTime { get; set; }
-        //public DateTime StartTime { get; set; }
-        //public DateTime EndTime { get; set; }
         public int? Score { get; set; }
         public string? ContentName { get; set; }
-        public int? AttemptsAllowed { get; set; }
         public int? NoSession { get; set; }
 
 
