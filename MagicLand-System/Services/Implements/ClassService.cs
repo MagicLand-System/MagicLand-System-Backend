@@ -1656,7 +1656,7 @@ namespace MagicLand_System.Services.Implements
 
             if(numberFetching != null)
             {
-                currentClasses = currentClasses.Take(numberFetching.Value).ToList();
+                currentClasses = currentClasses.OrderBy(cls => cls.Schedules.First().Slot).Take(numberFetching.Value).ToList();
             }
 
             return await GenerateClassSchedule(currentClasses);
