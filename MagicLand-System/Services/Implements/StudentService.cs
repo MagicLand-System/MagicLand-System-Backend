@@ -765,7 +765,7 @@ namespace MagicLand_System.Services.Implements
                 for (int i = 0; i < cls.Schedules.Count(); i++)
                 {
                     var schedule = cls.Schedules.ToList()[i];
-                    var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id);
+                    var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
 
                     var studentSchedule = new StudentScheduleResponse
                     {

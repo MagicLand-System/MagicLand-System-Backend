@@ -4,6 +4,7 @@ using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.Services.Interfaces;
@@ -174,18 +175,29 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Truy Suất Slot Lịch Dạy Các Lớp Của Giáo Viên Hiện Tại Có Trong Hôm Nay
         /// </summary>
+        /// <param name="numberFetching">Số Lớp Sẽ Hiễn Thị (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///   "numberFetching": 1,
+        ///}
+        /// </remarks>
         /// <response code="200">Trả Về Lịch Dạy Của Giáo Viên Trong Hôm Nay</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.LectureEndPoint.GetCurrentClassesSchedule)]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ClassWithSlotOutSideResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureClassesSchedule()
+        public async Task<IActionResult> GetCurrentLetureClassesSchedule([FromQuery] int? numberFetching)
         {
-            var responses = await _classService.GetCurrentLectureClassesScheduleAsync();
+            if (numberFetching != null && numberFetching.Value <= 0)
+            {
+                return BadRequest("Số Lượng Không Hợp Lệ");
+            }
+            var responses = await _classService.GetCurrentLectureClassesScheduleAsync(numberFetching);
             return Ok(responses);
         }
 

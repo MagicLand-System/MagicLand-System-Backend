@@ -1637,7 +1637,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync()
+        public async Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync(int? numberFetching)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt(),
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Slot)
@@ -1649,6 +1649,15 @@ namespace MagicLand_System.Services.Implements
             }
 
             var currentClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
+            if (!currentClasses.Any())
+            {
+                return new List<ClassWithSlotOutSideResponse>();
+            }
+
+            if(numberFetching != null)
+            {
+                currentClasses = currentClasses.Take(numberFetching.Value).ToList();
+            }
 
             return await GenerateClassSchedule(currentClasses);
         }
@@ -1659,12 +1668,9 @@ namespace MagicLand_System.Services.Implements
             foreach (var cls in currentClasses)
             {
                 var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
-                if (currentSchedule == null)
-                {
-                    throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Ở Hiện Tại", StatusCodes.Status400BadRequest);
-                }
+
                 var response = _mapper.Map<ClassWithSlotOutSideResponse>(cls);
-                response.ScheduleId = currentSchedule.Id;
+                response.ScheduleId = currentSchedule!.Id;
                 response.DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(currentSchedule.DayOfWeek)[0].ToString();
                 response.Date = currentSchedule.Date;
                 response.NoSession = cls.Schedules.ToList().IndexOf(currentSchedule) + 1;
