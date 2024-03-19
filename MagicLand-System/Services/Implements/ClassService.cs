@@ -1667,7 +1667,12 @@ namespace MagicLand_System.Services.Implements
             var responses = new List<ClassWithSlotOutSideResponse>();
             foreach (var cls in currentClasses)
             {
-                var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
+                var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.UtcNow.Date);
+
+                if (currentSchedule == null)
+                {
+                    throw new BadHttpRequestException("Giáo Viên Không Có Lớp Dạy Trong Hôm Nay", StatusCodes.Status400BadRequest);
+                }
 
                 var response = _mapper.Map<ClassWithSlotOutSideResponse>(cls);
                 response.ScheduleId = currentSchedule!.Id;
