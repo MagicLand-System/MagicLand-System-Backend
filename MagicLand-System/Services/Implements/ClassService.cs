@@ -1155,6 +1155,12 @@ namespace MagicLand_System.Services.Implements
                     Index = rq.Index,
                     IsSucess = true,
                     Messsage = $"ClassCode : {myRequest.ClassCode} , LecturerName : {roomLec.Lecturer.FullName}, Room : {roomLec.Room.Name}",
+                    SuccessfulInformation = new SuccessfulInformation
+                    {
+                        ClassCode = myRequest.ClassCode,
+                        LecturerName = roomLec.Lecturer.FullName,
+                        RoomName = roomLec.Room.Name,
+                    }
                 });
             }
             response.RowInsertResponse = rows;
