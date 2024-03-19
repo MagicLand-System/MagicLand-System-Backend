@@ -8,5 +8,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<Room>> GetRoomList(FilterRoomRequest? request);
         Task<List<AdminRoomResponse>> GetAdminRoom(DateTime? startDate, DateTime? endDate,string? searchString,string? slotId);
+        Task<List<AdminRoomResponseV2>> GetAdminRoomV2(DateTime date);
+
     }
 }

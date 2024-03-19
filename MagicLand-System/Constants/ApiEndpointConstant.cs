@@ -108,6 +108,7 @@
             public const string GetAll = ApiEndpoint + "/rooms";
             public const string RoomById = GetAll + "/{id}";
             public const string RoomByAdmin = GetAll + "/admin/get";
+            public const string RoomByAdminV2 = GetAll + "/v2/admin/get";
         }
         public static class SlotEnpoint
         {
