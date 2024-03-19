@@ -70,6 +70,40 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
+        public async  Task<List<AdminRoomResponseV2>> GetAdminRoomV2(DateTime date)
+        {
+            var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync(include: x => x.Include(x => x.Schedules).ThenInclude(x => x.Slot).Include(x => x.Schedules).ThenInclude(x => x.Class));
+            List<AdminRoomResponseV2> responses = new List<AdminRoomResponseV2>();
+            foreach (var room in rooms)
+            {
+                var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
+                foreach (var slot in slots)
+                {
+                    var isExist = room.Schedules.Where(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id)).Any();
+                    var filterSlot = room.Schedules.SingleOrDefault(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id));
+                    string classCode = string.Empty;
+                    if (filterSlot != null)
+                    {
+                        classCode = filterSlot.Class.ClassCode;
+                    }
+                    var response = new AdminRoomResponseV2
+                    {
+                        Date = date,
+                        Capacity = room.Capacity,
+                        EndTime = slot.EndTime,
+                        Floor = room.Floor,
+                        IsUse = isExist,
+                        LinkURL = room.LinkURL,
+                        Name = room.Name,
+                        StartTime = slot.StartTime,
+                        ClassCode = classCode,
+                    };
+                    responses.Add(response);
+                }
+            }
+            return responses.OrderBy(x => x.Name).ThenBy(x => x.StartTime).ToList();
+        }
+
         public async Task<List<Room>> GetRoomList(FilterRoomRequest? request)
         {
             var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync();
