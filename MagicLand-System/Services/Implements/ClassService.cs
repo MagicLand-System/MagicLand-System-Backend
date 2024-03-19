@@ -1654,9 +1654,9 @@ namespace MagicLand_System.Services.Implements
                 return new List<ClassWithSlotOutSideResponse>();
             }
 
-            if(numberFetching != null)
+            if (numberFetching != null)
             {
-                currentClasses = currentClasses.OrderBy(cls => cls.Schedules.First().Slot).Take(numberFetching.Value).ToList();
+                currentClasses = currentClasses.OrderBy(cls => cls.Schedules.First().Slot!.StartTime).Take(numberFetching.Value).ToList();
             }
 
             return await GenerateClassSchedule(currentClasses);

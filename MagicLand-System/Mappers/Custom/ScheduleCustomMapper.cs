@@ -115,9 +115,10 @@ namespace MagicLand_System.Mappers.Custom
         public static List<LectureScheduleResponse> fromClassToListLectureScheduleResponse(Class cls)
         {
             var responses = new List<LectureScheduleResponse>();
-
+            int index = 0;
             foreach (var schedule in cls.Schedules)
             {
+                index++;
                 var response = new LectureScheduleResponse
                 {
                     ClassId = cls.Id,
@@ -128,6 +129,7 @@ namespace MagicLand_System.Mappers.Custom
                     Method = cls.Method!,
                     ScheduleId = schedule.Id,
                     DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                    NoSession = index,
                     Date = schedule.Date,
                     Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
                     Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
