@@ -1019,8 +1019,9 @@ namespace MagicLand_System.Services.Implements
             List<RowInsertResponse> rows = new List<RowInsertResponse>();
             foreach (var rq in request)
             {
-                var courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Name.Trim().ToLower().Equals(rq.CourseName.Trim().ToLower()), selector: x => x.Id);
-                if (courseId == null)
+                Guid? syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.SubjectCode.Trim().ToLower().Equals(rq.CourseCode.Trim().ToLower()), selector: x => x.Id);
+                Guid? courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabusId, selector: x => x.Id);
+                if (syllabusId == null || courseId == null)
                 {
                     rows.Add(new RowInsertResponse
                     {
@@ -1129,7 +1130,7 @@ namespace MagicLand_System.Services.Implements
                 var myRequest = new CreateClassRequest
                 {
                     ClassCode = await AutoCreateClassCode(courseId.ToString()),
-                    CourseId = courseId,
+                    CourseId = courseId.Value,
                     LecturerId = roomLec.Lecturer.LectureId,
                     LeastNumberStudent = rq.LeastNumberStudent,
                     LimitNumberStudent = rq.LimitNumberStudent,
@@ -1153,7 +1154,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     Index = rq.Index,
                     IsSucess = true,
-                    Messsage = myRequest.ClassCode,
+                    Messsage = $"ClassCode : {myRequest.ClassCode} , LecturerName : {roomLec.Lecturer.FullName}, Room : {roomLec.Room.Name}",
                 });
             }
             response.RowInsertResponse = rows;
