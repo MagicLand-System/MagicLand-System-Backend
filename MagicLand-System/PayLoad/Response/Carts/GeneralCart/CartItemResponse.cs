@@ -8,6 +8,7 @@ namespace MagicLand_System.PayLoad.Response.Carts.GeneralCart
         public required string ItemType { get; set; }
         public Guid ItemId { get; set; }
         public string? Name { get; set; } = string.Empty;
+        public string? CourseName { get; set; } = string.Empty;
         public string? Code { get; set; } = string.Empty;
         public string? Subject { get; set; } = string.Empty;
         public double? Price { get; set; }

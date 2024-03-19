@@ -20,7 +20,7 @@ namespace MagicLand_System.Mappers.Custom
                 CartItemId = itemId,
                 ItemId = cls != null ? cls.Id : course.Id,
                 ItemType = cls != null ? "CLASS" : "COURSE",
-                Name = cls != null ? cls.ClassCode : course.Name,
+                Name = cls != null ? cls.Course!.Name : course.Name,
                 Code = cls != null ? cls.ClassCode : course.Syllabus!.SubjectCode,
                 Subject = course.SubjectName,
                 MinYearOldStudent = course.MinYearOldsStudent!.Value,

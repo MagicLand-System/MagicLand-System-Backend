@@ -473,7 +473,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
                         predicate: c => c.Id == item.ClassId,
-                        include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)!);
+                        include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot).Include(x => x.Course)!);
 
                     var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                         predicate: c => c.Id == cls.CourseId,

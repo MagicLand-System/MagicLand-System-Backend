@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Courses.Custom;
 
 namespace MagicLand_System.Mappers.Custom
 {
@@ -60,6 +61,39 @@ namespace MagicLand_System.Mappers.Custom
                 CourseDetail = fromCourseInforToCourseDetailResponse(course, coursePrerequisites),
                 OpeningSchedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
                 RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
+                UpdateDate = course.UpdateDate,
+            };
+
+            return response;
+        }
+
+        public static CourseResponseCustom fromCourseToCourseReponseCustom(Course course, IEnumerable<Course> coursePrerequisites, ICollection<Course> coureSubsequents)
+        {
+            if (course == null)
+            {
+                return new CourseResponseCustom();
+            }
+
+            var response = new CourseResponseCustom
+            {
+                CourseId = course.Id,
+                Image = course.Image,
+                MainDescription = course.MainDescription,
+                SubDescriptionTitle = course.SubDescriptionTitles
+                .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
+                CourseName = course.Name,
+                Subject = course.SubjectName,
+                SubjectCode = course.Syllabus!.SubjectCode,
+                MinAgeStudent = course.MinYearOldsStudent.ToString(),
+                MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
+                AddedDate = course.AddedDate,
+                Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
+                NumberOfSession = course.NumberOfSession,
+                CoursePrerequisites = coursePrerequisites != null
+                ? coursePrerequisites.Select(cp => cp.Name).ToList()!
+                : new List<string>(),
+                OpeningSchedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
+                RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites!, coureSubsequents),
                 UpdateDate = course.UpdateDate,
             };
 

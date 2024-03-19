@@ -6,6 +6,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Courses.Custom;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -242,7 +243,7 @@ namespace MagicLand_System.Services.Implements
             return coursePrerequesites.ToArray();
         }
 
-        public async Task<List<CourseResExtraInfor>> GetCoursesOfStudentByIdAsync(Guid studentId)
+        public async Task<List<CourseResponseCustom>> GetCoursesOfStudentByIdAsync(Guid studentId)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId);
             if (student == null)
@@ -252,16 +253,45 @@ namespace MagicLand_System.Services.Implements
             var courseRegisteredIdList = await _unitOfWork.GetRepository<Course>().GetListAsync(selector: x => x.Id, predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId == studentId)));
             if (courseRegisteredIdList == null)
             {
-                return new List<CourseResExtraInfor>();
+                return new List<CourseResponseCustom>();
             }
 
-            var listCourseResExtraInfror = new List<CourseResExtraInfor>();
+            var listCourseResExtraInfror = new List<CourseResponseCustom>();
+            //foreach (Guid id in courseRegisteredIdList)
+            //{
+            //    var course = await GetCourseByIdAsync(id);
+            //    course.Price = await GetPriceInTemp(id, false);
+            //    listCourseResExtraInfror.Add(course);
+            //}
             foreach (Guid id in courseRegisteredIdList)
             {
-                var course = await GetCourseByIdAsync(id);
-                course.Price = await GetPriceInTemp(id, false);
-                listCourseResExtraInfror.Add(course);
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == id,
+                    include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents).Include(x => x.Syllabus!));
+
+                course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == course.Id,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+
+                course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == course.Id,
+                include: x => x.Include(x => x.SyllabusPrerequisites).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                var courses = new List<Course>
+                {
+                    course
+                };
+
+                var coursePrerequisites = await GetCoursePrerequesites(courses);
+
+                var coureSubsequents = await GetCoureSubsequents(courses);
+
+                var response = CourseCustomMapper.fromCourseToCourseReponseCustom(courses.ToList()[0], coursePrerequisites, coureSubsequents);
+                response.Price = await GetPriceInTemp(id, false);
+
+                listCourseResExtraInfror.Add(response);
             }
+
 
             return listCourseResExtraInfror;
         }
