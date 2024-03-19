@@ -83,11 +83,20 @@ namespace MagicLand_System.Services.Implements
                 foreach (var slot in slots)
                 {
                     var isExist = room.Schedules.Where(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id)).Any();
-                    var filterSlot = room.Schedules.SingleOrDefault(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id));
+                    var filterSlot = room.Schedules.Where(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id)).OrderByDescending(x => x.Date).ToArray();
                     string classCode = string.Empty;
-                    if (filterSlot != null)
+                    if (filterSlot != null && filterSlot.Length > 0)
                     {
-                        classCode = filterSlot.Class.ClassCode;
+                        var maxDate = filterSlot[0].Class.StartDate;
+                        var findIndex = 0;
+                        for (int i = 0; i < filterSlot.Length; i++) 
+                        {
+                            if(maxDate < filterSlot[i].Class.StartDate)
+                            {
+                                findIndex = i;   
+                            }
+                        }
+                        classCode = filterSlot[findIndex].Class.ClassCode;
                     }
                     LecturerResponse lecturer = new LecturerResponse();
                     if(classCode != string.Empty)
