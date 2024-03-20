@@ -462,7 +462,9 @@ namespace MagicLand_System.Services.Implements
                 content.Contents = req;
                 desResponse.Add(content);
 
-            }
+            } 
+            var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseid));
+            var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
             StaffCourseResponse staffCourseResponse = new StaffCourseResponse
             {
                 AddedDate = courseFound.AddedDate,
@@ -473,7 +475,7 @@ namespace MagicLand_System.Services.Implements
                 MinYearOldsStudent = courseFound.MinYearOldsStudent,
                 Name = courseFound.Name,
                 NumberOfSession = courseFound.NumberOfSession,
-                //Price = courseFound.Price,
+                Price = priceArray[0].Price,
                 Status = courseFound.Status,
                 SubjectName = subjectname,
                 SyllabusId = courseFound.SyllabusId,
@@ -523,7 +525,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var course in findCourse)
             {
                 var count = (await _unitOfWork.GetRepository<Class>()
-                    .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString())));
+                    .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
                 if (count == null)
                 {
                     course.NumberClassOnGoing = 0;
@@ -545,33 +547,23 @@ namespace MagicLand_System.Services.Implements
             return findCourse;
         }
 
-        private async Task<bool> GenerateCoursePrice()
+        public async Task<bool> GenerateCoursePrice()
         {
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync();
             List<CoursePrice> coursePrices = new List<CoursePrice>();
             foreach (var course in courses)
             {
-                coursePrices.Add(new CoursePrice
+                var courseprice = await _unitOfWork.GetRepository<CoursePrice>().SingleOrDefaultAsync(predicate : x => x.CourseId == course.Id);
+                if(courseprice == null) 
                 {
-                    CourseId = course.Id,
-                    EffectiveDate = DateTime.Parse("2023/12/24"),
-                    Id = Guid.NewGuid(),
-                    Price = 100000,
-                });
-                coursePrices.Add(new CoursePrice
-                {
-                    CourseId = course.Id,
-                    EffectiveDate = DateTime.Parse("2023/03/10"),
-                    Id = Guid.NewGuid(),
-                    Price = 150000,
-                });
-                coursePrices.Add(new CoursePrice
-                {
-                    CourseId = course.Id,
-                    EffectiveDate = DateTime.Parse("2023/03/20"),
-                    Id = Guid.NewGuid(),
-                    Price = 200000,
-                });
+                    coursePrices.Add(new CoursePrice
+                    {
+                        CourseId = course.Id,
+                        EffectiveDate = DateTime.Parse("2024/03/20"),
+                        Id = Guid.NewGuid(),
+                        Price = 200000,
+                    });
+                }
             }
             await _unitOfWork.GetRepository<CoursePrice>().InsertRangeAsync(coursePrices);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
