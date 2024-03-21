@@ -87,7 +87,7 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        public async Task<List<AdminRoomResponseV2>> GetAdminRoomV2(DateTime date)
+        public async Task<List<AdminRoomResponseV2>> GetAdminRoomV2(DateTime date, string? searchString = null)
         {
             var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync(include: x => x.Include(x => x.Schedules).ThenInclude(x => x.Slot).Include(x => x.Schedules).ThenInclude(x => x.Class));
             List<AdminRoomResponseV2> responses = new List<AdminRoomResponseV2>();
@@ -119,7 +119,6 @@ namespace MagicLand_System.Services.Implements
                         var classRes = await GetClassFromClassCode(classCode);
                         lecturer = classRes.LecturerResponse;
                     }
-
                     var sch = new RoomSchedule
                     {
                         Date = date,
@@ -129,7 +128,20 @@ namespace MagicLand_System.Services.Implements
                         StartTime = slot.StartTime,
                         LecturerResponse = lecturer,
                     };
-                    roomSchedules.Add(sch);
+                    if(searchString != null && sch.IsUse)
+                    {
+                        var isMatch = false;
+                        isMatch = ((sch.ClassCode.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (lecturer.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim())));
+                        if (!isMatch)
+                        {
+                            sch.IsUse = false;
+                            roomSchedules.Add(sch);
+                        } 
+                        roomSchedules.Add((sch));
+                    } else
+                    {
+                        roomSchedules.Add(sch);
+                    }
                 }
                 roomSchedules = roomSchedules.OrderBy(x => x.StartTime).ToList();
                 var roomR = new AdminRoomResponseV2
@@ -141,6 +153,17 @@ namespace MagicLand_System.Services.Implements
                     Schedules = roomSchedules,
                 };
                 responses.Add(roomR);
+            }
+            if (searchString != null)
+            {
+                foreach(var res in responses)
+                {
+                    var schedules = res.Schedules.ToList();
+                    foreach(var schedule in schedules)
+                    {
+
+                    }
+                }
             }
             return responses.OrderBy(x => x.Name).ToList();
         }
