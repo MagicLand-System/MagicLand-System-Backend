@@ -472,6 +472,17 @@ namespace MagicLand_System.Services.Implements
             } 
             var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseid));
             var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
+            int ongoing = 0;
+            var count = (await _unitOfWork.GetRepository<Class>()
+                    .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(courseFound.Id.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
+            if (count == null)
+            {
+                ongoing = 0;
+            }
+            else
+            {
+                ongoing = count.Count();
+            }
             StaffCourseResponse staffCourseResponse = new StaffCourseResponse
             {
                 AddedDate = courseFound.AddedDate,
@@ -488,6 +499,7 @@ namespace MagicLand_System.Services.Implements
                 SyllabusId = courseFound.SyllabusId,
                 UpdateDate = courseFound.UpdateDate,
                 SubDescriptionTitles = desResponse,
+                NumberOfClassOnGoing = ongoing,
             };
 
             return staffCourseResponse;

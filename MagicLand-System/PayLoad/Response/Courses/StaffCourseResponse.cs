@@ -13,6 +13,7 @@
         public string? Image { get; set; } = null;
         public double Price { get; set; }
         public string? MainDescription { get; set; }
+        public int NumberOfClassOnGoing { get; set; }   
         public DateTime? UpdateDate { get; set; } = default;
         public Guid? SyllabusId { get; set; }
         public List<SubDescriptionTitleResponse> SubDescriptionTitles { get; set; }
