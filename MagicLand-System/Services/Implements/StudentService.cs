@@ -140,7 +140,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.StudentIdAccount == student.Id);
 
-                if (id != null && account != null && account.Id == id)
+                if (id != null && account != null && account.StudentIdAccount == id)
                 {
                     responses.Clear();
                     responses.Add(_mapper.Map<AccountStudentResponse>(account));

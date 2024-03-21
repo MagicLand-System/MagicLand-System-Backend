@@ -2168,7 +2168,7 @@ namespace MagicLand_System.Services.Implements
             var classes = await FetchClasses(default);
             if (courseId != null)
             {
-                classes = classes.Where(cls => cls.CourseId == courseId).ToList();
+                classes = classes.Where(cls => cls.CourseId == courseId && cls.Status == ClassStatusEnum.UPCOMING.ToString()).ToList();
             }
 
             var classesInCartId = await _unitOfWork.GetRepository<CartItem>().GetListAsync(

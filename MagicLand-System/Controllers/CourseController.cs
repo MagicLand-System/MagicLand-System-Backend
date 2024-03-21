@@ -72,9 +72,8 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
-            List<PayLoad.Response.Courses.CourseResExtraInfor> courseResExtraInfors = await _courseService.SearchCourseByNameOrAddedDateAsync(keyWord);
-            var courses = courseResExtraInfors;
-            return Ok(courses);
+            var responses = await _courseService.SearchCourseByNameOrAddedDateAsync(keyWord);
+            return Ok(responses);
         }
 
 
@@ -159,7 +158,7 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCurrentStudentCourses)]
-        [ProducesResponseType(typeof(CourseResExtraInforV2), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "STUDENT")]
         public async Task<IActionResult> GetCurrentStudentCourses()

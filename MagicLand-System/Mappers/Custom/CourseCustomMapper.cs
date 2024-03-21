@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Courses.Custom;
+using MagicLand_System.PayLoad.Response.Schedules;
 
 namespace MagicLand_System.Mappers.Custom
 {
@@ -100,17 +101,28 @@ namespace MagicLand_System.Mappers.Custom
             return response;
         }
 
-        public static CourseResExtraInforV2 fromCourseToCourseResExtraInforV2(
+        public static CourseWithScheduleShorten fromCourseToCourseWithScheduleShorten(
       Course course,
       IEnumerable<Course> coursePrerequisites,
       ICollection<Course> coureSubsequents)
         {
             if (course == null)
             {
-                return new CourseResExtraInforV2();
+                return new CourseWithScheduleShorten();
             }
 
-            var response = new CourseResExtraInforV2
+            var classOpeningInfors = new List<ClassOpeningInfor>();
+            foreach(var cls in course.Classes)
+            {
+                classOpeningInfors.Add(new ClassOpeningInfor()
+                {
+                    ClassId = cls.Id,
+                    OpeningDay = cls.StartDate,
+                    Schedules = ScheduleCustomMapper.fromScheduleToScheduleShortenResponses(cls),
+                }) ;
+            }
+
+            var response = new CourseWithScheduleShorten
             {
                 CourseId = course.Id,
                 Image = course.Image,
@@ -119,7 +131,7 @@ namespace MagicLand_System.Mappers.Custom
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
                 CourseDetail = fromCourseInforToCourseDetailResponse(course, coursePrerequisites),
-                Schedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
+                ClassOpeningInfors = classOpeningInfors,
                 RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
                 UpdateDate = course.UpdateDate,
             };
