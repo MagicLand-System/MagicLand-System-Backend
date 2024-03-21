@@ -1184,55 +1184,69 @@ namespace MagicLand_System.Services.Implements
                 List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
                 foreach (var schedule in schedules)
                 {
-                    string[] parts = schedule.ScheduleTime.Split(':');
-                    string day = parts[0].Trim(); // Thứ 2
-                    string timeRange = parts[1].Trim(); // 15:00 - 20:00
-                    string startTime = timeRange.Split('-')[0].Trim(); // 15:00
-                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
-                    if (slotId == null)
+                    try 
+                    {
+                        string[] parts = schedule.ScheduleTime.Split(':');
+                        string day = parts[0].Trim(); // Thứ 2
+                        string timeRange = parts[1].Trim(); // 15:00 - 20:00
+                        string startTime = timeRange.Split('-')[0].Trim(); // 15:00
+                        var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
+                        if (slotId == null)
+                        {
+                            rows.Add(new RowInsertResponse
+                            {
+                                Index = rq.Index,
+                                Messsage = $" index {rq.Index} Không tìm thấy slot như vậy , slot có thời gian {timeRange} không tồn tại",
+                                IsSucess = false
+                            });
+                            break;
+                        }
+                        string dateofweek = "";
+                        if (day.ToLower().Equals("thứ 2"))
+                        {
+                            dateofweek = "monday";
+                        }
+                        if (day.ToLower().Equals("thứ 3"))
+                        {
+                            dateofweek = "tuesday";
+                        }
+                        if (day.ToLower().Equals("thứ 4"))
+                        {
+                            dateofweek = "wednesday";
+                        }
+                        if (day.ToLower().Equals("thứ 5"))
+                        {
+                            dateofweek = "thursday";
+                        }
+                        if (day.ToLower().Equals("thứ 6"))
+                        {
+                            dateofweek = "friday";
+                        }
+                        if (day.ToLower().Equals("thứ 7"))
+                        {
+                            dateofweek = "saturday";
+                        }
+                        if (day.ToLower().Equals("chủ nhật"))
+                        {
+                            dateofweek = "sunday";
+                        }
+                        scheduleRequests.Add(new ScheduleRequest
+                        {
+                            DateOfWeek = dateofweek,
+                            SlotId = slotId,
+                        });
+                    }
+                    catch(Exception ex)
                     {
                         rows.Add(new RowInsertResponse
                         {
                             Index = rq.Index,
-                            Messsage = $" index {rq.Index} Không tìm thấy slot như vậy , slot có thời gian {timeRange} không tồn tại",
+                            Messsage = $" index {rq.Index} Không tìm thấy slot như vậy , slot có thời gian như vậy không tồn tại",
                             IsSucess = false
                         });
-                        continue;
+                        break;
                     }
-                    string dateofweek = "";
-                    if (day.ToLower().Equals("thứ 2"))
-                    {
-                        dateofweek = "monday";
-                    }
-                    if (day.ToLower().Equals("thứ 3"))
-                    {
-                        dateofweek = "tuesday";
-                    }
-                    if (day.ToLower().Equals("thứ 4"))
-                    {
-                        dateofweek = "wednesday";
-                    }
-                    if (day.ToLower().Equals("thứ 5"))
-                    {
-                        dateofweek = "thursday";
-                    }
-                    if (day.ToLower().Equals("thứ 6"))
-                    {
-                        dateofweek = "friday";
-                    }
-                    if (day.ToLower().Equals("thứ 7"))
-                    {
-                        dateofweek = "saturday";
-                    }
-                    if (day.ToLower().Equals("chủ nhật"))
-                    {
-                        dateofweek = "sunday";
-                    }
-                    scheduleRequests.Add(new ScheduleRequest
-                    {
-                        DateOfWeek = dateofweek,
-                        SlotId = slotId,
-                    });
+
                 }
 
                 string format = "dd/MM/yyyy";
@@ -1503,6 +1517,79 @@ namespace MagicLand_System.Services.Implements
                 Video = classx.Video,
             };
             return classFromClassCode;
+        }
+        private async Task<CreateClassResponse> GenerateCreateClassFail(CreateClassesRequest rq)
+        {
+            Guid? syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.SubjectCode.Trim().ToLower().Equals(rq.CourseCode.Trim().ToLower()), selector: x => x.Id);
+            Guid? courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabusId, selector: x => x.Id);
+            var schedules = rq.ScheduleRequests;
+            List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
+            foreach (var schedule in schedules)
+            {
+                try
+                {
+                    string[] parts = schedule.ScheduleTime.Split(':');
+                    string day = parts[0].Trim(); // Thứ 2
+                    string timeRange = parts[1].Trim(); // 15:00 - 20:00
+                    string startTime = timeRange.Split('-')[0].Trim(); // 15:00
+                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
+                    if (slotId == null)
+                    {
+                        break;
+                    }
+                    string dateofweek = "";
+                    if (day.ToLower().Equals("thứ 2"))
+                    {
+                        dateofweek = "monday";
+                    }
+                    if (day.ToLower().Equals("thứ 3"))
+                    {
+                        dateofweek = "tuesday";
+                    }
+                    if (day.ToLower().Equals("thứ 4"))
+                    {
+                        dateofweek = "wednesday";
+                    }
+                    if (day.ToLower().Equals("thứ 5"))
+                    {
+                        dateofweek = "thursday";
+                    }
+                    if (day.ToLower().Equals("thứ 6"))
+                    {
+                        dateofweek = "friday";
+                    }
+                    if (day.ToLower().Equals("thứ 7"))
+                    {
+                        dateofweek = "saturday";
+                    }
+                    if (day.ToLower().Equals("chủ nhật"))
+                    {
+                        dateofweek = "sunday";
+                    }
+                    scheduleRequests.Add(new ScheduleRequest
+                    {
+                        DateOfWeek = dateofweek,
+                        SlotId = slotId,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    break;
+                }
+            }
+
+            CreateClassResponse createClassResponse = new CreateClassResponse
+            {
+                ClassCode = null,
+                CourseId = courseId,
+                LecturerId = null,
+                LeastNumberStudent = rq.LeastNumberStudent,
+                LimitNumberStudent = rq.LimitNumberStudent,
+                Method = rq.Method,
+                RoomId = null,
+                ScheduleRequests = scheduleRequests,
+                StartDate = 
+            }
         }
         #endregion
         #region thanh_lee_code
