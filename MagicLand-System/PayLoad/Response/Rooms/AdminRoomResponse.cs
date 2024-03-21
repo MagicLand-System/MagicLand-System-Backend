@@ -14,5 +14,6 @@ namespace MagicLand_System.PayLoad.Response.Rooms
         public string EndTime { get; set; }
         public DateTime Date { get; set; }
         public string ClassCode { get; set; }   
+        public string LecturerName { get; set; }  
     }
 }

@@ -5,5 +5,6 @@
         public int Index {  get; set; } 
         public bool IsSucess {  get; set; } 
         public string? Messsage {  get; set; } 
+        public SuccessfulInformation? SuccessfulInformation { get; set; }
     }
 }

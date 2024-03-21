@@ -19,60 +19,75 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<AdminRoomResponse>> GetAdminRoom(DateTime? startDate, DateTime? endDate,string? searchString, string? slotId)
+        public async Task<List<AdminRoomResponse>> GetAdminRoom(DateTime? startDate, DateTime? endDate, string? searchString, string? slotId)
         {
-            var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync(include : x => x.Include(x => x.Schedules).ThenInclude(x => x.Slot).Include(x => x.Schedules).ThenInclude(x => x.Class));
             List<AdminRoomResponse> responses = new List<AdminRoomResponse>();
-            foreach (var room in rooms)
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Room).Include(x => x.Slot).Include(x => x.Class));
+
+            foreach (var schedule in schedules)
             {
-                var schedules = room.Schedules;
-                if(rooms.Count > 0) 
+                var lecturerName = string.Empty;
+                //if (schedule.SubLecturerId != null)
+                //{
+                //    lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == schedule.SubLecturerId.Value, selector: x => x.FullName);
+                //}
+                //else
+                //{
+                //    lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == schedule.Class.LecturerId, selector: x => x.FullName);
+                //}
+                if(schedule.SubLecturerId != null)
                 {
-                    foreach (var schedule in schedules)
-                    {
-                        var response = new AdminRoomResponse
-                        {
-                            Capacity = room.Capacity,
-                            Date = schedule.Date,
-                            EndTime = schedule.Slot.EndTime,
-                            StartTime = schedule.Slot.StartTime,
-                            Floor = room.Floor,
-                            LinkURL = room.LinkURL,
-                            Name = room.Name,
-                            ClassCode = schedule.Class.ClassCode,
-                        };
-                        responses.Add(response);
-                    }
+                    lecturerName = schedule.SubLecturerId.ToString();
+                } else
+                {
+                    lecturerName = schedule.Class.LecturerId.ToString();
                 }
+                var response = new AdminRoomResponse
+                {
+                    Capacity = schedule.Room.Capacity,
+                    Date = schedule.Date,
+                    EndTime = schedule.Slot.EndTime,
+                    StartTime = schedule.Slot.StartTime,
+                    Floor = schedule.Room.Floor,
+                    LinkURL = schedule.Room.LinkURL,
+                    Name = schedule.Room.Name,
+                    ClassCode = schedule.Class.ClassCode,
+                    LecturerName = lecturerName,
+                };
+                responses.Add(response);
             }
             if (responses.Count > 0)
             {
-                if(searchString != null)
+                if (searchString != null)
                 {
-                    responses = responses.Where(x =>( x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim()))).ToList();
+                    responses = responses.Where(x => (x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim()))).ToList();
                 }
-                
-                if(startDate != null)
+
+                if (startDate != null)
                 {
                     responses = responses.Where(x => x.Date >= startDate).ToList();
                 }
-                if(endDate != null)
+                if (endDate != null)
                 {
-                    endDate = endDate.Value.AddHours(23); 
+                    endDate = endDate.Value.AddHours(23);
                     responses = responses.Where(x => x.Date <= endDate).ToList();
                 }
-                if(slotId != null)
+                if (slotId != null)
                 {
                     var startTime = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(slotId), selector: x => x.StartTime);
                     responses = responses.Where(x => x.StartTime.Equals(startTime)).ToList();
-                } 
+                }
+                foreach (var response in responses)
+                {
+                    response.LecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(response.LecturerName),selector : x => x.FullName);
+                }
                 responses = responses.OrderByDescending(x => x.Date).ThenBy(x => x.Name).ToList();
 
             }
             return responses;
         }
 
-        public async  Task<List<AdminRoomResponseV2>> GetAdminRoomV2(DateTime date)
+        public async Task<List<AdminRoomResponseV2>> GetAdminRoomV2(DateTime date, string? searchString = null)
         {
             var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync(include: x => x.Include(x => x.Schedules).ThenInclude(x => x.Slot).Include(x => x.Schedules).ThenInclude(x => x.Class));
             List<AdminRoomResponseV2> responses = new List<AdminRoomResponseV2>();
@@ -83,19 +98,27 @@ namespace MagicLand_System.Services.Implements
                 foreach (var slot in slots)
                 {
                     var isExist = room.Schedules.Where(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id)).Any();
-                    var filterSlot = room.Schedules.SingleOrDefault(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id));
+                    var filterSlot = room.Schedules.Where(x => (x.Date.Day == date.Day && x.Date.Month == date.Month && x.Date.Year == date.Year && x.SlotId == slot.Id)).OrderByDescending(x => x.Date).ToArray();
                     string classCode = string.Empty;
-                    if (filterSlot != null)
+                    if (filterSlot != null && filterSlot.Length > 0)
                     {
-                        classCode = filterSlot.Class.ClassCode;
+                        var maxDate = filterSlot[0].Class.StartDate;
+                        var findIndex = 0;
+                        for (int i = 0; i < filterSlot.Length; i++)
+                        {
+                            if (maxDate < filterSlot[i].Class.StartDate)
+                            {
+                                findIndex = i;
+                            }
+                        }
+                        classCode = filterSlot[findIndex].Class.ClassCode;
                     }
                     LecturerResponse lecturer = new LecturerResponse();
-                    if(classCode != string.Empty)
+                    if (classCode != string.Empty)
                     {
                         var classRes = await GetClassFromClassCode(classCode);
                         lecturer = classRes.LecturerResponse;
                     }
-
                     var sch = new RoomSchedule
                     {
                         Date = date,
@@ -105,7 +128,20 @@ namespace MagicLand_System.Services.Implements
                         StartTime = slot.StartTime,
                         LecturerResponse = lecturer,
                     };
-                    roomSchedules.Add(sch);
+                    if(searchString != null && sch.IsUse)
+                    {
+                        var isMatch = false;
+                        isMatch = ((sch.ClassCode.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (lecturer.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim())));
+                        if (!isMatch)
+                        {
+                            sch.IsUse = false;
+                            roomSchedules.Add(sch);
+                        } 
+                        roomSchedules.Add((sch));
+                    } else
+                    {
+                        roomSchedules.Add(sch);
+                    }
                 }
                 roomSchedules = roomSchedules.OrderBy(x => x.StartTime).ToList();
                 var roomR = new AdminRoomResponseV2
@@ -118,17 +154,28 @@ namespace MagicLand_System.Services.Implements
                 };
                 responses.Add(roomR);
             }
+            if (searchString != null)
+            {
+                foreach(var res in responses)
+                {
+                    var schedules = res.Schedules.ToList();
+                    foreach(var schedule in schedules)
+                    {
+
+                    }
+                }
+            }
             return responses.OrderBy(x => x.Name).ToList();
         }
 
         public async Task<List<Room>> GetRoomList(FilterRoomRequest? request)
         {
             var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync();
-            if(rooms == null)
+            if (rooms == null)
             {
                 return null;
-            } 
-            if(request != null)
+            }
+            if (request != null)
             {
                 if (request.Schedules != null && request.StartDate != null && request.CourseId != null)
                 {
@@ -182,7 +229,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (convertedDateOfWeek.Contains(startDatex.DayOfWeek))
                         {
-                            
+
                             scheduleAdded++;
                         }
                         startDatex = startDatex.AddDays(1);
@@ -230,23 +277,24 @@ namespace MagicLand_System.Services.Implements
                     var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync();
                     allSchedule = allSchedule.Where(x => (x.Date < endDate && x.Date >= request.StartDate)).ToList();
                     List<Schedule> result = new List<Schedule>();
-                    foreach(var convert in convertSchedule) 
+                    foreach (var convert in convertSchedule)
                     {
                         var newFilter = allSchedule.Where(x => (x.DayOfWeek == convert.DateOfWeek && x.SlotId.ToString().Equals(convert.SlotId.ToString()))).ToList();
-                        if(newFilter != null)
+                        if (newFilter != null)
                         {
                             result.AddRange(newFilter);
-                        } 
+                        }
                     }
                     List<Guid> roomIds = new List<Guid>();
                     List<Room> exceptRooms = new List<Room>();
-                    if(result.Count > 0)
+                    if (result.Count > 0)
                     {
                         var groupByRoom = result.GroupBy(x => x.RoomId);
                         roomIds = groupByRoom.Select(x => x.Key).ToList();
 
                     }
-                    if(roomIds.Count == 0) {
+                    if (roomIds.Count == 0)
+                    {
                         return rooms.OrderBy(x => x.Name).ToList();
                     }
                     List<Room> finalResult = new List<Room>();
@@ -269,22 +317,7 @@ namespace MagicLand_System.Services.Implements
             if (classCode == null)
             {
                 return new ClassFromClassCode();
-            }
-            var course = classx.Course;
-            StaffCourseResponse staffCourseResponse = new StaffCourseResponse
-            {
-                AddedDate = course.AddedDate,
-                Id = course.Id,
-                Image = course.Image,
-                MainDescription = course.MainDescription,
-                MaxYearOldsStudent = course.MaxYearOldsStudent,
-                MinYearOldsStudent = course.MinYearOldsStudent,
-                Name = course.Name,
-                NumberOfSession = course.NumberOfSession,
-                //Price = course.Price,
-                UpdateDate = course.UpdateDate,
-                Status = course.Status,
-            };
+            }         
             var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == classx.LecturerId, include: x => x.Include(x => x.LecturerField));
             var lecturerResponse = new LecturerResponse
             {
@@ -307,12 +340,12 @@ namespace MagicLand_System.Services.Implements
                 LeastNumberStudent = classx.LeastNumberStudent,
                 LimitNumberStudent = classx.LimitNumberStudent,
                 Method = classx.Method,
-                StaffCourseResponse = staffCourseResponse,
                 StartDate = classx.StartDate,
                 Status = classx.Status,
                 Video = classx.Video,
             };
             return classFromClassCode;
+
         }
     }
 }

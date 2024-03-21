@@ -29,9 +29,9 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.RoomEnpoint.RoomByAdminV2)]
-        public async Task<IActionResult> GetByAdminV2(DateTime date)
+        public async Task<IActionResult> GetByAdminV2(DateTime date,string? searchString)
         {
-            var result = await _roomService.GetAdminRoomV2(date);
+            var result = await _roomService.GetAdminRoomV2(date,searchString);
             return Ok(result);
         }
     }
