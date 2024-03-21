@@ -416,6 +416,13 @@ namespace MagicLand_System.Services.Implements
                 await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
                 //await _unitOfWork.GetRepository<CoursePrerequisite>().InsertRangeAsync(prerequisites);
                 _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syll);
+                CoursePrice coursePrice = new CoursePrice
+                {
+                    CourseId = course.Id,
+                    EffectiveDate = DateTime.UtcNow,
+                    Price = request.Price,
+                };
+                await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);    
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;
             }
@@ -568,6 +575,12 @@ namespace MagicLand_System.Services.Implements
             await _unitOfWork.GetRepository<CoursePrice>().InsertRangeAsync(coursePrices);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
+        }
+
+        public async Task<List<CoursePrice>> GetCoursePrices(string courseId)
+        {
+            var prices = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId));
+            return prices.ToList();
         }
         #endregion
     }

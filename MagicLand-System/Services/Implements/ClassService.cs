@@ -80,7 +80,7 @@ namespace MagicLand_System.Services.Implements
                 ClassCode = request.ClassCode,
                 CourseId = request.CourseId,
                 StartDate = request.StartDate,
-                EndDate = DateTime.Now,
+                EndDate = DateTime.UtcNow,
                 LeastNumberStudent = request.LeastNumberStudent,
                 LimitNumberStudent = request.LimitNumberStudent,
                 LecturerId = request.LecturerId,
@@ -1175,7 +1175,7 @@ namespace MagicLand_System.Services.Implements
                     rows.Add(new RowInsertResponse
                     {
                         Index = rq.Index,
-                        Messsage = "Không tìm thấy khóa học có tên như vậy",
+                        Messsage = $" index {rq.Index} Không tìm thấy khóa học có mã như vậy",
                         IsSucess = false
                     });
                     continue;
@@ -1191,7 +1191,13 @@ namespace MagicLand_System.Services.Implements
                     var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
                     if (slotId == null)
                     {
-                        throw new BadHttpRequestException($"cột {rq.Index} không tồn tại slot như v", StatusCodes.Status400BadRequest);
+                        rows.Add(new RowInsertResponse
+                        {
+                            Index = rq.Index,
+                            Messsage = $" index {rq.Index} Không tìm thấy slot như vậy , slot có thời gian {timeRange} không tồn tại",
+                            IsSucess = false
+                        });
+                        continue;
                     }
                     string dateofweek = "";
                     if (day.ToLower().Equals("thứ 2"))
@@ -1309,8 +1315,9 @@ namespace MagicLand_System.Services.Implements
                         ClassCode = myRequest.ClassCode,
                         LecturerName = roomLec.Lecturer.FullName,
                         RoomName = roomLec.Room.Name,
+                        Times = rq.ScheduleRequests.Select(x => x.ScheduleTime).ToList(),
                     }
-                });
+                }) ;
             }
             response.RowInsertResponse = rows;
             var succ = response.RowInsertResponse.Where(x => x.IsSucess).Count();
