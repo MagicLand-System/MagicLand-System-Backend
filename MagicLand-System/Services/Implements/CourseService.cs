@@ -378,8 +378,8 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var course in findCourse)
             {
-                var count = (await _unitOfWork.GetRepository<Class>()
-           .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
+                var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(
+                    predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
 
                 if (count == null)
                 {

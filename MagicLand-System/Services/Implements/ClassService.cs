@@ -1588,8 +1588,9 @@ namespace MagicLand_System.Services.Implements
                 Method = rq.Method,
                 RoomId = null,
                 ScheduleRequests = scheduleRequests,
-                StartDate = 
-            }
+                //StartDate = 
+            };
+            return default;
         }
         #endregion
         #region thanh_lee_code

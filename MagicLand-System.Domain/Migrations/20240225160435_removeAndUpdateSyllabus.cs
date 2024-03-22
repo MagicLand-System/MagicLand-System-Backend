@@ -14,10 +14,10 @@ namespace MagicLand_System.Domain.Migrations
                 name: "ExamOrder",
                 table: "ExamSyllabus");
 
-            migrationBuilder.RenameColumn(
-                name: "PackageOrder",
-                table: "QuestionPackage",
-                newName: "AttemptsAllowed");
+            //migrationBuilder.RenameColumn(
+            //    name: "PackageOrder",
+            //    table: "QuestionPackage",
+            //    newName: "AttemptsAllowed");
 
             migrationBuilder.RenameColumn(
                 name: "PrerequisiteCourseId",
