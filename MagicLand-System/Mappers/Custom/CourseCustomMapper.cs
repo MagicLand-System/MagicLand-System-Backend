@@ -156,7 +156,7 @@ namespace MagicLand_System.Mappers.Custom
                 AddedDate = course.AddedDate,
                 Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
                 NumberOfSession = course.NumberOfSession,
-                CoursePrerequisites = coursePrerequisites != null
+                CoursePrerequisites = coursePrerequisites != null && coursePrerequisites.Any()
                 ? coursePrerequisites.Select(cp => cp.Name).ToList()!
                 : new List<string>(),
             };

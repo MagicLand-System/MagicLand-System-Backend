@@ -11,7 +11,7 @@ namespace MagicLand_System.PayLoad.Response.Quizes
         public string? QuizType { get; set; } = string.Empty;
         public string? QuizName { get; set; }
         public double Weight { get; set; }
-        public double? CompleteionCriteria { get; set; }
+        public double? CompletionCriteria { get; set; }
         public double TotalScore { get; set; }
         public int TotalMark { get; set; }
         //public int? DeadLine { get; set; }

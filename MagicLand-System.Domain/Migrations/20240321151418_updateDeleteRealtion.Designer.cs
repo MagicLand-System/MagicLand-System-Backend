@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240321151418_updateDeleteRealtion")]
+    partial class updateDeleteRealtion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -579,7 +582,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Promotions", (string)null);
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PromotionTransaction", b =>
@@ -598,7 +601,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("UserPromotionId");
 
-                    b.ToTable("PromotionTransactions", (string)null);
+                    b.ToTable("PromotionTransactions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Question", b =>
@@ -1343,7 +1346,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserPromotions", (string)null);
+                    b.ToTable("UserPromotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.WalletTransaction", b =>

@@ -163,7 +163,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        private async Task SaveGrading(TempQuiz currentTempQuiz, TestResult testResult, List<ExamQuestion> examQuestions, List<MultipleChoiceAnswer>? multipleChoiceAnswers, List<FlashCardAnswer>? flashCardAnswers)
+        private async Task SaveGrading(TempQuiz currentTempQuiz, TestResult testResult, List<ExamQuestion>? examQuestions, List<MultipleChoiceAnswer>? multipleChoiceAnswers, List<FlashCardAnswer>? flashCardAnswers)
         {
             try
             {
@@ -183,17 +183,18 @@ namespace MagicLand_System.Services.Implements
                     await _unitOfWork.GetRepository<MultipleChoiceAnswer>().InsertRangeAsync(multipleChoiceAnswers);
                 }
 
-                if (flashCardAnswers != null)
-                {
-                    await _unitOfWork.GetRepository<FlashCardAnswer>().InsertRangeAsync(flashCardAnswers);
-                }
+                //if (flashCardAnswers != null)
+                //{
+                //    await _unitOfWork.GetRepository<FlashCardAnswer>().InsertRangeAsync(flashCardAnswers);
+                //}
 
                 currentTempQuiz.IsGraded = true;
                 _unitOfWork.GetRepository<TempQuiz>().UpdateAsync(currentTempQuiz);
                 await _unitOfWork.GetRepository<TestResult>().InsertAsync(testResult);
-                await _unitOfWork.GetRepository<ExamQuestion>().InsertRangeAsync(examQuestions);
-
-
+                if (examQuestions != null)
+                {
+                    await _unitOfWork.GetRepository<ExamQuestion>().InsertRangeAsync(examQuestions);
+                }
                 _unitOfWork.Commit();
 
             }
@@ -253,7 +254,7 @@ namespace MagicLand_System.Services.Implements
             var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
                 predicate: x => x.ExamId == examId && x.ClassId == cls.Id);
 
-            if (isExamHasDone != null)
+            if (isExamHasDone != null && isExamHasDone.Any())
             {
                 if (quizTime is null)
                 {
@@ -436,11 +437,12 @@ namespace MagicLand_System.Services.Implements
             return cls;
         }
 
-        public async Task<QuizResultResponse> GradeQuizFCAsync(QuizFCRequest quizStudentWork)
+        public async Task<QuizResultResponse> GradeQuizFCAsync(Guid classId, Guid examId, double scoreEarned)
         {
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
-            Class cls = await ValidateGradeQuizClass(quizStudentWork.ClassId, currentStudentId);
+            //Class cls = await ValidateGradeQuizClass(quizStudentWork.ClassId, currentStudentId);
+            Class cls = await ValidateGradeQuizClass(classId, currentStudentId);
 
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.CourseId == cls.CourseId,
@@ -461,94 +463,107 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
-            var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
+            //var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
+            var currentQuiz = quizzes.Find(q => q!.Id == examId);
 
-            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, true);
+            //ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, true);
+            ValidateGradeCurrentQuiz(examId, currentQuiz, true);
+
+            //var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
+            //    orderBy: x => x.OrderByDescending(x => x.CreatedTime),
+            //    predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
+            //    include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.FCAnswers));
 
             var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
-                orderBy: x => x.OrderByDescending(x => x.CreatedTime),
-                predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
-                include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.FCAnswers));
+              orderBy: x => x.OrderByDescending(x => x.CreatedTime),
+              predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id);
 
-            if (currentTempQuiz.IsGraded == true)
+            if(currentTempQuiz == null)
             {
-                throw new BadHttpRequestException($"Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác Và Làm Lại", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Vui Lòng Truy Suất Câu Hỏi Trước Khi Lưu Điểm", StatusCodes.Status400BadRequest);
             }
-            ValidateTempQuizDB(quizStudentWork.StudentQuestionResults.Sum(sq => sq.Answers.Count()), currentQuiz, currentTempQuiz);
+            //if (currentTempQuiz.IsGraded == true)
+            //{
+            //    throw new BadHttpRequestException($"Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác Và Làm Lại", StatusCodes.Status400BadRequest);
+            //}
+            //ValidateTempQuizDB(quizStudentWork.StudentQuestionResults.Sum(sq => sq.Answers.Count()), currentQuiz, currentTempQuiz);
 
-            var questions = ValidateStudentFCWorkRequest(quizStudentWork, currentTempQuiz);
+            //var questions = ValidateStudentFCWorkRequest(quizStudentWork, currentTempQuiz);
 
-            int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentId, cls);
+            //int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentId, cls);
+            int noAttempt = await GetAttempt(examId, currentStudentId, cls);
 
             Guid testResultId;
             TestResult testResult;
             GenrateTestResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, cls.StudentClasses.ToList().Find(sc => sc.StudentId == currentStudentId)!, noAttempt, out testResultId, out testResult);
 
-            var examQuestions = new List<ExamQuestion>();
-            var flashCardAnswers = new List<FlashCardAnswer>();
-            int correctMark = 0;
-            double scoreEarned = 0;
+            //var examQuestions = new List<ExamQuestion>();
+            //var flashCardAnswers = new List<FlashCardAnswer>();
+            //int correctMark = 0;
+            //double scoreEarned = 0;
 
-            foreach (var sqr in quizStudentWork.StudentQuestionResults)
-            {
-                var currentQuestion = questions.Find(q => q.QuestionId == sqr.QuestionId);
+            //foreach (var sqr in quizStudentWork.StudentQuestionResults)
+            //{
+            //    var currentQuestion = questions.Find(q => q.QuestionId == sqr.QuestionId);
 
-                var question = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
-                predicate: x => x.Id == currentQuestion!.QuestionId,
-                include: x => x.Include(x => x.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
+            //    var question = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
+            //    predicate: x => x.Id == currentQuestion!.QuestionId,
+            //    include: x => x.Include(x => x.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
 
-                var sideFlashCards = question.FlashCards!.SelectMany(fc => fc.SideFlashCards).ToList();
+            //    var sideFlashCards = question.FlashCards!.SelectMany(fc => fc.SideFlashCards).ToList();
 
-                Guid examQuestionId = Guid.NewGuid();
-                examQuestions.Add(new ExamQuestion
-                {
-                    Id = examQuestionId,
-                    QuestionId = question.Id,
-                    Question = question.Description,
-                    QuestionImage = question.Img,
-                    TestResultId = testResultId,
-                });
+            //    Guid examQuestionId = Guid.NewGuid();
+            //    examQuestions.Add(new ExamQuestion
+            //    {
+            //        Id = examQuestionId,
+            //        QuestionId = question.Id,
+            //        Question = question.Description,
+            //        QuestionImage = question.Img,
+            //        TestResultId = testResultId,
+            //    });
 
-                foreach (var ar in sqr.Answers)
-                {
-                    foreach (var fc in question.FlashCards!)
-                    {
-                        var currentFirstCardAnswer = fc.SideFlashCards.Find(sfc => sfc.Id == ar.FirstCardId);
-                        if (currentFirstCardAnswer != null)
-                        {
-                            var currentSecondCardAnswer = sideFlashCards.Find(sfc => sfc.Id == ar.SecondCardId);
-                            var correctSecondCard = fc.SideFlashCards.Find(sfc => sfc.Id != ar.FirstCardId);
+            //    foreach (var ar in sqr.Answers)
+            //    {
+            //        foreach (var fc in question.FlashCards!)
+            //        {
+            //            var currentFirstCardAnswer = fc.SideFlashCards.Find(sfc => sfc.Id == ar.FirstCardId);
+            //            if (currentFirstCardAnswer != null)
+            //            {
+            //                var currentSecondCardAnswer = sideFlashCards.Find(sfc => sfc.Id == ar.SecondCardId);
+            //                var correctSecondCard = fc.SideFlashCards.Find(sfc => sfc.Id != ar.FirstCardId);
 
-                            bool isCorrect = false;
-                            if (correctSecondCard!.Id == currentSecondCardAnswer!.Id)
-                            {
-                                correctMark++;
-                                scoreEarned += fc.Score;
-                                isCorrect = true;
-                            }
+            //                bool isCorrect = false;
+            //                if (correctSecondCard!.Id == currentSecondCardAnswer!.Id)
+            //                {
+            //                    correctMark++;
+            //                    scoreEarned += fc.Score;
+            //                    isCorrect = true;
+            //                }
 
-                            GenerateFCResultItems(examQuestionId, flashCardAnswers, currentFirstCardAnswer, currentSecondCardAnswer,
-                            correctSecondCard, isCorrect ? "Correct" : "Wrong", isCorrect ? fc.Score : 0);
-                        }
-                    }
-                }
-            }
-            string status = GenerateExamStatus(testResult.TotalMark, correctMark);
+            //                GenerateFCResultItems(examQuestionId, flashCardAnswers, currentFirstCardAnswer, currentSecondCardAnswer,
+            //                correctSecondCard, isCorrect ? "Correct" : "Wrong", isCorrect ? fc.Score : 0);
+            //            }
+            //        }
+            //    }
+            //}
+            string status = GenerateExamStatus(testResult.TotalMark, (int)scoreEarned);
 
-            testResult.CorrectMark = correctMark;
+            //testResult.CorrectMark = correctMark;
+            //testResult.ScoreEarned = scoreEarned;
+            //testResult.ExamStatus = status;
+
+            testResult.CorrectMark = (int)scoreEarned;
             testResult.ScoreEarned = scoreEarned;
-            testResult.ExamStatus = status;
-
             var response = new QuizResultResponse
             {
                 TotalMark = testResult.TotalMark,
-                CorrectMark = correctMark,
+                CorrectMark = (int)scoreEarned,
                 TotalScore = testResult.TotalScore,
                 ScoreEarned = scoreEarned,
                 ExamStatus = status,
             };
 
-            await SaveGrading(currentTempQuiz, testResult, examQuestions, null, flashCardAnswers);
+            await SaveGrading(currentTempQuiz, testResult, null, null, null);
 
             return response;
         }

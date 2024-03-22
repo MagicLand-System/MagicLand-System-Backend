@@ -285,26 +285,17 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Grade Quiz Flash Card
         /// <summary>
-        ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Nối Thẻ] Của Học Sinh Hiện Tại
+        ///  Lưu Điểm Bài Kiểm Tra [Dạng Nối Thẻ] Của Học Sinh Hiện Tại
         /// </summary>
-        /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra Nối Thẻ </param>
-        /// <param name="studentWorkResults">Chứa Câu Hỏi Và Cặp Thẻ Đã Ghép Của Học Sinh</param>
+        /// <param name="classId">Id Của Lớp</param>
+        /// <param name="examId">Id Của Bài Kiểm Tra</param>
+        /// <param name="scoreEarned">Điểm Nhận Được</param>
         /// <remarks>
         /// Sample request:
         ///{     
         ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
         ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
-        ///    [
-        ///      {
-        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
-        ///         "answers" : [
-        ///                       {
-        ///                         "firstCardId":"35885C01-B2FA-46AE-93F2-CFAF519D9FB9",
-        ///                          "secondCardId":"9054F907-6AEB-4BC9-8AB3-9E0F405200DD"
-        ///                       }
-        ///                    ]
-        ///        },
-        ///     ]
+        ///    "score": 10,
         /// </remarks>
         /// <response code="200">Trả Về Kết Quả Của Bài Kiểm Tra</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
@@ -315,56 +306,56 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor, [FromBody] List<FCStudentQuestion> studentWorkResults)
+        public async Task<IActionResult> GradeQuizFC([FromQuery] Guid classId, [FromQuery] Guid examId, [FromQuery] double scoreEarned)
         {
-            var studentAnswers = studentWorkResults.SelectMany(sr => sr.Answers).ToList();
+           // var studentAnswers = studentWorkResults.SelectMany(sr => sr.Answers).ToList();
 
-            var duplicateCards = new List<Guid>();
+           // var duplicateCards = new List<Guid>();
 
-            var duplicateQuestions = studentWorkResults
-               .GroupBy(x => x.QuestionId)
-               .Where(g => g.Count() > 1)
-               .SelectMany(g => g)
-               .Distinct();
+           // var duplicateQuestions = studentWorkResults
+           //    .GroupBy(x => x.QuestionId)
+           //    .Where(g => g.Count() > 1)
+           //    .SelectMany(g => g)
+           //    .Distinct();
 
-            duplicateCards.AddRange(studentAnswers
-           .GroupBy(x => x.FirstCardId)
-           .Where(g => g.Count() > 1)
-           .SelectMany(g => g)
-           .Distinct().Select(x => x.FirstCardId));
+           // duplicateCards.AddRange(studentAnswers
+           //.GroupBy(x => x.FirstCardId)
+           //.Where(g => g.Count() > 1)
+           //.SelectMany(g => g)
+           //.Distinct().Select(x => x.FirstCardId));
 
-            duplicateCards.AddRange(studentAnswers
-            .GroupBy(x => x.SecondCardId)
-            .Where(g => g.Count() > 1)
-            .SelectMany(g => g)
-            .Distinct().Select(x => x.SecondCardId));
+           // duplicateCards.AddRange(studentAnswers
+           // .GroupBy(x => x.SecondCardId)
+           // .Where(g => g.Count() > 1)
+           // .SelectMany(g => g)
+           // .Distinct().Select(x => x.SecondCardId));
 
-            if (duplicateQuestions != null && duplicateQuestions.Any())
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Có Nhiều Hơn Các Id Của Câu Hỏi Bị Trùng Lặp [{string.Join(", ", duplicateQuestions.Select(dq => dq.QuestionId))}]",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
-            if (duplicateCards != null && duplicateCards.Any())
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Có Nhiều Hơn Các Id Của Thẻ Bị Trùng Lặp [{string.Join(", ", duplicateCards)}]",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
+           // if (duplicateQuestions != null && duplicateQuestions.Any())
+           // {
+           //     return BadRequest(new ErrorResponse
+           //     {
+           //         Error = $"Có Nhiều Hơn Các Id Của Câu Hỏi Bị Trùng Lặp [{string.Join(", ", duplicateQuestions.Select(dq => dq.QuestionId))}]",
+           //         StatusCode = StatusCodes.Status400BadRequest,
+           //         TimeStamp = DateTime.Now,
+           //     });
+           // }
+           // if (duplicateCards != null && duplicateCards.Any())
+           // {
+           //     return BadRequest(new ErrorResponse
+           //     {
+           //         Error = $"Có Nhiều Hơn Các Id Của Thẻ Bị Trùng Lặp [{string.Join(", ", duplicateCards)}]",
+           //         StatusCode = StatusCodes.Status400BadRequest,
+           //         TimeStamp = DateTime.Now,
+           //     });
+           // }
 
-            var quizFCStudentWork = new QuizFCRequest
-            {
-                ClassId = quizInfor.ClassId,
-                ExamId = quizInfor.ExamId,
-                StudentQuestionResults = studentWorkResults,
-            };
-            var responses = await _quizService.GradeQuizFCAsync(quizFCStudentWork);
+            //var quizFCStudentWork = new QuizFCRequest
+            //{
+            //    ClassId = quizInfor.ClassId,
+            //    ExamId = quizInfor.ExamId,
+            //    StudentQuestionResults = studentWorkResults,
+            //};
+            var responses = await _quizService.GradeQuizFCAsync(classId, examId, scoreEarned);
 
             return Ok(responses);
         }

@@ -881,7 +881,7 @@ namespace MagicLand_System.Services.Implements
                         QuizType = exam.QuizType,
                         QuizName = exam.QuizName,
                         Weight = exam.Weight,
-                        CompleteionCriteria = exam.CompleteionCriteria,
+                        CompletionCriteria = exam.CompletionCriteria,
                         TotalScore = exam.TotalScore,
                         TotalMark = exam.TotalMark,
                         Date = exam.Date,
@@ -977,7 +977,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 var tempQuestions = new List<TempQuestion>();
                 var tempMCAnswers = new List<TempMCAnswer>();
-                var tempFCAnswers = new List<TempFCAnswer>();
+                //var tempFCAnswers = new List<TempFCAnswer>();
 
                 Guid tempQuizId = Guid.NewGuid();
                 var tempQuiz = new TempQuiz
@@ -1001,7 +1001,7 @@ namespace MagicLand_System.Services.Implements
                     });
 
                     var multipleChoiceAnswers = res.AnswersMutipleChoicesInfor;
-                    if (multipleChoiceAnswers != null)
+                    if (multipleChoiceAnswers != null && multipleChoiceAnswers.Count > 0)
                     {
                         foreach (var answer in multipleChoiceAnswers)
                         {
@@ -1014,21 +1014,21 @@ namespace MagicLand_System.Services.Implements
                             });
                         }
                     }
-                    var flasCardAnswers = res.AnwserFlashCarsInfor;
-                    if (flasCardAnswers != null)
-                    {
-                        foreach (var answer in flasCardAnswers)
-                        {
-                            tempFCAnswers.Add(new TempFCAnswer
-                            {
-                                Id = Guid.NewGuid(),
-                                CardId = answer.CardId,
-                                Score = answer.Score,
-                                NumberCoupleIdentify = answer.NumberCoupleIdentify,
-                                TempQuestionId = tempQuestionId,
-                            });
-                        }
-                    }
+                    //var flashCardAnswers = res.AnwserFlashCarsInfor;
+                    //if (flashCardAnswers != null && flashCardAnswers.Count > 0)
+                    //{
+                    //    foreach (var answer in flashCardAnswers)
+                    //    {
+                    //        tempFCAnswers.Add(new TempFCAnswer
+                    //        {
+                    //            Id = Guid.NewGuid(),
+                    //            CardId = answer.CardId,
+                    //            Score = answer.Score,
+                    //            NumberCoupleIdentify = answer.NumberCoupleIdentify,
+                    //            TempQuestionId = tempQuestionId,
+                    //        });
+                    //    }
+                    //}
                 }
 
                 await _unitOfWork.GetRepository<TempQuiz>().InsertAsync(tempQuiz);
@@ -1037,10 +1037,10 @@ namespace MagicLand_System.Services.Implements
                 {
                     await _unitOfWork.GetRepository<TempMCAnswer>().InsertRangeAsync(tempMCAnswers);
                 }
-                if (tempFCAnswers.Any())
-                {
-                    await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
-                }
+                //if (tempFCAnswers.Any())
+                //{
+                //    await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
+                //}
                 _unitOfWork.Commit();
             }
             catch (Exception ex)

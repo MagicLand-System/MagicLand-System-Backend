@@ -1575,72 +1575,73 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<ClassWithSlotShorten>> GetClassesAsync(PeriodTimeEnum time)
         {
             #region
+           
             //try
             //{
-            //var deleteClasses = new List<Class>();
-            //var deleteSyllabuses = new List<Syllabus>();
-            //var deleteCourses = new List<Course>();
+                //var deleteClasses = new List<Class>();
+                //var deleteSyllabuses = new List<Syllabus>();
+                //var deleteCourses = new List<Course>();
 
-            //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
+                //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
 
-            //foreach (var syll in syllabuses)
-            //{
-            //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
-            //    if (course == null)
-            //    {
-            //        deleteSyllabuses.Add(syll);
-            //        continue;
-            //    }
-            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
-            //    if (classes == null && !classes.Any())
-            //    {
-            //        deleteCourses.Add(course);
-            //        deleteSyllabuses.Add(syll);
-            //        continue;
-            //    }
-            //    int classCount = 0;
-            //    foreach (var cls in classes)
-            //    {
-            //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
-            //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
-            //        {
-            //            classCount++;
-            //            deleteClasses.Add(cls);
-            //        }
-            //    }
-            //    if (classCount == classes.Count())
-            //    {
-            //        deleteCourses.Add(course);
-            //        deleteSyllabuses.Add(syll);
-            //    }
-            //}
+                //foreach (var syll in syllabuses)
+                //{
+                //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
+                //    if (course == null)
+                //    {
+                //        deleteSyllabuses.Add(syll);
+                //        continue;
+                //    }
+                //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
+                //    if (classes == null && !classes.Any())
+                //    {
+                //        deleteCourses.Add(course);
+                //        deleteSyllabuses.Add(syll);
+                //        continue;
+                //    }
+                //    int classCount = 0;
+                //    foreach (var cls in classes)
+                //    {
+                //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
+                //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
+                //        {
+                //            classCount++;
+                //            deleteClasses.Add(cls);
+                //        }
+                //    }
+                //    if (classCount == classes.Count())
+                //    {
+                //        deleteCourses.Add(course);
+                //        deleteSyllabuses.Add(syll);
+                //    }
+                //}
 
-            //_unitOfWork.GetRepository<Class>().DeleteRangeAsync(deleteClasses);
-            //_unitOfWork.GetRepository<Course>().DeleteRangeAsync(deleteCourses);
-            //_unitOfWork.GetRepository<Syllabus>().DeleteRangeAsync(deleteSyllabuses);
-            //await _unitOfWork.CommitAsync();
+                //_unitOfWork.GetRepository<Class>().DeleteRangeAsync(classs);
+                //_unitOfWork.GetRepository<Course>().DeleteRangeAsync(deleteCourses);
+                //_unitOfWork.GetRepository<Syllabus>().DeleteRangeAsync(deleteSyllabuses);
+                 //_unitOfWork.Commit();
 
 
-            //}
+                //}
 
-            //catch (Exception ex)
-            //{
-            //    var s = ex;
-            //}
+                //catch (Exception ex)
+                //{
+                //    var s = ex;
+                //}
 
-            //return default!;
-            #endregion
-            var classes = await FetchClasses(time);
-            var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+                //return default!;
+                #endregion
+                var classes = await FetchClasses(time);
+                var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
 
-            foreach (var res in responses)
-            {
-                res.CoursePrice = await GetPriceInTemp(res.ClassId, true);
+                foreach (var res in responses)
+                {
+                    res.CoursePrice = await GetPriceInTemp(res.ClassId, true);
+                }
+                //responses.ForEach(async res => await GetPriceInTemp(res.ClassId, true));
+
+                return responses;
             }
-            //responses.ForEach(async res => await GetPriceInTemp(res.ClassId, true));
-
-            return responses;
-        }
 
 
         public async Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id, ClassStatusEnum status)

@@ -60,6 +60,10 @@ namespace MagicLand_System_Web.Pages
 
         private async Task RenderProgress(List<CourseResExtraInfor>? courses, int i, int index)
         {
+          
+
+            var lectureres = await _httpClient.GetAsync(baseUrl + "/getLecturer");
+
             var schedules = new List<ScheduleRequest>
                 {
                     new ScheduleRequest
