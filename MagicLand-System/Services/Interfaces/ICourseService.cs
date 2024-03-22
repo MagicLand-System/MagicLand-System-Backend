@@ -10,7 +10,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<CourseWithScheduleShorten>> GetCurrentStudentCoursesAsync();
         Task<List<CourseWithScheduleShorten>> GetCoursesAsync(bool isValid);
         Task<CourseWithScheduleShorten> GetCourseByIdAsync(Guid id);
-        Task<List<CourseWithScheduleShorten>> SearchCourseByNameOrAddedDateAsync(string keyWord);
+        Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord);
         Task<List<CourseWithScheduleShorten>> FilterCourseAsync(int minYearsOld, int maxYearsOld, int? minNumberSession,
             int? maxNumberSession, double minPrice, double? maxPrice, string? subject, int? rate);
         Task<List<SyllabusCategory>> GetCourseCategories();

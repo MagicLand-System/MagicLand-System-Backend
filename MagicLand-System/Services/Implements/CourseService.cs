@@ -339,13 +339,12 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        public async Task<List<CourseWithScheduleShorten>> SearchCourseByNameOrAddedDateAsync(string keyWord)
+        public async Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord)
         {
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
              .Include(x => x.Syllabus)
-            .ThenInclude(x => x!.SyllabusPrerequisites!)
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents));
 
@@ -357,7 +356,8 @@ namespace MagicLand_System.Services.Implements
             {
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.CourseId == course.Id,
-                include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)));
+                include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)).Include(x => x.SyllabusPrerequisites)!);
+
 
                 course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
                 predicate: x => x.CourseId == course.Id,
@@ -373,7 +373,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var findCourse = courses.Select(c => CourseCustomMapper
-                  .fromCourseToCourseWithScheduleShorten(c, currentCoursePrerequistites,
+                  .fromCourseToCourseResExtraInfor(c, currentCoursePrerequistites,
                   coureSubsequents)).ToList();
 
             foreach (var course in findCourse)
@@ -494,7 +494,7 @@ namespace MagicLand_System.Services.Implements
                     EffectiveDate = DateTime.UtcNow,
                     Price = request.Price,
                 };
-                await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);    
+                await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;
             }
@@ -541,8 +541,8 @@ namespace MagicLand_System.Services.Implements
                 content.Contents = req;
                 desResponse.Add(content);
 
-            } 
-            var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseid));
+            }
+            var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseid));
             var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
             int ongoing = 0;
             var count = (await _unitOfWork.GetRepository<Class>()
@@ -585,8 +585,8 @@ namespace MagicLand_System.Services.Implements
             List<CoursePrice> coursePrices = new List<CoursePrice>();
             foreach (var course in courses)
             {
-                var courseprice = await _unitOfWork.GetRepository<CoursePrice>().SingleOrDefaultAsync(predicate : x => x.CourseId == course.Id);
-                if(courseprice == null) 
+                var courseprice = await _unitOfWork.GetRepository<CoursePrice>().SingleOrDefaultAsync(predicate: x => x.CourseId == course.Id);
+                if (courseprice == null)
                 {
                     coursePrices.Add(new CoursePrice
                     {
@@ -604,7 +604,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<CoursePrice>> GetCoursePrices(string courseId)
         {
-            var prices = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId));
+            var prices = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId));
             return prices.ToList();
         }
         #endregion

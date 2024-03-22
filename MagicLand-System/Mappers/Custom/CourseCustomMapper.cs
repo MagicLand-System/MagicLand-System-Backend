@@ -197,7 +197,7 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     CourseRelatedId = course.Id,
                     Name = course.Name,
-                    //Subject = course.CourseCategory.Name,
+                    Subject = course.SubjectName,
                     Image = course.Image,
                     //Price = course.Price,
                     MinAgeStudent = course.MinYearOldsStudent,
