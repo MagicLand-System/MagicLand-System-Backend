@@ -6,5 +6,6 @@
         public bool IsSucess {  get; set; } 
         public string? Messsage {  get; set; } 
         public SuccessfulInformation? SuccessfulInformation { get; set; }
+        public CreateClassResponse? CreateClass { get; set; }
     }
 }

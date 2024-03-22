@@ -665,7 +665,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (schedule.DayOfWeek == 8)
                 {
-                    dateOfWeek = "=wednesday";
+                    dateOfWeek = "wednesday";
                 }
                 if (schedule.DayOfWeek == 16)
                 {
@@ -1074,7 +1074,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (schedulex.DayOfWeek == 8)
                 {
-                    dateOfWeek = "=wednesday";
+                    dateOfWeek = "wednesday";
                 }
                 if (schedulex.DayOfWeek == 16)
                 {
@@ -1334,6 +1334,14 @@ namespace MagicLand_System.Services.Implements
                 }) ;
             }
             response.RowInsertResponse = rows;
+            foreach(var row in rows)
+            {
+                if (!row.IsSucess)
+                {
+                    var requestx = request.Single(x => x.Index == row.Index);
+                    row.CreateClass = (await GenerateCreateClassFail(requestx));
+                }
+            }
             var succ = response.RowInsertResponse.Where(x => x.IsSucess).Count();
             var fail = response.RowInsertResponse.Where(x => !x.IsSucess).Count();
             response.SuccessRow = succ;
@@ -1577,7 +1585,11 @@ namespace MagicLand_System.Services.Implements
                     break;
                 }
             }
+            string format = "dd/MM/yyyy";
 
+            var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
+                ? (DateTime?)parsedDate
+                : DateTime.Parse(rq.StartDate);
             CreateClassResponse createClassResponse = new CreateClassResponse
             {
                 ClassCode = null,
@@ -1588,9 +1600,9 @@ namespace MagicLand_System.Services.Implements
                 Method = rq.Method,
                 RoomId = null,
                 ScheduleRequests = scheduleRequests,
-                //StartDate = 
+                StartDate = date,
             };
-            return default;
+            return createClassResponse;
         }
         #endregion
         #region thanh_lee_code
