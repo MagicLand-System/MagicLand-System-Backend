@@ -579,7 +579,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Promotions", (string)null);
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.PromotionTransaction", b =>
@@ -598,7 +598,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("UserPromotionId");
 
-                    b.ToTable("PromotionTransactions", (string)null);
+                    b.ToTable("PromotionTransactions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Question", b =>
@@ -1343,7 +1343,7 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserPromotions", (string)null);
+                    b.ToTable("UserPromotions");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.WalletTransaction", b =>
