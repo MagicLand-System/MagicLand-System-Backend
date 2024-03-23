@@ -60,7 +60,12 @@ namespace MagicLand_System_Web.Pages
 
         private async Task RenderProgress(List<CourseResExtraInfor>? courses, int i, int index)
         {
-          
+
+            var slots = new List<(string, string)> { ("417997AC-AFD7-4363-BFE5-6CDD56D4713A", "7:00 - 9:00"), ("301EFD4A-618E-4495-8E7E-DAA223D3945E", "9:15 - 11:15"), ("6AB50A00-08BA-483C-BF5D-0D55B05A2CCC", "12:00 - 14:00"), 
+            ("2291E53B-094B-493E-8132-C6494D2B18A8", "14:15 - 16:30"), ("688FE18C-5DB1-40AA-A7F3-F47CCD9FD395", "16:30 - 18:30"), ("418704FB-FAC8-4119-8795-C8FE5D348753", "19:00 - 21:00")};
+
+            var dayOfWeeks = new List<string> { "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday" };
+
 
             var lectureres = await _httpClient.GetAsync(baseUrl + "/getLecturer");
 

@@ -18,6 +18,7 @@ namespace MagicLand_System.Domain.Models
         public DateTime? NotificationTimer { get; set; }
         public bool IsRead { get; set; } = false;
         public string? ActionData { get; set; }
+        public string? Identify { get; set; } = string.Empty;
 
 
         [ForeignKey("User")]

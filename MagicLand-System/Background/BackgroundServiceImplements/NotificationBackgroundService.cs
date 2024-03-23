@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
+using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -85,31 +86,46 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     var classes = await _unitOfWork.GetRepository<Class>()
                       .GetListAsync(predicate: x => x.Status == ClassStatusEnum.CANCELED.ToString() || x.Status == ClassStatusEnum.PROGRESSING.ToString(),
-                       include: x => x.Include(x => x.StudentClasses).ThenInclude(sc => sc.Student)
-                       .Include(x => x.Schedules).ThenInclude(sc => sc.Attendances).ThenInclude(att => att.Student!));
+                       include: x => x.Include(x => x.StudentClasses).ThenInclude(sc => sc.Student)!);
 
                     var newNotifications = new List<Notification>();
 
                     foreach (var cls in classes)
                     {
+                        cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                        orderBy: x => x.OrderBy(x => x.Date),
+                        predicate: x => x.ClassId == cls.Id,
+                        include: x => x.Include(x => x.Attendances).ThenInclude(x => x.Student).Include(x => x.Slot)!);
+
+
                         if (cls.Status == ClassStatusEnum.CANCELED.ToString())
                         {
                             foreach (var stu in cls.StudentClasses)
                             {
                                 if (stu.CanChangeClass)
                                 {
-                                    GenerateNotificationInCondition(currentDate, newNotifications, NotificationMessageContant.ChangeClassRequestTitle,
-                                        NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
-                                        currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, stu.StudentId, cls.Image!);
+                                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                                       {
+                                         ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                                         ($"{AttachValueEnum.StudentId}", $"{stu.StudentId}"),
+                                       });
+
+                                    await GenerateNotification(currentDate, newNotifications, null, NotificationMessageContant.ChangeClassRequestTitle,
+                                                 NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
+                                                 currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
                                 }
                             }
                             continue;
                         }
 
-                        ForProgressingClass(currentDate, newNotifications, cls);
+                        await ForProgressingClass(currentDate, newNotifications, cls, _unitOfWork);
                     }
 
-                    await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
+                    if (newNotifications.Count() > 0)
+                    {
+                        await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
+                    }
+
                     _unitOfWork.Commit();
                 }
             }
@@ -120,43 +136,51 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Create New Notifications Success";
         }
 
-        private void ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls)
+        private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
         {
             var CheckingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date && sc.Attendances.Any(att => att.IsPresent == null)).ToList();
+            var tempNotifications = new List<Notification>();
+            int totalNonAttendance = 0;
 
             foreach (var schedule in CheckingSchedules)
             {
-                foreach (var attendance in schedule.Attendances)
+                var attendances = schedule.Attendances;
+                foreach (var attendance in attendances)
                 {
                     if (attendance.IsPresent != null)
                     {
                         continue;
                     }
+                    totalNonAttendance++;
+                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                        {
+                          ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                          ($"{AttachValueEnum.StudentId}", $"{attendance.StudentId}"),
+                        });
 
-                    GenerateNotificationInCondition(currentDate, newNotifications, NotificationMessageContant.MakeUpAttendanceTitle,
-                           NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
-                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Id, attendance.StudentId, cls.Image!);
+                    await GenerateNotification(currentDate, tempNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
+                             NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
+                             currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                }
+
+                if (totalNonAttendance == attendances.Count())
+                {
+                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                        {
+                          ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                        });
+
+                    await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpAttendanceLecturerTitle,
+                           NotificationMessageContant.MakeUpAttendanceLecturerBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
+                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+
+                }
+                else
+                {
+                    newNotifications.AddRange(tempNotifications);
                 }
             }
-        }
 
-        private void GenerateNotificationInCondition(DateTime currentDate, List<Notification> newNotifications, string title, string body, string type, Guid classId, Guid studentId, string image)
-        {
-            newNotifications.Add(new Notification
-            {
-                Id = new Guid(),
-                Title = title,
-                Body = body,
-                Priority = type,
-                Image = image,
-                CreatedAt = currentDate,
-                IsRead = false,
-                ActionData = StringHelper.GenerateJsonString(new List<(string, string)>
-                {
-                 ($"{AttachValueEnum.ClassId}", $"{classId}"),
-                 ($"{AttachValueEnum.StudentId}", $"{studentId}"),
-                })
-            });
         }
 
         public async Task<string> CreateNotificationForLastRegisterTime()
@@ -190,8 +214,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                   ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
                                 });
 
-                                GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.LastDayRegisterTitle, NotificationMessageContant.LastDayRegisterBody(cls.ClassCode!),
-                                    NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, actionData);
+                                await GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.LastDayRegisterTitle, NotificationMessageContant.LastDayRegisterBody(cls.ClassCode!),
+                                       NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, actionData, _unitOfWork);
                             }
 
                             if (cls.StartDate.AddDays(-3).Date == currentDate.Date)
@@ -214,8 +238,25 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Create New Notifications Success";
         }
 
-        private void GenerateNotification(DateTime currentDate, List<Notification> newNotifications, Guid targetUser, string title, string body, string type, string image, string actionData)
+        private async Task GenerateNotification(DateTime currentDate, List<Notification> newNotifications, Guid? targetUser, string title, string body, string type, string image, string actionData, IUnitOfWork _unitOfWork)
         {
+
+            var listItemIdentify = new List<string>
+            {
+                StringHelper.TrimStringAndNoSpace(targetUser is null ? "" : targetUser.Value.ToString()),
+                StringHelper.TrimStringAndNoSpace(title),
+                StringHelper.TrimStringAndNoSpace(body),
+                StringHelper.TrimStringAndNoSpace(image),
+                StringHelper.TrimStringAndNoSpace(actionData),
+            };
+
+            string identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify));
+            var isNotify = await _unitOfWork.GetRepository<Notification>().SingleOrDefaultAsync(predicate: x => x.Identify == identify);
+            if (isNotify != null)
+            {
+                return;
+            }
+
             newNotifications.Add(new Notification
             {
                 Id = new Guid(),
@@ -226,6 +267,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 CreatedAt = currentDate,
                 IsRead = false,
                 ActionData = actionData,
+                Identify = identify,
                 UserId = targetUser,
             });
         }
@@ -260,9 +302,9 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                       ($"{AttachValueEnum.CourseId}", $"{course.Id}"),
                                     });
 
-                                    GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.RemindRegisterCourseTitle,
+                                    await GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.RemindRegisterCourseTitle,
                                         NotificationMessageContant.RemindRegisterCourseBody(course.Name!),
-                                   NotificationPriorityEnum.REMIND.ToString(), course.Image!, actionData);
+                                   NotificationPriorityEnum.REMIND.ToString(), course.Image!, actionData, _unitOfWork);
                                 }
                             }
                         }

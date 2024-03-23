@@ -1,4 +1,6 @@
-﻿using MagicLand_System.Enums;
+﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.Utils;
 
 namespace MagicLand_System.Constants
@@ -8,6 +10,7 @@ namespace MagicLand_System.Constants
         public const string ChangeClassRequestTitle = "Học Sinh Cần Chuyển Lớp";
         public const string ChangeClassTitle = "Học Sinh Được Chuyển Lớp";
         public const string MakeUpAttendanceTitle = "Học Sinh Cần Điểm Danh Bù";
+        public const string MakeUpAttendanceLecturerTitle = "Nhắc Nhở Điểm Danh";
         public const string PaymentSuccessTitle = "Đăng Ký Lớp Học Thành Công";
         public const string TopUpSuccessTitle = "Nạp Tiền Vào Ví Thành Công";
         public const string TopUpFailedTitle = "Nạp Tiền Vào Ví Không Thành Thành Công";
@@ -30,6 +33,11 @@ namespace MagicLand_System.Constants
         public static string MakeUpAttendanceBody(string classCode, string studentName, DateTime date)
         {
             return $"Học Sinh {studentName} Thuộc Lớp {classCode} Cần Được Điểm Danh Bù Vào Ngày {date}, Do Hệ Thống Không Nhận Thấy Trạng Thái Điểm Danh Của Bé";
+        }
+
+        public static string MakeUpAttendanceLecturerBody(Class cls, DateTime date, string slot)
+        {
+            return $"Bạn Có Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date} Vào Lúc {slot} Chưa Cập Nhập Điểm Danh. Vui Lòng Cập Nhập Điểm Danh";
         }
         public static string PaymentSuccessBody(string classCode, string studentName)
         {

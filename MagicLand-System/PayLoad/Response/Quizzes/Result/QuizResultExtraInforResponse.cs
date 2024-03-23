@@ -8,6 +8,5 @@
         public string? ExamName { get; set; } = string.Empty;
         public string? ExamCategory { get; set; } = string.Empty;
         public string? ExamType { get; set; } = string.Empty;
-        public required List<QuestionResultResponse> StudentWorks { get; set; }
     }
 }

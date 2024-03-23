@@ -2,6 +2,7 @@
 using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Course;
@@ -494,6 +495,16 @@ namespace MagicLand_System.Services.Implements
                     EffectiveDate = DateTime.UtcNow,
                     Price = request.Price,
                 };
+
+                var tempItemPrice = new TempItemPrice
+                {
+                    Id = Guid.NewGuid(),
+                    ClassId = default,
+                    CourseId = course.Id,
+                    Price = coursePrice.Price,
+                };
+
+                await _unitOfWork.GetRepository<TempItemPrice>().InsertAsync(tempItemPrice);
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;

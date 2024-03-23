@@ -478,7 +478,7 @@ namespace MagicLand_System.Services.Implements
               orderBy: x => x.OrderByDescending(x => x.CreatedTime),
               predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id);
 
-            if(currentTempQuiz == null)
+            if (currentTempQuiz == null)
             {
                 throw new BadHttpRequestException($"Vui Lòng Truy Suất Câu Hỏi Trước Khi Lưu Điểm", StatusCodes.Status400BadRequest);
             }
@@ -683,27 +683,25 @@ namespace MagicLand_System.Services.Implements
             var responses = new List<QuizResultExtraInforResponse>();
             foreach (var test in testResults!)
             {
-                var studentWorks = new List<QuestionResultResponse>();
+                //var studentWorks = new List<QuestionResultResponse>();
 
-                foreach (var examQuestion in test.ExamQuestions)
-                {
-                    var multipleChoiceAnswerResult = new MCAnswerResultResponse();
-                    var flashCardAnswerResults = new List<FCAnswerResultResponse>();
+                //foreach (var examQuestion in test.ExamQuestions)
+                //{
+                //    var multipleChoiceAnswerResult = new MCAnswerResultResponse();
+                //    //var flashCardAnswerResults = new List<FCAnswerResultResponse>();
+                //    var flasCardAnswerResult = new FCAnswerResultResponse {};
 
-                    var multipleChoiceAnswer = await GetMCStudentResult(examQuestion, multipleChoiceAnswerResult);
-                    var flashCardAnswers = await GetFCStudentResult(examQuestion, flashCardAnswerResults);
+                //    var multipleChoiceAnswer = await GetMCStudentResult(examQuestion, multipleChoiceAnswerResult);
+                //    //var flashCardAnswers = await GetFCStudentResult(examQuestion, flashCardAnswerResults);
 
-                    studentWorks.Add(new QuestionResultResponse
-                    {
-                        QuestionId = examQuestion.QuestionId,
-                        QuestionDescription = examQuestion.Question,
-                        QuestionImage = examQuestion.QuestionImage,
-                        MultipleChoiceAnswerResult = multipleChoiceAnswer != null ? multipleChoiceAnswerResult : null,
-                        FlashCardAnswerResults = flashCardAnswers != null ? flashCardAnswerResults : null,
-                    });
-
-                }
-
+                //    studentWorks.Add(new QuestionResultResponse
+                //    {
+                //        QuestionId = examQuestion.QuestionId,
+                //        QuestionDescription = examQuestion.Question,
+                //        QuestionImage = examQuestion.QuestionImage,
+                //        MultipleChoiceAnswerResult = multipleChoiceAnswer != null ? multipleChoiceAnswerResult : null,
+                //        FlashCardAnswerResult = flashCardAnswers != null ? flashCardAnswerResults : null,
+                //    });
                 responses.Add(new QuizResultExtraInforResponse
                 {
                     ResultId = test.Id,
@@ -717,38 +715,38 @@ namespace MagicLand_System.Services.Implements
                     TotalScore = test.TotalScore,
                     ScoreEarned = test.ScoreEarned,
                     ExamStatus = test.ExamStatus!,
-                    StudentWorks = studentWorks,
+                    //StudentWorks = studentWorks,
                 });
             }
-
             return responses;
         }
 
         private async Task<ICollection<FlashCardAnswer>?> GetFCStudentResult(ExamQuestion examQuestion, List<FCAnswerResultResponse> flashCardAnswerResults)
         {
-            var flashCardAnswers = await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
-            if (flashCardAnswers != null)
-            {
-                foreach (var fc in flashCardAnswers)
-                {
-                    flashCardAnswerResults.Add(new FCAnswerResultResponse
-                    {
-                        StudentFirstCardAnswerId = fc.LeftCardAnswerId,
-                        StudentFirstCardAnswerDecription = fc.LeftCardAnswer,
-                        StudentFirstCardAnswerImage = fc.LeftCardAnswerImage,
-                        StudentSecondCardAnswerId = fc.RightCardAnswerId,
-                        StudentSecondCardAnswerDescription = fc.RightCardAnswer,
-                        StudentSecondCardAnswerImage = fc.RightCardAnswerImage,
-                        CorrectSecondCardAnswerId = fc.CorrectRightCardAnswerId,
-                        CorrectSecondCardAnswerDescription = fc.CorrectRightCardAnswer,
-                        CorrectSecondCardAnswerImage = fc.CorrectRightCardAnswerImage,
-                        Status = fc.Status,
-                        Score = fc.Score,
-                    });
-                }
-            }
+            //var flashCardAnswers = await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
+            //if (flashCardAnswers != null)
+            //{
+            //    foreach (var fc in flashCardAnswers)
+            //    {
+            //        flashCardAnswerResults.Add(new FCAnswerResultResponse
+            //        {
+            //            StudentFirstCardAnswerId = fc.LeftCardAnswerId,
+            //            StudentFirstCardAnswerDecription = fc.LeftCardAnswer,
+            //            StudentFirstCardAnswerImage = fc.LeftCardAnswerImage,
+            //            StudentSecondCardAnswerId = fc.RightCardAnswerId,
+            //            StudentSecondCardAnswerDescription = fc.RightCardAnswer,
+            //            StudentSecondCardAnswerImage = fc.RightCardAnswerImage,
+            //            CorrectSecondCardAnswerId = fc.CorrectRightCardAnswerId,
+            //            CorrectSecondCardAnswerDescription = fc.CorrectRightCardAnswer,
+            //            CorrectSecondCardAnswerImage = fc.CorrectRightCardAnswerImage,
+            //            Status = fc.Status,
+            //            Score = fc.Score,
+            //        });
+            //    }
+            //}
 
-            return flashCardAnswers;
+            //return flashCardAnswers;
+            return default!;
         }
 
         private async Task<MultipleChoiceAnswer?> GetMCStudentResult(ExamQuestion examQuestion, MCAnswerResultResponse multipleChoiceAnswerResult)
@@ -1033,6 +1031,40 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Thời Gian Cài Đặt Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
+        }
+
+        public async Task<List<StudentWorkResult>> GetCurrentStudentQuizDoneWorkAsync(Guid examId)
+        {
+            var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
+
+            var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.ExamId == examId,
+                include: x => x.Include(x => x.StudentClass!).Include(x => x.ExamQuestions));
+
+
+            if (testResult == null)
+            {
+                throw new BadHttpRequestException($"Học Sinh Chưa Làm Bài Kiểm Tra Này Hoặc Bài Kiểm Tra Không Thuộc Dạng Trắc Nghiệm", StatusCodes.Status400BadRequest);
+            }
+
+            var responses = new List<StudentWorkResult>();
+
+            foreach (var examQuestion in testResult.ExamQuestions)
+            {
+                var multipleChoiceAnswerResult = new MCAnswerResultResponse();
+
+                var multipleChoiceAnswer = await GetMCStudentResult(examQuestion, multipleChoiceAnswerResult);
+
+                responses.Add(new StudentWorkResult
+                {
+                    QuestionId = examQuestion.QuestionId,
+                    QuestionDescription = examQuestion.Question,
+                    QuestionImage = examQuestion.QuestionImage,
+                    MultipleChoiceAnswerResult = multipleChoiceAnswer != null ? multipleChoiceAnswerResult : null,
+                });
+            }
+
+            return responses;
         }
     }
 }

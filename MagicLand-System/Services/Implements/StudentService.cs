@@ -305,6 +305,17 @@ namespace MagicLand_System.Services.Implements
 
         private Notification GenerateNotification(User targetUser, string title, string body, string actionData)
         {
+            var listItemIdentify = new List<string>
+            {
+                StringHelper.TrimStringAndNoSpace(targetUser.Id.ToString()),
+                StringHelper.TrimStringAndNoSpace(title),
+                StringHelper.TrimStringAndNoSpace(body),
+                StringHelper.TrimStringAndNoSpace(ImageUrlConstant.RefundImageUrl),
+                StringHelper.TrimStringAndNoSpace(actionData),
+            };
+
+            string identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify));
+
             return new Notification
             {
                 Id = new Guid(),
@@ -316,6 +327,7 @@ namespace MagicLand_System.Services.Implements
                 IsRead = false,
                 ActionData = actionData,
                 UserId = targetUser.Id,
+                Identify = identify,
             };
 
         }

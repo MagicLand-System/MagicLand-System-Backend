@@ -253,6 +253,17 @@ namespace MagicLand_System.Services.Implements
 
         private Notification GenerateNewNotification(User targetUser, string title, string body, string type, string image, string actionData)
         {
+            var listItemIdentify = new List<string>
+            {
+                StringHelper.TrimStringAndNoSpace(targetUser is null ? "" : targetUser.Id.ToString()),
+                StringHelper.TrimStringAndNoSpace(title),
+                StringHelper.TrimStringAndNoSpace(body),
+                StringHelper.TrimStringAndNoSpace(image),
+                StringHelper.TrimStringAndNoSpace(actionData),
+            };
+
+            string identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify));
+
             return new Notification
             {
                 Id = new Guid(),
@@ -263,7 +274,8 @@ namespace MagicLand_System.Services.Implements
                 CreatedAt = DateTime.Now,
                 IsRead = false,
                 ActionData = actionData,
-                UserId = targetUser.Id,
+                UserId = targetUser!.Id,
+                Identify = identify,
             };
         }
 
@@ -379,19 +391,21 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
         {
-            var cls = await _unitOfWork.GetRepository<Class>()
-                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(classId), include: x => x
-                .Include(x => x.Schedules)
-                .ThenInclude(s => s.Slot)
-                .Include(x => x.Schedules)
-                .ThenInclude(s => s.Room)!
-                .Include(x => x.StudentClasses)
-                .Include(x => x.Course)!);
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+               predicate: x => x.Id.Equals(classId),
+               include: x => x.Include(x => x.StudentClasses)!);
 
             if (cls == null)
             {
                 throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
             }
+
+            cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+            orderBy: x => x.OrderBy(x => x.Date),
+            predicate: x => x.ClassId == classId,
+            include: x => x.Include(x => x.Slot).Include(x => x.Room)!);
+
+            cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == cls.CourseId);
 
             await ValidateSuitableClass(studentIds, cls);
 
@@ -439,8 +453,12 @@ namespace MagicLand_System.Services.Implements
         {
             var currentSyllabusPrequisite = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 selector: x => x.SyllabusPrerequisites,
-                predicate: x => x.CourseId == cls.CourseId,
-                include: x => x.Include(x => x.SyllabusPrerequisites!));
+                predicate: x => x.CourseId == cls.CourseId);
+
+            if (currentSyllabusPrequisite is null)
+            {
+                return;
+            }
 
             var allSyllabusPrerIdRequired = await FindAllIdSyllabusPrerRequired(currentSyllabusPrequisite!.Select(csp => csp.PrerequisiteSyllabusId).ToList());
 

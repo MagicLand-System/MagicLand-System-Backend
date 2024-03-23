@@ -369,7 +369,7 @@ namespace MagicLand_System.Controllers
         private async Task<IActionResult> ValidRequest(Guid classId, List<Guid> studentIds)
         {
 
-            if (await _classService.GetClassByIdAsync(classId) == null)
+            if (await _classService.GetClassByIdAsync(classId) == default)
             {
                 return BadRequest(new ErrorResponse
                 {
