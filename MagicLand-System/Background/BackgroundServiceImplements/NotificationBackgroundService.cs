@@ -95,7 +95,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                         orderBy: x => x.OrderBy(x => x.Date),
                         predicate: x => x.ClassId == cls.Id,
-                        include: x => x.Include(x => x.Attendances).ThenInclude(x => x.Student).Include(x => x.Slot)!);
+                        include: x => x.Include(x => x.Slot)!);
 
 
                         if (cls.Status == ClassStatusEnum.CANCELED.ToString())
@@ -117,8 +117,10 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                             }
                             continue;
                         }
-
-                        await ForProgressingClass(currentDate, newNotifications, cls, _unitOfWork);
+                        if (cls.Status == ClassStatusEnum.PROGRESSING.ToString())
+                        {
+                            await ForProgressingClass(currentDate, newNotifications, cls, _unitOfWork);
+                        }
                     }
 
                     if (newNotifications.Count() > 0)
@@ -138,32 +140,27 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
         {
-            var CheckingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date && sc.Attendances.Any(att => att.IsPresent == null)).ToList();
+            var checkingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date).ToList();
             var tempNotifications = new List<Notification>();
-            int totalNonAttendance = 0;
 
-            foreach (var schedule in CheckingSchedules)
+            foreach (var schedule in checkingSchedules)
             {
-                var attendances = schedule.Attendances;
-                foreach (var attendance in attendances)
+                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id, include: x => x.Include(x => x.Student)!);
+                var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id);
+
+                if(evaluates.Any(evl => evl.Status == null || evl.Status == string.Empty))
                 {
-                    if (attendance.IsPresent != null)
-                    {
-                        continue;
-                    }
-                    totalNonAttendance++;
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
                           ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
-                          ($"{AttachValueEnum.StudentId}", $"{attendance.StudentId}"),
                         });
 
-                    await GenerateNotification(currentDate, tempNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
-                             NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
-                             currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                    await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpEvaluateLecturerTitle,
+                           NotificationMessageContant.MakeUpEvaluateLecturerBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
+                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
                 }
 
-                if (totalNonAttendance == attendances.Count())
+                if (attendances.All(att => att.IsPresent == null))
                 {
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
@@ -175,12 +172,27 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                            currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
 
                 }
-                else
+                else if (attendances.Any(att => att.IsPresent == null))
                 {
-                    newNotifications.AddRange(tempNotifications);
+                    foreach (var attendance in attendances)
+                    {
+                        if (attendance.IsPresent != null)
+                        {
+                            continue;
+                        }
+
+                        var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                        {
+                          ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                          ($"{AttachValueEnum.StudentId}", $"{attendance.StudentId}"),
+                        });
+
+                        await GenerateNotification(currentDate, tempNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
+                              NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
+                              currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                    }
                 }
             }
-
         }
 
         public async Task<string> CreateNotificationForLastRegisterTime()
