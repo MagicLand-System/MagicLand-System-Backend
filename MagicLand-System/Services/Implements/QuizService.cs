@@ -554,6 +554,7 @@ namespace MagicLand_System.Services.Implements
 
             testResult.CorrectMark = (int)scoreEarned;
             testResult.ScoreEarned = scoreEarned;
+            testResult.ExamStatus = status;
             var response = new QuizResultResponse
             {
                 TotalMark = testResult.TotalMark,
@@ -1001,18 +1002,27 @@ namespace MagicLand_System.Services.Implements
             }
 
             var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                    selector: x => x.Topics!.SelectMany(tp => tp.Sessions!.Select(ses => ses.Id)),
+                    selector: x => x.Topics!.SelectMany(tp => tp.Sessions!),
                     predicate: x => x.CourseId == courseId);
 
             bool isValid = false;
-            foreach (var id in sessions)
+
+            var slot = new Slot { StartTime = default!, EndTime = default!};
+
+            foreach (var session in sessions)
             {
                 var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
                     selector: x => x.Id,
-                    predicate: x => x.SessionId == id);
+                    predicate: x => x.SessionId == session.Id);
 
                 if (quiz != default && quiz == examId)
                 {
+                    var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                        orderBy: x => x.OrderBy(x => x.Date),
+                        predicate: x => x.ClassId == classId,
+                        include: x => x.Include(x => x.Slot)!);
+
+                    slot = schedules.ToList()[session.NoSession - 1].Slot;
                     isValid = true;
                     break;
                 }
@@ -1023,14 +1033,31 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Tồn Tại Hoặc Không Thuộc Id Lớp Học Đang Yêu Cầu", StatusCodes.Status400BadRequest);
             }
 
+            if (settingInfor.QuizStartTime == default && settingInfor.QuizEndTime == default)
+            {
+                throw new BadHttpRequestException($"Thời Gian Thiết Lập Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+
+            if (settingInfor.QuizStartTime > settingInfor.QuizEndTime)
+            {
+                throw new BadHttpRequestException($"Thiết Lập Không Hợp Lệ, Thời Gian Bắt Đầu Lớn Hơn Thời Gian Kết Thúc", StatusCodes.Status400BadRequest);
+            }
+
+            if (settingInfor.QuizStartTime < TimeOnly.Parse(slot!.StartTime))
+            {
+                throw new BadHttpRequestException($"Thiết Lập Không Hợp Lệ, Thời Gian Bắt Đầu Sớm Hơn Thời Gian Bắt Đầu {slot.StartTime} Của Buổi Học Có Bài Kiểm Tra", StatusCodes.Status400BadRequest);
+            }
+
+            if (settingInfor.QuizEndTime > TimeOnly.Parse(slot!.EndTime))
+            {
+                throw new BadHttpRequestException($"Thiết Lập Không Hợp Lệ, Thời Gian Kết Thúc Trễ Hơn Thời Gian Kết Thúc {slot.EndTime} Của Buổi Học Có Bài Kiểm Tra", StatusCodes.Status400BadRequest);
+            }
+
             if (settingInfor.AttemptAllowed < 0 || settingInfor.AttemptAllowed > 10)
             {
                 throw new BadHttpRequestException($"Số Lần Làm Quiz Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
-            if (settingInfor.QuizStartTime == default && settingInfor.QuizEndTime == default)
-            {
-                throw new BadHttpRequestException($"Thời Gian Cài Đặt Không Hợp Lệ", StatusCodes.Status400BadRequest);
-            }
+           
         }
 
         public async Task<List<StudentWorkResult>> GetCurrentStudentQuizDoneWorkAsync(Guid examId)

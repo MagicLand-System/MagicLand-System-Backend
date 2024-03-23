@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure;
 using MagicLand_System.Constants;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
@@ -27,7 +26,6 @@ using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Globalization;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -1974,7 +1972,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync(int? numberFetching)
+        public async Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync()
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt(),
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Slot)
@@ -1985,18 +1983,27 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
 
-            var currentClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
-            if (!currentClasses.Any())
+            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.UtcNow.Date)).ToList();
+            if (!classes.Any())
             {
                 return new List<ClassWithSlotOutSideResponse>();
             }
 
-            if (numberFetching != null)
-            {
-                currentClasses = currentClasses.OrderBy(cls => cls.Schedules.First().Slot!.StartTime).Take(numberFetching.Value).ToList();
-            }
+            nearestClasses = nearestClasses.OrderBy(cls => TimeOnly.Parse(cls.Schedules.First().Slot!.StartTime)).ToList();
 
-            return await GenerateClassSchedule(currentClasses);
+            //foreach (var cls in nearestClasses)
+            //{
+            //    var currentSchedule = cls.Schedules.FirstOrDefault(sc => sc.Date.Date == DateTime.UtcNow.Date);
+
+            //    var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule!.Id);
+            //    if (evaluates.All(e => e.Status == null || e.Status == string.Empty))
+            //    {
+            //        nearestClasses.Remove(cls);
+            //        nearestClasses.Insert(0, cls);
+            //    }
+            //}
+
+            return await GenerateClassSchedule(nearestClasses);
         }
 
         private async Task<List<ClassWithSlotOutSideResponse>> GenerateClassSchedule(List<Class> currentClasses)

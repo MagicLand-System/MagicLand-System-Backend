@@ -388,7 +388,7 @@ namespace MagicLand_System.Services.Implements
 
             var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()).ToList();
 
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.UtcNow.Date);
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
 
             if (studentNotHaveAttendance.Count() > 0)
