@@ -138,17 +138,18 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Create New Notifications Success";
         }
 
-        private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
+        private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class clss, IUnitOfWork _unitOfWork)
         {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse(""), include: x => x.Include(x => x.Schedules)!);
+
             var checkingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date).ToList();
-            var tempNotifications = new List<Notification>();
 
             foreach (var schedule in checkingSchedules)
             {
                 var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id, include: x => x.Include(x => x.Student)!);
                 var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id);
 
-                if(evaluates.Any(evl => evl.Status == null || evl.Status == string.Empty))
+                if (evaluates.Any(evl => evl.Status == null || evl.Status == string.Empty))
                 {
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
@@ -187,7 +188,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                           ($"{AttachValueEnum.StudentId}", $"{attendance.StudentId}"),
                         });
 
-                        await GenerateNotification(currentDate, tempNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
+                        await GenerateNotification(currentDate, newNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
                               NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
                               currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
                     }

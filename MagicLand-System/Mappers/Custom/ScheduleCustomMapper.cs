@@ -122,6 +122,7 @@ namespace MagicLand_System.Mappers.Custom
                 var response = new LectureScheduleResponse
                 {
                     ClassId = cls.Id,
+                    CourseId = cls.CourseId,
                     ClassCode = cls.ClassCode!,
                     ClassName = cls.ClassCode!,
                     ClassSubject = cls.Course!.SubjectName!,
