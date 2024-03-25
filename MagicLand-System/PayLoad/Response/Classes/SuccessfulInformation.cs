@@ -6,5 +6,6 @@
         public string LecturerName { get; set; }
         public string RoomName { get; set; }
         public List<string> Times { get; set; }
+        public DateTime? StartDate { get; set; }    
     }
 }
