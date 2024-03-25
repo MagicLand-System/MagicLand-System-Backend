@@ -9,7 +9,7 @@ namespace MagicLand_System.Mappers.Quizzes
     {
         public QuizMapper()
         {
-            CreateMap<ExamResponse, ExamWithScore>();
+            CreateMap<ExamResponse, ExamResForStudent>();
         }
 
     }

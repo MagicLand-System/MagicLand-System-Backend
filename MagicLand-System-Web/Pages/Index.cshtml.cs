@@ -29,9 +29,12 @@ namespace MagicLand_System_Web.Pages
 
         [BindProperty]
         public List<(string, string, string, string)> messages { get; set; } = new List<(string, string, string, string)>();
+        [BindProperty]
+        public bool IsLoading { get; set; }
         public async Task<IActionResult> OnGetAsync()
         {
             var token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
+            IsLoading = false;
             if (token != null)
             {
                 return Page();
@@ -49,7 +52,7 @@ namespace MagicLand_System_Web.Pages
 
         public async Task<IActionResult> OnPostAsync(int inputField)
         {
-
+            IsLoading = true;
             if (inputField == 0 || inputField < 0 || inputField >= 100)
             {
                 ViewData["Message"] = "Số Lượng không Hợp Lệ";

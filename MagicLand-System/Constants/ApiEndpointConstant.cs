@@ -92,6 +92,7 @@
         public static class StudentEndpoint
         {
             public const string StudentsEndpoint = ApiEndpoint + "/students";
+            public const string FindValidDayReLearning = ApiEndpoint + "/student/dayOff/findClass";
             public const string GetStudentLearningProgress = ApiEndpoint + "/student/learning/progress";
             public const string StudentEndpointGet = StudentsEndpoint + "/{id}";
             public const string StudentEnpointCreate = StudentsEndpoint + "/add";

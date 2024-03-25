@@ -2,8 +2,9 @@
 
 namespace MagicLand_System.PayLoad.Response.Quizzes
 {
-    public class ExamWithScore : ExamResponse
+    public class ExamResForStudent : ExamResponse
     {
         public double? Score { get; set; }
+        public int? AttemptLeft { get; set; }
     }
 }

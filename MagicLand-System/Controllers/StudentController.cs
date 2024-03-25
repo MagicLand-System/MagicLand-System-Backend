@@ -4,6 +4,8 @@ using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForStudent;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Services.Interfaces;
@@ -382,6 +384,47 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetStudentLearningProgress([FromQuery] Guid studentId, [FromQuery] Guid classId)
         {
             var result = await _studentService.GetStudentLearningProgressAsync(studentId, classId);
+            return Ok(result);
+        }
+
+        #region document API Get Day Valid Off
+        /// <summary>
+        ///  Cho Phép Phụ Huynh Truy Suất Các Ngày Phù Hợp Cho Bé Học Bù
+        /// </summary>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="dayOffs">Các Ngày Muốn Nghĩ</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "studentId": "3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///        "classId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB0a",
+        ///        "dayOffs": 
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Các Lịch Học Phù Hợp</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.StudentEndpoint.FindValidDayReLearning)]
+        [ProducesResponseType(typeof(ScheduleReLearn), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> FindValidDayReLearning([FromQuery] Guid studentId, [FromQuery] Guid classId, [FromQuery] List<DateOnly> dayOffs)
+        {
+            if(dayOffs.Count == 0 || dayOffs.Count > 4)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Số Lượng Ngày Nghĩ Không Hợp Lệ, Khi Bằng [0] Hoặc Vượt Quá Số Ngày Nghĩ Cho Phép [4]",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var result = await _studentService.FindValidDayReLearningAsync(studentId, classId, dayOffs);
             return Ok(result);
         }
     }

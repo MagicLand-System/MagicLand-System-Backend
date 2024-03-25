@@ -898,7 +898,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<ExamWithScore>> LoadExamOfClassByClassIdAsync(Guid classId, Guid? studentId)
+        public async Task<List<ExamResForStudent>> LoadExamOfClassByClassIdAsync(Guid classId, Guid? studentId)
         {
             var examsResponse = new List<ExamResponse>();
 
@@ -908,16 +908,30 @@ namespace MagicLand_System.Services.Implements
             {
                 await GenerateExamWithDate(examsResponse, cls, session);
             }
-            var responses = examsResponse.Select(x => _mapper.Map<ExamWithScore>(x)).ToList();
+            var responses = examsResponse.Select(x => _mapper.Map<ExamResForStudent>(x)).ToList();
 
             if (studentId != null && studentId != default)
             {
                 foreach (var res in responses)
                 {
                     var isQuizDone = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                        orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                         predicate: x => x.StudentClass!.ClassId == classId && x.StudentClass.StudentId == studentId && x.ExamId == res.ExamId);
 
+                    var attemptSetting = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
+                        selector: x => x.AttemptAllowed,
+                        predicate: x => x.ExamId == res.ExamId);
+
                     res.Score = isQuizDone == null ? null : isQuizDone.ScoreEarned;
+                    if (attemptSetting != 0)
+                    {
+                        res.AttemptLeft = isQuizDone != null ? attemptSetting - isQuizDone.NoAttempt : attemptSetting;
+                    }
+                    else
+                    {
+                        res.AttemptLeft = isQuizDone != null ? 0 : 1;
+                    }
+
                 }
             }
 

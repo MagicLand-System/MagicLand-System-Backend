@@ -11,6 +11,8 @@ using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Evaluates;
+using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForStudent;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
@@ -892,6 +894,107 @@ namespace MagicLand_System.Services.Implements
                 new StudentLearningProgress{ProgressName = "Exam", PercentageProgress = examProgress},
             };
 
+        }
+
+        public async Task<List<ScheduleReLearn>> FindValidDayReLearningAsync(Guid studentId, Guid classId, List<DateOnly> dayOffs)
+        {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId && x.StudentClasses.Any(sc => sc.StudentId == studentId),
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).Include(x => x.Course)!);
+
+            var student = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.Students.FirstOrDefault(st => st.Id == studentId), predicate: x => x.Id == GetUserIdFromJwt());
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id Học Sinh [{studentId}] Không Hợp Lệ, Khi Không Tồn Tại Hoặc Phụ Huynh Đang Truy Vấn Bé Khác Không Thuộc Tài Khoản Này", StatusCodes.Status400BadRequest);
+            }
+            if (!student.IsActive!.Value)
+            {
+                throw new BadHttpRequestException($"Id Học Sinh [{studentId}] Không Hợp Lệ, Khi Không Đã Ngưng Hoạt Động", StatusCodes.Status400BadRequest);
+            }
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Không Tồn Tại Hoặc Hoặc Học Sinh Không Thuộc Lớp Đang Truy Suất", StatusCodes.Status400BadRequest);
+            }
+            if (cls.Status != ClassStatusEnum.PROGRESSING.ToString())
+            {
+                throw new BadHttpRequestException($"Chỉ Có Thế Điểm Danh Lớp [Đang Diễn Ra] Lớp [{cls.ClassCode}] [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status!).Trim()}]", StatusCodes.Status400BadRequest);
+            }
+
+            var duplicates = dayOffs.GroupBy(d => d).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (duplicates.Any())
+            {
+                throw new BadHttpRequestException($"Ngày Nghĩ Không Hợp Lệ [{string.Join(", ", duplicates.Select(dp => dp.ToString()))}], Khi Đang Bị Trùng Lặp", StatusCodes.Status400BadRequest);
+            }
+
+            var schedules = cls.Schedules.ToList();
+
+            foreach (var d in dayOffs)
+            {
+                if (d <= DateOnly.FromDateTime(DateTime.UtcNow.Date))
+                {
+                    throw new BadHttpRequestException($"Ngày Nghĩ Không Hợp Lệ [{d}], Khi Sắp Diễn Ra Hoặc Đã Diễn Ra So Với Ngày Hiện Tại", StatusCodes.Status400BadRequest);
+                }
+
+                if (!schedules.Any(sc => d == DateOnly.FromDateTime(sc.Date.Date)))
+                {
+                    throw new BadHttpRequestException($"Ngày Nghĩ Không Hợp Lệ [{d}], " +
+                          $"Khi Không Thuộc Lịch Học Của Lơp Đang Truy Suất", StatusCodes.Status400BadRequest);
+                }
+            }
+
+            var classRealted = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == cls.CourseId && x.Status == ClassStatusEnum.PROGRESSING.ToString() && x.Id != classId,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+
+            var responses = new List<ScheduleReLearn>();
+
+            if (classRealted is not null && classRealted.Any())
+            {
+                var timeSessions = new List<(int, DateTime)>();
+
+                var schedulesOff = schedules.Where(sc => dayOffs.Any(day => day.Equals(DateOnly.FromDateTime(sc.Date.Date)))).ToList();
+                foreach (var so in schedulesOff)
+                {
+                    int noSession = schedules.ToList().IndexOf(so);
+                    timeSessions.Add(new(noSession, so.Date));
+                }
+
+                timeSessions = timeSessions.OrderBy(ts => ts.Item2).ToList();
+
+                foreach (var timeSession in timeSessions)
+                {
+                    var response = new ScheduleReLearn
+                    {
+                        DayOffRequest = DateOnly.FromDateTime(timeSession.Item2.Date),
+                    };
+                    var scheduleReLearns = new List<ScheduleResponse>();
+
+                    foreach (var cr in classRealted)
+                    {
+                        var dayOfSession = cr.Schedules.ToList()[timeSession.Item1];
+
+                        if (dayOfSession.Date.Date > timeSession.Item2.Date && !timeSessions.Any(ts => ts.Item2.Date == dayOfSession.Date.Date))
+                        {
+                            dayOfSession.Slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id == dayOfSession.SlotId);
+                            dayOfSession.Room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == dayOfSession.RoomId);
+                            var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == cr.LecturerId, include: x => x.Include(x => x.Role)!);
+
+                            var scheduleReLearn = _mapper.Map<ScheduleResponse>(dayOfSession);
+                            scheduleReLearn.Lecturer = _mapper.Map<LecturerResponse>(lecturer);
+                            scheduleReLearn.ClassCode = cr.ClassCode;
+                            scheduleReLearn.ClassName = cr.ClassCode;
+                            scheduleReLearn.ClassSubject = cls.Course!.SubjectName;
+                            scheduleReLearn.Method = cls.Method;
+
+                            scheduleReLearns.Add(scheduleReLearn);
+                        }
+                    }
+
+                    response.Schedules = scheduleReLearns.Any() ? scheduleReLearns : null;
+                    responses.Add(response);
+                }
+            }
+
+            return responses;
         }
     }
     #endregion
