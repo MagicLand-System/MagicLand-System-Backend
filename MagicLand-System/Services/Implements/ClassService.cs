@@ -24,6 +24,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System.Data;
 using System.Globalization;
 
@@ -1169,12 +1170,42 @@ namespace MagicLand_System.Services.Implements
             {
                 Guid? syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.SubjectCode.Trim().ToLower().Equals(rq.CourseCode.Trim().ToLower()), selector: x => x.Id);
                 Guid? courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabusId, selector: x => x.Id);
-                if (syllabusId == null || courseId == null)
+                if (syllabusId == Guid.Empty || courseId == Guid.Empty)
                 {
                     rows.Add(new RowInsertResponse
                     {
                         Index = rq.Index,
-                        Messsage = $" index {rq.Index} Không tìm thấy khóa học có mã như vậy",
+                        Messsage = $"Không tìm thấy khóa học có mã như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(rq.LeastNumberStudent >= rq.LimitNumberStudent)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa không thể nhỏ hơn số lượng tối thiểu",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(rq.LimitNumberStudent < 0)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa phải lớn hơn 0",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (rq.LeastNumberStudent < 0)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối thiểu phải lớn hơn 0",
                         IsSucess = false
                     });
                     continue;
@@ -1229,6 +1260,15 @@ namespace MagicLand_System.Services.Implements
                         {
                             dateofweek = "sunday";
                         }
+                        if (dateofweek.Equals(""))
+                        {
+                            rows.Add(new RowInsertResponse
+                            {
+                                Index = rq.Index,
+                                Messsage = $"Không tồn tại thứ trong tuần như vậy",
+                                IsSucess = false
+                            });
+                        }
                         scheduleRequests.Add(new ScheduleRequest
                         {
                             DateOfWeek = dateofweek,
@@ -1253,12 +1293,64 @@ namespace MagicLand_System.Services.Implements
                 var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
                     ? (DateTime?)parsedDate
                     : DateTime.Parse(rq.StartDate);
+                var doW = date.Value.DayOfWeek.ToString();
+                var isExist = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.ToLower().Trim().Equals(doW.ToLower().Trim()));
+                if (!isExist)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Ngày bắt đầu không trùng vào các thứ trong lịch học",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(date.Value < DateTime.Now)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Ngày bắt đầu không thể là ngày trong quá khứ",
+                        IsSucess = false
+                    });
+                    continue;
+                }
                 var roomLec = await GetRoomAndLecturer(new FilterLecturerRequest
                 {
                     CourseId = courseId.ToString(),
                     Schedules = scheduleRequests,
                     StartDate = date,
                 });
+                if (roomLec.Lecturer == null && roomLec.Room == null)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" index {rq.Index} Không tìm thấy giáo viên phù hợp , phòng phù hợp với lịch như như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (roomLec.Lecturer == null)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" index {rq.Index} Không tìm thấy giáo viên phù hợp với lịch như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (roomLec.Room == null)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" index {rq.Index} Không tìm thấy phòng phù hợp với lịch như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
                 var resultCheck = await CheckValidateSchedule(new FilterLecturerRequest
                 {
                     CourseId = courseId.ToString(),
@@ -2795,7 +2887,15 @@ namespace MagicLand_System.Services.Implements
                             final.Add(resx);
                         }
                     }
-                    res.Lecturer = final.OrderBy(x => x.NumberOfClassesTeaching).ToArray()[0];
+                    if (final == null || final.Count == 0)
+                    {
+                        res.Lecturer = null;
+                    }
+                    else
+                    {
+                        res.Lecturer = final.OrderBy(x => x.NumberOfClassesTeaching).ToArray()[0];
+                    }
+
                     if (roomIds.Count == 0)
                     {
                         res.Room = rooms.OrderBy(x => x.Name).ToArray()[0];
@@ -2808,7 +2908,15 @@ namespace MagicLand_System.Services.Implements
                             finalResult.Add(room);
                         }
                     }
-                    res.Room = finalResult.OrderBy(x => x.Name).ToArray()[0];
+                    if (final == null || final.Count == 0)
+                    {
+                        res.Room = null;
+                    }
+                    else
+                    {
+                        res.Room = finalResult.OrderBy(x => x.Name).ToArray()[0];
+                    }
+
                     return res;
                 }
 

@@ -522,9 +522,7 @@ namespace MagicLand_System.Services.Implements
             {
                 List<Schedule> mySchedule = new List<Schedule>();
                 var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Class).Include(x => x.Room).Include(x => x.Slot));
-                var filterSchedules = schedules.Where(x => x.SubLecturerId != null).Where(x => x.SubLecturerId.ToString().Equals(lecturer.Id.ToString()));
                 var filterSchedules2 = schedules.Where(x => x.Class.LecturerId.ToString().Equals(lecturer.Id.ToString()));
-                mySchedule.AddRange(filterSchedules);
                 mySchedule.AddRange(filterSchedules2);
                 if(mySchedule.Count > 0)
                 {
