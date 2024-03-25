@@ -1270,16 +1270,6 @@ namespace MagicLand_System.Services.Implements
                         {
                             dateofweek = "sunday";
                         }
-                        if (dateofweek.Equals(""))
-                        {
-                            rows.Add(new RowInsertResponse
-                            {
-                                Index = rq.Index,
-                                Messsage = $"Không tồn tại thứ trong tuần như vậy",
-                                IsSucess = false
-                            });
-                            break;
-                        }
                         scheduleRequests.Add(new ScheduleRequest
                         {
                             DateOfWeek = dateofweek,
@@ -1298,7 +1288,11 @@ namespace MagicLand_System.Services.Implements
                     }
 
                 }
-
+                var check = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.Equals(""));
+                if(check)
+                {
+                    continue;
+                }
                 string format = "dd/MM/yyyy";
 
                 var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
