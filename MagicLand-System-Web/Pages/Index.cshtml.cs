@@ -2,6 +2,7 @@
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System_Web.Pages.Message;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http.Headers;
@@ -28,13 +29,23 @@ namespace MagicLand_System_Web.Pages
         }
 
         [BindProperty]
+        public List<SyllabusMessage> SyllabusMessages { get; set; }
+        [BindProperty]
         public List<(string, string, string, string)> messages { get; set; } = new List<(string, string, string, string)>();
         [BindProperty]
         public bool IsLoading { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
-            var token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
             IsLoading = false;
+            var token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
+            var data = SessionHelper.GetObjectFromJson<List<SyllabusMessage>>(_httpContextAccessor.HttpContext!.Session, "DataSyllabus");
+
+            if (data != null)
+            {
+                messages.Add(new(data[0].Status, data[0].SyllabusCode, data[0].SyllabusName, data[0].Note));
+            }
+
             if (token != null)
             {
                 return Page();
@@ -53,6 +64,16 @@ namespace MagicLand_System_Web.Pages
         public async Task<IActionResult> OnPostAsync(int inputField)
         {
             IsLoading = true;
+            SyllabusMessages.Add(new SyllabusMessage
+            {
+                SyllabusName = "a",
+                Status = "200",
+                SyllabusCode = "b",
+                Note = "aa",
+            });
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", SyllabusMessages);
+            return Page();
+
             if (inputField == 0 || inputField < 0 || inputField >= 100)
             {
                 ViewData["Message"] = "Số Lượng không Hợp Lệ";
@@ -95,8 +116,10 @@ namespace MagicLand_System_Web.Pages
                 var insertResponse = await _httpClient.PostAsync(baseUrl + "/Syllabus/insertSyllabus", jsonContent);
 
                 int statusCode = (int)insertResponse.StatusCode;
+                string responseMessage = await insertResponse.Content.ReadAsStringAsync();
 
-                messages.Add(("Giáo Trình Thứ Tự " + i, $"{requestData.SyllabusName}", $"{requestData.SubjectCode}", $"{statusCode}"));
+                messages.Add(($"{requestData.SyllabusName}", $"{requestData.SubjectCode}", $"{statusCode}", responseMessage));
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", messages);
             }
 
             return Page();
@@ -240,7 +263,7 @@ namespace MagicLand_System_Web.Pages
                 {
                     Type = i == 0 ? "Practice" : i == 1 ? "Test" : "FinalExam",
                     ContentName = i == 0 ? "Luyện Tập" : i == 1 ? "Kiểm Tra" : "Kiểm Tra Cuối Khóa",
-                    Weight = i == 2 ? 40 : 30,
+                    Weight = 30,
                     CompleteionCriteria = 0,
                     QuestionType = i == 0 ? "Trắc nghiệm" : i == 1 ? "Tùy Chọn" : "Ghép thẻ",
                     Part = i == 0 ? 2 : 1,
@@ -248,6 +271,15 @@ namespace MagicLand_System_Web.Pages
                     Duration = i == 0 ? "30" : i == 1 ? "Tại Nhà" : "40",
                 });
             }
+            exams.Add(new ExamSyllabusRequest
+            {
+                Type = "Participation",
+                ContentName = "Điểm danh",
+                Weight = 10,
+                CompleteionCriteria = 0,
+                Part = 1,
+                Method = "Online",
+            });
 
             return exams;
         }

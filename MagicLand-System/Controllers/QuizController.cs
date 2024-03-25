@@ -106,6 +106,35 @@ namespace MagicLand_System.Controllers
             return Ok(responses);
         }
 
+        #region document API Get Fully Exam Infor
+        /// <summary>
+        ///  Truy Suất Thông Tin Bài Kiểm Tra Của Học Sinh
+        /// </summary>
+        /// <param name="examId">Id Của Bài Kiểm Tra</param>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "examId":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
+        ///    "studentId": "EC4C3593-7C58-423C-A87A-CEF2A391C57a"
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Thông Tin Bài Kiểm Tra</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        //[HttpGet(ApiEndpointConstant.QuizEndPoint.)]
+        //[ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
+        //[ProducesErrorResponseType(typeof(Exception))]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid examId, [FromQuery] Guid studentId)
+        //{
+        //    var responses = await _quizService.(examId, studentId);
+
+        //    return Ok(responses);
+        //}
+
         #region document API Get Exams Of Current Student In Time
         /// <summary>
         ///  Truy Suất Các Bài Kiểm Tra Của Bé Trong Khoảng Thời Gian Trước Và Sau Ngày Hiện Tại

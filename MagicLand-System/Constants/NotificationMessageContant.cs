@@ -37,11 +37,11 @@ namespace MagicLand_System.Constants
         }
         public static string MakeUpAttendanceLecturerBody(Class cls, DateTime date, string slot)
         {
-            return $"Bạn Có Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date} Vào Lúc {slot} Chưa Cập Nhập Điểm Danh. Vui Lòng Cập Nhập Điểm Danh";
+            return $"Bạn Có Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Điểm Danh. Vui Lòng Cập Nhập Điểm Danh";
         }
         public static string MakeUpEvaluateLecturerBody(Class cls, DateTime date, string slot)
         {
-            return $"Bạn Có Một Số Học Sinh Ở Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date} Vào Lúc {slot} Chưa Cập Nhập Đánh Giá. Vui Lòng Cập Nhập Đánh Giá";
+            return $"Bạn Có Một Số Học Sinh Ở Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Đánh Giá. Vui Lòng Cập Nhập Đánh Giá";
         }
         public static string PaymentSuccessBody(string classCode, string studentName)
         {

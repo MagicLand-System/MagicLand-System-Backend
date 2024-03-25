@@ -202,13 +202,14 @@ namespace MagicLand_System.Mappers.Custom
                     var listFlashCard = new List<FlashCard>();
                     var usedCouple = new HashSet<int>();
 
-                    for (int i = 0; i < coupleFlashCardLeft && i < currentQuestion.FlashCards.Count(); i++)
+                    for (int i = 0; i < coupleFlashCardLeft && i < currentQuestion.FlashCards.Count; i++)
                     {
                         int randomCouple;
                         do
                         {
-                            randomCouple = random.Next(0, currentQuestion.FlashCards.Count());
+                            randomCouple = random.Next(0, currentQuestion.FlashCards.Count);
                         } while (usedCouple.Contains(randomCouple));
+                        usedCouple.Add(randomCouple);
 
                         listFlashCard.Add(currentQuestion.FlashCards[randomCouple]);
                     }

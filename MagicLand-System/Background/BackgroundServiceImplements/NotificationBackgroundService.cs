@@ -82,7 +82,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
+                    var currentDate = DateTime.UtcNow;
 
                     var classes = await _unitOfWork.GetRepository<Class>()
                       .GetListAsync(predicate: x => x.Status == ClassStatusEnum.CANCELED.ToString() || x.Status == ClassStatusEnum.PROGRESSING.ToString(),
@@ -96,7 +96,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         orderBy: x => x.OrderBy(x => x.Date),
                         predicate: x => x.ClassId == cls.Id,
                         include: x => x.Include(x => x.Slot)!);
-
 
                         if (cls.Status == ClassStatusEnum.CANCELED.ToString())
                         {
@@ -138,11 +137,9 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Create New Notifications Success";
         }
 
-        private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class clss, IUnitOfWork _unitOfWork)
+        private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
         {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse(""), include: x => x.Include(x => x.Schedules)!);
-
-            var checkingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date).ToList();
+            var checkingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date && sc.Date.Date > currentDate.Date.AddDays(-10)).ToList();
 
             foreach (var schedule in checkingSchedules)
             {

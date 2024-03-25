@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Class;
@@ -960,8 +961,8 @@ namespace MagicLand_System.Services.Implements
                 var oldQuizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(predicate: x => x.ClassId == classId && x.ExamId == examId);
                 if (oldQuizTime != null)
                 {
-                    oldQuizTime.ExamStartTime = settingInfor.QuizStartTime!.Value.ToTimeSpan();
-                    oldQuizTime.ExamEndTime = settingInfor.QuizEndTime!.Value.ToTimeSpan();
+                    oldQuizTime.ExamStartTime = settingInfor.QuizStartTime != default ? settingInfor.QuizStartTime.ToTimeSpan() : oldQuizTime.ExamStartTime;
+                    oldQuizTime.ExamEndTime = settingInfor.QuizEndTime != default ? settingInfor.QuizEndTime.ToTimeSpan() : oldQuizTime.ExamEndTime;
                     oldQuizTime.AttemptAllowed = settingInfor.AttemptAllowed!.Value;
 
                     _unitOfWork.GetRepository<TempQuizTime>().UpdateAsync(oldQuizTime);
@@ -973,8 +974,8 @@ namespace MagicLand_System.Services.Implements
                     Id = Guid.NewGuid(),
                     ClassId = classId,
                     ExamId = examId,
-                    ExamStartTime = settingInfor.QuizStartTime!.Value.ToTimeSpan(),
-                    ExamEndTime = settingInfor.QuizEndTime!.Value.ToTimeSpan(),
+                    ExamStartTime = settingInfor.QuizStartTime.ToTimeSpan(),
+                    ExamEndTime = settingInfor.QuizEndTime.ToTimeSpan(),
                     AttemptAllowed = settingInfor.AttemptAllowed!.Value,
                 };
 
@@ -1007,7 +1008,7 @@ namespace MagicLand_System.Services.Implements
 
             bool isValid = false;
 
-            var slot = new Slot { StartTime = default!, EndTime = default!};
+            var slot = new Slot { StartTime = default!, EndTime = default! };
 
             foreach (var session in sessions)
             {
@@ -1035,7 +1036,7 @@ namespace MagicLand_System.Services.Implements
 
             if (settingInfor.QuizStartTime == default && settingInfor.QuizEndTime == default)
             {
-                throw new BadHttpRequestException($"Thời Gian Thiết Lập Không Hợp Lệ", StatusCodes.Status400BadRequest);
+                return;
             }
 
             if (settingInfor.QuizStartTime > settingInfor.QuizEndTime)
@@ -1057,7 +1058,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Số Lần Làm Quiz Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
-           
+
         }
 
         public async Task<List<StudentWorkResult>> GetCurrentStudentQuizDoneWorkAsync(Guid examId)
@@ -1093,5 +1094,32 @@ namespace MagicLand_System.Services.Implements
 
             return responses;
         }
+
+        //public async Task<FullyExamRes> GetFullyExamInforStudent(Guid studentId, Guid examId)
+        //{
+        //    var response = new FullyExamRes();
+        //    var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+        //      predicate: x => x.StudentClass!.StudentId == studentId && x.ExamId == examId,
+        //      include: x => x.Include(x => x.StudentClass!).Include(x => x.ExamQuestions));
+
+        //    if (testResult != null && testResult.ExamType!.Trim().ToLower() != QuizTypeEnum.flashcard.ToString())
+        //    {
+        //        foreach (var examQuestion in testResult.ExamQuestions)
+        //        {
+        //            var multipleChoiceAnswerResult = new MCAnswerResultResponse();
+
+        //            var multipleChoiceAnswer = await GetMCStudentResult(examQuestion, multipleChoiceAnswerResult);
+
+        //            response.StudentWork!.Add(new StudentWorkResult
+        //            {
+        //                QuestionId = examQuestion.QuestionId,
+        //                QuestionDescription = examQuestion.Question,
+        //                QuestionImage = examQuestion.QuestionImage,
+        //                MultipleChoiceAnswerResult = multipleChoiceAnswer != null ? multipleChoiceAnswerResult : null,
+        //            });
+        //        }
+        //    }
+
+        //}
     }
 }

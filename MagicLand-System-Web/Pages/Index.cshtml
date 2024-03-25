@@ -7,6 +7,10 @@
 }
 
 <style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
     #syllabus {
         background-color: lightblue;
     }
@@ -54,7 +58,7 @@
 
         @if (Model.messages != null && Model.messages.Count() > 0)
         {
-            <table class="table">
+            <table class="table" style="margin-top: 17px; width: 73%">
                 <thead>
                     <tr>
                         <th>
@@ -88,6 +92,9 @@
                                 @index
                             </td>
                             <td>
+                                @item.Item1
+                            </td>
+                            <td>
                                 @item.Item2
                             </td>
                             <td>
@@ -96,6 +103,7 @@
                             <td>
                                 @item.Item4
                             </td>
+                 
                         </tr>
                     }
                 </tbody>
