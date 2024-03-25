@@ -1175,7 +1175,7 @@ namespace MagicLand_System.Services.Implements
                     rows.Add(new RowInsertResponse
                     {
                         Index = rq.Index,
-                        Messsage = $"  Không tìm thấy khóa học có mã như vậy",
+                        Messsage = $"Không tìm thấy khóa học có mã như vậy",
                         IsSucess = false
                     });
                     continue;
@@ -1185,7 +1185,27 @@ namespace MagicLand_System.Services.Implements
                     rows.Add(new RowInsertResponse
                     {
                         Index = rq.Index,
-                        Messsage = $" Số lượng tối đa không thể nhỏ hơn số lượng tối thiểu",
+                        Messsage = $"Số lượng tối đa không thể nhỏ hơn số lượng tối thiểu",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(rq.LimitNumberStudent < 0)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa phải lớn hơn 0",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (rq.LeastNumberStudent < 0)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối thiểu phải lớn hơn 0",
                         IsSucess = false
                     });
                     continue;
@@ -1239,6 +1259,15 @@ namespace MagicLand_System.Services.Implements
                         if (day.ToLower().Equals("chủ nhật"))
                         {
                             dateofweek = "sunday";
+                        }
+                        if (dateofweek.Equals(""))
+                        {
+                            rows.Add(new RowInsertResponse
+                            {
+                                Index = rq.Index,
+                                Messsage = $"Không tồn tại thứ trong tuần như vậy",
+                                IsSucess = false
+                            });
                         }
                         scheduleRequests.Add(new ScheduleRequest
                         {
