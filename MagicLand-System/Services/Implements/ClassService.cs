@@ -1175,7 +1175,17 @@ namespace MagicLand_System.Services.Implements
                     rows.Add(new RowInsertResponse
                     {
                         Index = rq.Index,
-                        Messsage = $" index {rq.Index} Không tìm thấy khóa học có mã như vậy",
+                        Messsage = $"  Không tìm thấy khóa học có mã như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(rq.LeastNumberStudent >= rq.LimitNumberStudent)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" Số lượng tối đa không thể nhỏ hơn số lượng tối thiểu",
                         IsSucess = false
                     });
                     continue;
