@@ -17,7 +17,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<CourseResponseCustom>> GetCoursesOfStudentByIdAsync(Guid studentId);
         Task<bool> AddCourseInformation(CreateCourseRequest request);
         Task<StaffCourseResponse> GetStaffCourseByCourseId(string courseid);
-        Task<bool> GenerateCoursePrice();
+        Task<bool> GenerateCoursePrice(CoursePriceRequest request);
         Task<List<CoursePrice>> GetCoursePrices(string courseId);
     }
 }

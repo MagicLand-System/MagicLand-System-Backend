@@ -1291,6 +1291,12 @@ namespace MagicLand_System.Services.Implements
                 var check = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.Equals(""));
                 if(check)
                 {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"không tồn tại thứ trong tuần có tên như vậy",
+                        IsSucess = false
+                    });
                     continue;
                 }
                 string format = "dd/MM/yyyy";

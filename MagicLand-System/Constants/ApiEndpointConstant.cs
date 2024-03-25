@@ -88,6 +88,7 @@
             public const string AddCourse = GetAll + "/add";
             public const string GetCourseByStaff = GetAll + "/staff/get";
             public const string GetCoursePrice = GetAll + "/getCoursePrice";
+            public const string AddPrice = GetAll + "/addPrice";
         }
         public static class StudentEndpoint
         {
