@@ -1254,6 +1254,28 @@ namespace MagicLand_System.Services.Implements
                 var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
                     ? (DateTime?)parsedDate
                     : DateTime.Parse(rq.StartDate);
+                var doW = date.Value.DayOfWeek.ToString();
+                var isExist = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.ToLower().Trim().Equals(doW.ToLower().Trim()));
+                if (!isExist)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Ngày bắt đầu không trùng vào các thứ trong lịch học",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(date.Value < DateTime.Now)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Ngày bắt đầu không thể là ngày trong quá khứ",
+                        IsSucess = false
+                    });
+                    continue;
+                }
                 var roomLec = await GetRoomAndLecturer(new FilterLecturerRequest
                 {
                     CourseId = courseId.ToString(),
