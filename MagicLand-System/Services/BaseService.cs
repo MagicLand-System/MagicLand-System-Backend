@@ -60,23 +60,29 @@ namespace MagicLand_System.Services
         protected async Task<double> GetClassPrice(Guid classId)
         {
             double result = 0;
-            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId);
-            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classx.CourseId.ToString()), include: x => x.Include(x => x.CoursePrices));
-            var prices = course.CoursePrices;
-            var classDate = classx.AddedDate;
-            var priceList = prices.OrderBy(x => x.EffectiveDate).ToArray();
-            if (classDate < priceList[0].EffectiveDate)
+
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId);
+
+            var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                selector: x => x.CoursePrices,
+                predicate: x => x.Id == cls.CourseId))!.ToArray();
+
+            coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
+
+            result = coursePrices.First().Price;
+            for (int i = 1; i < coursePrices.Length; i++)
             {
-                return result;
-            }
-            for (var i = 0; i < priceList.Length - 1; i++)
-            {
-                if (priceList[i].EffectiveDate <= classDate && classDate < priceList[i + 1].EffectiveDate)
+                if (cls.AddedDate >= coursePrices[i].EffectiveDate)
                 {
-                    return result = priceList[i].Price;
+                    result = coursePrices[i].Price;
+                }
+                else
+                {
+                    break;
                 }
             }
-            return priceList[priceList.Length - 1].Price;
+
+            return result;
         }
 
         protected async Task<double> GetPriceInTemp(Guid id, bool isClass)

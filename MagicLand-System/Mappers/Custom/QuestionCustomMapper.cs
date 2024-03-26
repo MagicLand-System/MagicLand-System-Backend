@@ -191,12 +191,13 @@ namespace MagicLand_System.Mappers.Custom
                 var answerMutipleChoicesInfor = new List<MCAnswerResponse>();
                 var answerFlashCarsInfor = new List<FCAnswerResponse>();
 
+
                 if (currentQuestion.MutipleChoices != null && currentQuestion.MutipleChoices.Any())
                 {
                     answerMutipleChoicesInfor = fromMutipleChoiceAnswerToMutipleChoiceAnswerResponse(currentQuestion.MutipleChoices!);
                     totalMark += currentQuestion.MutipleChoices!.Select(mc => mc.Score).Sum();
                 }
-                if (currentQuestion.FlashCards != null && currentQuestion.FlashCards.Any())
+                else if (currentQuestion.FlashCards != null && currentQuestion.FlashCards.Any())
                 {
                     int coupleFlashCardLeft = (int)(package.Score - totalMark)!;
                     var listFlashCard = new List<FlashCard>();
@@ -216,6 +217,10 @@ namespace MagicLand_System.Mappers.Custom
                     answerFlashCarsInfor = fromFlashCardToFlashCardAnswerResponse(listFlashCard);
 
                     totalMark += listFlashCard.Select(fc => fc.Score).Sum();
+                }
+                else
+                {
+                    throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh, Khi Không Tìm Được Bộ Câu Hỏi Vui Lòng Chờ Nhân Viên Hệ Thống Kiểm Tra Lại", StatusCodes.Status500InternalServerError);
                 }
 
                 var response = new QuizResponse

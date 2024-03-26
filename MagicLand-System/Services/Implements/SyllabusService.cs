@@ -753,9 +753,11 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
-            cls.Course!.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-            predicate: x => x.CourseId == cls.CourseId,
-            include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+             predicate: x => x.CourseId == cls.CourseId,
+             include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
+
+            cls.Course!.Syllabus = syllabus;
 
             if (cls == null || cls.Course!.Syllabus == null)
             {
@@ -772,16 +774,19 @@ namespace MagicLand_System.Services.Implements
 
         private async Task GenerateExamWithDate(List<ExamResponse> examsResponse, Class cls, Session session)
         {
-            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id,
-            include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.MutipleChoices!)
-           .Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards!).ThenInclude(fc => fc.SideFlashCards!));
+            var questionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id);
 
             if (questionPackage == null)
             {
                 return;
             }
 
+            questionPackage.Questions = (await _unitOfWork.GetRepository<Question>().GetListAsync(
+            predicate: x => x.QuestionPacketId == questionPackage.Id,
+            include: x => x.Include(x => x.MutipleChoices).Include(x => x.FlashCards!).ThenInclude(fc => fc.SideFlashCards!))).ToList();
+
             var exam = cls.Course!.Syllabus!.ExamSyllabuses!.SingleOrDefault(exam => StringHelper.TrimStringAndNoSpace(exam.ContentName!) == StringHelper.TrimStringAndNoSpace(questionPackage.ContentName!));
+
             var examResponse = QuizCustomMapper.fromSyllabusItemsToExamResponse(questionPackage, exam);
             var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(predicate: x => x.ExamId == questionPackage.Id && x.ClassId == cls.Id);
 
@@ -904,7 +909,8 @@ namespace MagicLand_System.Services.Implements
 
             var cls = await ValidateClass(classId, studentId);
 
-            foreach (var session in cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
+            var sessions = cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList();
+            foreach (var session in sessions)
             {
                 await GenerateExamWithDate(examsResponse, cls, session);
             }

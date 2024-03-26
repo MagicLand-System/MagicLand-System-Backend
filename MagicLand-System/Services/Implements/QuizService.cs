@@ -762,8 +762,8 @@ namespace MagicLand_System.Services.Implements
                 multipleChoiceAnswerResult.CorrectAnswerId = multipleChoiceAnswer.CorrectAnswerId;
                 multipleChoiceAnswerResult.CorrectAnswerDescription = multipleChoiceAnswer.CorrectAnswer;
                 multipleChoiceAnswerResult.CorrectAnswerImage = multipleChoiceAnswer.CorrectAnswerImage;
-                multipleChoiceAnswer.Status = multipleChoiceAnswer.Status;
-                multipleChoiceAnswer.Score = multipleChoiceAnswer.Score;
+                multipleChoiceAnswerResult.Status = multipleChoiceAnswer.Status;
+                multipleChoiceAnswerResult.Score = multipleChoiceAnswer.Score;
             }
 
             return multipleChoiceAnswer;

@@ -188,6 +188,7 @@ namespace MagicLand_System.Mappers.Custom
                             ScheduleId = schedule.Id,
                             DayOfWeeks = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
                             Date = schedule.Date,
+                            NoSession = session.NoSession,
                             Room = RoomCustomMapper.fromRoomToRoomResponse(schedule.Room!),
                             Slot = SlotCustomMapper.fromSlotToSlotResponse(schedule.Slot!),
                             Session = SessionCustomMapper.fromSessionToSessionResponse(session, topic)
