@@ -1180,7 +1180,7 @@ namespace MagicLand_System.Services.Implements
                     });
                     continue;
                 }
-                if(rq.LeastNumberStudent >= rq.LimitNumberStudent)
+                if (rq.LeastNumberStudent >= rq.LimitNumberStudent)
                 {
                     rows.Add(new RowInsertResponse
                     {
@@ -1190,7 +1190,7 @@ namespace MagicLand_System.Services.Implements
                     });
                     continue;
                 }
-                if(rq.LimitNumberStudent < 0)
+                if (rq.LimitNumberStudent < 0)
                 {
                     rows.Add(new RowInsertResponse
                     {
@@ -1206,6 +1206,16 @@ namespace MagicLand_System.Services.Implements
                     {
                         Index = rq.Index,
                         Messsage = $"Số lượng tối thiểu phải lớn hơn 0",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if(rq.LimitNumberStudent > 30)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa phải nhỏ hơn 30",
                         IsSucess = false
                     });
                     continue;
@@ -1260,15 +1270,6 @@ namespace MagicLand_System.Services.Implements
                         {
                             dateofweek = "sunday";
                         }
-                        if (dateofweek.Equals(""))
-                        {
-                            rows.Add(new RowInsertResponse
-                            {
-                                Index = rq.Index,
-                                Messsage = $"Không tồn tại thứ trong tuần như vậy",
-                                IsSucess = false
-                            });
-                        }
                         scheduleRequests.Add(new ScheduleRequest
                         {
                             DateOfWeek = dateofweek,
@@ -1287,7 +1288,17 @@ namespace MagicLand_System.Services.Implements
                     }
 
                 }
-
+                var check = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.Equals(""));
+                if(check)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"không tồn tại thứ trong tuần có tên như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
                 string format = "dd/MM/yyyy";
 
                 var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
@@ -1305,7 +1316,7 @@ namespace MagicLand_System.Services.Implements
                     });
                     continue;
                 }
-                if(date.Value < DateTime.Now)
+                if (date.Value < DateTime.Now)
                 {
                     rows.Add(new RowInsertResponse
                     {
@@ -1421,6 +1432,7 @@ namespace MagicLand_System.Services.Implements
                         LecturerName = roomLec.Lecturer.FullName,
                         RoomName = roomLec.Room.Name,
                         Times = rq.ScheduleRequests.Select(x => x.ScheduleTime).ToList(),
+                        StartDate = date.Value,
                     }
                 });
             }

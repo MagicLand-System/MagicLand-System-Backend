@@ -590,27 +590,29 @@ namespace MagicLand_System.Services.Implements
 
 
 
-        public async Task<bool> GenerateCoursePrice()
+        public async Task<bool> GenerateCoursePrice(CoursePriceRequest request)
         {
-            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync();
-            List<CoursePrice> coursePrices = new List<CoursePrice>();
-            foreach (var course in courses)
+            if(request == null)
             {
-                var courseprice = await _unitOfWork.GetRepository<CoursePrice>().SingleOrDefaultAsync(predicate: x => x.CourseId == course.Id);
-                if (courseprice == null)
+                if (request.EffectiveDate < DateTime.Now.AddMinutes(-5))
                 {
-                    coursePrices.Add(new CoursePrice
-                    {
-                        CourseId = course.Id,
-                        EffectiveDate = DateTime.Parse("2024/03/20"),
-                        Id = Guid.NewGuid(),
-                        Price = 200000,
-                    });
+                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ",StatusCodes.Status400BadRequest);
                 }
+                if (request.Price < 0)
+                {
+                    throw new BadHttpRequestException("giá phải lớn hơn 0", StatusCodes.Status400BadRequest);
+                }
+                var price = new CoursePrice
+                {
+                    Price = request.Price,
+                    CourseId = request.CourseId,
+                    EffectiveDate = request.EffectiveDate,
+                };
+                await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(price);
+                bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+                return isSuccess;
             }
-            await _unitOfWork.GetRepository<CoursePrice>().InsertRangeAsync(coursePrices);
-            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
-            return isSuccess;
+            return false;
         }
 
         public async Task<List<CoursePrice>> GetCoursePrices(string courseId)
