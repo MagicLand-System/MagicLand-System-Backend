@@ -16,6 +16,7 @@ using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
+using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Slots;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Topics;
@@ -24,7 +25,6 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Ocsp;
 using System.Data;
 using System.Globalization;
 
@@ -1210,7 +1210,7 @@ namespace MagicLand_System.Services.Implements
                     });
                     continue;
                 }
-                if(rq.LimitNumberStudent > 30)
+                if (rq.LimitNumberStudent > 30)
                 {
                     rows.Add(new RowInsertResponse
                     {
@@ -1289,7 +1289,7 @@ namespace MagicLand_System.Services.Implements
 
                 }
                 var check = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.Equals(""));
-                if(check)
+                if (check)
                 {
                     rows.Add(new RowInsertResponse
                     {
@@ -2654,12 +2654,24 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
             }
+            var tempQuizTimes = new List<TempQuizTime>();
 
             var topic = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 selector: x => x.Topics!.SingleOrDefault(tp => tp.OrderNumber == topicOrder),
                 predicate: x => x.CourseId == cls.CourseId,
                 include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
                .ThenInclude(ses => ses.SessionDescriptions!.OrderBy(sd => sd.Order)));
+
+
+            var questionPackages = new List<QuestionPackage>();
+            foreach (var session in topic!.Sessions!)
+            {
+                var pakage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == session.Id);
+                if (pakage != null)
+                {
+                    questionPackages.Add(pakage);
+                }
+            }
 
             var response = new TopicResponse
             {
@@ -2670,33 +2682,73 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var session in response.Sessions)
             {
-                var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
-                predicate: x => x.NoSession == session.OrderSession);
+                var quiz = questionPackages.SingleOrDefault(qp => qp.NoSession == session.OrderSession);
 
                 if (quiz != null)
                 {
-                    var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
-                        predicate: x => x.ExamId == quiz.Id && x.ClassId == classId);
-
-                    var startTime = DateTime.Parse(session.Date!).Date.Add(session.StartTime!.Value.ToTimeSpan());
-                    var endTime = DateTime.Parse(session.Date!).Date.Add(session.EndTime!.Value.ToTimeSpan());
-
-                    int part = quiz.Type == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
-                    session.Quiz = new QuizInforResponse
-                    {
-                        ExamId = quiz.Id,
-                        ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
-                        ExamPart = part,
-                        QuizName = quiz.Title!,
-                        QuizDuration = quiz.Duration != null ? quiz.Duration.Value : 300,
-                        Attempts = quizTime != null ? quizTime.AttemptAllowed : 1,
-                        QuizStartTime = quizTime != null && quizTime.ExamStartTime != default ? startTime.Date.Add(quizTime.ExamStartTime) : startTime,
-                        QuizEndTime = quizTime != null && quizTime.ExamEndTime != default ? endTime.Date.Add(quizTime.ExamEndTime) : endTime,
-                    };
+                    await SettingSesstionExamTime(classId, tempQuizTimes, session, quiz, session);
                 }
+            }
+            try
+            {
+                if (tempQuizTimes.Count > 0)
+                {
+                    await _unitOfWork.GetRepository<TempQuizTime>().InsertRangeAsync(tempQuizTimes);
+                    _unitOfWork.Commit();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status500InternalServerError);
             }
 
             return response;
+        }
+
+        private async Task SettingSesstionExamTime(Guid classId, List<TempQuizTime> tempQuizTimes, SessionSyllabusResponse session, QuestionPackage quiz, SessionSyllabusResponse ssr)
+        {
+            var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(predicate: x => x.ExamId == quiz.Id && x.ClassId == classId);
+
+            var startTime = DateTime.Parse(session.Date!).Date.Add(session.StartTime!.Value.ToTimeSpan());
+            var endTime = DateTime.Parse(session.Date!).Date.Add(session.EndTime!.Value.ToTimeSpan());
+            int attempt = 1, duration = 600;
+            bool isNonRequireTime = quiz.PackageType != PackageTypeEnum.Review.ToString() && quiz.PackageType != PackageTypeEnum.ProgressTest.ToString() ? true : false;
+
+            if (quizTime != null)
+            {
+                startTime = quizTime.ExamStartTime != default ? startTime.Date.Add(quizTime.ExamStartTime) : startTime;
+                endTime = quizTime.ExamEndTime != default ? endTime.Date.Add(quizTime.ExamEndTime) : endTime;
+                attempt = quizTime.AttemptAllowed != 0 ? quizTime.AttemptAllowed : attempt;
+                duration = quizTime.Duration != 0 ? quizTime.Duration : duration;
+            }
+            else if (!isNonRequireTime)
+            {
+                tempQuizTimes.Add(new TempQuizTime
+                {
+                    Id = Guid.NewGuid(),
+                    ExamStartTime = session.StartTime!.Value.ToTimeSpan(),
+                    ExamEndTime = session.EndTime!.Value.ToTimeSpan(),
+                    AttemptAllowed = attempt,
+                    Duration = duration,
+                    ClassId = classId,
+                    ExamId = quiz.Id,
+                });
+            }
+
+            int part = quiz.QuizType == QuizTypeEnum.FlashCard.ToString() ? 2 : 1;
+
+            ssr.Quiz = new QuizInforResponse
+            {
+                ExamId = quiz.Id,
+                ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
+                ExamPart = part,
+                QuizName = quiz.Title!,
+                QuizDuration = isNonRequireTime ? null : duration,
+                Attempts = isNonRequireTime ? null : attempt,
+                QuizStartTime = isNonRequireTime ? null : startTime,
+                QuizEndTime = isNonRequireTime ? null : endTime,
+            };
         }
 
         private async Task<FilterRoomAndLecturer> GetRoomAndLecturer(FilterLecturerRequest request)

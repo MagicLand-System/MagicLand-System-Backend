@@ -6,10 +6,10 @@
         public required string ExamName { get; set; }
         public required int ExamPart { get; set; }
         public required string QuizName { get; set; }
-        public required int QuizDuration { get; set; }
-        public required int Attempts { get; set; }
-        public DateTime QuizStartTime { get; set; }
-        public DateTime QuizEndTime { get; set; }
+        public int? QuizDuration { get; set; }
+        public int? Attempts { get; set; }
+        public DateTime? QuizStartTime { get; set; }
+        public DateTime? QuizEndTime { get; set; }
 
     }
 }

@@ -19,7 +19,8 @@ namespace MagicLand_System.Mappers.Custom
                 Type = exam.Category,
                 Weight = exam.Weight,
                 CompletionCriteria = exam.CompleteionCriteria,
-                QuestionType = string.Join(",", StringHelper.FromStringToList(exam.QuestionType!)),
+                QuestionType = exam.QuestionType != null
+                ? string.Join(",", StringHelper.FromStringToList(exam.QuestionType)) : "Participation",
                 Part = exam.Part,
             }).ToList();
 

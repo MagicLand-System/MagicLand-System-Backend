@@ -269,7 +269,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
             newNotifications.Add(new Notification
             {
-                Id = new Guid(),
+                Id = Guid.NewGuid(),
                 Title = title,
                 Body = body,
                 Priority = type,

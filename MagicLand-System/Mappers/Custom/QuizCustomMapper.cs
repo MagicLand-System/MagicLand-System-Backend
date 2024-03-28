@@ -16,7 +16,7 @@ namespace MagicLand_System.Mappers.Custom
             }
 
             int part = 1;
-            if (questionPackage.Type == "flashcard")
+            if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
             {
                 part = 2;
             }
@@ -25,9 +25,9 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 QuizCategory = examSyllabus == null ? "Review" : examSyllabus.Category,
-                QuizType = questionPackage.Type,
+                QuizType = questionPackage.QuizType,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus == null ? 0 : examSyllabus.Weight,
+                Weight = examSyllabus == null ? 0 : examSyllabus.Weight / examSyllabus.Part,
                 CompletionCriteria = examSyllabus == null ? 0 : examSyllabus.CompleteionCriteria,
                 TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalMark = questionPackage.Questions!.Count(),
@@ -50,7 +50,7 @@ namespace MagicLand_System.Mappers.Custom
                 return new ExamWithQuizResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
 
-            int part = questionPackage.Type == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
+            int part = questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString() ? 2 : 1;
 
             var quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
             int totalMark = 0;
@@ -69,17 +69,14 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
-                QuizCategory = examSyllabus != null ? examSyllabus.Category : QuizTypeEnum.review.ToString(),
-                QuizType = questionPackage.Type,
+                QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString(),
+                QuizType = questionPackage.QuizType,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus != null ? examSyllabus.Weight : 0,
-                CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria : null,
+                Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part: 0,
+                CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria :  null,
                 TotalScore = (double)questionPackage.Score!,
                 TotalMark = totalMark,
-                Duration = questionPackage.Duration != null ?  questionPackage.Duration.Value : 300,
-                //DeadLine = questionPackage.DeadlineTime,
-                //Attempts = questionPackage.AttemptsAllowed,
-                NoSession = questionPackage.NoSession != null ? questionPackage.NoSession.Value : 0,
+                NoSession = questionPackage.NoSession,
                 ExamId = questionPackage.Id,
             };
         }
@@ -93,7 +90,7 @@ namespace MagicLand_System.Mappers.Custom
 
 
             int part = 1;
-            if (questionPackage.Type == "flashcard")
+            if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
             {
                 part = 2;
             }
@@ -102,13 +99,12 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 QuizCategory = examSyllabus.Category,
-                QuizType = questionPackage.Type,
+                QuizType = questionPackage.QuizType,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus.Weight,
+                Weight = examSyllabus.Weight / examSyllabus.Part,
                 CompletionCriteria = examSyllabus.CompleteionCriteria,
                 TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
                 TotalMark = questionPackage.Questions!.Count(),
-                //Attempts = 1,
                 NoSession = noSession,
                 ExamId = examSyllabus.Id,
                 QuestionMultipleChoices = QuestionCustomMapper.fromQuestionPackageToQuestionMultipleChoicesResponse(questionPackage),
@@ -125,7 +121,7 @@ namespace MagicLand_System.Mappers.Custom
 
 
             int part = 1;
-            if (questionPackage.Type == "flashcard")
+            if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
             {
                 part = 2;
             }
@@ -134,9 +130,9 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 QuizCategory = examSyllabus.Category,
-                QuizType = questionPackage.Type,
+                QuizType = questionPackage.QuizType,
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus.Weight,
+                Weight = examSyllabus.Weight / examSyllabus.Part,
                 CompletionCriteria = examSyllabus.CompleteionCriteria,
                 TotalScore = questionPackage.Questions!.SelectMany(quest => quest.FlashCards!.Select(fc => fc.Score)).ToList().Sum(),
                 TotalMark = questionPackage.Questions!.Count(),

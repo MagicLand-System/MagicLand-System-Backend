@@ -106,6 +106,10 @@ namespace MagicLand_System.Mappers.Custom
 
             foreach (var desc in descriptions)
             {
+                if (desc.Detail == null)
+                {
+                    var a = "a";
+                }
                 responses.Add(new SessionContentReponse
                 {
                     Content = desc.Content,

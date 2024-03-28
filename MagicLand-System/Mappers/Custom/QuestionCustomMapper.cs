@@ -30,7 +30,7 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     QuestionPackageId = ses.QuestionPackage.Id,
                     Title = ses.QuestionPackage!.Title,
-                    Type = ses.QuestionPackage!.Type,
+                    Type = ses.QuestionPackage!.QuizType,
                     NoOfSession = ses.NoSession,
                 });
             }

@@ -16,10 +16,10 @@ namespace MagicLand_System.PayLoad.Response.Quizes
         public int TotalMark { get; set; }
         //public int? DeadLine { get; set; }
         public string? Date { get; set; } = string.Empty;
-        public DateTime ExamStartTime { get; set; }
-        public DateTime ExamEndTime { get; set; }
-        public int Duration { get; set; }
-        public int AttemptAlloweds { get; set; }
+        public DateTime? ExamStartTime { get; set; }
+        public DateTime? ExamEndTime { get; set; }
+        public int? Duration { get; set; }
+        public int? AttemptAlloweds { get; set; }
         public int NoSession { get; set; }
         public Guid SessionId { get; set; }
         public Guid CourseId { get; set; }

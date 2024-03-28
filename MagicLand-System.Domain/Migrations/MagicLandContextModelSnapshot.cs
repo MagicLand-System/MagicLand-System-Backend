@@ -304,9 +304,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("Method")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Part")
                         .HasColumnType("int");
 
@@ -633,30 +630,30 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ContentName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("DeadlineTime")
+                    b.Property<int>("NoSession")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Duration")
+                    b.Property<int>("OrderPackage")
                         .HasColumnType("int");
 
-                    b.Property<int?>("NoSession")
-                        .HasColumnType("int");
+                    b.Property<string>("PackageType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OrderPackage")
-                        .HasColumnType("int");
+                    b.Property<string>("QuizType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("Score")
+                    b.Property<int>("Score")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -1083,6 +1080,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Property<Guid>("ClassId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
 
                     b.Property<TimeSpan>("ExamEndTime")
                         .HasColumnType("time");

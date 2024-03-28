@@ -477,6 +477,7 @@ namespace MagicLand_System.Controllers
         /// <param name="quizStartTime">Thời Gian Bắt Đầu</param>
         /// <param name="quizEndTime">Thời Gian Kết Thúc</param>
         /// <param name="attemptAllowed">Số Lần Thử</param>
+        /// <param name="duration">Thời Gian Làm Bài (Giây)</param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -487,6 +488,7 @@ namespace MagicLand_System.Controllers
         ///        "quizStartTime": "9:45",
         ///        "quizEndTime": "10:15",
         ///        "attempAllowed" : 2,
+        ///        "druration":600,
         ///        },
         ///     ]
         /// </remarks>
@@ -499,13 +501,14 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> SettingExam([FromBody] QuizRequest quizInfor, [FromQuery] TimeOnly quizStartTime, [FromQuery] TimeOnly quizEndTime, [FromQuery] int attemptAllowed)
+        public async Task<IActionResult> SettingExam([FromBody] QuizRequest quizInfor, [FromQuery] TimeOnly quizStartTime, [FromQuery] TimeOnly quizEndTime, [FromQuery] int attemptAllowed, [FromQuery] int duration)
         {
             var settingInfor = new SettingQuizTimeRequest
             {
                 QuizStartTime = quizStartTime,
                 QuizEndTime = quizEndTime,
                 AttemptAllowed = attemptAllowed,
+                Duration = duration,
             };
             var response = await _quizService.SettingExamTimeAsync(quizInfor.ExamId, quizInfor.ClassId, settingInfor);
             return Ok(response);
