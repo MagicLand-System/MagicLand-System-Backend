@@ -6,7 +6,7 @@ namespace MagicLand_System.PayLoad.Request.Course
     {
         [Required(ErrorMessage = "Tên Nội Dung Buổi Học Một Số Chỗ Đang Trống")]
         [MaxLength(300, ErrorMessage = "Tên Nội Dung Buổi Học Không Nên Vượt Quá 300 Ký Tự")]
-        [MinLength(5, ErrorMessage = "Tên Nội Dung Buổi Học Nên Có Ít Nhất 5 Ký Tự")]
+        [MinLength(1, ErrorMessage = "Tên Nội Dung Buổi Học Nên Có Ít Nhất 1 Ký Tự")]
         public required string Content {  get; set; }
         [Required(ErrorMessage = "Nội Dung Chi Tiết Buổi Học Một Số Chỗ Đang Trống")]
         [MaxLength(10, ErrorMessage = "Nội Dung Chi Tiết Buổi Học Không Nên Vượt Quá 10 Nội Dung")]
