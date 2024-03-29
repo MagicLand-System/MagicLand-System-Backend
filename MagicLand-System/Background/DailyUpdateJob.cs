@@ -32,7 +32,6 @@ namespace MagicLand_System.Background
             message += await _classBackgroundService.UpdateClassInTimeAsync();
             message += await _transactionBackgroundService.UpdateTransactionAfterTime();
             message += await _notificationBackgroundService.ModifyNotificationAfterTime();
-            message += await _tempEntityBackgroundService.UpdateTempItemPrice();
 
             _logger.LogInformation($"Daily Update Job Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
         }

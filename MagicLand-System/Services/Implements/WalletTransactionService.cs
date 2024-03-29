@@ -184,7 +184,7 @@ namespace MagicLand_System.Services.Implements
                     .Include(x => x.Schedules)
                     .Include(x => x.StudentClasses));
 
-                var currentRequestTotal = await GetClassPrice(cls.Id) * request.StudentIdList.Count();
+                var currentRequestTotal = await GetDynamicPrice(cls.Id, true) * request.StudentIdList.Count();
 
                 string studentNameString = await GenerateStudentNameString(request.StudentIdList);
 
@@ -561,12 +561,11 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<double> CalculateTotal(List<CheckoutRequest> requests)
         {
-
             double total = 0.0;
 
             foreach (var request in requests)
             {
-                var price = await GetPriceInTemp(request.ClassId, true);
+                var price = await GetDynamicPrice(request.ClassId, true);
 
                 total += request.StudentIdList.Count() * price;
             }
@@ -906,7 +905,7 @@ namespace MagicLand_System.Services.Implements
 
                     string signature = txnRefCode + StringHelper.GenerateAttachValueForTxnRefCode(item);
 
-                    var currentRequestTotal = await GetClassPrice(cls.Id) * item.StudentIdList.Count();
+                    var currentRequestTotal = await GetDynamicPrice(cls.Id, true) * item.StudentIdList.Count();
                     var studentNameString = await GenerateStudentNameString(item.StudentIdList);
 
                     var newTransaction = new WalletTransaction

@@ -893,7 +893,7 @@ namespace MagicLand_System.Services.Implements
             }
             foreach (var res in responses)
             {
-                res.CoursePrice = await GetPriceInTemp(res.ClassId, true);
+                res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
             }
 
             return responses;

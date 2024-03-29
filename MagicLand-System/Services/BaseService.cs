@@ -46,24 +46,27 @@ namespace MagicLand_System.Services
         protected async Task<User> GetUserFromJwt()
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
-            //string role = _httpContextAccessor?.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
 
-            //if (role == "Student")
-            //{
-            //    var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id);
-            //    return (default, student);
-            //}
             var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role));
             return account;
-            //return (account, default);
         }
-        protected async Task<double> GetClassPrice(Guid classId)
-        {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId);
 
-            var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-                selector: x => x.CoursePrices,
-                predicate: x => x.Id == cls.CourseId))!.ToArray();
+        protected async Task<double> GetDynamicPrice(Guid id, bool isClass)
+        {
+
+            var coursePrices = isClass
+              ? await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Classes.Any(cls => cls.Id == id),
+                selector: x => x.CoursePrices)
+              : await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == id,
+                selector: x => x.CoursePrices);
+
+            if (coursePrices == null || coursePrices.Count == 0)
+            {
+                return 0;
+            }
+
             var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(15));
 
             foreach (var pr in prices)
@@ -73,22 +76,7 @@ namespace MagicLand_System.Services
                     return pr.Price;
                 }
             }
-            return (coursePrices.OrderByDescending(x => x.EndDate).ToArray())[0].Price;
-        }
-        protected async Task<double> GetCoursePrice(Guid courseId)
-        {
-            var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-              selector: x => x.CoursePrices,
-              predicate: x => x.Id == courseId))!.ToArray();
-            var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(15));
 
-            foreach (var pr in prices)
-            {
-                if (pr.StartDate <= DateTime.Now && pr.EndDate >= DateTime.Now)
-                {
-                    return pr.Price;
-                }
-            }
             return (coursePrices.OrderByDescending(x => x.EndDate).ToArray())[0].Price;
         }
     }

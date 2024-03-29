@@ -287,7 +287,7 @@ namespace MagicLand_System.Services.Implements
                             include: x => x.Include(x => x.Syllabus!));
 
                         var response = _mapper.Map<ClassResExtraInfor>(cls);
-                        response.CoursePrice = await GetPriceInTemp(cls.Id, true);
+                        response.CoursePrice = await GetDynamicPrice(cls.Id, true);
 
                         classes.Add(response);
 
@@ -379,7 +379,7 @@ namespace MagicLand_System.Services.Implements
                     var response = CartCustomMapper.fromCartToFavoriteResponse(currentParrentCart.Id, itemFavorites, courses);
                     foreach (var fv in response.FavoriteItems)
                     {
-                        fv.Price = await GetPriceInTemp(fv.CourseId, false);
+                        fv.Price = await GetDynamicPrice(fv.CourseId, false);
                     }
 
                     return response;
@@ -481,7 +481,7 @@ namespace MagicLand_System.Services.Implements
 
                     itemResponse = CartItemCustomMapper.fromCartItemToCartItemResponse(course, cls, item.Id);
                     itemResponse.Schedules!.Add(ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls));
-                    itemResponse.Price = await GetPriceInTemp(cls.Id, true);
+                    itemResponse.Price = await GetDynamicPrice(cls.Id, true);
 
                     response.Items.Add(itemResponse);
                     continue;
@@ -499,7 +499,7 @@ namespace MagicLand_System.Services.Implements
 
                     itemResponse = CartItemCustomMapper.fromCartItemToCartItemResponse(course, null, item.Id);
                     itemResponse.Schedules = classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList();
-                    itemResponse.Price = await GetPriceInTemp(course.Id, false);
+                    itemResponse.Price = await GetDynamicPrice(course.Id, false);
 
                     response.Items.Add(itemResponse);
                 }

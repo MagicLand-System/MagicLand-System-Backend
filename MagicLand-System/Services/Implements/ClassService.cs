@@ -1750,8 +1750,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var response in responses)
             {
-                double price = await GetPriceInTemp(response.ClassId, true);
-                response.CoursePrice = price == 0 ? await GetClassPrice(response.ClassId) : price;
+                response.CoursePrice = await GetDynamicPrice(response.ClassId, true);
             }
 
             return responses;
@@ -1783,8 +1782,7 @@ namespace MagicLand_System.Services.Implements
 
             var response = _mapper.Map<ClassResExtraInfor>(cls);
 
-            double price = await GetPriceInTemp(response.ClassId, true);
-            response.CoursePrice = price == 0 ? await GetClassPrice(response.ClassId) : price;
+            response.CoursePrice = await GetDynamicPrice(response.ClassId, true);
 
             return response;
         }
@@ -1927,10 +1925,8 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var res in responses)
             {
-                double price = await GetPriceInTemp(res.ClassId, true);
-                res.CoursePrice = price == 0 ? await GetClassPrice(res.ClassId) : price;
+                res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
             }
-            //responses.ForEach(async res => await GetPriceInTemp(res.ClassId, true));
 
             return responses;
         }
@@ -1966,8 +1962,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var res in responses)
             {
-                double price = await GetPriceInTemp(res.ClassId, true);
-                res.CoursePrice = price == 0 ? await GetClassPrice(res.ClassId) : price;
+                res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
             }
 
             return responses;
@@ -2104,41 +2099,12 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
-            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1))).ToList();
+            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1).Date)).ToList();
 
-            //var nearestClasses = new List<Class>();
-            //var tempClass = new Class();
-
-            //foreach(var cls in classes)
-            //{
-            //    var nearest = cls.Schedules.FirstOrDefault(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1));
-
-            //    if(nearest is null)
-            //    {
-            //        continue;
-            //    }
-
-            //}
             if (!nearestClasses.Any())
             {
                 return new List<ClassWithSlotOutSideResponse>();
             }
-
-            nearestClasses = nearestClasses.OrderBy(cls => cls.Schedules.First(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1)).Date)
-                                           .ThenBy(cls => TimeOnly.Parse(cls.Schedules.First().Slot!.StartTime))
-                                           .ToList();
-
-            //foreach (var cls in nearestClasses)
-            //{
-            //    var currentSchedule = cls.Schedules.FirstOrDefault(sc => sc.Date.Date == DateTime.UtcNow.Date);
-
-            //    var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule!.Id);
-            //    if (evaluates.All(e => e.Status == null || e.Status == string.Empty))
-            //    {
-            //        nearestClasses.Remove(cls);
-            //        nearestClasses.Insert(0, cls);
-            //    }
-            //}
 
             return await GenerateClassSchedule(nearestClasses);
         }
@@ -2148,11 +2114,11 @@ namespace MagicLand_System.Services.Implements
             var responses = new List<ClassWithSlotOutSideResponse>();
             foreach (var cls in currentClasses)
             {
-                var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.UtcNow.Date);
+                var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
 
                 if (currentSchedule == null)
                 {
-                    throw new BadHttpRequestException("Giáo Viên Không Có Lớp Dạy Trong Hôm Nay", StatusCodes.Status400BadRequest);
+                    currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.AddDays(1).Date);
                 }
 
                 var response = _mapper.Map<ClassWithSlotOutSideResponse>(cls);
@@ -2164,10 +2130,11 @@ namespace MagicLand_System.Services.Implements
                 response.Room = RoomCustomMapper.fromRoomToRoomResponse(currentSchedule.Room!);
                 response.SlotOrder = StringHelper.GetSlotNumber(currentSchedule.Slot!.StartTime);
 
-                //response.CoursePrice = await GetPriceInTemp(cls.Id, true);
+                response.CoursePrice = await GetDynamicPrice(cls.Id, true);
 
                 responses.Add(response);
             }
+            responses = responses.OrderBy(res => res.Date).ThenBy(res => res.Slot.StartTime).ToList();
             return responses;
         }
 
@@ -2576,7 +2543,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 var response = _mapper.Map<ClassWithSlotShorten>(cls);
-                response.CoursePrice = await GetPriceInTemp(response.ClassId, true);
+                response.CoursePrice = await GetDynamicPrice(response.ClassId, true);
                 responses.Add(response);
             }
             return responses;
@@ -2670,8 +2637,7 @@ namespace MagicLand_System.Services.Implements
             var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
             foreach (var res in responses)
             {
-                double price = await GetPriceInTemp(res.ClassId, true);
-                res.CoursePrice = price == 0 ? await GetClassPrice(res.ClassId) : price;
+                res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
             }
 
             return responses;

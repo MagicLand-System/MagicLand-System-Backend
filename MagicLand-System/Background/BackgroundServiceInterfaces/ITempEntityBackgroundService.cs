@@ -3,6 +3,5 @@
     public interface ITempEntityBackgroundService
     {
         internal Task<string> DeleteTempEntityByCondition();
-        internal Task<string> UpdateTempItemPrice();
     }
 }

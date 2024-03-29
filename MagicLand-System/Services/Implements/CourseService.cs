@@ -46,7 +46,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var res in responses)
             {
-                res.Price = await GetPriceInTemp(res.CourseId, false);
+                res.Price = await GetDynamicPrice(res.CourseId, false);
             }
 
             return responses;
@@ -65,13 +65,13 @@ namespace MagicLand_System.Services.Implements
             var fiteredPriceCourse = new List<Course>();
             if (minPrice > maxPrice || minPrice < 0 || maxPrice < 0)
             {
-                throw new BadHttpRequestException("Gía Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Giá Cả Truy Suất Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
             else
             {
                 foreach (var course in filteredCourses)
                 {
-                    var price = await GetClassPrice(course.Id);
+                    var price = await GetDynamicPrice(course.Id, false);
                     if (price >= minPrice && price <= maxPrice)
                     {
                         fiteredPriceCourse.Add(course);
@@ -115,7 +115,7 @@ namespace MagicLand_System.Services.Implements
             var coureSubsequents = await GetCoureSubsequents(courses);
 
             var response = CourseCustomMapper.fromCourseToCourseWithScheduleShorten(courses.ToList()[0], coursePrerequisites, coureSubsequents);
-            response.Price = await GetPriceInTemp(response.CourseId, false);
+            response.Price = await GetDynamicPrice(response.CourseId, false);
             return response;
         }
 
@@ -169,7 +169,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var res in responses)
             {
-                res.Price = await GetPriceInTemp(res.CourseId, false);
+                res.Price = await GetDynamicPrice(res.CourseId, false);
             }
 
             return responses;
@@ -259,12 +259,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var listCourseResExtraInfror = new List<CourseResponseCustom>();
-            //foreach (Guid id in courseRegisteredIdList)
-            //{
-            //    var course = await GetCourseByIdAsync(id);
-            //    course.Price = await GetPriceInTemp(id, false);
-            //    listCourseResExtraInfror.Add(course);
-            //}
+
             foreach (Guid id in courseRegisteredIdList)
             {
                 var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
@@ -289,7 +284,7 @@ namespace MagicLand_System.Services.Implements
                 var coureSubsequents = await GetCoureSubsequents(courses);
 
                 var response = CourseCustomMapper.fromCourseToCourseReponseCustom(courses.ToList()[0], coursePrerequisites, coureSubsequents);
-                response.Price = await GetPriceInTemp(id, false);
+                response.Price = await GetDynamicPrice(id, false);
 
                 listCourseResExtraInfror.Add(response);
             }
@@ -335,7 +330,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var res in responses)
             {
-                res.Price = await GetPriceInTemp(res.CourseId, false);
+                res.Price = await GetDynamicPrice(res.CourseId, false);
             }
 
             return responses;
@@ -499,15 +494,6 @@ namespace MagicLand_System.Services.Implements
                     EndDate = DateTime.ParseExact("2040-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
                 };
 
-                //var tempItemPrice = new TempItemPrice
-                //{
-                //    Id = Guid.NewGuid(),
-                //    ClassId = default,
-                //    CourseId = course.Id,
-                //    Price = coursePrice.Price,
-                //};
-
-                //await _unitOfWork.GetRepository<TempItemPrice>().InsertAsync(tempItemPrice);
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;
@@ -579,7 +565,7 @@ namespace MagicLand_System.Services.Implements
                 MinYearOldsStudent = courseFound.MinYearOldsStudent,
                 Name = courseFound.Name,
                 NumberOfSession = courseFound.NumberOfSession,
-                Price = await GetCoursePrice(courseFound.Id),
+                Price = await GetDynamicPrice(courseFound.Id, false),
                 Status = courseFound.Status,
                 SubjectName = subjectname,
                 SyllabusId = courseFound.SyllabusId,
