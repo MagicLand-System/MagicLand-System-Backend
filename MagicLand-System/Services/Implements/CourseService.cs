@@ -11,6 +11,7 @@ using MagicLand_System.PayLoad.Response.Courses.Custom;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -494,17 +495,19 @@ namespace MagicLand_System.Services.Implements
                     CourseId = course.Id,
                     //EffectiveDate = DateTime.UtcNow,
                     Price = request.Price,
+                    StartDate = DateTime.Now,
+                    EndDate = DateTime.ParseExact("2040-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
                 };
 
-                var tempItemPrice = new TempItemPrice
-                {
-                    Id = Guid.NewGuid(),
-                    ClassId = default,
-                    CourseId = course.Id,
-                    Price = coursePrice.Price,
-                };
+                //var tempItemPrice = new TempItemPrice
+                //{
+                //    Id = Guid.NewGuid(),
+                //    ClassId = default,
+                //    CourseId = course.Id,
+                //    Price = coursePrice.Price,
+                //};
 
-                await _unitOfWork.GetRepository<TempItemPrice>().InsertAsync(tempItemPrice);
+                //await _unitOfWork.GetRepository<TempItemPrice>().InsertAsync(tempItemPrice);
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 return isSuccess;
@@ -576,7 +579,7 @@ namespace MagicLand_System.Services.Implements
                 MinYearOldsStudent = courseFound.MinYearOldsStudent,
                 Name = courseFound.Name,
                 NumberOfSession = courseFound.NumberOfSession,
-                //Price = priceArray[0].Price,
+                Price = await GetCoursePrice(courseFound.Id),
                 Status = courseFound.Status,
                 SubjectName = subjectname,
                 SyllabusId = courseFound.SyllabusId,

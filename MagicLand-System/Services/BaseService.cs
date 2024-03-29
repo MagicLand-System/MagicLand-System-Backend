@@ -59,30 +59,37 @@ namespace MagicLand_System.Services
         }
         protected async Task<double> GetClassPrice(Guid classId)
         {
-            double result = 0;
-
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId);
 
             var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                 selector: x => x.CoursePrices,
                 predicate: x => x.Id == cls.CourseId))!.ToArray();
+            var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(15));
 
-            //coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
-
-            result = coursePrices.First().Price;
-            for (int i = 1; i < coursePrices.Length; i++)
+            foreach (var pr in prices)
             {
-                //if (cls.AddedDate >= coursePrices[i].EffectiveDate)
-                //{
-                //    result = coursePrices[i].Price;
-                //}
-                //else
-                //{
-                //    break;
-                //}
+                if (pr.StartDate <= DateTime.Now && pr.EndDate >= DateTime.Now)
+                {
+                    return pr.Price;
+                }
             }
+            return (coursePrices.OrderByDescending(x => x.EndDate).ToArray())[0].Price;
+        }
+        protected async Task<double> GetCoursePrice(Guid courseId)
+        {
+            var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+              selector: x => x.CoursePrices,
+              predicate: x => x.Id == courseId))!.ToArray();
+            var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(15));
 
-            return result;
+            foreach (var pr in prices)
+            {
+                if (pr.StartDate <= DateTime.Now && pr.EndDate >= DateTime.Now)
+                {
+                    return pr.Price;
+                }
+            }
+            return (coursePrices.OrderByDescending(x => x.EndDate).ToArray())[0].Price;
         }
     }
 
