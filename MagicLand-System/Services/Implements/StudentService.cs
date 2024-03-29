@@ -11,6 +11,8 @@ using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Evaluates;
+using MagicLand_System.PayLoad.Response.Quizzes.Result;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForStudent;
 using MagicLand_System.PayLoad.Response.Students;
@@ -20,6 +22,8 @@ using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Ocsp;
+using Quartz;
 
 
 namespace MagicLand_System.Services.Implements
@@ -390,7 +394,7 @@ namespace MagicLand_System.Services.Implements
 
             var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()).ToList();
 
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.UtcNow.Date);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
 
             if (studentNotHaveAttendance.Count() > 0)
@@ -683,6 +687,168 @@ namespace MagicLand_System.Services.Implements
                include: x => x.Include(x => x.Student!));
 
             responses.Add(EvaluateCustomMapper.fromEvaluateInforRelatedToEvaluateResponse(schedule, evaluates.ToList(), noSession));
+        }
+
+        public async Task<List<QuizResultWithStudentWork>> GetStudentQuizFullyInforAsync(Guid classId, List<Guid>? studentIdList, List<Guid>? examIdList, bool isLatestAttempt)
+        {
+            var currentUserId = GetUserIdFromJwt();
+
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.Id == classId && (x.LecturerId == currentUserId || x.Schedules.Select(sc => sc.SubLecturerId).Any(sub => sub == currentUserId)),
+                include: x => x.Include(x => x.StudentClasses).ThenInclude(sc => sc.Student)!);
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Này Không Tồn Tại, Hoặc Không Được Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
+            }
+
+            if (cls.Status != ClassStatusEnum.PROGRESSING.ToString())
+            {
+                throw new BadHttpRequestException($"Chỉ Có Thể Truy Suất Điểm Của Lớp Đã Bắt Đầu, Lớp Này [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status!)}]",
+                    StatusCodes.Status400BadRequest);
+            }
+
+            var studentClasses = cls.StudentClasses.ToList();
+
+            if (studentIdList != null && studentIdList.Count > 0)
+            {
+                var invalidIds = studentIdList.Where(id => !studentClasses.Any(sc => sc.StudentId == id)).ToList();
+
+                if (invalidIds.Any())
+                {
+                    throw new BadHttpRequestException($"Id Học Sinh [{string.Join(" ,", invalidIds)}] Không Thuộc Lớp Học Đang Truy Suất", StatusCodes.Status400BadRequest);
+                }
+            }
+
+            var sessionIds = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == cls.CourseId,
+                selector: x => x.Topics!.SelectMany(tp => tp.Sessions!.Select(ses => ses.Id)))).ToList();
+
+            if (sessionIds == null || sessionIds.Count == 0)
+            {
+                throw new BadHttpRequestException($"Lớp Học Hiện Đang Thuộc Về Khóa Học Chưa Có Giáo Trình", StatusCodes.Status409Conflict);
+            }
+
+            var currentExamIds = new List<Guid>();
+            foreach (var sesId in sessionIds)
+            {
+                var examId = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                    predicate: x => x.SessionId == sesId,
+                    selector: x => x.Id);
+
+                if (examId != default)
+                {
+                    currentExamIds.Add(examId);
+                }
+            }
+
+            if (examIdList != null && examIdList.Count > 0)
+            {
+                var invalidIds = examIdList.Where(exId => !currentExamIds.Any(ceId => ceId == exId)).ToList();
+
+                if (invalidIds.Any())
+                {
+                    throw new BadHttpRequestException($"Id Bài Kiểm Tra [{string.Join(" ,", invalidIds)}] Không Thuộc Lớp Học Đang Truy Suất", StatusCodes.Status400BadRequest);
+                }
+            }
+
+            var studentsLoading = studentIdList?.Any() ?? false ? studentIdList.Select(stuId => studentClasses.First(sc => sc.StudentId == stuId)).ToList() : studentClasses;
+            var examsLoading = examIdList?.Any() ?? false ? examIdList : currentExamIds;
+
+            var responses = new List<QuizResultWithStudentWork>();
+            foreach (var stu in studentsLoading)
+            {
+                var response = new QuizResultWithStudentWork
+                {
+                    StudentId = stu.StudentId,
+                    StudentName = stu.Student!.FullName!,
+                    ExamInfors = new List<StudentWorkFullyInfor>(),
+                };
+
+                foreach (var exlId in examsLoading)
+                {
+                    var testResults = new List<TestResult>();
+                    if (isLatestAttempt)
+                    {
+                        var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                            predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
+                            orderBy: x => x.OrderByDescending(x => x.NoAttempt),
+                            include: x => x.Include(x => x.ExamQuestions).ThenInclude(ex => ex.MultipleChoiceAnswer)!);
+
+                        if (testResult != null)
+                        {
+                            testResults.Add(testResult);
+                        }
+                    }
+                    else
+                    {
+                        var testResult = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+                           predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
+                           orderBy: x => x.OrderBy(x => x.NoAttempt),
+                           include: x => x.Include(x => x.ExamQuestions).ThenInclude(ex => ex.MultipleChoiceAnswer)!);
+
+                        if (testResult?.Any() ?? false)
+                        {
+                            testResults.AddRange(testResult);
+                        }
+                    }
+
+                    if (testResults.Any())
+                    {
+                        foreach (var test in testResults)
+                        {
+                            response.ExamInfors.Add(new StudentWorkFullyInfor
+                            {
+                                ExamId = test.ExamId,
+                                ExamName = test.ExamName!,
+                                NoAttemp = test.NoAttempt,
+                                QuizCategory = test.QuizCategory!,
+                                QuizType = test.QuizType!,
+                                QuizName = test.QuizName!,
+                                TotalMark = test.TotalMark,
+                                CorrectMark = test.CorrectMark,
+                                TotalScore = test.TotalScore,
+                                ScoreEarned = test.ScoreEarned,
+                                ExamStatus = test.ExamStatus!,
+                                StudentWorkResult = test.ExamQuestions?.Any() ?? false ? GenerateStudentWorkResult(test.ExamQuestions.ToList()) : null,
+
+                            });
+                        }
+                    }
+                }
+                responses.Add(response);
+            }
+
+            return responses;
+        }
+
+        private List<StudentWorkResult> GenerateStudentWorkResult(List<ExamQuestion> examQuestions)
+        {
+            var studentWorkResults = new List<StudentWorkResult>();
+
+            foreach (var examQuestion in examQuestions)
+            {
+
+                studentWorkResults.Add(new StudentWorkResult
+                {
+                    QuestionId = examQuestion.QuestionId,
+                    QuestionDescription = examQuestion.Question,
+                    QuestionImage = examQuestion.QuestionImage,
+                    MultipleChoiceAnswerResult = new MCAnswerResultResponse
+                    {
+                        StudentAnswerId = examQuestion.MultipleChoiceAnswer!.AnswerId,
+                        StudentAnswerDescription = examQuestion.MultipleChoiceAnswer.Answer,
+                        StudentAnswerImage = examQuestion.MultipleChoiceAnswer.AnswerImage,
+                        CorrectAnswerId = examQuestion.MultipleChoiceAnswer.CorrectAnswerId,
+                        CorrectAnswerDescription = examQuestion.MultipleChoiceAnswer.CorrectAnswer,
+                        CorrectAnswerImage = examQuestion.MultipleChoiceAnswer.CorrectAnswerImage,
+                        Score = examQuestion.MultipleChoiceAnswer.Score,
+                        Status = examQuestion.MultipleChoiceAnswer.Status,
+                    }
+                });
+            }
+
+            return studentWorkResults;
         }
         #endregion
         #region gia_thuong code

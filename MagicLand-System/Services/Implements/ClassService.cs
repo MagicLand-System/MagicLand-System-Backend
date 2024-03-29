@@ -2105,7 +2105,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
 
-            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.UtcNow.Date)).ToList();
+            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
             if (!classes.Any())
             {
                 return new List<ClassWithSlotOutSideResponse>();
@@ -2754,7 +2754,7 @@ namespace MagicLand_System.Services.Implements
                 });
             }
 
-            int part = quiz.QuizType == QuizTypeEnum.FlashCard.ToString() ? 2 : 1;
+            int part = quiz.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
 
             ssr.Quiz = new QuizInforResponse
             {

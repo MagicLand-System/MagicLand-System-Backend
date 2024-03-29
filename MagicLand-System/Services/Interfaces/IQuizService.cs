@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.PayLoad.Request.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 
 namespace MagicLand_System.Services.Interfaces
 {

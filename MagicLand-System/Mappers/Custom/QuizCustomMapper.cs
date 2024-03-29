@@ -16,7 +16,7 @@ namespace MagicLand_System.Mappers.Custom
             }
 
             int part = 1;
-            if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
+            if (questionPackage.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString())
             {
                 part = 2;
             }
@@ -25,7 +25,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 QuizCategory = examSyllabus == null ? "Review" : examSyllabus.Category,
-                QuizType = questionPackage.QuizType == QuizTypeEnum.MultipleChoice.ToString() ? "multiple-choice" : questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString() ? "flashcard" : "offline",
+                QuizType = questionPackage.QuizType.ToLower(),
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus == null ? 0 : examSyllabus.Weight / examSyllabus.Part,
                 CompletionCriteria = examSyllabus == null ? 0 : examSyllabus.CompleteionCriteria,
@@ -50,7 +50,7 @@ namespace MagicLand_System.Mappers.Custom
                 return new ExamWithQuizResponse { Date = "Cần Truy Suất Qua Lớp" };
             }
 
-            int part = questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString() ? 2 : 1;
+            int part = questionPackage.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
 
             var quizzes = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(questionPackage);
             int totalMark = 0;
@@ -70,7 +70,7 @@ namespace MagicLand_System.Mappers.Custom
                 ExamPart = part,
                 ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
                 QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString(),
-                QuizType = questionPackage.QuizType == QuizTypeEnum.MultipleChoice.ToString() ? "multiple-choice" : questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString() ? "flashcard" : "offline",
+                QuizType = questionPackage.QuizType.ToLower(),
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part: 0,
                 CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria :  null,

@@ -1202,9 +1202,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int>("CorrectMark")
                         .HasColumnType("int");
 
-                    b.Property<string>("ExamCategory")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("ExamId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1214,11 +1211,17 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("ExamStatus")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ExamType")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("NoAttempt")
                         .HasColumnType("int");
+
+                    b.Property<string>("QuizCategory")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QuizName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QuizType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("ScoreEarned")
                         .HasColumnType("float");

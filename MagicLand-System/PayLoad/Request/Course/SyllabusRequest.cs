@@ -9,7 +9,6 @@ namespace MagicLand_System.PayLoad.Request.Course
         [Range(0, 100, ErrorMessage = "Thứ Tự Chủ Đề Một Số Chỗ Đang Không Hợp Lệ [1-99]")]
         public required int Index {  get; set; }
         [Required(ErrorMessage = "Tên Chủ Đề Một Số Chỗ Đang Trống")]
-        [MaxLength(100, ErrorMessage = "Tên Chủ Đề Không Nên Vượt Quá 100 Ký Tự")]
         [MinLength(1, ErrorMessage = "Tên Chủ Đề Nên Có Ít Nhất 1 Ký Tự")]
         public required string TopicName { get; set; }
         [Required(ErrorMessage = "Nội Dung Buổi Học Của Chủ Đề Một Số Chỗ Đang Trống")]

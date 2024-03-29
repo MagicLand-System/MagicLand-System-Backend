@@ -8,6 +8,7 @@ using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -235,8 +236,9 @@ namespace MagicLand_System.Services.Implements
                 Id = testResultId,
                 ExamId = currentQuiz!.Id,
                 ExamName = "Bài Kiểm Tra Số " + currentQuiz.OrderPackage,
-                ExamCategory = currentExam != null ? currentExam.Category : PackageTypeEnum.Review.ToString(),
-                ExamType = currentQuiz.QuizType,
+                QuizCategory = currentExam != null ? currentExam.Category : PackageTypeEnum.Review.ToString(),
+                QuizType = currentQuiz.QuizType,
+                QuizName = currentQuiz.Title,
                 TotalScore = currentQuiz.Score,
                 TotalMark = totalMark,
                 StudentClassId = studentClass.Id,
@@ -369,7 +371,7 @@ namespace MagicLand_System.Services.Implements
                           StatusCodes.Status400BadRequest);
             }
 
-            if (currentQuiz.PackageType == PackageTypeEnum.ProgressTest.ToString())
+            if (String.Compare(currentQuiz.PackageType, PackageTypeEnum.ProgressTest.ToString(), StringComparison.OrdinalIgnoreCase) == 0)
             {
                 throw new BadHttpRequestException($"Id [{examId}] Bài Kiểm Tra Thuộc Dạng Tự Làm Tại Nhà Cần Nhập Điểm Trực Tiếp",
                          StatusCodes.Status400BadRequest);
@@ -377,7 +379,7 @@ namespace MagicLand_System.Services.Implements
 
             if (isFlashCard)
             {
-                if (currentQuiz.QuizType != QuizTypeEnum.FlashCard.ToString())
+                if (currentQuiz.QuizType.ToLower() != QuizTypeEnum.flashcard.ToString())
                 {
                     throw new BadHttpRequestException($"Id [{examId}] Bài Kiểm Tra Thuộc Dạng Trắc Nghiệm, Yêu Cầu Không Hợp Lệ",
                              StatusCodes.Status400BadRequest);
@@ -385,7 +387,7 @@ namespace MagicLand_System.Services.Implements
             }
             else
             {
-                if (currentQuiz.QuizType == QuizTypeEnum.FlashCard.ToString())
+                if (currentQuiz.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString())
                 {
                     throw new BadHttpRequestException($"Id [{examId}] Bài Kiểm Tra Thuộc Dạng Nối Thẻ, Yêu Cầu Không Hợp Lệ",
                              StatusCodes.Status400BadRequest);
@@ -714,8 +716,9 @@ namespace MagicLand_System.Services.Implements
                     ResultId = test.Id,
                     ExamId = test.ExamId,
                     ExamName = test.ExamName,
-                    ExamCategory = test.ExamCategory,
-                    ExamType = test.ExamType,
+                    QuizCategory = test.QuizCategory,
+                    QuizType = test.QuizType,
+                    QuizName = test.QuizName,
                     NoAttemp = test.NoAttempt,
                     TotalMark = test.TotalMark,
                     CorrectMark = test.CorrectMark,
@@ -908,7 +911,8 @@ namespace MagicLand_System.Services.Implements
                 double weight = quizExam.Item1.Part == 2 ? quizExam.Item1.Weight / 2 : quizExam.Item1.Weight;
 
                 finalTestResult.ExamId = quizExam.Item2.Id;
-                finalTestResult.QuizName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
+                finalTestResult.ExamName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
+                finalTestResult.QuizName = quizExam.Item2.Title;
                 finalTestResult.QuizType = quizExam.Item2.QuizType;
                 finalTestResult.QuizCategory = quizExam.Item1.Category;
                 finalTestResult.Weight = weight;
@@ -934,7 +938,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var session in sessions)
             {
                 var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
-                    predicate: x => x.SessionId == session.Id && x.QuizType != QuizTypeEnum.Offline.ToString());
+                    predicate: x => x.SessionId == session.Id && x.QuizType.ToLower() != QuizTypeEnum.offline.ToString());
 
                 if (quiz is not null && quiz.PackageType == PackageTypeEnum.ProgressTest.ToString())
                 {
@@ -979,7 +983,7 @@ namespace MagicLand_System.Services.Implements
                     ExamStartTime = settingInfor.QuizStartTime.ToTimeSpan(),
                     ExamEndTime = settingInfor.QuizEndTime.ToTimeSpan(),
                     AttemptAllowed = settingInfor.AttemptAllowed!.Value,
-                    Duration = settingInfor.Duration.Value,
+                    Duration = settingInfor.Duration!.Value,
                 };
 
                 await _unitOfWork.GetRepository<TempQuizTime>().InsertAsync(quizTime);

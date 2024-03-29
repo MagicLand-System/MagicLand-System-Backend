@@ -92,6 +92,7 @@ namespace MagicLand_System.Helpers
             return input.Trim().Replace(" ", "");
         }
 
+
         public static string GenerateTransactionCode(TransactionTypeEnum type)
         {
             const string chars = "0123456789";

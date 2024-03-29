@@ -17,6 +17,7 @@ using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
@@ -72,22 +73,20 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var qp in request.QuestionPackageRequests)
             {
-                if (qp.Type.ToLower() == QuizTypeEnum.FlashCard.ToString().ToLower())
+                if (StringHelper.TrimStringAndNoSpace(qp.Type).ToLower() != QuizTypeEnum.flashcard.ToString() &&
+                    StringHelper.TrimStringAndNoSpace(qp.Type).ToLower() != "multiple-choice")
                 {
-                    qp.Type = QuizTypeEnum.FlashCard.ToString();
+                    throw new BadHttpRequestException($"Loài Bộ Đề [{qp.Type}] Của [{qp.Title}] Không Hợp Lệ", StatusCodes.Status400BadRequest);
                 }
-                else
-                {
-                    qp.Type = QuizTypeEnum.MultipleChoice.ToString();
-                }
+
             }
 
             var offlineExams = request.ExamSyllabusRequests
-           .Where(exam => exam.Method.Trim().ToLower() == "offline")
+           .Where(exam => exam.Method.Trim().ToLower() == QuizTypeEnum.offline.ToString())
            .ToList();
 
             var onlineExams = request.ExamSyllabusRequests
-           .Where(exam => StringHelper.TrimStringAndNoSpace(exam.Method).ToLower() == QuizTypeEnum.Online.ToString().ToLower()
+           .Where(exam => exam.Method.Trim().ToLower() == QuizTypeEnum.online.ToString()
             && StringHelper.TrimStringAndNoSpace(exam.Type).ToLower() != PackageTypeEnum.Participation.ToString().ToLower())
            .ToList();
 
@@ -131,7 +130,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         ContentName = exam.ContentName,
                         NoOfSession = session.Order,
-                        Type = QuizTypeEnum.Offline.ToString(),
+                        Type = QuizTypeEnum.offline.ToString(),
                         Title = "Làm Tại Nhà",
                         Score = 0,
                         Duration = 0,
@@ -692,7 +691,7 @@ namespace MagicLand_System.Services.Implements
                 });
             }
 
-            int part = quiz.QuizType == QuizTypeEnum.FlashCard.ToString() ? 2 : 1;
+            int part = quiz.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
 
             ssr.Quiz = new QuizInforResponse
             {
@@ -1058,7 +1057,7 @@ namespace MagicLand_System.Services.Implements
             examsResponse.Add(examResponse);
         }
 
-        public async Task<List<ExamExtraInfor>> LoadExamOfCurrentStudentAsync(int numberOfDate)
+        public async Task<List<ExamExtraClassInfor>> LoadExamOfCurrentStudentAsync(int numberOfDate)
         {
             var studentId = (await GetUserFromJwt()).StudentIdAccount;
             if (studentId == null)
@@ -1073,7 +1072,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Bé Chưa Tham Gia Lớp Học Nào", StatusCodes.Status400BadRequest);
             }
-            var responses = new List<ExamExtraInfor>();
+            var responses = new List<ExamExtraClassInfor>();
             foreach (var cls in classes)
             {
                 var examsResponse = new List<ExamResponse>();
@@ -1100,7 +1099,7 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task SettingExamInfor(int numberOfDate, Guid studentId, List<ExamExtraInfor> responses, Class cls, List<ExamResponse> examsResponse)
+        private async Task SettingExamInfor(int numberOfDate, Guid studentId, List<ExamExtraClassInfor> responses, Class cls, List<ExamResponse> examsResponse)
         {
             foreach (var exam in examsResponse)
             {
@@ -1131,7 +1130,7 @@ namespace MagicLand_System.Services.Implements
 
                 if (examDate >= currentDate.AddDays(-numberOfDate).Date && examDate <= currentDate.AddDays(+numberOfDate).Date)
                 {
-                    responses.Add(new ExamExtraInfor
+                    responses.Add(new ExamExtraClassInfor
                     {
                         ExamId = exam.ExamId,
                         ExamPart = exam.ExamPart,

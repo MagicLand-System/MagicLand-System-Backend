@@ -7,6 +7,7 @@ using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.Services.Implements;

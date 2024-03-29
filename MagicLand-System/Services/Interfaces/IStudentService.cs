@@ -6,6 +6,7 @@ using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Evaluates;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 using MagicLand_System.PayLoad.Response.Schedules.ForStudent;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
@@ -14,6 +15,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IStudentService
     {
+        Task<List<QuizResultWithStudentWork>> GetStudentQuizFullyInforAsync(Guid classId, List<Guid>? studentIdList, List<Guid>? examIdList, bool isLatestAttempt);
         Task<List<ScheduleReLearn>> FindValidDayReLearningAsync(Guid studentId, Guid classId, List<DateOnly> dayOffs);
         Task<List<StudentLearningProgress>> GetStudentLearningProgressAsync(Guid studentId, Guid classId);
         Task<AccountStudentResponse> AddStudent(CreateStudentRequest request);

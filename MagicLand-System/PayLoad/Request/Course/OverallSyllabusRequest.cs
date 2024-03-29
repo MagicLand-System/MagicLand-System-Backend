@@ -5,7 +5,6 @@ namespace MagicLand_System.PayLoad.Request.Course
     public class OverallSyllabusRequest
     {
         [Required(ErrorMessage = "Tên Giáo Trình Không Được Để Trống")]
-        [MaxLength(50, ErrorMessage = "Tên Giáo Trình Không Nên Vượt Quá 50 Ký Tự")]
         [MinLength(5, ErrorMessage = "Tên Giáo Trình Nên Có Ít Nhất 5 Ký Tự")]
         public required string SyllabusName { get; set; }
         [Required(ErrorMessage = "Ngày Hiệu Lực Không Được Để Trống")]
@@ -16,7 +15,7 @@ namespace MagicLand_System.PayLoad.Request.Course
         [Range(1, 300, ErrorMessage = "Thời Gian Mỗi Buổi Học Không Hợp Lệ [1-300]")]
         public required int TimePerSession { get; set; }
         public double? MinAvgMarkToPass { get; set; } = 5.0;
-        [MaxLength(300, ErrorMessage = "Mô Tả Giáo Trình Không Nên Vượt Quá 300 Ký Tự")]
+        [MinLength(1, ErrorMessage = "Mô Tả Giáo Trình Không Nên Có Ít Nhất 1 Ký Tự")]
         public string? Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Mã Giáo Trình Không Được Để Trống")]
         public required string SubjectCode { get; set; }

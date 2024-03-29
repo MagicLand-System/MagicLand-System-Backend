@@ -5,12 +5,10 @@ namespace MagicLand_System.Enums
     public enum QuizTypeEnum
     {
         [Description("Nối Thẻ")]
-        FlashCard,
-        [Description("Trắc Nghiệm")]
-        MultipleChoice,
+        flashcard,
         [Description("Làm Tại Nhà")]
-        Offline,
+        offline,
         [Description("Làm Trên Máy")]
-        Online,
+        online,
     }
 }
