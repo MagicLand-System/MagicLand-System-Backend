@@ -67,19 +67,19 @@ namespace MagicLand_System.Services
                 selector: x => x.CoursePrices,
                 predicate: x => x.Id == cls.CourseId))!.ToArray();
 
-            coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
+            //coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
 
             result = coursePrices.First().Price;
             for (int i = 1; i < coursePrices.Length; i++)
             {
-                if (cls.AddedDate >= coursePrices[i].EffectiveDate)
-                {
-                    result = coursePrices[i].Price;
-                }
-                else
-                {
-                    break;
-                }
+                //if (cls.AddedDate >= coursePrices[i].EffectiveDate)
+                //{
+                //    result = coursePrices[i].Price;
+                //}
+                //else
+                //{
+                //    break;
+                //}
             }
 
             return result;

@@ -69,19 +69,19 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                 selector: x => x.CoursePrices,
                                 predicate: x => x.Id == cls.CourseId))!.ToArray();
 
-                            coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
+                            //coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
 
                             result = coursePrices.First().Price;
                             for (int i = 1; i < coursePrices.Length; i++)
                             {
-                                if (cls.AddedDate >= coursePrices[i].EffectiveDate)
-                                {
-                                    result = coursePrices[i].Price;
-                                }
-                                else
-                                {
-                                    break;
-                                }
+                                //if (cls.AddedDate >= coursePrices[i].EffectiveDate)
+                                //{
+                                //    result = coursePrices[i].Price;
+                                //}
+                                //else
+                                //{
+                                //    break;
+                                //}
                             }
 
                             item.Price = result;
@@ -94,16 +94,16 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                 selector: x => x.CoursePrices,
                                 predicate: x => x.Id == item.CourseId);
 
-                            coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToList();
+                            //coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToList();
 
                             result = coursePrices.Last().Price;
 
-                            var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
+                            //var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
 
-                            if (currentValidPrice is not null)
-                            {
-                                result = currentValidPrice.Value;
-                            }
+                            //if (currentValidPrice is not null)
+                            //{
+                            //    result = currentValidPrice.Value;
+                            //}
 
                             item.Price = result;
                         }
