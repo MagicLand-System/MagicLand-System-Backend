@@ -11,7 +11,8 @@ namespace MagicLand_System.Domain.Models
     {
         public Guid Id { get; set; }
         public double Price { get; set; }
-        public DateTime EffectiveDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }   
 
 
         [ForeignKey("Course")]

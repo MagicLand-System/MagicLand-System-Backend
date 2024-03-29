@@ -492,7 +492,7 @@ namespace MagicLand_System.Services.Implements
                 CoursePrice coursePrice = new CoursePrice
                 {
                     CourseId = course.Id,
-                    EffectiveDate = DateTime.UtcNow,
+                    //EffectiveDate = DateTime.UtcNow,
                     Price = request.Price,
                 };
 
@@ -554,7 +554,7 @@ namespace MagicLand_System.Services.Implements
 
             }
             var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseid));
-            var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
+            //var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
             int ongoing = 0;
             var count = (await _unitOfWork.GetRepository<Class>()
                     .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(courseFound.Id.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
@@ -576,7 +576,7 @@ namespace MagicLand_System.Services.Implements
                 MinYearOldsStudent = courseFound.MinYearOldsStudent,
                 Name = courseFound.Name,
                 NumberOfSession = courseFound.NumberOfSession,
-                Price = priceArray[0].Price,
+                //Price = priceArray[0].Price,
                 Status = courseFound.Status,
                 SubjectName = subjectname,
                 SyllabusId = courseFound.SyllabusId,
@@ -606,7 +606,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     Price = request.Price,
                     CourseId = request.CourseId,
-                    EffectiveDate = request.EffectiveDate,
+                    //EffectiveDate = request.EffectiveDate,
                 };
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(price);
                 bool isSuccess = await _unitOfWork.CommitAsync() > 0;

@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240329084758_UpdatePrice")]
+    partial class UpdatePrice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1205,6 +1208,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int>("CorrectMark")
                         .HasColumnType("int");
 
+                    b.Property<string>("ExamCategory")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ExamId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1214,17 +1220,11 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("ExamStatus")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ExamType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("NoAttempt")
                         .HasColumnType("int");
-
-                    b.Property<string>("QuizCategory")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("QuizName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("QuizType")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("ScoreEarned")
                         .HasColumnType("float");
