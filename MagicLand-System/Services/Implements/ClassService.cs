@@ -2105,13 +2105,15 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
 
-            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date)).ToList();
+            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1))).ToList();
             if (!classes.Any())
             {
                 return new List<ClassWithSlotOutSideResponse>();
             }
 
-            nearestClasses = nearestClasses.OrderBy(cls => TimeOnly.Parse(cls.Schedules.First().Slot!.StartTime)).ToList();
+            nearestClasses = nearestClasses.OrderBy(cls => TimeOnly.Parse(cls.Schedules.First().Slot!.StartTime))
+                                           .ThenBy(cls => cls.Schedules.First(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1)).Date)
+                                           .ToList();
 
             //foreach (var cls in nearestClasses)
             //{

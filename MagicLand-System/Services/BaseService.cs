@@ -84,15 +84,6 @@ namespace MagicLand_System.Services
 
             return result;
         }
-
-        protected async Task<double> GetPriceInTemp(Guid id, bool isClass)
-        {
-            if (isClass)
-            {
-                return await _unitOfWork.GetRepository<TempItemPrice>().SingleOrDefaultAsync(predicate: x => x.ClassId == id, selector: x => x.Price);
-            }
-            return await _unitOfWork.GetRepository<TempItemPrice>().SingleOrDefaultAsync(predicate: x => x.CourseId == id, selector: x => x.Price);
-        }
     }
 
 }

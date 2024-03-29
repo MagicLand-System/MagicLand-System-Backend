@@ -9,5 +9,6 @@ namespace MagicLand_System.PayLoad.Request.Quizzes
         [Required(ErrorMessage = "Điểm Của Học Sinh Không Được Trống")]
         [Range(0, 10, ErrorMessage = "Điểm Phải Bắt Đầu Từ 0 Đến 10")]
         public required double Score { get; set; }
+        public required string Status { get; set; }
     }
 }

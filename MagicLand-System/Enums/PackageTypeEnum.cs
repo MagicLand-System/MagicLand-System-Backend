@@ -10,6 +10,8 @@ namespace MagicLand_System.Enums
         Practice,
         [Description("Tại Nhà")]
         ProgressTest,
+        [Description("Tại Nhà")]
+        Test,
         [Description("Điểm Danh")]
         Participation,
         [Description("Bài Tổng Kết")]

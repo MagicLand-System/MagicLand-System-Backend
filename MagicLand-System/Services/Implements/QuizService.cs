@@ -583,7 +583,7 @@ namespace MagicLand_System.Services.Implements
 
             var studentIdList = exaOffLineStudentWork.StudentQuizGardes.Select(sqg => sqg.StudentId).ToList();
 
-            Class cls = await ValidateGradeExamOffLineClass(exaOffLineStudentWork.ClassId, studentIdList);
+            var cls = await ValidateGradeExamOffLineClass(exaOffLineStudentWork.ClassId, studentIdList);
 
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.CourseId == cls.CourseId,
@@ -657,7 +657,7 @@ namespace MagicLand_System.Services.Implements
                 if (currentTest != null)
                 {
                     currentTest.ScoreEarned = studentWork.Score;
-                    currentTest.ExamStatus = GenerateExamStatus(10, (int)studentWork.Score);
+                    currentTest.ExamStatus = studentWork.Status;
                     updateTestResults.Add(currentTest);
                 }
                 else
@@ -668,8 +668,8 @@ namespace MagicLand_System.Services.Implements
 
                     testResult.TotalScore = 10;
                     testResult.ScoreEarned = studentWork.Score;
-                    testResult.ExamStatus = GenerateExamStatus(10, (int)studentWork.Score);
-                    testResult.CorrectMark = 0;
+                    testResult.ExamStatus = studentWork.Status;
+                    testResult.CorrectMark = (int)studentWork.Score;
                     newTestResults.Add(testResult);
                 }
             }
