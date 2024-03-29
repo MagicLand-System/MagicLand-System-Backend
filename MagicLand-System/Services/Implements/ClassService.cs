@@ -2104,15 +2104,28 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
-
             var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1))).ToList();
-            if (!classes.Any())
+
+            //var nearestClasses = new List<Class>();
+            //var tempClass = new Class();
+
+            //foreach(var cls in classes)
+            //{
+            //    var nearest = cls.Schedules.FirstOrDefault(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1));
+
+            //    if(nearest is null)
+            //    {
+            //        continue;
+            //    }
+
+            //}
+            if (!nearestClasses.Any())
             {
                 return new List<ClassWithSlotOutSideResponse>();
             }
 
-            nearestClasses = nearestClasses.OrderBy(cls => TimeOnly.Parse(cls.Schedules.First().Slot!.StartTime))
-                                           .ThenBy(cls => cls.Schedules.First(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1)).Date)
+            nearestClasses = nearestClasses.OrderBy(cls => cls.Schedules.First(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1)).Date)
+                                           .ThenBy(cls => TimeOnly.Parse(cls.Schedules.First().Slot!.StartTime))
                                            .ToList();
 
             //foreach (var cls in nearestClasses)
@@ -2151,7 +2164,7 @@ namespace MagicLand_System.Services.Implements
                 response.Room = RoomCustomMapper.fromRoomToRoomResponse(currentSchedule.Room!);
                 response.SlotOrder = StringHelper.GetSlotNumber(currentSchedule.Slot!.StartTime);
 
-                response.CoursePrice = await GetPriceInTemp(cls.Id, true);
+                //response.CoursePrice = await GetPriceInTemp(cls.Id, true);
 
                 responses.Add(response);
             }
