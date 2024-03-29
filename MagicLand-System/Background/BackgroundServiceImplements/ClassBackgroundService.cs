@@ -55,11 +55,11 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
             if (cls.StartDate.Date == currentDate.Date)
             {
-                if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
-                {
-                    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
-                    return;
-                }
+                //if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                //{
+                //    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
+                //    return;
+                //}
 
                 UpdateStudent(cls, ClassStatusEnum.PROGRESSING.ToString());
                 return;

@@ -1889,9 +1889,27 @@ namespace MagicLand_System.Services.Implements
             //    });
             //}
 
-            //await _unitOfWork.GetRepository<TempItemPrice>().InsertRangeAsync(temps);
-            //_unitOfWork.GetRepository<Course>().DeleteRangeAsync(deleteCourses);
-            //_unitOfWork.GetRepository<Syllabus>().DeleteRangeAsync(deleteSyllabuses);
+            //var eva = new List<Evaluate>();
+            //var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("98c21f9d-0cf6-4076-a001-2f0e054e92ae"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            //foreach (var stu in cls.StudentClasses)
+            //{
+            //    foreach (var sch in cls.Schedules)
+            //    {
+            //        eva.Add(new Evaluate
+            //        {
+            //            Id = Guid.NewGuid(),
+            //            Status = null,
+            //            Note = null,
+            //            IsValid = true,
+            //            StudentId = stu.StudentId,
+            //            ScheduleId = sch.Id,
+            //        });
+            //    }
+            //}
+
+            //await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(eva);
+            ////_unitOfWork.GetRepository<Course>().DeleteRangeAsync(deleteCourses);
+            ////_unitOfWork.GetRepository<Syllabus>().DeleteRangeAsync(deleteSyllabuses);
             //_unitOfWork.Commit();
 
 

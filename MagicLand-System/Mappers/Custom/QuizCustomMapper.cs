@@ -25,7 +25,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 ExamPart = part,
                 QuizCategory = examSyllabus == null ? "Review" : examSyllabus.Category,
-                QuizType = questionPackage.QuizType,
+                QuizType = questionPackage.QuizType == QuizTypeEnum.MultipleChoice.ToString() ? "multiple-choice" : questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString() ? "flashcard" : "offline",
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus == null ? 0 : examSyllabus.Weight / examSyllabus.Part,
                 CompletionCriteria = examSyllabus == null ? 0 : examSyllabus.CompleteionCriteria,
@@ -70,7 +70,7 @@ namespace MagicLand_System.Mappers.Custom
                 ExamPart = part,
                 ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
                 QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString(),
-                QuizType = questionPackage.QuizType,
+                QuizType = questionPackage.QuizType == QuizTypeEnum.MultipleChoice.ToString() ? "multiple-choice" : questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString() ? "flashcard" : "offline",
                 QuizName = questionPackage.Title,
                 Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part: 0,
                 CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria :  null,
@@ -81,68 +81,68 @@ namespace MagicLand_System.Mappers.Custom
             };
         }
 
-        public static QuizMultipleChoiceResponse fromSyllabusItemsToQuizMutipleChoiceResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus examSyllabus)
-        {
-            if (questionPackage == null || examSyllabus == null)
-            {
-                return new QuizMultipleChoiceResponse { Date = "Cần Truy Suất Qua Lớp" };
-            }
+        //public static QuizMultipleChoiceResponse fromSyllabusItemsToQuizMutipleChoiceResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus examSyllabus)
+        //{
+        //    if (questionPackage == null || examSyllabus == null)
+        //    {
+        //        return new QuizMultipleChoiceResponse { Date = "Cần Truy Suất Qua Lớp" };
+        //    }
 
 
-            int part = 1;
-            if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
-            {
-                part = 2;
-            }
+        //    int part = 1;
+        //    if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
+        //    {
+        //        part = 2;
+        //    }
 
-            var response = new QuizMultipleChoiceResponse
-            {
-                ExamPart = part,
-                QuizCategory = examSyllabus.Category,
-                QuizType = questionPackage.QuizType,
-                QuizName = questionPackage.Title,
-                Weight = examSyllabus.Weight / examSyllabus.Part,
-                CompletionCriteria = examSyllabus.CompleteionCriteria,
-                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
-                TotalMark = questionPackage.Questions!.Count(),
-                NoSession = noSession,
-                ExamId = examSyllabus.Id,
-                QuestionMultipleChoices = QuestionCustomMapper.fromQuestionPackageToQuestionMultipleChoicesResponse(questionPackage),
-            };
+        //    var response = new QuizMultipleChoiceResponse
+        //    {
+        //        ExamPart = part,
+        //        QuizCategory = examSyllabus.Category,
+        //        QuizType = questionPackage.QuizType,
+        //        QuizName = questionPackage.Title,
+        //        Weight = examSyllabus.Weight / examSyllabus.Part,
+        //        CompletionCriteria = examSyllabus.CompleteionCriteria,
+        //        TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
+        //        TotalMark = questionPackage.Questions!.Count(),
+        //        NoSession = noSession,
+        //        ExamId = examSyllabus.Id,
+        //        QuestionMultipleChoices = QuestionCustomMapper.fromQuestionPackageToQuestionMultipleChoicesResponse(questionPackage),
+        //    };
 
-            return response;
-        }
-        public static QuizFlashCardResponse fromSyllabusItemsToQuizFlashCardResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus examSyllabus)
-        {
-            if (questionPackage == null || examSyllabus == null)
-            {
-                return new QuizFlashCardResponse { Date = "Cần Truy Suất Qua Lớp", };
-            }
+        //    return response;
+        //}
+        //public static QuizFlashCardResponse fromSyllabusItemsToQuizFlashCardResponse(int noSession, QuestionPackage questionPackage, ExamSyllabus examSyllabus)
+        //{
+        //    if (questionPackage == null || examSyllabus == null)
+        //    {
+        //        return new QuizFlashCardResponse { Date = "Cần Truy Suất Qua Lớp", };
+        //    }
 
 
-            int part = 1;
-            if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
-            {
-                part = 2;
-            }
+        //    int part = 1;
+        //    if (questionPackage.QuizType == QuizTypeEnum.FlashCard.ToString())
+        //    {
+        //        part = 2;
+        //    }
 
-            var response = new QuizFlashCardResponse
-            {
-                ExamPart = part,
-                QuizCategory = examSyllabus.Category,
-                QuizType = questionPackage.QuizType,
-                QuizName = questionPackage.Title,
-                Weight = examSyllabus.Weight / examSyllabus.Part,
-                CompletionCriteria = examSyllabus.CompleteionCriteria,
-                TotalScore = questionPackage.Questions!.SelectMany(quest => quest.FlashCards!.Select(fc => fc.Score)).ToList().Sum(),
-                TotalMark = questionPackage.Questions!.Count(),
-                //Attempts = 1,
-                NoSession = noSession,
-                ExamId = examSyllabus.Id,
-                QuestionFlasCards = QuestionCustomMapper.fromQuestionPackageToQuestionFlashCardResponse(questionPackage),
-            };
+        //    var response = new QuizFlashCardResponse
+        //    {
+        //        ExamPart = part,
+        //        QuizCategory = examSyllabus.Category,
+        //        QuizType = questionPackage.QuizType,
+        //        QuizName = questionPackage.Title,
+        //        Weight = examSyllabus.Weight / examSyllabus.Part,
+        //        CompletionCriteria = examSyllabus.CompleteionCriteria,
+        //        TotalScore = questionPackage.Questions!.SelectMany(quest => quest.FlashCards!.Select(fc => fc.Score)).ToList().Sum(),
+        //        TotalMark = questionPackage.Questions!.Count(),
+        //        //Attempts = 1,
+        //        NoSession = noSession,
+        //        ExamId = examSyllabus.Id,
+        //        QuestionFlasCards = QuestionCustomMapper.fromQuestionPackageToQuestionFlashCardResponse(questionPackage),
+        //    };
 
-            return response;
-        }
+        //    return response;
+        //}
     }
 }
