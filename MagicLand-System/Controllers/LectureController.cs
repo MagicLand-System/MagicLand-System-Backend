@@ -34,7 +34,7 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Cho Phép Giảng Viên Điểm Danh Các Học Sinh Của Một Lớp Ở Ngày Hiện Tại Thông Qua Id Của Lớp Và Slot Học
         /// </summary>
-        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
+        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Điểm Danh Và Thông Tin Liên Quan</param>
         /// <param name="slot">Slot Điểm Danh</param>
         /// <remarks>
         /// Sample request:
@@ -44,7 +44,8 @@ namespace MagicLand_System.Controllers
         ///    [
         ///       {
         ///          "StudentId":"3c1849af-400c-43ca-979e-58c71ce9301d",
-        ///          "IsAttendance": "true"
+        ///          "IsAttendance": "true",
+        ///          "Note": "Học Bù"
         ///        }
         ///    ]
         ///}
@@ -207,9 +208,9 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Current Lecture Classes
         /// <summary>
-        ///  Truy Suất Slot Lịch Dạy Các Lớp Của Giáo Viên Hiện Tại Có Trong Hôm Nay
+        ///  Truy Suất Các Lớp Học Có Lịch Dạy Gần Nhất
         /// </summary>
-        /// <response code="200">Trả Về Lịch Dạy Của Giáo Viên Trong Hôm Nay</response>
+        /// <response code="200">Trả Về Lịch Dạy Của Các Lớp Gần Nhất</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>

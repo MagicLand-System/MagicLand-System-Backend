@@ -1,12 +1,8 @@
 ﻿using AutoMapper;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
-using MagicLand_System.Domain.Models.TempEntity.Class;
-using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace MagicLand_System.Services
@@ -53,7 +49,6 @@ namespace MagicLand_System.Services
 
         protected async Task<double> GetDynamicPrice(Guid id, bool isClass)
         {
-
             var coursePrices = isClass
               ? await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                 predicate: x => x.Classes.Any(cls => cls.Id == id),

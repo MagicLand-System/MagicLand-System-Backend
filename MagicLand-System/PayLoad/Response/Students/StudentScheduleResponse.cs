@@ -19,6 +19,7 @@ public class StudentScheduleResponse
     public string? LinkURL { get; set; }
     public string? Method { get; set; }
     public string? AttendanceStatus { get; set; }
+    public string? Note { get; set; }
     public string? LecturerName { get; set; }
     public string? Status { get; set; }
 

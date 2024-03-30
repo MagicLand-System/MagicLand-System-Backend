@@ -396,7 +396,6 @@ namespace MagicLand_System.Services.Implements
 
             var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
-
             if (studentNotHaveAttendance.Count() > 0)
             {
                 return $"Điểm Danh Hoàn Tất, Một Số Học Sinh [{string.Join(", ", studentNotHaveAttendance)}] Không Được Điểm Danh Sẽ Được Hệ Thống Tự Động Đánh Vắng";
@@ -491,8 +490,10 @@ namespace MagicLand_System.Services.Implements
 
             try
             {
-                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id,
-                   include: x => x.Include(x => x.Student)!);
+                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                    predicate: x => x.ScheduleId == currentSchedule.Id,
+                    include: x => x.Include(x => x.Student)!);
+
                 var studentAttendanceRequest = request.StudentAttendanceRequests;
 
                 foreach (var attendance in attendances)
@@ -506,6 +507,7 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
                     attendance.IsPresent = student.IsPresent;
+                    attendance.Note = student.Note;
                 }
 
                 _unitOfWork.GetRepository<Attendance>().UpdateRange(attendances);
@@ -609,6 +611,7 @@ namespace MagicLand_System.Services.Implements
                 throw new Exception($"Lỗi Hễ Thống Phát Sinh: [{ex.Message}]" + ex.InnerException != null ? $"[{ex.InnerException}]" : "");
             }
         }
+
 
         private async Task<List<string>> CheckingCurrentClassForEvaluate(List<StudentEvaluateRequest> studentEvaluateRequests, Class cls, int noSession)
         {
@@ -945,7 +948,7 @@ namespace MagicLand_System.Services.Implements
                 for (int i = 0; i < cls.Schedules.Count(); i++)
                 {
                     var schedule = cls.Schedules.ToList()[i];
-                    var IsPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(selector: x => x.IsPresent, predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
+                    var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
 
                     var studentSchedule = new StudentScheduleResponse
                     {
@@ -966,7 +969,8 @@ namespace MagicLand_System.Services.Implements
                         Method = cls.Method,
                         RoomInFloor = schedule.Room.Floor,
                         RoomName = schedule.Room.Name,
-                        AttendanceStatus = IsPresent == true ? "Có Mặt" : IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
+                        AttendanceStatus = attendance.IsPresent == true ? "Có Mặt" : attendance.IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
+                        Note = attendance.Note,
                         LecturerName = lecturerName,
                     };
                     listStudentSchedule.Add(studentSchedule);

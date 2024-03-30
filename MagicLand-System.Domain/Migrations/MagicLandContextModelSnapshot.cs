@@ -37,6 +37,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<bool?>("IsValid")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ScheduleId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1050,26 +1053,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasIndex("CurrentSyllabusId");
 
                     b.ToTable("SyllabusPrerequisite", (string)null);
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.TempEntity.Class.TempItemPrice", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("Price")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TempItemPrice", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.TempEntity.Class.TempQuizTime", b =>

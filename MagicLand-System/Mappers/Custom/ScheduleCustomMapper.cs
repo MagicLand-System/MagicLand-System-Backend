@@ -236,6 +236,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 return new ScheduleWithAttendanceResponse();
             }
+
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AllowNullCollections = true;

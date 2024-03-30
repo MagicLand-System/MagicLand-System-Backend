@@ -2112,13 +2112,36 @@ namespace MagicLand_System.Services.Implements
         private async Task<List<ClassWithSlotOutSideResponse>> GenerateClassSchedule(List<Class> currentClasses)
         {
             var responses = new List<ClassWithSlotOutSideResponse>();
+
+            TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.Now);
+
             foreach (var cls in currentClasses)
             {
-                var currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
+                var currentSchedule = new Schedule();
 
-                if (currentSchedule == null)
+                if (currentTime.Hour < 21 || currentTime.Hour != 0)
                 {
-                    currentSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.AddDays(1).Date);
+                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
+                    if (checkingSchedule == null)
+                    {
+                        continue;
+                    }
+
+                    if (currentTime > TimeOnly.Parse(checkingSchedule!.Slot!.EndTime))
+                    {
+                        continue;
+                    }
+                    currentSchedule = checkingSchedule;
+                }
+                else
+                {
+                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.AddDays(1).Date);
+                    if (checkingSchedule == null)
+                    {
+                        continue;
+                    }
+                    currentSchedule = checkingSchedule;
+
                 }
 
                 var response = _mapper.Map<ClassWithSlotOutSideResponse>(cls);
