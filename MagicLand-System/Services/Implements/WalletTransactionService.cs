@@ -6,6 +6,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
+using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
@@ -357,8 +358,9 @@ namespace MagicLand_System.Services.Implements
             return studentAttendanceList;
         }
 
-        public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
+        public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse>? allStudentSchedules, List<Guid>? studentIds, List<CreateStudentRequest>? studentIfors, Guid classId)
         {
+<<<<<<< Updated upstream
             var cls = await _unitOfWork.GetRepository<Class>()
                 .SingleOrDefaultAsync(predicate: x => x.Id.Equals(classId), include: x => x
                 .Include(x => x.Schedules)
@@ -367,45 +369,91 @@ namespace MagicLand_System.Services.Implements
                 .ThenInclude(s => s.Room)!
                 .Include(x => x.StudentClasses)
                 .Include(x => x.Course)!);
+=======
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+               predicate: x => x.Id.Equals(classId),
+               include: x => x.Include(x => x.StudentClasses)!);
 
-            await ValidateSuitableClass(studentIds, cls);
+            //if (cls == null)
+            //{
+            //    throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
+            //}
 
-            ValidateSchedule(allStudentSchedules, cls);
+            cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+            orderBy: x => x.OrderBy(x => x.Date),
+            predicate: x => x.ClassId == classId,
+            include: x => x.Include(x => x.Slot)!);
+
+            cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == cls.CourseId);
+>>>>>>> Stashed changes
+
+            await ValidateSuitableClass(studentIds, studentIfors, cls);
+
+            if (allStudentSchedules is not null && allStudentSchedules.Count > 0)
+            {
+                ValidateSchedule(allStudentSchedules, cls);
+            }
 
             return true;
         }
 
-        private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
+        private async Task ValidateSuitableClass(List<Guid>? studentIds, List<CreateStudentRequest>? studentIfors, Class cls)
         {
             string status = cls.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()) ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
 
+<<<<<<< Updated upstream
             if (!cls.Status!.Trim().Equals("UPCOMING"))
             {
                 throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
                     StatusCodes.Status400BadRequest);
-            }
+=======
+            //if (!cls.Status!.Trim().Equals(ClassStatusEnum.UPCOMING.ToString()))
+            //{
+            //    throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status.Trim())}]",
+            //        StatusCodes.Status400BadRequest);
+            //}
+            int studentCount = 0;
 
-            foreach (Guid id in studentIds)
+            if (studentIds is not null && studentIds.Count > 0)
             {
-                var student = await _unitOfWork.GetRepository<Student>()
-                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
-
-                if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
+                studentCount = studentIds.Count;
+                foreach (Guid id in studentIds)
                 {
-                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
+                    var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
+
+                    if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
+                    {
+                        throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
+                    }
+
+                    int age = DateTime.Now.Year - student.DateOfBirth.Year;
+
+                    if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
+                    {
+                        throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}], " +
+                            $"Yêu Cầu Tuổi Từ {cls.Course.MinYearOldsStudent} Đến {cls.Course.MaxYearOldsStudent}", StatusCodes.Status400BadRequest);
+                    }
+
+                    await ValidateCoursePrerequisite(student, cls);
                 }
-
-                int age = DateTime.Now.Year - student.DateOfBirth.Year;
-
-                if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
-                {
-                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
-                }
-
-                await ValidateCoursePrerequisite(student, cls);
+>>>>>>> Stashed changes
             }
 
-            if (cls.StudentClasses.Count() + studentIds.Count() > cls.LimitNumberStudent)
+            if (studentIfors is not null && studentIfors.Count > 0)
+            {
+                studentCount = studentIfors.Count;
+                foreach (var s in studentIfors)
+                {
+                    int age = DateTime.Now.Year - s.DateOfBirth.Year;
+                    if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
+                    {
+                        throw new BadHttpRequestException($"Học Sinh [{s.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}], " +
+                            $"Yêu Cầu Tuổi Từ {cls.Course.MinYearOldsStudent} Đến {cls.Course.MaxYearOldsStudent}", StatusCodes.Status400BadRequest);
+                    }
+                }
+            }
+
+            if (cls.StudentClasses.Count() + studentCount > cls.LimitNumberStudent)
             {
                 throw new BadHttpRequestException($"Lớp [{cls.ClassCode}] Đã Đủ Chỉ Số", StatusCodes.Status400BadRequest);
             }

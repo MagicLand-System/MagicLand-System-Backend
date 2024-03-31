@@ -1,14 +1,18 @@
 ﻿using Azure.Core;
 using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
+using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Vnpay;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -33,6 +37,65 @@ namespace MagicLand_System.Controllers
             _walletTransactionService = walletTransactionService;
             _gatewayService = gatewayService;
         }
+
+        #region document API Check-out Class
+        /// <summary>
+        /// Thanh Toán Một Hoặc Nhiều Lớp Dành Cho Nhân Viên
+        /// </summary>
+        /// <param name="requests">Chứa Id Của Các Lớp Muốn Thanh Toán Và Id Của Các Học Sinh Trong Đó</param>
+        /// <remarks>
+        /// Sample request:
+        ///[
+        ///     {
+        ///        "ClassId": "c6d70a5f-56ae-4de0-b441-c080da024524"
+        ///        "StudentIdList": {"3fa85f64-5717-4562-b3fc-2c963f66afa6"}
+        ///     },
+        ///     {
+        ///        "ClassId": "1c2ag2g5-kgae-ud3p-bf4a-aaaw1a023gaa"
+        ///        "StudentIdList": {"172c40fe-32e4-43fd-b982-c87afe8b54fa", "f9113f7e-ae51-4f65-a7b4-2348f666787d"}
+        ///     }
+        ///]
+        /// </remarks>
+        /// <response code="200">Trả Về Hóa Đơn Sau Khi Thanh Toán</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        //[HttpPost(ApiEndpointConstant.User.)]
+        //[ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
+        //[ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        //[Authorize(Roles = "STAFF")]
+        //public async Task<IActionResult> CheckOutStaff(CheckOutStaffRequest request)
+        //{
+        //    var result = await ValidRequest(request.ClassId, null, request.StudentInfors);
+
+        //    if (result is not OkResult)
+        //    {
+        //        return result;
+        //    }
+
+        //    if (!await _walletTransactionService.ValidRegisterAsync(null, null, request.StudentInfors, request.ClassId))
+        //    {
+        //        return BadRequest(new ErrorResponse
+        //        {
+        //            Error = "Yêu Cầu Vi Phạm Một Số Tiêu Chuẩn Lớp Học",
+        //            StatusCode = StatusCodes.Status500InternalServerError,
+        //            TimeStamp = DateTime.Now,
+        //        });
+        //    }
+
+        //    var allUser = await _userService.GetUsers();
+        //    var isRegistered = allUser.SingleOrDefault(u => StringHelper.TrimStringAndNoSpace(u.Phone!) == StringHelper.TrimStringAndNoSpace(request.ParentInfor.Phone));
+        //    if (isRegistered == null)
+        //    {
+        //        await _userService.RegisterNewUser(request.ParentInfor);
+        //    }
+        //    _studentService.
+
+        //    var response = await _walletTransactionService.CheckoutAsync(requests);
+
+        //    return Ok(response);
+        //}
 
         #region document API Check-out Class
         /// <summary>
@@ -68,9 +131,9 @@ namespace MagicLand_System.Controllers
                 return BadRequest();
             }
 
-            foreach(var request in requests)
+            foreach (var request in requests)
             {
-                var result = await ValidRequest(request.ClassId, request.StudentIdList);
+                var result = await ValidRequest(request.ClassId, request.StudentIdList, null);
 
                 if (result is not OkResult)
                 {
@@ -86,7 +149,7 @@ namespace MagicLand_System.Controllers
 
                 }
 
-                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, request.ClassId, request.StudentIdList))
+                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, request.StudentIdList, null, request.ClassId))
                 {
                     return BadRequest(new ErrorResponse
                     {
@@ -136,7 +199,7 @@ namespace MagicLand_System.Controllers
 
             foreach (var request in requests)
             {
-                var result = await ValidRequest(request.ClassId, request.StudentIdList);
+                var result = await ValidRequest(request.ClassId, request.StudentIdList, null);
 
                 if (result is not OkResult)
                 {
@@ -152,7 +215,7 @@ namespace MagicLand_System.Controllers
 
                 }
 
-                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, request.ClassId, request.StudentIdList))
+                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, request.StudentIdList, null, request.ClassId))
                 {
                     return BadRequest(new ErrorResponse
                     {
@@ -230,7 +293,7 @@ namespace MagicLand_System.Controllers
 
                 }
 
-                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
+                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Students.Select(stu => stu.StudentId).ToList(), null, item.Class.ClassId))
                 {
                     return BadRequest(new ErrorResponse
                     {
@@ -308,7 +371,7 @@ namespace MagicLand_System.Controllers
 
                 }
 
-                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Class.ClassId, item.Students.Select(stu => stu.StudentId).ToList()))
+                if (!await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, item.Students.Select(stu => stu.StudentId).ToList(), null, item.Class.ClassId))
                 {
                     return BadRequest(new ErrorResponse
                     {
@@ -366,10 +429,15 @@ namespace MagicLand_System.Controllers
 
             return Ok(items);
         }
-        private async Task<IActionResult> ValidRequest(Guid classId, List<Guid> studentIds)
+        private async Task<IActionResult> ValidRequest(Guid classId, List<Guid>? studentIds, List<CreateStudentRequest>? studentInfors)
         {
+<<<<<<< Updated upstream
 
             if (await _classService.GetClassByIdAsync(classId) == null)
+=======
+            var cls = await _classService.GetClassByIdAsync(classId);
+            if (cls == default)
+>>>>>>> Stashed changes
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -379,50 +447,81 @@ namespace MagicLand_System.Controllers
                 });
             }
 
-            var students = await _studentService.GetStudentsOfCurrentParent();
-            var invalidStudentIds = studentIds.Except(students.Select(s => s.Id)).ToList();
-
-            if (invalidStudentIds.Any())
+            if (cls.Status != ClassStatusEnum.UPCOMING.ToString())
             {
                 return BadRequest(new ErrorResponse
                 {
-                    Error = "Id Của Học Sinh Không Tồn Tại Hoặc Bạn Đăng Sử Dụng Id Của Học Sinh Khác Không Phải Con Bạn " +
-                    $"[{string.Join(", ", invalidStudentIds.Select(x => x.ToString()))}]",
+                    Error = $"Chỉ Có Thể Đăng Ký Vào Lớp Sắp Diễn Ra Lớp {cls.ClassCode} [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status!)}]",
                     StatusCode = StatusCodes.Status400BadRequest,
                     TimeStamp = DateTime.Now,
                 });
             }
 
-            var exsitStudents = students.Where(stu => studentIds.Any(id => id == stu.Id)).ToList();
-
-            foreach (var student in exsitStudents)
+            if (studentInfors is not null && studentInfors.Count > 0)
             {
-                if (!student.IsActive!.Value)
+                var duplicateNames = studentInfors
+                   .GroupBy(s => StringHelper.TrimStringAndNoSpace(s.FullName).ToLower())
+                   .Where(g => g.Count() > 1)
+                   .Select(g => g.Key);
+
+                if (duplicateNames != default)
                 {
                     return BadRequest(new ErrorResponse
                     {
-                        Error = $"Id [{student.Id}] Của Học Sinh Đã Ngưng Hoạt Động",
+                        Error = $"Tên Học Sinh [{string.Join(", ", duplicateNames)}] Đang Bị Trùng",
                         StatusCode = StatusCodes.Status400BadRequest,
                         TimeStamp = DateTime.Now,
                     });
                 }
             }
 
-            Guid duplicateStudentId = studentIds.GroupBy(x => x)
-               .Where(list => list.Count() > 1)
-               .Select(list => list.First())
-               .SingleOrDefault();
-
-
-            if (duplicateStudentId != default)
+            if (studentIds is not null && studentIds.Count > 0)
             {
-                return BadRequest(new ErrorResponse
+                var students = await _studentService.GetStudentsOfCurrentParent();
+                var invalidStudentIds = studentIds.Except(students.Select(s => s.Id)).ToList();
+
+                if (invalidStudentIds.Any())
                 {
-                    Error = $"Bạn Đang Đăng Ký Cho Học Sinh [{students.Where(x => x.Id == duplicateStudentId).Single().FullName}] " +
-                    "Nhiều Hơn Hai Lần Vào Một Lớp",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = "Id Của Học Sinh Không Tồn Tại Hoặc Bạn Đăng Sử Dụng Id Của Học Sinh Khác Không Phải Con Bạn " +
+                        $"[{string.Join(", ", invalidStudentIds.Select(x => x.ToString()))}]",
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        TimeStamp = DateTime.Now,
+                    });
+                }
+
+                var exsitStudents = students.Where(stu => studentIds.Any(id => id == stu.Id)).ToList();
+
+                foreach (var student in exsitStudents)
+                {
+                    if (!student.IsActive!.Value)
+                    {
+                        return BadRequest(new ErrorResponse
+                        {
+                            Error = $"Id [{student.Id}] Của Học Sinh Đã Ngưng Hoạt Động",
+                            StatusCode = StatusCodes.Status400BadRequest,
+                            TimeStamp = DateTime.Now,
+                        });
+                    }
+                }
+
+                Guid duplicateStudentId = studentIds.GroupBy(x => x)
+                   .Where(list => list.Count() > 1)
+                   .Select(list => list.First())
+                   .SingleOrDefault();
+
+
+                if (duplicateStudentId != default)
+                {
+                    return BadRequest(new ErrorResponse
+                    {
+                        Error = $"Bạn Đang Đăng Ký Cho Học Sinh [{students.Where(x => x.Id == duplicateStudentId).Single().FullName}] " +
+                        "Nhiều Hơn Hai Lần Vào Một Lớp",
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        TimeStamp = DateTime.Now,
+                    });
+                }
             }
 
             return Ok();

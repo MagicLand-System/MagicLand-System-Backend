@@ -99,6 +99,48 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
+<<<<<<< Updated upstream
+=======
+        #region document API Checking Class For Students
+        /// <summary>
+        ///  Cho Phép Kiểm Tra Các Học Sinh Có Thỏa Mãn Điều Kiện Để Học Một Lớp Dựa Vào Id của Lớp Và Id Của Các Học Sinh
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học Cần Kiểm Tra</param>
+        /// <param name="studentIdList">Id Của Các Học Sinh Cần Kiểm Tra</param>
+        /// <response code="200">Các Học Sinh Đã Thõa Mãn Điều Kiện</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.CheckingClassForStudents)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckingClassForStudents([FromQuery] Guid classId, [FromQuery] List<Guid> studentIdList)
+        {
+            if (classId == default || studentIdList == null)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
+            var allStudentSchedules = new List<StudentScheduleResponse>();
+            foreach (var task in studentIdList.Select(async stu => await _studentService
+            .GetScheduleOfStudent(stu.ToString())))
+            {
+                var schedules = await task;
+                allStudentSchedules.AddRange(schedules);
+            }
+
+            await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, studentIdList, null, classId);
+
+            return Ok("Các Học Thỏa Mãn Điều Kiện Để Đăng Ký Vào Lớp");
+        }
+
+>>>>>>> Stashed changes
         #region document API Filter Class
         /// <summary>
         ///  Tìm Kiếm Hoặc Lọc Lớp Theo Tiêu Chí
