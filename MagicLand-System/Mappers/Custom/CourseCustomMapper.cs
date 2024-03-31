@@ -1,10 +1,27 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Courses.Custom;
+using MagicLand_System.PayLoad.Response.Schedules;
 
 namespace MagicLand_System.Mappers.Custom
 {
     public class CourseCustomMapper
     {
+        public static CourseSimpleResponse fromCourseToCourseSimpleResponse(Course course)
+        {
+            if (course == null)
+            {
+                return new CourseSimpleResponse();
+            }
+
+            var response = new CourseSimpleResponse
+            {
+                CourseId = course.Id,
+                CourseName = course.Name,
+            };
+
+            return response;
+        }
         public static CourseResponse fromCourseToCourseResponse(Course course)
         {
             if (course == null)
@@ -16,7 +33,6 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
-                Price = (decimal)course.Price,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
@@ -39,12 +55,83 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
-                Price = (decimal)course.Price,
+                //Price = (decimal)course.Price,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
                 CourseDetail = fromCourseInforToCourseDetailResponse(course, coursePrerequisites),
                 OpeningSchedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
+                RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
+                UpdateDate = course.UpdateDate,
+            };
+
+            return response;
+        }
+
+        public static CourseResponseCustom fromCourseToCourseReponseCustom(Course course, IEnumerable<Course> coursePrerequisites, ICollection<Course> coureSubsequents)
+        {
+            if (course == null)
+            {
+                return new CourseResponseCustom();
+            }
+
+            var response = new CourseResponseCustom
+            {
+                CourseId = course.Id,
+                Image = course.Image,
+                MainDescription = course.MainDescription,
+                SubDescriptionTitle = course.SubDescriptionTitles
+                .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
+                CourseName = course.Name,
+                Subject = course.SubjectName,
+                SubjectCode = course.Syllabus!.SubjectCode,
+                MinAgeStudent = course.MinYearOldsStudent.ToString(),
+                MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
+                AddedDate = course.AddedDate,
+                Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
+                NumberOfSession = course.NumberOfSession,
+                CoursePrerequisites = coursePrerequisites != null
+                ? coursePrerequisites.Select(cp => cp.Name).ToList()!
+                : new List<string>(),
+                OpeningSchedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
+                RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites!, coureSubsequents),
+                UpdateDate = course.UpdateDate,
+            };
+
+            return response;
+        }
+
+        public static CourseWithScheduleShorten fromCourseToCourseWithScheduleShorten(
+      Course course,
+      IEnumerable<Course> coursePrerequisites,
+      ICollection<Course> coureSubsequents)
+        {
+            if (course == null)
+            {
+                return new CourseWithScheduleShorten();
+            }
+
+            var classOpeningInfors = new List<ClassOpeningInfor>();
+            foreach(var cls in course.Classes)
+            {
+                classOpeningInfors.Add(new ClassOpeningInfor()
+                {
+                    ClassId = cls.Id,
+                    OpeningDay = cls.StartDate,
+                    Schedules = ScheduleCustomMapper.fromScheduleToScheduleShortenResponses(cls),
+                }) ;
+            }
+
+            var response = new CourseWithScheduleShorten
+            {
+                CourseId = course.Id,
+                Image = course.Image,
+                //Price = (decimal)course.Price,
+                MainDescription = course.MainDescription,
+                SubDescriptionTitle = course.SubDescriptionTitles
+                .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
+                CourseDetail = fromCourseInforToCourseDetailResponse(course, coursePrerequisites),
+                ClassOpeningInfors = classOpeningInfors,
                 RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
                 UpdateDate = course.UpdateDate,
             };
@@ -58,17 +145,18 @@ namespace MagicLand_System.Mappers.Custom
             {
                 return new CourseDetailResponse();
             }
-
             CourseDetailResponse response = new CourseDetailResponse
             {
+                Id = course.Id,
                 CourseName = course.Name,
+                Subject = course.SubjectName,
+                SubjectCode = course.Syllabus!.SubjectCode,
                 MinAgeStudent = course.MinYearOldsStudent.ToString(),
                 MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
                 AddedDate = course.AddedDate,
-                Subject = course.CourseCategory.Name,
                 Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
                 NumberOfSession = course.NumberOfSession,
-                CoursePrerequisites = coursePrerequisites != null
+                CoursePrerequisites = coursePrerequisites != null && coursePrerequisites.Any()
                 ? coursePrerequisites.Select(cp => cp.Name).ToList()!
                 : new List<string>(),
             };
@@ -109,9 +197,9 @@ namespace MagicLand_System.Mappers.Custom
                 {
                     CourseRelatedId = course.Id,
                     Name = course.Name,
-                    Subject = course.CourseCategory.Name,
+                    Subject = course.SubjectName,
                     Image = course.Image,
-                    Price = course.Price,
+                    //Price = course.Price,
                     MinAgeStudent = course.MinYearOldsStudent,
                     MaxAgeStudent = course.MaxYearOldsStudent,
                 };

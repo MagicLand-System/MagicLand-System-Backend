@@ -34,12 +34,12 @@ namespace MagicLand_System.Controllers
             {
                 return NotFound(new ErrorResponse
                 {
-                    Error = "User with phone not exist",
+                    Error = $"Không tìm thấy user có số điện thoại {phone}",
                     StatusCode = StatusCodes.Status404NotFound,
                     TimeStamp = DateTime.Now,
                 });
             }
-            return Ok(new { Message = "Phone has exist" , Role = isExist.Role});
+            return Ok(new { Message = $"Tồn tại user có số điện thoại {phone}", Role = isExist.Role });
         }
         [HttpGet(ApiEndpointConstant.User.UserEndPointGetCurrentUser)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
@@ -57,6 +57,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
+
             return Ok(user);
         }
         [HttpPost(ApiEndpointConstant.User.UserEndPointRegister)]
@@ -80,12 +81,12 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = "Created Successfully" });
         }
-        [HttpGet(ApiEndpointConstant.User.UserEndPointGetLecturer)]
+        [HttpPost(ApiEndpointConstant.User.UserEndPointGetLecturer)]
         [ProducesResponseType(typeof(LecturerResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundObjectResult))]
-        public async Task<IActionResult> GetLecturers()
+        public async Task<IActionResult> GetLecturers(FilterLecturerRequest? request)
         {
-            var users = await _userService.GetLecturers();
+            var users = await _userService.GetLecturers(request);
             if (users == null)
             {
                 return NotFound(new ErrorResponse
@@ -130,6 +131,12 @@ namespace MagicLand_System.Controllers
             var response = await _userService.UpdateUserAsync(request);
 
             return Ok(response);
+        }
+        [HttpGet(ApiEndpointConstant.User.GetByAdmin)]
+        public async Task<IActionResult> GetByAdmin(DateTime? startDate , DateTime? endDate , string? searchString, string? slotId)
+        {
+            var result = await _userService.GetAdminLecturerResponses(startDate, endDate, searchString,slotId);
+            return Ok(result);
         }
 
     }

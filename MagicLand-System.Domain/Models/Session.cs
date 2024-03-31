@@ -11,8 +11,12 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("Topic")]
         public Guid TopicId { get; set; }
         public Topic? Topic { get; set; }
-        public ICollection<SessionDescription> SessionDescriptions { get; set; } = new List<SessionDescription>();
+
+        [ForeignKey("QuestionPackage")]
         public Guid? QuestionPackageId { get; set; }
-        public QuestionPackage? QuestionPackage { get; set; }   
+        public QuestionPackage? QuestionPackage { get; set; }
+
+        public ICollection<SessionDescription>? SessionDescriptions { get; set; } = new List<SessionDescription>();
+
     }
 }

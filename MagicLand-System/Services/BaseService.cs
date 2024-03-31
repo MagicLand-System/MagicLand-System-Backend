@@ -3,8 +3,6 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace MagicLand_System.Services
@@ -44,8 +42,37 @@ namespace MagicLand_System.Services
         protected async Task<User> GetUserFromJwt()
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
-            User account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.Students).Include(x => x.PersonalWallet));
+
+            var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role));
             return account;
+        }
+
+        protected async Task<double> GetDynamicPrice(Guid id, bool isClass)
+        {
+            var coursePrices = isClass
+              ? await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Classes.Any(cls => cls.Id == id),
+                selector: x => x.CoursePrices)
+              : await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == id,
+                selector: x => x.CoursePrices);
+
+            if (coursePrices == null || coursePrices.Count == 0)
+            {
+                return 0;
+            }
+
+            var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(15));
+
+            foreach (var pr in prices)
+            {
+                if (pr.StartDate <= DateTime.Now && pr.EndDate >= DateTime.Now)
+                {
+                    return pr.Price;
+                }
+            }
+
+            return (coursePrices.OrderByDescending(x => x.EndDate).ToArray())[0].Price;
         }
     }
 

@@ -1,0 +1,35 @@
+﻿@page
+@model PrivacyModel
+@{
+    ViewData["Title"] = "Course";
+    var Message = ViewData["Message"]?.ToString();
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #course {
+        background-color: lightblue;
+    }
+
+        #course .nav-link {
+            color: blue !important;
+        }
+
+        #course i.fa {
+        color: blue;
+        }
+
+</style>
+<div class="loader"></div>
+<div class="text-center">
+    <h4 class="display-3"><b>Tạo course trực tiếp</b></h4>
+    <div class="form-group">
+        <label for="quantity">Nhập số lượng </label>
+        <input type="text" id="quantity" name="">
+        <button type="submit">Xử lý</button>
+    </div>
+</div>
+

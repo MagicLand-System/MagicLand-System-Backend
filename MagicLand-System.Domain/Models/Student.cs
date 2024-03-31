@@ -21,5 +21,6 @@ namespace MagicLand_System.Domain.Models
 
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
         public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public ICollection<Evaluate> Evaluates { get; set; } = new List<Evaluate>();
     }
 }

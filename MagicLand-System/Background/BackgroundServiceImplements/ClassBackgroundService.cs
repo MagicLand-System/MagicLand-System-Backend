@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
-    public class ClassBackgroundService : IClassBackroundService
+    public class ClassBackgroundService : IClassBackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
@@ -47,7 +47,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         private void CheckingDateTime(Class cls, DateTime currentDate)
         {
-            if (cls.StartDate.Date == currentDate.AddDays(7).Date)
+            if (cls.StartDate.Date == currentDate.AddDays(3).Date)
             {
                 UpdateStudent(cls, ClassStatusEnum.LOCKED.ToString());
                 return;
@@ -55,11 +55,11 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
             if (cls.StartDate.Date == currentDate.Date)
             {
-                if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
-                {
-                    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
-                    return;
-                }
+                //if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                //{
+                //    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
+                //    return;
+                //}
 
                 UpdateStudent(cls, ClassStatusEnum.PROGRESSING.ToString());
                 return;

@@ -20,6 +20,8 @@ namespace MagicLand_System.Background
             _logger.LogInformation($"Daily Create Job Running At [{DateTime.Now}]");
 
             message += await _notificationBackgroundService.CreateNewNotificationInCondition();
+            message += await _notificationBackgroundService.CreateNotificationForLastRegisterTime();
+            message += await _notificationBackgroundService.CreateNotificationForRemindRegisterCourse();
 
             _logger.LogInformation($"Daily Create Job Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
         }

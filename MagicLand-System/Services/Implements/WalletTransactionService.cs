@@ -6,12 +6,12 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
-using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
+using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -86,7 +86,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         Address = user.Address,
                         AvatarImage = user.AvatarImage,
-                        DateOfBirth = user.DateOfBirth,
+                        DateOfBirth = user.DateOfBirth.Value,
                         Email = user.Email,
                         FullName = user.FullName,
                         Gender = user.Gender,
@@ -150,7 +150,12 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<BillPaymentResponse> CheckoutAsync(List<CheckoutRequest> requests)
         {
-            var currentPayer = await GetUserFromJwt();
+            var id = GetUserIdFromJwt();
+            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+            if (currentPayer == null)
+            {
+                throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Và Thực Hiện Lại Giao Dịch", StatusCodes.Status500InternalServerError);
+            }
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
             double total = await CalculateTotal(requests);
@@ -179,11 +184,11 @@ namespace MagicLand_System.Services.Implements
                     .Include(x => x.Schedules)
                     .Include(x => x.StudentClasses));
 
-                var currentRequestTotal = cls.Course!.Price * request.StudentIdList.Count();
+                var currentRequestTotal = await GetDynamicPrice(cls.Id, true) * request.StudentIdList.Count();
 
                 string studentNameString = await GenerateStudentNameString(request.StudentIdList);
 
-                var newStudentAttendanceList = await RenderStudentAttendanceList(cls.Id, request.StudentIdList);
+                var newStudentItemScheduleList = await RenderStudentItemScheduleList(cls.Id, request.StudentIdList);
 
                 WalletTransaction newTransaction;
                 List<StudentClass> newStudentInClassList;
@@ -193,7 +198,7 @@ namespace MagicLand_System.Services.Implements
 
                 personalWallet.Balance = personalWallet.Balance - currentRequestTotal;
 
-                await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentAttendanceList, newNotification);
+                await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentItemScheduleList, newNotification);
 
                 string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.ClassCode}]";
                 messageList.Add(message);
@@ -248,6 +253,17 @@ namespace MagicLand_System.Services.Implements
 
         private Notification GenerateNewNotification(User targetUser, string title, string body, string type, string image, string actionData)
         {
+            var listItemIdentify = new List<string>
+            {
+                StringHelper.TrimStringAndNoSpace(targetUser is null ? "" : targetUser.Id.ToString()),
+                StringHelper.TrimStringAndNoSpace(title),
+                StringHelper.TrimStringAndNoSpace(body),
+                StringHelper.TrimStringAndNoSpace(image),
+                StringHelper.TrimStringAndNoSpace(actionData),
+            };
+
+            string identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify));
+
             return new Notification
             {
                 Id = new Guid(),
@@ -258,7 +274,8 @@ namespace MagicLand_System.Services.Implements
                 CreatedAt = DateTime.Now,
                 IsRead = false,
                 ActionData = actionData,
-                UserId = targetUser.Id,
+                UserId = targetUser!.Id,
+                Identify = identify,
             };
         }
 
@@ -267,7 +284,7 @@ namespace MagicLand_System.Services.Implements
             PersonalWallet personalWallet,
             WalletTransaction newTransaction,
             List<StudentClass> newStudentInClassList,
-            List<Attendance> newStudentAttendanceList,
+            (List<Attendance>, List<Evaluate>) newStudentItemScheduleList,
             Notification newNotification)
         {
             try
@@ -275,12 +292,13 @@ namespace MagicLand_System.Services.Implements
                 if (cls.StudentClasses.Count() + newStudentInClassList.Count() >= cls.LeastNumberStudent)
                 {
                     await UpdateStudentAttendance(cls);
-                    newStudentAttendanceList.ForEach(attendance => attendance.IsPublic = true);
+                    newStudentItemScheduleList.Item1.ForEach(attendance => attendance.IsPublic = true);
                 }
 
                 _unitOfWork.GetRepository<PersonalWallet>().UpdateAsync(personalWallet);
                 await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(newStudentInClassList);
-                await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendanceList);
+                await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentItemScheduleList.Item1);
+                await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newStudentItemScheduleList.Item2);
                 await _unitOfWork.GetRepository<WalletTransaction>().InsertAsync(newTransaction);
                 await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
 
@@ -335,17 +353,30 @@ namespace MagicLand_System.Services.Implements
             return bill;
         }
 
-        private async Task<List<Attendance>> RenderStudentAttendanceList(Guid classId, List<Guid> studentIds)
+        private async Task<(List<Attendance>, List<Evaluate>)> RenderStudentItemScheduleList(Guid classId, List<Guid> studentIds)
         {
             var studentAttendanceList = new List<Attendance>();
+            var studentEvaluateList = new List<Evaluate>();
 
             var classSchedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Class!.Id == classId);
 
             foreach (var schedule in classSchedules)
             {
+                var studentEvaluate = studentIds.Select(si => new Evaluate
+                {
+                    Id = Guid.NewGuid(),
+                    StudentId = si,
+                    ScheduleId = schedule.Id,
+                    Status = null,
+                    Note = string.Empty,
+                    IsValid = true,
+                }).ToList();
+
+                studentEvaluateList.AddRange(studentEvaluate);
+
                 var studentAttendance = studentIds.Select(si => new Attendance
                 {
-                    Id = new Guid(),
+                    Id = Guid.NewGuid(),
                     StudentId = si,
                     ScheduleId = schedule.Id,
                     IsPresent = null,
@@ -355,105 +386,64 @@ namespace MagicLand_System.Services.Implements
                 studentAttendanceList.AddRange(studentAttendance);
             }
 
-            return studentAttendanceList;
+            return (studentAttendanceList, studentEvaluateList);
         }
 
-        public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse>? allStudentSchedules, List<Guid>? studentIds, List<CreateStudentRequest>? studentIfors, Guid classId)
+        public async Task<bool> ValidRegisterAsync(List<StudentScheduleResponse> allStudentSchedules, Guid classId, List<Guid> studentIds)
         {
-<<<<<<< Updated upstream
-            var cls = await _unitOfWork.GetRepository<Class>()
-                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(classId), include: x => x
-                .Include(x => x.Schedules)
-                .ThenInclude(s => s.Slot)
-                .Include(x => x.Schedules)
-                .ThenInclude(s => s.Room)!
-                .Include(x => x.StudentClasses)
-                .Include(x => x.Course)!);
-=======
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
                predicate: x => x.Id.Equals(classId),
                include: x => x.Include(x => x.StudentClasses)!);
 
-            //if (cls == null)
-            //{
-            //    throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
-            //}
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
+            }
 
             cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
             orderBy: x => x.OrderBy(x => x.Date),
             predicate: x => x.ClassId == classId,
-            include: x => x.Include(x => x.Slot)!);
+            include: x => x.Include(x => x.Slot).Include(x => x.Room)!);
 
             cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == cls.CourseId);
->>>>>>> Stashed changes
 
-            await ValidateSuitableClass(studentIds, studentIfors, cls);
+            await ValidateSuitableClass(studentIds, cls);
 
-            if (allStudentSchedules is not null && allStudentSchedules.Count > 0)
-            {
-                ValidateSchedule(allStudentSchedules, cls);
-            }
+            ValidateSchedule(allStudentSchedules, cls);
 
             return true;
         }
 
-        private async Task ValidateSuitableClass(List<Guid>? studentIds, List<CreateStudentRequest>? studentIfors, Class cls)
+        private async Task ValidateSuitableClass(List<Guid> studentIds, Class cls)
         {
-            string status = cls.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()) ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
 
-<<<<<<< Updated upstream
-            if (!cls.Status!.Trim().Equals("UPCOMING"))
+            if (!cls.Status!.Trim().Equals(ClassStatusEnum.UPCOMING.ToString()))
             {
-                throw new BadHttpRequestException($"Xin Lỗi Bạn Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{status}]",
+                throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status.Trim())}]",
                     StatusCodes.Status400BadRequest);
-=======
-            //if (!cls.Status!.Trim().Equals(ClassStatusEnum.UPCOMING.ToString()))
-            //{
-            //    throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Lớp [Sắp Bắt Đầu], Lớp Này [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status.Trim())}]",
-            //        StatusCodes.Status400BadRequest);
-            //}
-            int studentCount = 0;
-
-            if (studentIds is not null && studentIds.Count > 0)
-            {
-                studentCount = studentIds.Count;
-                foreach (Guid id in studentIds)
-                {
-                    var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
-
-                    if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
-                    {
-                        throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
-                    }
-
-                    int age = DateTime.Now.Year - student.DateOfBirth.Year;
-
-                    if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
-                    {
-                        throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}], " +
-                            $"Yêu Cầu Tuổi Từ {cls.Course.MinYearOldsStudent} Đến {cls.Course.MaxYearOldsStudent}", StatusCodes.Status400BadRequest);
-                    }
-
-                    await ValidateCoursePrerequisite(student, cls);
-                }
->>>>>>> Stashed changes
             }
 
-            if (studentIfors is not null && studentIfors.Count > 0)
+            foreach (Guid id in studentIds)
             {
-                studentCount = studentIfors.Count;
-                foreach (var s in studentIfors)
+                var student = await _unitOfWork.GetRepository<Student>()
+                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
+
+                if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
-                    int age = DateTime.Now.Year - s.DateOfBirth.Year;
-                    if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
-                    {
-                        throw new BadHttpRequestException($"Học Sinh [{s.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}], " +
-                            $"Yêu Cầu Tuổi Từ {cls.Course.MinYearOldsStudent} Đến {cls.Course.MaxYearOldsStudent}", StatusCodes.Status400BadRequest);
-                    }
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
                 }
+
+                int age = DateTime.Now.Year - student.DateOfBirth.Year;
+
+                if (age > cls.Course!.MaxYearOldsStudent || age < cls.Course.MinYearOldsStudent)
+                {
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Có Độ Tuổi Không Phù Hợp Với Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
+                }
+
+                await ValidateCoursePrerequisite(student, cls);
             }
 
-            if (cls.StudentClasses.Count() + studentCount > cls.LimitNumberStudent)
+            if (cls.StudentClasses.Count() + studentIds.Count() > cls.LimitNumberStudent)
             {
                 throw new BadHttpRequestException($"Lớp [{cls.ClassCode}] Đã Đủ Chỉ Số", StatusCodes.Status400BadRequest);
             }
@@ -461,37 +451,35 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateCoursePrerequisite(Student student, Class cls)
         {
-            var currentCourseIdPrerRequiredList = (List<Guid>)await _unitOfWork.GetRepository<Course>()
-                .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
-                predicate: x => x.Classes.Any(c => c.Id.Equals(cls.Id)),
-                include: x => x.Include(x => x.CoursePrerequisites));
+            var currentSyllabusPrequisite = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.SyllabusPrerequisites,
+                predicate: x => x.CourseId == cls.CourseId);
 
-            var allCoursePrerIdRequired = new List<Guid>();
-
-            var allCoursePrerIdRequiredRender = await RenderAllCoursePrerRequired(currentCourseIdPrerRequiredList);
-            allCoursePrerIdRequired.AddRange(allCoursePrerIdRequiredRender);
-
-            if (allCoursePrerIdRequired?.Any() ?? false)
+            if (currentSyllabusPrequisite is null)
             {
-                await ValidateCoursePrerProgress(student, cls, allCoursePrerIdRequired);
+                return;
+            }
+
+            var allSyllabusPrerIdRequired = await FindAllIdSyllabusPrerRequired(currentSyllabusPrequisite!.Select(csp => csp.PrerequisiteSyllabusId).ToList());
+
+            if (allSyllabusPrerIdRequired?.Any() ?? false)
+            {
+                await ValidateCoursePrerProgress(student, cls, allSyllabusPrerIdRequired);
             }
         }
 
-        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allCoursePrerIdRequired)
+        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allSyllabusPrerIdRequired)
         {
             var courseRequiredList = new List<Course>();
 
-            foreach (Guid id in allCoursePrerIdRequired)
+            foreach (Guid id in allSyllabusPrerIdRequired)
             {
-                var courseRequired = await _unitOfWork.GetRepository<Course>()
-                   .SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.CoursePrerequisites));
-
+                var courseRequired = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == id);
                 courseRequiredList.Add(courseRequired);
             }
 
-            var courseCompleted = await _unitOfWork.GetRepository<Course>()
-               .GetListAsync(predicate: x => x.Classes.Any(c => c.StudentClasses
-               .Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Equals("COMPLETED"))));
+            var courseCompleted = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()))));
 
             if (courseCompleted?.Any() ?? false)
             {
@@ -510,52 +498,48 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        private async Task<List<Guid>> RenderAllCoursePrerRequired(List<Guid> currentCourseIdPrerRequiredList)
+        private async Task<List<Guid>> FindAllIdSyllabusPrerRequired(List<Guid> currentSyllabusIdPreList)
         {
-            var allCoursePrerIdRequired = new List<Guid>();
+            var allSyllabusPreIdRequired = new List<Guid>();
 
-            if (currentCourseIdPrerRequiredList?.Any() ?? false)
+            if (currentSyllabusIdPreList?.Any() ?? false)
             {
-                allCoursePrerIdRequired.AddRange(currentCourseIdPrerRequiredList);
-
-                currentCourseIdPrerRequiredList = await GetSubCoursePrerIdRequired(currentCourseIdPrerRequiredList);
-
-                allCoursePrerIdRequired.AddRange(currentCourseIdPrerRequiredList);
+                allSyllabusPreIdRequired.AddRange(currentSyllabusIdPreList);
+                allSyllabusPreIdRequired.AddRange(await GetIdPreSyllabusOfPreSyllabusIdRequired(currentSyllabusIdPreList));
             }
 
-            return allCoursePrerIdRequired;
+            return allSyllabusPreIdRequired;
         }
 
-        private async Task<List<Guid>> GetSubCoursePrerIdRequired(List<Guid> courseIdRequiredList)
+        private async Task<List<Guid>> GetIdPreSyllabusOfPreSyllabusIdRequired(List<Guid> currentSyllabusIdPreList)
         {
-            var subCoursePrerIdRequiredList = new List<Guid>();
+            var preSyllabusIdOfPreSyllabusList = new List<Guid>();
 
             bool isAll = false;
 
             while (isAll == false)
             {
-                var tempCourseIdRequiredList = new List<Guid>();
+                var tempSyllabusIdRequiredList = new List<Guid>();
 
-                foreach (Guid id in courseIdRequiredList!)
+                foreach (Guid id in currentSyllabusIdPreList!)
                 {
-                    var coursePrerIdRequired = await _unitOfWork.GetRepository<Course>()
-                       .SingleOrDefaultAsync(selector: x => x.CoursePrerequisites.Select(cp => cp.PrerequisiteCourseId),
-                       predicate: x => x.CoursePrerequisites.Any(cp => cp.CurrentCourseId == id),
-                       include: x => x.Include(x => x.CoursePrerequisites));
+                    var preSyllabusesOfPreSyllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                        selector: x => x.SyllabusPrerequisites,
+                        predicate: x => x.SyllabusPrerequisites!.Any(sp => sp.CurrentSyllabusId == id));
 
-                    if (coursePrerIdRequired?.Any() ?? false)
+                    if (preSyllabusesOfPreSyllabus?.Any() ?? false)
                     {
-                        tempCourseIdRequiredList.AddRange(coursePrerIdRequired);
+                        tempSyllabusIdRequiredList.AddRange(preSyllabusesOfPreSyllabus.Select(psps => psps.PrerequisiteSyllabusId));
                     }
                 }
-                courseIdRequiredList = tempCourseIdRequiredList;
+                currentSyllabusIdPreList = tempSyllabusIdRequiredList;
 
-                subCoursePrerIdRequiredList.AddRange(courseIdRequiredList);
+                preSyllabusIdOfPreSyllabusList.AddRange(currentSyllabusIdPreList);
 
-                isAll = courseIdRequiredList.Any() ? false : true;
+                isAll = currentSyllabusIdPreList.Any() ? false : true;
             }
 
-            return subCoursePrerIdRequiredList ??= new List<Guid>();
+            return preSyllabusIdOfPreSyllabusList ??= new List<Guid>();
         }
 
         private void ValidateSchedule(List<StudentScheduleResponse> allStudentSchedules, Class cls)
@@ -577,13 +561,11 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<double> CalculateTotal(List<CheckoutRequest> requests)
         {
-
             double total = 0.0;
 
             foreach (var request in requests)
             {
-                var price = await _unitOfWork.GetRepository<Class>()
-                .SingleOrDefaultAsync(selector: x => x.Course!.Price, predicate: x => x.Id.Equals(request.ClassId), include: x => x.Include(x => x.Course)!);
+                var price = await GetDynamicPrice(request.ClassId, true);
 
                 total += request.StudentIdList.Count() * price;
             }
@@ -659,7 +641,13 @@ namespace MagicLand_System.Services.Implements
             {
                 string txnRefCode = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.TopUp);
 
-                var currentUser = await GetUserFromJwt();
+                var id = GetUserIdFromJwt();
+                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+                if (currentUser == null)
+                {
+                    throw new Exception($"Lỗi Hễ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Giao Dịch");
+                }
+
                 var transactionId = Guid.NewGuid();
 
                 var transaction = new WalletTransaction
@@ -757,7 +745,7 @@ namespace MagicLand_System.Services.Implements
                 if (pair.Key == AttachValueEnum.StudentId.ToString())
                 {
                     var studentIdList = pair.Value.Select(v => Guid.Parse(v)).ToList();
-                    var studentAttendanceList = await RenderStudentAttendanceList(classId, studentIdList);
+                    var studentAttendanceList = await RenderStudentItemScheduleList(classId, studentIdList);
 
                     var studentClassList = studentIdList.Select(id =>
                     new StudentClass
@@ -767,7 +755,8 @@ namespace MagicLand_System.Services.Implements
                         ClassId = classId,
                     }).ToList();
 
-                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList);
+                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList.Item1);
+                    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(studentAttendanceList.Item2);
                     await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentClassList);
                     continue;
                 }
@@ -890,7 +879,13 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<(string, double)> GeneratePaymentTransAsync(List<ItemGenerate> items)
         {
-            var currentPayer = await GetUserFromJwt();
+            var id = GetUserIdFromJwt();
+            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+
+            if (currentPayer == null)
+            {
+                throw new Exception($"Lỗi Hễ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Giao Dịch");
+            }
 
             double total = await ConvertItemAndGetTotal(items);
             double discountEachItem = CalculateDiscountEachItem(items.Count(), total);
@@ -910,7 +905,7 @@ namespace MagicLand_System.Services.Implements
 
                     string signature = txnRefCode + StringHelper.GenerateAttachValueForTxnRefCode(item);
 
-                    var currentRequestTotal = cls.Course!.Price * item.StudentIdList.Count();
+                    var currentRequestTotal = await GetDynamicPrice(cls.Id, true) * item.StudentIdList.Count();
                     var studentNameString = await GenerateStudentNameString(item.StudentIdList);
 
                     var newTransaction = new WalletTransaction

@@ -1,6 +1,6 @@
 ﻿using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Cart;
-using MagicLand_System.PayLoad.Request.Checkout;
+using MagicLand_System.Utils;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,10 +9,89 @@ namespace MagicLand_System.Helpers
 {
     public class StringHelper
     {
+
+        public static string GetStringWithoutSpecificSyntax(string valueInput, string syntax, bool isBefore)
+        {
+            int syntaxIndex = valueInput.IndexOf(syntax);
+
+            if (isBefore && syntaxIndex != -1)
+            {
+                return valueInput.Substring(0, syntaxIndex);
+            }
+
+            if (!isBefore && syntaxIndex != -1 && syntaxIndex < valueInput.Length - 1)
+            {
+                return valueInput.Substring(syntaxIndex + 1);
+            }
+
+            return valueInput;
+        }
+
+        public static string GetSlotNumber(string startTime)
+        {
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot1).Trim())
+            {
+                return "Slot 1";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot2).Trim())
+            {
+                return "Slot 2";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot3).Trim())
+            {
+                return "Slot 3";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot4).Trim())
+            {
+                return "Slot 4";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot5).Trim())
+            {
+                return "Slot 5";
+            }
+            if (startTime == EnumUtil.GetDescriptionFromEnum(SlotEnum.Slot6).Trim())
+            {
+                return "Slot 6";
+            }
+
+            return "Undefined";
+        }
+
+        public static (string, string) SplitStringByNewLine(string input)
+        {
+            string[] parts = input.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length >= 2)
+            {
+                return (TrimStringAndNoSpace(parts[0]), TrimStringAndNoSpace(parts[1]));
+            }
+            else if (parts.Length == 1)
+            {
+                return (TrimStringAndNoSpace(parts[0]), string.Empty);
+            }
+            else
+            {
+                return (string.Empty, string.Empty);
+            }
+        }
+
+
+        public static List<string> FromStringToList(string input)
+        {
+            var separators = new string[] { "/r/n", "\r\n", "\n" };
+
+            var result = input.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                              .Select(line => line.Trim())
+                              .ToList();
+
+            return result;
+        }
+
         public static string TrimStringAndNoSpace(string input)
         {
             return input.Trim().Replace(" ", "");
         }
+
 
         public static string GenerateTransactionCode(TransactionTypeEnum type)
         {
@@ -115,6 +194,20 @@ namespace MagicLand_System.Helpers
             }
 
             return values;
+        }
+        public static string ComputeSHA256Hash(string input)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
         }
         private static string Encrypt(string input)
         {

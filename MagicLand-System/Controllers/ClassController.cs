@@ -1,13 +1,18 @@
-﻿    using MagicLand_System.Constants;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Topics;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml.Utils;
 
 namespace MagicLand_System.Controllers
 {
@@ -15,9 +20,13 @@ namespace MagicLand_System.Controllers
     public class ClassController : BaseController<ClassController>
     {
         private readonly IClassService _classService;
-        public ClassController(ILogger<ClassController> logger, IClassService classService) : base(logger)
+        private readonly IStudentService _studentService;
+        private readonly IWalletTransactionService _walletTransactionService;
+        public ClassController(ILogger<ClassController> logger, IClassService classService, IWalletTransactionService walletTransactionService, IStudentService studentService) : base(logger)
         {
             _classService = classService;
+            _walletTransactionService = walletTransactionService;
+            _studentService = studentService;
         }
 
         #region document API Get Classes
@@ -32,6 +41,8 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetClasses([FromQuery] PeriodTimeEnum time)
         {
+
+
             var classes = await _classService.GetClassesAsync(time);
             return Ok(classes);
         }
@@ -41,11 +52,13 @@ namespace MagicLand_System.Controllers
         ///  Truy Suất Toàn Bộ Lớp Của Một Khóa
         /// </summary>
         /// <param name="id">Id Của Khóa Học</param>
+        /// <param name="classStatus">Trạng Thái Của Lớp Học</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
-        ///        "id": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///        "id": "fded66d4-c3e7-4721-b509-e71feab6723a",
+        ///        "classStatus":"UPCOMING",
         ///     }
         ///
         /// </remarks>
@@ -54,20 +67,166 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByCourseId)]
-        [ProducesResponseType(typeof(ClassResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetClassByCourseId(Guid id)
+        public async Task<IActionResult> GetClassByCourseId(Guid id, [FromQuery] ClassStatusEnum classStatus)
         {
-            var courses = await _classService.GetClassesByCourseIdAsync(id);
-            return Ok(courses);
+            var classes = await _classService.GetClassesByCourseIdAsync(id, classStatus);
+            return Ok(classes);
+        }
+
+        #region document API Get Class Not In Cart
+        /// <summary>
+        ///  Truy Suất Các Lớp Học Không Thuộc Giỏ Hàng Của Người Dùng Hiện Tại
+        /// </summary>
+        /// <param name="courseId">Id Của Khóa Học (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "courseId": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllClassNotInCart)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetClassNotInCart([FromQuery] Guid? courseId)
+        {
+            var classes = await _classService.GetClassesNotInCartAsync(courseId);
+            return Ok(classes);
+        }
+
+        #region document API Get Topic Learning  
+        /// <summary>
+        ///  Truy Suất Nội Dung Chủ Đề Dựa Vào Thử Tự Chủ Đề
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="orderTopic">Thứ Tự Của Chủ Đề</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "classId": "fded66d4-c3e7-4721-b509-e71feab6723a",
+        ///        "orderTopic": 3
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Nội Dung Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetTopicLearning)]
+        [ProducesResponseType(typeof(TopicResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        //[Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetTopicLearning([FromQuery] Guid classId, [FromQuery] int orderTopic)
+        {
+            if (orderTopic == 0 || orderTopic < 0 || orderTopic > 30)
+            {
+                return BadRequest("Thứ Tự Chủ Đề Không Hợp Lệ");
+            }
+            var response = await _classService.GetTopicLearningAsync(classId, orderTopic);
+            return Ok(response);
         }
 
 
+        #region document API Checking Valid Student For Class Of Current User
+        /// <summary>
+        ///  Kiểm Tra Các Học Sinh Của Người Dùng Hiện Tại Thỏa Mãn Điều Kiện Để Học Một Lớp Dựa Vào Id Của Lớp
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "classId": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetStudentValid)]
+        [ProducesResponseType(typeof(StudentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetValidStudent([FromQuery] Guid classId)
+        {
+            if (classId == default)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var students = await _studentService.GetStudentsOfCurrentParent();
+            if (students == null)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Phụ Huynh Chưa Thêm Bé Vào Hệ Thống",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var responses = await _classService.GetValidStudentForClassAsync(classId, students);
+            return Ok(responses);
+        }
+
+        #region document API Get Valid Class
+        /// <summary>
+        ///  Truy Suất Các Lớp Kèm Lịch Học Của Một Khóa Học Sinh Có Thể Đăng Ký Dựa Vào Id Của Khóa Học Và Học Sinh
+        /// </summary>
+        /// <param name="courseId">Id Của Khóa Học</param>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "courseId": "fded66d4-c3e7-4721-b509-e71feab6723a"
+        ///       "studentId": "1a3abb54-d1e8-6ab2-g50a-b22vbab6799b"
+        ///     }
+        ///
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Thỏa Mãn</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetClassValid)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetValidClass([FromQuery] Guid courseId, [FromQuery] Guid studentId)
+        {
+            if (courseId == default || studentId == default)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = "Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var classes = await _classService.GetValidClassForStudentAsync(courseId, studentId);
+            return Ok(classes);
+        }
 
         #region document API Get Class By Id
         /// <summary>
-        ///  Truy Suất Lớp Thông Qua Id Của Lớp
+        ///  Truy Suất Thông Tin Chi Tiết Lớp Thông Qua Id Của Lớp
         /// </summary>
         /// <remarks>
         /// <param name="id">Id Của Lớp Học</param>
@@ -99,8 +258,6 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
-<<<<<<< Updated upstream
-=======
         #region document API Checking Class For Students
         /// <summary>
         ///  Cho Phép Kiểm Tra Các Học Sinh Có Thỏa Mãn Điều Kiện Để Học Một Lớp Dựa Vào Id của Lớp Và Id Của Các Học Sinh
@@ -135,12 +292,11 @@ namespace MagicLand_System.Controllers
                 allStudentSchedules.AddRange(schedules);
             }
 
-            await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, studentIdList, null, classId);
+            await _walletTransactionService.ValidRegisterAsync(allStudentSchedules, classId, studentIdList);
 
             return Ok("Các Học Thỏa Mãn Điều Kiện Để Đăng Ký Vào Lớp");
         }
 
->>>>>>> Stashed changes
         #region document API Filter Class
         /// <summary>
         ///  Tìm Kiếm Hoặc Lọc Lớp Theo Tiêu Chí
@@ -229,7 +385,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ChangeClass)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
-       [Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF")]
         public async Task<IActionResult> ChangeStudentClass([FromQuery] Guid fromClassId, [FromQuery] Guid toClassId, [FromQuery] List<Guid> studentIdList)
         {
             var classes = await _classService.ChangeStudentClassAsync(fromClassId, toClassId, studentIdList);
@@ -241,7 +397,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
         {
             var isSuccess = await _classService.CreateNewClass(request);
-            if (!isSuccess) 
+            if (!isSuccess)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -255,9 +411,9 @@ namespace MagicLand_System.Controllers
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]
         [AllowAnonymous]
-        public async Task<IActionResult> GetStaffClass([FromQuery] string? searchString , [FromQuery] string? status)
+        public async Task<IActionResult> GetStaffClass([FromQuery] string? searchString, [FromQuery] string? status)
         {
-            var courses = await _classService.GetAllClass(searchString,status);
+            var courses = await _classService.GetAllClass(searchString, status);
             return Ok(courses);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.ClassByIdV2)]
@@ -281,7 +437,7 @@ namespace MagicLand_System.Controllers
                     StatusCode = StatusCodes.Status404NotFound,
                 });
             }
-            return Ok(matchClass);  
+            return Ok(matchClass);
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.AutoCreateClassEndPoint)]
@@ -289,13 +445,13 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> AutoCreate(string courseId)
         {
             var result = await _classService.AutoCreateClassCode(courseId);
-            return Ok(new {ClassCode = result});
+            return Ok(new { ClassCode = result });
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.UpdateClass)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
-        public async Task<IActionResult> UpdateStudent([FromRoute] string id,[FromBody] UpdateClassRequest request)
+        public async Task<IActionResult> UpdateStudent([FromRoute] string id, [FromBody] UpdateClassRequest request)
         {
-            var isSuccess = await _classService.UpdateClass(id, request);   
+            var isSuccess = await _classService.UpdateClass(id, request);
             if (!isSuccess)
             {
                 return BadRequest(new ErrorResponse
@@ -314,9 +470,9 @@ namespace MagicLand_System.Controllers
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.LoadClassForAttandance)]
-        public async Task<IActionResult> LoadClasForAttandance(string? searchString ,DateTime dateTime,string? attendanceStatus)
+        public async Task<IActionResult> LoadClasForAttandance(string? searchString, DateTime dateTime, string? attendanceStatus)
         {
-            var result = await _classService.GetAllClassForAttandance(searchString,dateTime,attendanceStatus);
+            var result = await _classService.GetAllClassForAttandance(searchString, dateTime, attendanceStatus);
             return Ok(result);
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.CancelClass)]
@@ -367,16 +523,16 @@ namespace MagicLand_System.Controllers
             return Ok("success");
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetMakeUpClass)]
-        public async Task<IActionResult> GetMakeUpClass(string scheduleId,string studentId,DateTime? dateTime,string? keyword,string? slotId)
+        public async Task<IActionResult> GetMakeUpClass(string scheduleId, string studentId, DateTime? dateTime, string? keyword, string? slotId)
         {
-            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId,studentId,dateTime,keyword,slotId);
+            var isSuccess = await _classService.GetScheduleCanMakeUp(scheduleId, studentId, dateTime, keyword, slotId);
             return Ok(isSuccess);
         }
         [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClasses)]
         public async Task<IActionResult> GetMakeUpClass([FromBody] List<CreateClassesRequest> requests)
         {
             var isSuccess = await _classService.InsertClasses(requests);
-            return Ok("insert all success");
+            return Ok(isSuccess);
         }
     }
-}   
+}

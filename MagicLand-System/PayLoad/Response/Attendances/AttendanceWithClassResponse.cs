@@ -1,5 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.PayLoad.Response.Attendances

@@ -5,7 +5,8 @@ namespace MagicLand_System.PayLoad.Response.Classes
 {
     public class ClassResExtraInfor : ClassResponse
     {
-        public UserResponse? Lecture { get; set; } = new UserResponse();
-        public List<ScheduleResWithTopic>? Schedules { get; set; } = new List<ScheduleResWithTopic>();
+        public string? CourseName { get; set; }
+        public UserResponse? Lecture { get; set; } = default!;
+        public List<ScheduleResWithSession>? Schedules { get; set; } = new List<ScheduleResWithSession>();
     }
 }

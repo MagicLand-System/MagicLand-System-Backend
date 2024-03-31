@@ -1,19 +1,17 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.PayLoad.Request.Student;
-using MagicLand_System.PayLoad.Response.Students;
-using MagicLand_System.PayLoad.Response;
-using MagicLand_System.Services.Implements;
+using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request.Attendance;
+using MagicLand_System.PayLoad.Request.Evaluates;
+using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
+using MagicLand_System.PayLoad.Response.Evaluates;
+using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using MagicLand_System.PayLoad.Request.Attendance;
-using MagicLand_System.PayLoad.Response.Attendances;
-using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Response.Classes;
 using Microsoft.AspNetCore.Http.HttpResults;
-using MagicLand_System.PayLoad.Response.Schedules;
-using MagicLand_System.Background.BackgroundServiceInterfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
 {
@@ -36,7 +34,7 @@ namespace MagicLand_System.Controllers
         /// <summary>
         ///  Cho Phép Giảng Viên Điểm Danh Các Học Sinh Của Một Lớp Ở Ngày Hiện Tại Thông Qua Id Của Lớp Và Slot Học
         /// </summary>
-        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Điểm Danh Và Trạng Thái Điểm Danh</param>
+        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Điểm Danh Và Thông Tin Liên Quan</param>
         /// <param name="slot">Slot Điểm Danh</param>
         /// <remarks>
         /// Sample request:
@@ -46,7 +44,8 @@ namespace MagicLand_System.Controllers
         ///    [
         ///       {
         ///          "StudentId":"3c1849af-400c-43ca-979e-58c71ce9301d",
-        ///          "IsAttendance": "true"
+        ///          "IsAttendance": "true",
+        ///          "Note": "Học Bù"
         ///        }
         ///    ]
         ///}
@@ -64,6 +63,102 @@ namespace MagicLand_System.Controllers
         {
             var response = await _studentService.TakeStudentAttendanceAsync(request, slot);
 
+            return Ok(response);
+        }
+
+        #region document API Get Student Evaluates
+        /// <summary>
+        ///  Truy Suất Danh Sách Đánh Giá Của Các Học Sinh Trong Một Lớp 
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="noSession">Thứ Tự Hiện Của Buổi Học Cần Truy Suất Đánh Giá (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///    "noSession": 6,
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Đánh Giá Của Các Học Sinh</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentEvaluates)]
+        [ProducesResponseType(typeof(EvaluateResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> GetStudentEvaluates([FromQuery] Guid classId, [FromQuery] int? noSession)
+        {
+            var response = await _studentService.GetStudentEvaluatesAsync(classId, noSession);
+            return Ok(response);
+        }
+
+
+        #region document API Get Student Test Result
+        /// <summary>
+        ///  Truy Suất Danh Sách Các Bài Kiểm Tra Đã Làm Của Các Học Sinh
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="studentIdList">Id Của Các Học Sinh Cần Truy Suất (Option)</param>
+        /// <param name="examIdList">Id Của Các Bài Kiểm Tra Cần Truy Suất (Option)</param>
+        /// <param name="isLatestAttempt">Truy Suất Theo Lần Làm Mới Nhất, Mặc Định [Không] (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///    "studentIdList": [{"4729E1A5-79F9-48A5-B8ED-0A53F963Cc00"}],
+        ///    "examIdList": [{"735616C5-B24A-4C16-A30A-A27A570CD6FE"}],
+        ///    "isLatestAttempt": false,
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Danh Sách Điểm Kiểm Tra Của Các Học Sinh</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentQuizFullyInfor)]
+        [ProducesResponseType(typeof(QuizResultWithStudentWork), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> GetStudentQuizFullyInfor([FromQuery] Guid classId, [FromQuery] List<Guid>? studentIdList, [FromQuery] List<Guid>? examIdList, [FromQuery] bool isLatestAttempt = false)
+        {
+            var responses = await _studentService.GetStudentQuizFullyInforAsync(classId, studentIdList, examIdList, isLatestAttempt);
+            return Ok(responses);
+        }
+
+        #region document API Evaluate Students
+        /// <summary>
+        ///  Cho Phép Giảng Viên Đánh Giá Buổi Học Của Các Học Sinh Của Một Lớp, Thông Qua Id Của Lớp Và Id Buổi Học
+        /// </summary>
+        /// <param name="request">Chứa Id Của Lớp Học, Id Của Học Sinh Cần Đánh Giá, Mức Độ Và Ghi Chú Cho Đánh Giá</param>
+        /// <param name="noSession">Thứ Tự Hiện Tại Của Buổi Học Cần Đánh Giá</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "ClassId":"3c1849af-400c-43ca-979e-58c71ce9301d"
+        ///    "sessionId": "5229E1A5-79F9-48A5-B8ED-0A53F963Cd31"
+        ///    [
+        ///       {
+        ///          "StudentId":"6ab50a00-08ba-483c-bf5d-0d55b05a2c1a",
+        ///          "Level": 1, 
+        ///          "Note": "Dự Thính",
+        ///        }
+        ///    ]
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Báo Sau Khi Đánh Giá</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPut(ApiEndpointConstant.LectureEndPoint.EvaluateStudent)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> EvaluateStudent([FromBody] EvaluateRequest request, [FromQuery] int noSession)
+        {
+            var response = await _studentService.EvaluateStudentAsync(request, noSession);
             return Ok(response);
         }
 
@@ -113,20 +208,20 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Current Lecture Classes
         /// <summary>
-        ///  Truy Suất Các Lớp Của Giáo Viên Hiện Tại Có Lịch Học Trong Hôm Nay
+        ///  Truy Suất Các Lớp Học Có Lịch Dạy Gần Nhất
         /// </summary>
-        /// <response code="200">Trả Về Danh Sách Lớp Học Thỏa Mãn</response>
+        /// <response code="200">Trả Về Lịch Dạy Của Các Lớp Gần Nhất</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetCurrentClass)]
-        [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetCurrentClassesSchedule)]
+        [ProducesResponseType(typeof(ClassWithSlotOutSideResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureClasses()
+        public async Task<IActionResult> GetCurrentLetureClassesSchedule()
         {
-            var responses = await _classService.GetCurrentLectureClassesAsync();    
+            var responses = await _classService.GetCurrentLectureClassesScheduleAsync();
             return Ok(responses);
         }
 
@@ -160,7 +255,7 @@ namespace MagicLand_System.Controllers
 
 
 
-        #region document API Get All Class Attendance
+        #region document API Get All Class Schedules
         /// <summary>
         ///  Truy Suất Lịch Giảng Dạy Của Giáo Viên Hiện Tại
         /// </summary>

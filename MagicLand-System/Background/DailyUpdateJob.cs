@@ -11,15 +11,17 @@ namespace MagicLand_System.Background
     public class DailyUpdateJob : IJob
     {
         private readonly ILogger<DailyUpdateJob> _logger;
-        private readonly IClassBackroundService _classBackgroundService;
+        private readonly IClassBackgroundService _classBackgroundService;
         private readonly ITransactionBackgroundService _transactionBackgroundService;
         private readonly INotificationBackgroundService _notificationBackgroundService;
-        public DailyUpdateJob(ILogger<DailyUpdateJob> logger, IClassBackroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService, INotificationBackgroundService notificationBackgroundService)
+        private readonly ITempEntityBackgroundService _tempEntityBackgroundService;
+        public DailyUpdateJob(ILogger<DailyUpdateJob> logger, IClassBackgroundService classBackgroundService, ITransactionBackgroundService transactionBackgroundService, INotificationBackgroundService notificationBackgroundService, ITempEntityBackgroundService tempEntityBackgroundService)
         {
             _logger = logger;
             _classBackgroundService = classBackgroundService;
             _transactionBackgroundService = transactionBackgroundService;
             _notificationBackgroundService = notificationBackgroundService;
+            _tempEntityBackgroundService = tempEntityBackgroundService;
         }
 
         public async Task Execute(IJobExecutionContext context)

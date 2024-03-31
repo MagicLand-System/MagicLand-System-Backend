@@ -1,0 +1,142 @@
+﻿@page
+@model MagicLand_System_Web.Pages.ClassModel
+@{
+    ViewData["Title"] = "Class";
+    var Message = ViewData["Message"]?.ToString();
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #class {
+        background-color: lightblue;
+    }
+
+        #class .nav-link {
+            color: blue !important;
+        }
+
+        #class i.fa {
+            color: blue;
+        }
+</style>
+<div class="loader"></div>
+<section class="body-class">
+    <div class="text-center">
+        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Lớp Học Thuộc Ngẫu Nhiên Các Khóa Học</b></h6>
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-warning">
+                @Message
+            </div>
+        }
+
+        <div class="form-group">
+            <form method="post">
+                <label for="inputField">Nhập Số Lương: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <button type="submit" style="background-color: white; color: black">Xử Lý</button>
+            </form>
+        </div>
+
+        @if (Model.messages != null && Model.messages.Count() > 0)
+        {
+            <table class="table" style="margin-top: 17px">
+                <thead>
+                    <tr>
+                        <th>
+                            Thứ Tự
+                        </th>
+                        <th>
+                            Mã Lớp
+                        </th>
+                        <th>
+                            Thuộc Khóa
+                        </th>
+                        <th>
+                            Ngày Bắt Đầu
+                        </th>
+                        <th style="width: 200px">
+                            Thuộc Giáo Viên
+                        </th>
+                        <th style="width: 200px">
+                            Lịch Học
+                        </th>
+                        <th>
+                            Trạng Thái
+                        </th>
+                        <th style="width: 170px">
+                            Ghi Chú
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 0;
+                    }
+                    @foreach (var item in Model.messages)
+                    {
+                        {
+                            index++;
+                        }
+                        <tr>
+                            <td>
+                                @index
+                            </td>
+                            <td>
+                                @item.Item1
+                            </td>
+                            <td>
+                                @item.Item2
+                            </td>
+                            <td>
+                                @item.Item3
+                            </td>
+                            <td>
+                                @item.Item4
+                            </td>
+                            <td>
+                                <table style="border-collapse: collapse; border: none; width: 200px; text-align: center">
+
+                                    @for (int i = 0; i < item.Item5.Count(); i++)
+                                    {
+                                        if (i != 0)
+                                        {
+                                            <tbody style="border-top: 1px solid black;">
+                                                <tr>
+                                                    <td style="border: none">@item.Item5[i].Item1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border: none">@item.Item5[i].Item2</td>
+                                                </tr>
+                                            </tbody>
+                                        }
+                                        else
+                                        {
+                                            <tbody>
+                                                <tr>
+                                                    <td style="border: none">@item.Item5[i].Item1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border: none">@item.Item5[i].Item2</td>
+                                                </tr>
+                                            </tbody>
+                                        }
+                                    }
+                                </table>
+                            </td>
+                            <td>
+                                @item.Item6
+                            </td>
+                            <td>
+                                @item.Item7
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</section>

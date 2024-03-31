@@ -2,40 +2,43 @@
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 
 namespace MagicLand_System.Mappers.CustomMapper
 {
     public class CartCustomMapper
     {
-
         public static FavoriteResponse fromCartToFavoriteResponse(Guid cartId, List<CartItem> cartItems, List<Course> courses)
         {
             if (cartItems == null || !courses.Any() || cartId == default)
             {
                 return new FavoriteResponse();
             }
-            var favoriteItems = new List<FavoriteItemResponse>();
+            var FavoriteItems = new List<CourseResponse>();
 
-            foreach(var item in cartItems)
+            foreach (var item in cartItems)
             {
-                var favoriteItem = CartItemCustomMapper.fromCartItemToFavoriteItemResponse(courses.First(c => c.Id == item.CourseId), item.CourseId);
-                favoriteItems.Add(favoriteItem);
+                var favoriteItem = CourseCustomMapper.fromCourseToCourseResponse(courses.First(c => c.Id == item.CourseId));
+                favoriteItem.IsInCart = true;
+                favoriteItem.CartItemId = item.Id;
+
+                FavoriteItems.Add(favoriteItem);
             }
 
             var response = new FavoriteResponse
             {
                 CartId = cartId,
-                FavoriteItems = favoriteItems,
+                FavoriteItems = FavoriteItems,
             };
 
             return response;
         }
 
-        public static CartResponse fromCartToCartResponse(Cart cart, List<Student> students, List<ClassResExtraInfor> cls)
+        public static WishListResponse fromCartToWishListResponse(Cart cart, List<Student> students, List<ClassResExtraInfor> cls)
         {
             if (cart == null || cart.CartItems == null || cls == null)
             {
-                return new CartResponse();
+                return new WishListResponse();
             }
 
             // Leave Incase Error
@@ -71,10 +74,10 @@ namespace MagicLand_System.Mappers.CustomMapper
             //};
             #endregion
 
-            CartResponse response = new CartResponse
+            WishListResponse response = new WishListResponse
             {
                 CartId = cart.Id,
-                CartItems = cart.CartItems.Select(cts => CartItemCustomMapper.fromCartItemToCartItemResponse(
+                Items = cart.CartItems.Select(cts => CartItemCustomMapper.fromCartItemToCartItemResponse(
                 cts.Id,
                 cls.FirstOrDefault(cls => cls.ClassId == cts.ClassId)!,
                 cts.StudentInCarts.Select(sic => students.FirstOrDefault(stu => stu.Id == sic.StudentId))!)).ToList()

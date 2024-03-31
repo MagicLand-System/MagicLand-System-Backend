@@ -2,7 +2,9 @@
 {
     public class CourseDetailResponse
     {
+        public Guid Id { get; set; }
         public string? CourseName { get; set; } = "Undefined";
+        public string? SubjectCode { get; set; } = "Undefined";
         public string? MinAgeStudent { get; set; } = "Undefined";
         public string? MaxAgeStudent { get; set; } = "Undefined";
         public string? Subject { get; set; } = "Undefined";

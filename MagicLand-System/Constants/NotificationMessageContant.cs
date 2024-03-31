@@ -1,4 +1,6 @@
-﻿using MagicLand_System.Enums;
+﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.Utils;
 
 namespace MagicLand_System.Constants
@@ -8,6 +10,8 @@ namespace MagicLand_System.Constants
         public const string ChangeClassRequestTitle = "Học Sinh Cần Chuyển Lớp";
         public const string ChangeClassTitle = "Học Sinh Được Chuyển Lớp";
         public const string MakeUpAttendanceTitle = "Học Sinh Cần Điểm Danh Bù";
+        public const string MakeUpAttendanceLecturerTitle = "Nhắc Nhở Điểm Danh";
+        public const string MakeUpEvaluateLecturerTitle = "Nhắc Nhở Đánh Giá";
         public const string PaymentSuccessTitle = "Đăng Ký Lớp Học Thành Công";
         public const string TopUpSuccessTitle = "Nạp Tiền Vào Ví Thành Công";
         public const string TopUpFailedTitle = "Nạp Tiền Vào Ví Không Thành Thành Công";
@@ -15,6 +19,8 @@ namespace MagicLand_System.Constants
         public const string PaymentViaGatewayFailedTitle = "Thanh Toán Đăng Ký Lớp Học Không Thành Công";
         public const string RefundTitle = "Hoàn Tiền Từ Hệ Thống";
         public const string NoRefundTitle = "Không Hoàn Tiền Từ Hệ Thống";
+        public const string LastDayRegisterTitle = "Hạn Cuối Đăng Ký";
+        public const string RemindRegisterCourseTitle = "Nhanh Tay Đăng Ký Lớp Học";
 
 
         public static string ChangeClassRequestBody(string classCode, string studentName)
@@ -28,6 +34,14 @@ namespace MagicLand_System.Constants
         public static string MakeUpAttendanceBody(string classCode, string studentName, DateTime date)
         {
             return $"Học Sinh {studentName} Thuộc Lớp {classCode} Cần Được Điểm Danh Bù Vào Ngày {date}, Do Hệ Thống Không Nhận Thấy Trạng Thái Điểm Danh Của Bé";
+        }
+        public static string MakeUpAttendanceLecturerBody(Class cls, DateTime date, string slot)
+        {
+            return $"Bạn Có Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Điểm Danh. Vui Lòng Cập Nhập Điểm Danh";
+        }
+        public static string MakeUpEvaluateLecturerBody(Class cls, DateTime date, string slot)
+        {
+            return $"Bạn Có Một Số Học Sinh Ở Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Đánh Giá. Vui Lòng Cập Nhập Đánh Giá";
         }
         public static string PaymentSuccessBody(string classCode, string studentName)
         {
@@ -57,6 +71,16 @@ namespace MagicLand_System.Constants
         public static string NoRefundBody(string classCode, string money, string studentName)
         {
             return $"Hệ Thống Sẽ Không Hoàn Trả {money} Số Tiền Đăng Ký Lớp {classCode} Của Học Sinh {studentName} Đã Hủy Đăng Ký, Do Lớp Đã Bắt Đầu Và Số Buổi Học Còn Lại Của Bé Cũng Bị Hủy";
+        }
+
+        public static string LastDayRegisterBody(string classCode)
+        {
+            return $"Hôm Nay Là Hạn Cuối Đăng Ký Lớp Học {classCode}, Hãy Nhanh Tay Đăng Ký Cho Bé Vào Lớp, Lớp Sẽ Xóa Khỏi Giỏ Hàng Khi Hết Hạn";
+        }
+
+        public static string RemindRegisterCourseBody(string courseName)
+        {
+            return $"Khóa Học {courseName} Vẫn Đang Có Các Lớp Đang Mở Và Còn Thời Hạn Đăng Ký, Hãy Nhanh Tay Đăng Ký Cho Bé Vào Lớp";
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
@@ -6,12 +7,13 @@ using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -23,26 +25,83 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<LoginResponse> Authentication(LoginRequest loginRequest)
         {
-            var date = DateTime.Now;
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: u => u.Phone.Trim().Equals(loginRequest.Phone.Trim()), include: u => u.Include(u => u.Role));
+            //var date = DateTime.Now;
+            //var parts = loginRequest.Phone.Split("_");
+            //if (parts.Length == 1) 
+            //{
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: u => u.Phone!.Trim().Equals(loginRequest.Phone.Trim()),
+                include: u => u.Include(u => u.Role!));
+
+
             if (user == null)
             {
-                return null;
+                return default!;
             }
-            string Role = user.Role.Name;
+
+            if (user.Role!.Name == RoleEnum.STUDENT.ToString())
+            {
+                var isActive = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(
+                selector: x => x.IsActive,
+                predicate: x => x.Id == user.StudentIdAccount);
+
+                if (!isActive.Value)
+                {
+                    throw new BadHttpRequestException("Tài Khoản Đã Ngưng Hoạt Động", StatusCodes.Status400BadRequest);
+                }
+            }
+
             Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
             var token = JwtUtil.GenerateJwtToken(user, guidClaim);
-            LoginResponse loginResponse = new LoginResponse
+            var loginResponse = new LoginResponse
             {
-                Role = Role,
+                Role = user.Role!.Name,
                 AccessToken = token,
                 DateOfBirth = user.DateOfBirth,
-                Email = user.Email,
+                Email = user.Email != null ? user.Email : string.Empty,
                 FullName = user.FullName,
                 Gender = user.Gender,
-                Phone = user.Phone,
+                Phone = user.Phone!,
             };
             return loginResponse;
+            #region
+            //}
+            //if (parts.Length == 2)
+            //{
+            //    var parentPhone = parts[0];
+            //    var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : u => u.Phone.Trim().Equals(parentPhone));
+            //    var students = (await _unitOfWork.GetRepository<Student>().GetListAsync(predicate : x => x.ParentId.ToString().Equals(user.Id.ToString()),include : x => x.Include(x => x.User))).ToArray();
+            //    if(students != null && students.Length > 0)
+            //    { 
+            //       try
+            //        {
+            //            students = students.OrderBy(x => x.AddedTime).ToArray();
+            //            var order = int.Parse(parts[1]);
+            //            var student = students[order - 1];
+            //            string Role = RoleEnum.STUDENT.ToString();
+            //            Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", student.Id);
+            //            var token = JwtUtil.GenerateJwtToken(null,student, guidClaim);
+            //            LoginResponse loginResponse = new LoginResponse
+            //            {
+            //                Role = Role,
+            //                AccessToken = token,
+            //                DateOfBirth = student.DateOfBirth,
+            //                Email = student.Email,
+            //                FullName = student.FullName,
+            //                Gender = student.Gender,
+            //                Phone = parts[0] ,
+            //            };
+            //            return loginResponse;
+            //        } 
+            //        catch(Exception ex) { }
+            //        {
+            //            return null;
+            //        }
+            //    }
+            //    return null;
+            //}
+            //return null;
+            #endregion
         }
 
         public async Task<UserExistRespone> CheckUserExistByPhone(string phone)
@@ -50,10 +109,44 @@ namespace MagicLand_System.Services.Implements
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phone.Trim()), include: x => x.Include(x => x.Role));
             if (user == null)
             {
+                #region
+                //var parts = phone.Split('_');
+                //if (parts.Length == 2)
+                //{
+                //    var phoneInput = parts[0];
+                //    var userFound = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Trim().Equals(phoneInput.Trim()), include: x => x.Include(x => x.Role).Include(x => x.Students));
+                //    try
+                //    {
+                //        var count = int.Parse(parts[1].Trim());
+                //        if (count - 1 > userFound.Students.Count)
+                //        {
+                //            return new UserExistRespone
+                //            {
+                //                IsExist = false,
+                //            };
+                //        }
+                //        else
+                //        {
+                //            return new UserExistRespone
+                //            {
+                //                IsExist = true,
+                //                Role = "student",
+                //            };
+                //        }
+
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        return new UserExistRespone
+                //        {
+                //            IsExist = false,
+                //        };
+                //    }
+                //}
+                #endregion
                 return new UserExistRespone
                 {
                     IsExist = false,
-                    Role = user.Role.Name,
                 };
             }
             return new UserExistRespone
@@ -83,7 +176,12 @@ namespace MagicLand_System.Services.Implements
                 return null;
             }
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse(userId), include: u => u.Include(u => u.Role));
-            Tuple<string, Guid> guidClaim = new Tuple<string, Guid>("userId", user.Id);
+            Tuple<string, Guid> guidClaim = null;
+
+            if (user != null)
+            {
+                guidClaim = new Tuple<string, Guid>("userId", user.Id);
+            }
             var token = JwtUtil.GenerateJwtToken(user, guidClaim);
             return new NewTokenResponse { Token = token };
         }
@@ -136,7 +234,7 @@ namespace MagicLand_System.Services.Implements
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return true; //isSuccess;
         }
-        public async Task<List<LecturerResponse>> GetLecturers()
+        public async Task<List<LecturerResponse>> GetLecturers(FilterLecturerRequest? request)
         {
             var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
             if (users == null)
@@ -147,6 +245,19 @@ namespace MagicLand_System.Services.Implements
             List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
             foreach (var user in lecturers)
             {
+                var lecturerField = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(user.LecturerFieldId.ToString()), selector: x => x.Name);
+                var cls = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId.ToString().Equals(user.Id.ToString()));
+                var count = 0;
+                if (cls != null)
+                {
+                    count = cls.Count;
+                }
+                var schedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.SubLecturerId.ToString().Equals(user.Id.ToString()));
+                if (schedule != null)
+                {
+                    var sc = schedule.GroupBy(x => x.ClassId).ToList();
+                    count = count + sc.Count;
+                }
                 LecturerResponse response = new LecturerResponse
                 {
                     FullName = user.FullName,
@@ -156,13 +267,169 @@ namespace MagicLand_System.Services.Implements
                     Gender = user.Gender,
                     Phone = user.Phone,
                     LectureId = user.Id,
-                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()
+                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>(),
+                    LecturerField = lecturerField,
+                    NumberOfClassesTeaching = count,
                 };
                 lecturerResponses.Add(response);
             }
             if (lecturerResponses.Count == 0)
             {
                 return null;
+            }
+            if (request != null)
+            {
+                var type = "all";
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                if (course != null)
+                {
+                    if (course.Syllabus != null)
+                    {
+                        type = course.Syllabus.SyllabusCategory.Name;
+                    }
+                }
+                if (type.Equals("all"))
+                {
+                    lecturerResponses =  lecturerResponses;
+                }
+                else
+                {
+                    lecturerResponses = lecturerResponses.Where(x => x.LecturerField.Equals(type)).ToList();
+                }
+                if (request.Schedules != null && request.StartDate != null && request.CourseId != null)
+                {
+                    List<ScheduleRequest> scheduleRequests = request.Schedules;
+                    List<string> daysOfWeek = new List<string>();
+                    foreach (ScheduleRequest scheduleRequest in scheduleRequests)
+                    {
+                        daysOfWeek.Add(scheduleRequest.DateOfWeek);
+                    }
+                    List<DayOfWeek> convertedDateOfWeek = new List<DayOfWeek>();
+                    foreach (var dayOfWeek in daysOfWeek)
+                    {
+                        if (dayOfWeek.ToLower().Equals("sunday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Sunday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("monday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Monday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("tuesday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Tuesday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("wednesday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Wednesday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("thursday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Thursday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("friday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Friday);
+                        }
+                        if (dayOfWeek.ToLower().Equals("saturday"))
+                        {
+                            convertedDateOfWeek.Add(DayOfWeek.Saturday);
+                        }
+                    }
+                    var coursex = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.CourseId.ToString()));
+                    if (coursex == null)
+                    {
+                        throw new BadHttpRequestException("không thấy lớp hợp lệ", StatusCodes.Status400BadRequest);
+                    }
+                    int numberOfSessions = coursex.NumberOfSession;
+                    int scheduleAdded = 0;
+                    DateTime startDatex = request.StartDate.Value;
+                    while (scheduleAdded < numberOfSessions)
+                    {
+                        if (convertedDateOfWeek.Contains(startDatex.DayOfWeek))
+                        {
+
+                            scheduleAdded++;
+                        }
+                        startDatex = startDatex.AddDays(1);
+                    }
+                    var endDate = startDatex;
+                    List<ScheduleRequest> schedules = request.Schedules;
+                    List<ConvertScheduleRequest> convertSchedule = new List<ConvertScheduleRequest>();
+                    foreach (var schedule in schedules)
+                    {
+                        var doW = 1;
+                        if (schedule.DateOfWeek.ToLower().Equals("sunday"))
+                        {
+                            doW = 1;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("monday"))
+                        {
+                            doW = 2;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("tuesday"))
+                        {
+                            doW = 4;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("wednesday"))
+                        {
+                            doW = 8;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("thursday"))
+                        {
+                            doW = 16;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("friday"))
+                        {
+                            doW = 32;
+                        }
+                        if (schedule.DateOfWeek.ToLower().Equals("saturday"))
+                        {
+                            doW = 64;
+                        }
+                        convertSchedule.Add(new ConvertScheduleRequest
+                        {
+                            DateOfWeek = doW,
+                            SlotId = schedule.SlotId,
+                        });
+                    }
+                    var allSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync();
+                    allSchedule = allSchedule.Where(x => (x.Date < endDate && x.Date >= request.StartDate)).ToList();
+                    List<Schedule> result = new List<Schedule>();
+                    foreach (var convert in convertSchedule)
+                    {
+                        var newFilter = allSchedule.Where(x => (x.DayOfWeek == convert.DateOfWeek && x.SlotId.ToString().Equals(convert.SlotId.ToString()))).ToList();
+                        if (newFilter != null)
+                        {
+                            result.AddRange(newFilter);
+                        }
+                    }
+                    List<Guid> classIds = new List<Guid>();
+                    List<Guid> subLecturerIds = new List<Guid>();
+                    if (result.Count > 0)
+                    {
+                        var groupByClass = result.GroupBy(x => x.ClassId);
+                        classIds = groupByClass.Select(x => x.Key).ToList();
+                        var groupBySubLecturer = result.Where(x => (x.SubLecturerId != null)).GroupBy(x => x.SubLecturerId.Value);
+                        subLecturerIds = groupBySubLecturer.Select(x => x.Key).ToList();
+                    }
+                    List<Guid> LecturerIds = new List<Guid>();
+                    foreach (var classId in classIds)
+                    {
+                        LecturerIds.Add(await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()), selector: x => x.LecturerId));
+                    }
+                    LecturerIds.AddRange(subLecturerIds);
+                    List<LecturerResponse> final = new List<LecturerResponse>();
+                    foreach (var res in lecturerResponses)
+                    {
+                        if (!LecturerIds.Contains(res.LectureId))
+                        {
+                            final.Add(res);
+                        }
+                    }
+                    return final;
+                }
+
             }
             return lecturerResponses;
         }
@@ -171,8 +438,12 @@ namespace MagicLand_System.Services.Implements
         {
             try
             {
-                var currentUser = await GetUserFromJwt();
-
+                var id = GetUserIdFromJwt();
+                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
+                if (currentUser == null)
+                {
+                    throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng, Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Thao Tác", StatusCodes.Status400BadRequest);
+                }
                 if (request.FullName != null)
                 {
                     await UpdateCurrentUserTransaction(request, currentUser);
@@ -219,21 +490,88 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<LectureScheduleResponse>> GetLectureScheduleAsync()
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
-                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!)
-                .Include(x => x.Schedules).ThenInclude(sc => sc.Room!));
+                include: x => x.Include(x => x.Course!));
 
+            foreach (var cls in classes)
+            {
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
+            }
             if (!classes.Any())
             {
                 throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);
             }
 
             var responses = new List<LectureScheduleResponse>();
-            foreach(var cls in classes)
+            foreach (var cls in classes)
             {
                 responses.AddRange(ScheduleCustomMapper.fromClassToListLectureScheduleResponse(cls));
             }
 
             return responses;
+        }
+
+        public async Task<List<AdminLecturerResponse>> GetAdminLecturerResponses(DateTime? startDate, DateTime? endDate, string? searchString,string? slotId)
+        {
+            var user = await _unitOfWork.GetRepository<User>().GetListAsync(include : x => x.Include(x => x.Role).Include(x => x.LecturerField));
+            var lecturers = user.Where(x => x.Role.Name.ToLower().Equals("lecturer"));
+            List<AdminLecturerResponse> adminLecturerResponses = new List<AdminLecturerResponse>();
+            foreach (var lecturer in lecturers)
+            {
+                List<Schedule> mySchedule = new List<Schedule>();
+                var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Class).Include(x => x.Room).Include(x => x.Slot));
+                var filterSchedules2 = schedules.Where(x => x.Class.LecturerId.ToString().Equals(lecturer.Id.ToString()));
+                mySchedule.AddRange(filterSchedules2);
+                if(mySchedule.Count > 0)
+                {
+                    foreach (var schedule in mySchedule)
+                    {
+                        var adminResponse = new AdminLecturerResponse
+                        {
+                            Address = lecturer.Address,
+                            AvatarImage = lecturer.AvatarImage,
+                            ClassCode = schedule.Class.ClassCode,
+                            ClassRoom = schedule.Room.Name,
+                            Date = schedule.Date,
+                            DateOfBirth = lecturer.DateOfBirth,
+                            Email = lecturer.Email,
+                            StartTime = schedule.Slot.StartTime,
+                            EndTime = schedule.Slot.EndTime,
+                            FullName = lecturer.FullName,
+                            Gender = lecturer.Gender,
+                            LecturerField = lecturer.LecturerField.Name,
+                            Phone = lecturer.Phone
+                        };
+                        adminLecturerResponses.Add(adminResponse);
+
+                    }
+                }
+            }
+            if (adminLecturerResponses.Count > 0)
+            {
+                if (startDate != null)
+                {
+                    adminLecturerResponses = adminLecturerResponses.Where(x => x.Date >= startDate).ToList();
+                }
+                if (endDate != null)
+                {
+                    adminLecturerResponses = adminLecturerResponses.Where(x => x.Date <= endDate.Value.AddHours(23)).ToList();
+                }
+                if (searchString != null)
+                {
+                    adminLecturerResponses = adminLecturerResponses.Where(x => (x.LecturerField.ToLower().Trim().Contains(searchString.ToLower().Trim()) || x.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim()) || x.Phone.Trim().ToLower().Contains(searchString.ToLower().Trim()))).ToList();
+                }
+                if (slotId != null)
+                {
+                    var startTime = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(slotId), selector: x => x.StartTime);
+                    adminLecturerResponses = adminLecturerResponses.Where(x => x.StartTime.Equals(startTime)).ToList();
+                }
+                adminLecturerResponses = adminLecturerResponses.OrderByDescending(x => x.Date).ThenBy(x => x.FullName).ToList();
+            }
+            return adminLecturerResponses;
+
         }
     }
 }

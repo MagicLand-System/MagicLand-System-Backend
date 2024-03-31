@@ -13,11 +13,12 @@ namespace MagicLand_System.Domain.Models
         public bool? IsPresent { get; set; } = default;
         public bool? IsPublic { get; set; } = false;
         public bool? IsValid { get; set; } = true;
+        public string? Note { get; set; } = string.Empty;
 
 
         [ForeignKey("Student")]
         public Guid StudentId { get; set; }
-        public Student? Student { get; set; } 
+        public Student? Student { get; set; }
 
         [ForeignKey("Schedule")]
         public Guid ScheduleId { get; set; }

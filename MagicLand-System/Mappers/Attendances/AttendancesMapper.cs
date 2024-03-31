@@ -24,7 +24,8 @@ namespace MagicLand_System.Mappers.Attendances
             CreateMap<Attendance, AttendanceResponse>()
                .ForMember(dest => dest.StudentId, opt => opt.MapFrom(src => src.StudentId))
                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student!.FullName))
-               .ForMember(dest => dest.IsPresent, opt => opt.MapFrom(src => src.IsPresent));
+               .ForMember(dest => dest.IsPresent, opt => opt.MapFrom(src => src.IsPresent))
+               .ForMember(dest => dest.Note, opt => opt.MapFrom(src => src.Note));
         }
     }
 }

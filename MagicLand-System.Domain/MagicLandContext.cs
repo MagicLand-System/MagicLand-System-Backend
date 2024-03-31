@@ -1,4 +1,6 @@
-﻿ using MagicLand_System.Domain.Models;
+﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Domain.Models.TempEntity.Class;
+using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -23,24 +25,40 @@ namespace MagicLand_System.Domain
         public DbSet<Class> Classes { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<Course> Courses { get; set; }
-        public DbSet<CoursePrerequisite> CoursePrerequisites { get; set; }
+        public DbSet<SyllabusPrerequisite> SyllabusPrerequisites { get; set; }
         public DbSet<Slot> Slots { get; set; }
         public DbSet<Schedule> Sessions { get; set; }
         public DbSet<Room> Rooms { get; set; }
-        public DbSet<CourseCategory> CourseCategories { get; set; }
-        public DbSet<CourseSyllabus> CourseSyllabuses { get; set; }
+        public DbSet<SyllabusCategory> SyllabusCategories { get; set; }
+        public DbSet<Syllabus> Syllabuses { get; set; }
         public DbSet<SubDescriptionTitle> SubDescriptionTitles { get; set; }
         public DbSet<SubDescriptionContent> SubDescriptionContents { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<SessionDescription> SessionDescriptions { get; set; }
-        public DbSet<Material> Materials { get; set; }  
-        public DbSet<ExamSyllabus> ExamSyllabuses { get; set; }  
+        public DbSet<Material> Materials { get; set; }
+        public DbSet<ExamSyllabus> ExamSyllabuses { get; set; }
         public DbSet<QuestionPackage> QuestionPackages { get; set; }
         public DbSet<Question> Questions { get; set; }
-        public DbSet<MutipleChoiceAnswer> MutipleChoiceAnswers { get; set; }
-        public DbSet<FlashCard> FlashCards { get; set; }    
-        public DbSet<SideFlashCard> SideFlashCards { get; set; }    
+        public DbSet<MultipleChoice> MultipleChoice { get; set; }
+        public DbSet<FlashCard> FlashCards { get; set; }
+        public DbSet<SideFlashCard> SideFlashCards { get; set; }
+        public DbSet<LecturerField> LecturerFields { get; set; }
+        public DbSet<Evaluate> Evaluates { get; set; }
+        public DbSet<TestResult> TestResults { get; set; }
+        public DbSet<ExamQuestion> examQuestions { get; set; }
+        public DbSet<MultipleChoiceAnswer> MultipleChoiceAnswers { get; set; }
+        public DbSet<FlashCardAnswer> FlashCardAnswers { get; set; }
+        public DbSet<CoursePrice> CoursePrices { get; set; }
+        /// <summary>
+        /// Temp Entity
+        /// </summary>
+        public DbSet<TempQuiz> tempQuizzes { get; set; }
+        public DbSet<TempQuestion> TempQuestions { get; set; }
+        public DbSet<TempMCAnswer> TempMCAnswers { get; set; }
+        public DbSet<TempFCAnswer> TempFCAnswers { get; set; }
+        public DbSet<TempQuizTime> TempQuizTimes { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -68,6 +86,7 @@ namespace MagicLand_System.Domain
                 entity.Property(entity => entity.FullName).HasMaxLength(255);
                 entity.Property(e => e.DateOfBirth).HasDefaultValueSql("getutcdate()");
                 entity.HasOne(e => e.Role).WithMany(r => r.Accounts).HasForeignKey(e => e.RoleId).HasConstraintName("FK_USER_ROLE");
+                entity.HasOne(e => e.LecturerField).WithMany(e => e.Users).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Role>(entity =>
             {
@@ -99,7 +118,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Class");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Lecture).WithMany(e => e.Classes).HasForeignKey(entity => entity.LecturerId);
-                entity.HasOne(e => e.Course).WithMany(r => r.Classes).HasForeignKey(e => e.CourseId);
+                entity.HasOne(e => e.Course).WithMany(r => r.Classes).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
                 entity.Property(e => e.StartDate).HasDefaultValueSql("getutcdate()");
                 entity.Property(e => e.EndDate).HasDefaultValueSql("getutcdate()");
             });
@@ -108,7 +127,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("StudentClass");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Class).WithMany(e => e.StudentClasses).HasForeignKey(e => e.ClassId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Class).WithMany(e => e.StudentClasses).HasForeignKey(e => e.ClassId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.Student).WithMany(e => e.StudentClasses).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -116,14 +135,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Course");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.CourseCategory).WithMany(e => e.Courses).HasForeignKey(e => e.CourseCategoryId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.CourseSyllabus).WithOne(e => e.Course).HasForeignKey<CourseSyllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
-            });
-            modelBuilder.Entity<CoursePrerequisite>(entity =>
-            {
-                entity.ToTable("CoursePrerequisite");
-                entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Course).WithMany(e => e.CoursePrerequisites).HasForeignKey(e => e.CurrentCourseId);
+                entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<PersonalWallet>(entity =>
             {
@@ -149,7 +161,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Schedule");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Class).WithMany(e => e.Schedules).HasForeignKey(e => e.ClassId);
+                entity.HasOne(e => e.Class).WithMany(e => e.Schedules).HasForeignKey(e => e.ClassId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.Room).WithMany(e => e.Schedules).HasForeignKey(e => e.RoomId);
                 entity.HasOne(e => e.Slot).WithMany(e => e.Schedules).HasForeignKey(e => e.SlotId);
 
@@ -166,71 +178,47 @@ namespace MagicLand_System.Domain
                 entity.HasOne(e => e.User).WithMany(e => e.Students).HasForeignKey(e => e.ParentId);
 
             });
-            modelBuilder.Entity<CourseCategory>(entity =>
+            modelBuilder.Entity<SyllabusCategory>(entity =>
             {
-                entity.ToTable("CourseCategory");
+                entity.ToTable("SyllabusCategory");
                 entity.HasKey(entity => entity.Id);
             });
             modelBuilder.Entity<SubDescriptionTitle>(entity =>
             {
                 entity.ToTable("SubDescriptionTitle");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Course).WithMany(e => e.SubDescriptionTitles).HasForeignKey(e => e.CourseId);
+                entity.HasOne(e => e.Course).WithMany(e => e.SubDescriptionTitles).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<SubDescriptionContent>(entity =>
             {
                 entity.ToTable("SubDescriptionContent");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.SubDescriptionTitle).WithMany(e => e.SubDescriptionContents).HasForeignKey(e => e.SubDescriptionTitleId);
+                entity.HasOne(e => e.SubDescriptionTitle).WithMany(e => e.SubDescriptionContents).HasForeignKey(e => e.SubDescriptionTitleId).OnDelete(DeleteBehavior.Cascade);
             });
-            modelBuilder.Entity<CourseSyllabus>(entity =>
+            modelBuilder.Entity<Syllabus>(entity =>
             {
-                entity.ToTable("CourseSyllabus");
+                entity.ToTable("Syllabus");
                 entity.HasKey(entity => entity.Id);
+                entity.HasOne(entity => entity.SyllabusCategory).WithMany(e => e.Syllabuses).HasForeignKey(e => e.SyllabusCategoryId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<SyllabusPrerequisite>(entity =>
+            {
+                entity.ToTable("SyllabusPrerequisite");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Syllabus).WithMany(e => e.SyllabusPrerequisites).HasForeignKey(e => e.CurrentSyllabusId);
             });
             modelBuilder.Entity<Topic>(entity =>
             {
                 entity.ToTable("Topic");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.Topics).HasForeignKey(e => e.CourseSyllabusId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Syllabus).WithMany(e => e.Topics).HasForeignKey(e => e.SyllabusId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<Session>(entity =>
             {
                 entity.ToTable("Session");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Topic).WithMany(e => e.Sessions).HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.QuestionPackage).WithOne(e => e.Session).HasForeignKey<QuestionPackage>(e => e.SessionId).OnDelete(DeleteBehavior.Cascade);
-            });
-            modelBuilder.Entity<Attendance>(entity =>
-            {
-                entity.ToTable("Attendance");
-                entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(e => e.Student).WithMany(e => e.Attendances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
-            });
-            modelBuilder.Entity<Notification>(entity =>
-            {
-                entity.ToTable("Notification");
-                entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.TargetUser).WithMany(e => e.Notifications).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
-            });
-            modelBuilder.Entity<SessionDescription>(entity => 
-            {
-                entity.ToTable("SessionDescription");
-                entity.HasKey(e => e.Id);
-                entity.HasOne(x => x.Session).WithMany(e => e.SessionDescriptions).OnDelete(DeleteBehavior.Cascade);   
-            });
-            modelBuilder.Entity<Material>(entity =>
-            {
-                entity.ToTable("Material");
-                entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.Materials).OnDelete(DeleteBehavior.Cascade);
-            });
-            modelBuilder.Entity<ExamSyllabus>(entity =>
-            {
-                entity.ToTable("ExamSyllabus");
-                entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.CourseSyllabus).WithMany(e => e.ExamSyllabuses).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.QuestionPackage).WithOne(e => e.Session).HasForeignKey<QuestionPackage>(e => e.SessionId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<QuestionPackage>(entity =>
             {
@@ -238,28 +226,135 @@ namespace MagicLand_System.Domain
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<Session>(e => e.QuestionPackageId).OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<Attendance>(entity =>
+            {
+                entity.ToTable("Attendance");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Attendances).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany(e => e.Attendances).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<Evaluate>(entity =>
+            {
+                entity.ToTable("Evaluate");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.Schedule).WithMany(e => e.Evaluates).HasForeignKey(e => e.ScheduleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Student).WithMany(e => e.Evaluates).HasForeignKey(e => e.StudentId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("Notification");
+                entity.HasKey(entity => entity.Id);
+                entity.HasOne(e => e.TargetUser).WithMany(e => e.Notifications).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<SessionDescription>(entity =>
+            {
+                entity.ToTable("SessionDescription");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(x => x.Session).WithMany(e => e.SessionDescriptions).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<Material>(entity =>
+            {
+                entity.ToTable("Material");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Syllabus).WithMany(e => e.Materials).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<ExamSyllabus>(entity =>
+            {
+                entity.ToTable("ExamSyllabus");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Syllabus).WithMany(e => e.ExamSyllabuses).OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<Question>(entity =>
             {
                 entity.ToTable("Question");
                 entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.QuestionPackage).WithMany(e => e.Questions).HasForeignKey(e => e.QuestionPacketId).OnDelete(DeleteBehavior.Cascade);
             });
-            modelBuilder.Entity<MutipleChoiceAnswer>(entity =>
+            modelBuilder.Entity<MultipleChoice>(entity =>
             {
-                entity.ToTable("MutipleChoiceAnswer");
+                entity.ToTable("MultipleChoice");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Question).WithMany(e => e.MutipleChoiceAnswers).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Question).WithMany(e => e.MutipleChoices).HasForeignKey(e => e.QuestionId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<FlashCard>(entity =>
             {
                 entity.ToTable("FlashCard");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Question).WithMany(e => e.FlashCards).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Question).WithMany(e => e.FlashCards).HasForeignKey(e => e.QuestionId).OnDelete(DeleteBehavior.Cascade);
+
             });
             modelBuilder.Entity<SideFlashCard>(entity =>
             {
                 entity.ToTable($"{nameof(SideFlashCard)}");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.FlashCard).WithMany(e => e.SideFlashCards).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.FlashCard).WithMany(e => e.SideFlashCards).HasForeignKey(e => e.FlashCardId).OnDelete(DeleteBehavior.Cascade);
+
+            });
+            modelBuilder.Entity<LecturerField>(entity =>
+            {
+                entity.ToTable("LecturerField");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<TestResult>(entity =>
+            {
+                entity.ToTable("TestResult");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.StudentClass).WithMany(e => e.TestResults).HasForeignKey(e => e.StudentClassId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<ExamQuestion>(entity =>
+            {
+                entity.ToTable("ExamQuestion");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TestResult).WithMany(e => e.ExamQuestions).HasForeignKey(e => e.TestResultId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.MultipleChoiceAnswer).WithOne(e => e.ExamQuestion).HasForeignKey<MultipleChoiceAnswer>(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Restrict);
+
+            });
+            modelBuilder.Entity<MultipleChoiceAnswer>(entity =>
+            {
+                entity.ToTable("MultipleChoiceAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.ExamQuestion).WithOne(e => e.MultipleChoiceAnswer).HasForeignKey<ExamQuestion>(e => e.MultipleChoiceAnswerId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<FlashCardAnswer>(entity =>
+            {
+                entity.ToTable("FlashCardAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.ExamQuestion).WithMany(e => e.FlashCardAnswers).HasForeignKey(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempQuiz>(entity =>
+            {
+                entity.ToTable("TempQuiz");
+                entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<TempQuestion>(entity =>
+            {
+                entity.ToTable("TempQuestion");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TempQuiz).WithMany(e => e.Questions).HasForeignKey(e => e.TempQuizId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempMCAnswer>(entity =>
+            {
+                entity.ToTable("TempMCAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TempQuestion).WithMany(e => e.MCAnswers).HasForeignKey(e => e.TempQuestionId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempFCAnswer>(entity =>
+            {
+                entity.ToTable("TempFCAnswer");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.TempQuestion).WithMany(e => e.FCAnswers).HasForeignKey(e => e.TempQuestionId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<CoursePrice>(entity =>
+            {
+                entity.ToTable("CoursePrice");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Course).WithMany(e => e.CoursePrices).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<TempQuizTime>(entity =>
+            {
+                entity.ToTable("TempQuizTime");
+                entity.HasKey(e => e.Id);
             });
         }
     }

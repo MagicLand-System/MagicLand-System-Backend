@@ -1,8 +1,11 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -27,7 +30,24 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetCourses()
         {
-            var courses = await _courseService.GetCoursesAsync();
+            var courses = await _courseService.GetCoursesAsync(false);
+            return Ok(courses);
+        }
+        #region document API Get Courses Statisfy
+        /// <summary>
+        ///  Truy Suất Các Khóa Học Có Lớp Có Thể Đăng Ký
+        /// </summary>
+        /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllValid)]
+        [ProducesResponseType(typeof(CourseResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> GetCoursesValid()
+        {
+            var courses = await _courseService.GetCoursesAsync(true);
             return Ok(courses);
         }
 
@@ -52,9 +72,8 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
-            List<PayLoad.Response.Courses.CourseResExtraInfor> courseResExtraInfors = await _courseService.SearchCourseByNameOrAddedDateAsync(keyWord);
-            var courses = courseResExtraInfors;
-            return Ok(courses);
+            var responses = await _courseService.SearchCourseByNameOrAddedDateAsync(keyWord);
+            return Ok(responses);
         }
 
 
@@ -129,6 +148,25 @@ namespace MagicLand_System.Controllers
             var courses = await _courseService.FilterCourseAsync(minYearsOld, maxYearsOld, minNumberSession, maxNumberSession, minPrice, maxPrice, subject, rate);
             return Ok(courses);
         }
+
+        #region document API Get Current Student Course
+        /// <summary>
+        ///  Truy Suất Các Khóa Học Của Học Sinh Hiện Tại
+        /// </summary>
+        /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCurrentStudentCourses)]
+        [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "STUDENT")]
+        public async Task<IActionResult> GetCurrentStudentCourses()
+        {
+            var courses = await _courseService.GetCurrentStudentCoursesAsync();
+            return Ok(courses);
+        }
+
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseCategory)]
         public async Task<IActionResult> GetCourseCategory()
         {
@@ -139,6 +177,24 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> InsertCourseInformation([FromBody] CreateCourseRequest request)
         {
             var isSuccess = await _courseService.AddCourseInformation(request);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseByStaff)]
+        public async Task<IActionResult> GetCourseByStaff(string? id)
+        {
+            var isSuccess = await _courseService.GetStaffCourseByCourseId(id);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCoursePrice)]
+        public async Task<IActionResult> GetCoursePrice(string? courseId)
+        {
+            var isSuccess = await _courseService.GetCoursePrices(courseId);
+            return Ok(isSuccess);
+        }
+        [HttpPost(ApiEndpointConstant.CourseEnpoint.AddPrice)]
+        public async Task<IActionResult> CreateNewPrice(CoursePriceRequest request)
+        {
+            var isSuccess = await _courseService.GenerateCoursePrice(request);
             return Ok(isSuccess);
         }
     }

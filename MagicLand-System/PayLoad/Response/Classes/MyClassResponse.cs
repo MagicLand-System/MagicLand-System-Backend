@@ -1,4 +1,5 @@
-﻿using MagicLand_System.PayLoad.Response.Rooms;
+﻿using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Users;
 
@@ -12,5 +13,6 @@ namespace MagicLand_System.PayLoad.Response.Classes
         public RoomResponse? RoomResponse { get; set; }
         public LecturerResponse? LecturerResponse { get; set; }
         public DateTime CreatedDate { get; set; }
+        public CustomCourseResponse CourseResponse { get; set; }    
     }
 }

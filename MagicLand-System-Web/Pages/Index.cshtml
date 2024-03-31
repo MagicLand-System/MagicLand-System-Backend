@@ -1,0 +1,133 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Syllabus";
+    var Message = ViewData["Message"]?.ToString();
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #syllabus {
+        background-color: lightblue;
+    }
+
+        #syllabus .nav-link {
+            color: blue !important;
+        }
+
+        #syllabus i.fa {
+            color: blue;
+        }
+</style>
+
+<section class="body-class">
+    <div class="text-center">
+        <p class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Hàng Loạt Giáo Trình</b></p>
+
+        <div class="form-group" onsubmit="return setLoader()">
+            <form method="post">
+                <label for="inputField">Nhập Số Lương: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+            </form>
+        </div>
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-warning" style="margin-left: auto; width: 75%;">
+                @Message
+            </div>
+        }
+
+        @if (Model.IsLoading)
+        {
+            <script>
+                setLoader();
+            </script>
+        }
+
+        <div class="form-loader" id="loaderContainer" style="text-align: center; display:none;">
+            <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
+            <div style="margin-left: 29%;">Now Progressing...</div>
+        </div>
+
+
+
+        @if (Model.messages != null && Model.messages.Count() > 0)
+        {
+            <table class="table" style="margin-top: 17px; width: 73%">
+                <thead>
+                    <tr>
+                        <th>
+                            Thứ Tự
+                        </th>
+                        <th>
+                            Tên Giáo Trình
+                        </th>
+                        <th>
+                            Mã Giáo Trình
+                        </th>
+                        <th>
+                            Trạng Thái
+                        </th>
+                        <th style="width: 170px">
+                            Ghi Chú
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 0;
+                    }
+                    @foreach (var item in Model.messages)
+                    {
+                        {
+                            index++;
+                        }
+                        <tr>
+                            <td>
+                                @index
+                            </td>
+                            <td>
+                                @item.Item1
+                            </td>
+                            <td>
+                                @item.Item2
+                            </td>
+                            <td>
+                                @item.Item3
+                            </td>
+                            <td>
+                                @item.Item4
+                            </td>
+                 
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</section>
+
+<script>
+    function setLoader() {
+        var loaderContainer = document.getElementById("loaderContainer");
+        var buttonSubmit = document.getElementById("button-submit");
+        if (loaderContainer.style.display === "none") {
+            loaderContainer.style.display = "block";
+            buttonSubmit.style.opacity = "0.5";
+            buttonSubmit.disabled = true;
+            return true;
+        } else {
+            loaderContainer.style.display = "none";
+        }
+
+        if (@Model.IsLoading) {
+            buttonSubmit.style.opacity = "1";
+            buttonSubmit.disabled = false;
+        }
+    }
+</script>

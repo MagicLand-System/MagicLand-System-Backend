@@ -5,14 +5,16 @@ namespace MagicLand_System.PayLoad.Request.Student
     public class UpdateStudentRequest 
     {
         public required Guid StudentId { get; set; }
-        [RegularExpression("^[A-Z][a-z]*( [A-Z][a-z]*)*$", ErrorMessage = "FullName Cần Phải Viết Hoa Đầu Mỗi Ký Chữ")]
+        [Required(ErrorMessage = "Tên Bé Không Được Để Trống")]
+        [MaxLength(50, ErrorMessage = "Tên Bé Không Nên Vượt Quá 50 Ký Tự")]
+        [MinLength(5, ErrorMessage = "Tên Bé Nên Có Ít Nhất 5 Ký Tự")]
         public string? FullName { get; set; }
         [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; } = default;
         public string? Gender { get; set; }
         public string? AvatarImage { get; set; }
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Email Phải Chứa Ký Tự '@'")]
-        public string? Email { get; set; }
+        //[EmailAddress(ErrorMessage = "Định Dạng Email Không Hợp Lệ")]
+        //public string? Email { get; set; }
 
     }
 }

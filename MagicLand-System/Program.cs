@@ -106,6 +106,7 @@ builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
@@ -117,17 +118,19 @@ builder.Services.AddScoped<ISyllabusService, SyllabusService>();
 var quartzJobs = builder.Configuration.GetSection("QuartzJobs").GetChildren();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Services.AddScoped<IClassBackroundService, ClassBackgroundService>();
+builder.Services.AddScoped<IClassBackgroundService, ClassBackgroundService>();
 builder.Services.AddScoped<ITransactionBackgroundService, TransactionBackgroundService>();
 builder.Services.AddScoped<INotificationBackgroundService, NotificationBackgroundService>();
+builder.Services.AddScoped<ITempEntityBackgroundService, TempEntityBackgroundService>();
 builder.Services.AddHostedService<QuartzScheduler>();
 builder.Services.AddSingleton<IJobFactory, JobFactoryService>();
 builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 builder.Services.AddScoped<DailyUpdateJob>();
 builder.Services.AddScoped<DailyCreateJob>();
+builder.Services.AddScoped<DailyDeleteJob>();
 builder.Services.AddSingleton(new Job(type: typeof(DailyUpdateJob), expression: DetermineCronExpression(quartzJobs, "DailyUpdateJob")));
 builder.Services.AddSingleton(new Job(type: typeof(DailyCreateJob), expression: DetermineCronExpression(quartzJobs, "DailyCreateJob")));
-
+builder.Services.AddSingleton(new Job(type: typeof(DailyDeleteJob), expression: DetermineCronExpression(quartzJobs, "DailyDeleteJob")));
 
 var app = builder.Build();
 
