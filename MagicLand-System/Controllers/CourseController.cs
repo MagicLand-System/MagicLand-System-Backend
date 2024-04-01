@@ -203,5 +203,11 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _courseService.GetCourseResponse(categoryIds,searchString,minAge,MaxAge);
             return Ok(isSuccess);
         }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseClassStaff)]
+        public async Task<IActionResult> GetCourseClassStaff(string courseId)
+        {
+            var isSuccess = await _courseService.GetClassesOfCourse(courseId);
+            return Ok(isSuccess);
+        }
     }
 }

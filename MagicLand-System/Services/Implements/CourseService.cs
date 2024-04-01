@@ -6,8 +6,12 @@ using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Courses.Custom;
+using MagicLand_System.PayLoad.Response.Rooms;
+using MagicLand_System.PayLoad.Response.Schedules;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -718,6 +722,165 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             return result;
+        }
+
+        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId)
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId) && x.Status.Equals("UPCOMING"),include: x => x.Include(x => x.Schedules));
+            List<MyClassResponse> result = new List<MyClassResponse>();
+            var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
+            foreach (var c in classes)
+            {
+                var schedulex = (await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == c.Id)).FirstOrDefault();
+                if (schedulex == null) { continue; }
+                var room = (await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == schedulex.RoomId));
+                if (room == null) { continue; }
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.LecturerId.ToString()));
+                if (lecturer == null) { continue; }
+                RoomResponse roomResponse = new RoomResponse
+                {
+                    Floor = room.Floor.Value,
+                    Capacity = room.Capacity,
+                    RoomId = room.Id,
+                    Name = room.Name,
+                    Status = room.Status,
+                    LinkUrl = room.LinkURL,
+
+                };
+                LecturerResponse lecturerResponse = new LecturerResponse
+                {
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    Email = lecturer.Email,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    LectureId = lecturer.Id,
+                    Phone = lecturer.Phone,
+                };
+                List<DailySchedule> schedules = new List<DailySchedule>();
+                var DaysOfWeek = c.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
+                foreach (var day in DaysOfWeek)
+                {
+                    var slot = slots.Where(x => x.Id.ToString().ToLower().Equals(day.SlotId.ToString().ToLower())).FirstOrDefault();
+                    if (day.DayOfWeek == 1)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Sunday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 2)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Monday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 4)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Tuesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 8)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Wednesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 16)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Thursday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 32)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Friday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 64)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Saturday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                }
+                Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                MyClassResponse myClassResponse = new MyClassResponse
+                {
+                    ClassId = c.Id,
+                    LimitNumberStudent = c.LimitNumberStudent,
+                    ClassCode = c.ClassCode,
+                    LecturerName = lecturer.FullName,
+                    CoursePrice = await GetDynamicPrice(course.Id, false),
+                    EndDate = c.EndDate,
+                    CourseId = c.CourseId,
+                    Image = c.Image,
+                    LeastNumberStudent = c.LeastNumberStudent,
+                    Method = c.Method,
+                    StartDate = c.StartDate,
+                    Status = c.Status,
+                    Video = c.Video,
+                    NumberStudentRegistered = studentList.Count,
+                    Schedules = schedules,
+                    CourseName = course.Name,
+                    LecturerResponse = lecturerResponse,
+                    RoomResponse = roomResponse,
+                    CreatedDate = c.AddedDate.Value,
+                };
+                var syllabusCode = "undefined";
+                var syllabusName = "undefined";
+                var syllabusType = "undefined";
+                if (course.Syllabus != null)
+                {
+                    syllabusCode = course.Syllabus.SubjectCode;
+                    syllabusName = course.Syllabus.Name;
+                    syllabusType = course.Syllabus.SyllabusCategory.Name;
+                }
+                CustomCourseResponse customCourseResponse = new CustomCourseResponse
+                {
+                    Image = course.Image,
+                    MainDescription = course.MainDescription,
+                    MaxYearOldsStudent = course.MaxYearOldsStudent,
+                    MinYearOldsStudent = course.MinYearOldsStudent,
+                    Name = course.Name,
+                    Price = await GetDynamicPrice(course.Id,false),
+                    SyllabusCode = syllabusCode,
+                    SyllabusName = syllabusName,
+                    SyllabusType = syllabusType,
+                    Status = course.Status
+                };
+                myClassResponse.CourseResponse = customCourseResponse;
+                result.Add(myClassResponse);
+            }
+            if(result.Count == 0)
+            {
+                return result;
+            }
+            return result;
+
         }
         #endregion
     }
