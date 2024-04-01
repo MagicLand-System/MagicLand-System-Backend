@@ -573,5 +573,26 @@ namespace MagicLand_System.Services.Implements
             return adminLecturerResponses;
 
         }
+
+        public async Task<UserResponse> GetUserFromPhone(string phone)
+        {
+            var checkphone = "+84" + phone.Substring(1);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Phone.Equals(checkphone));
+            if(user == null) 
+            {
+                return new UserResponse();
+            }
+            return new UserResponse
+            {
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                AvatarImage = user.AvatarImage,
+                DateOfBirth = user.DateOfBirth.Value,
+                FullName = user.FullName,
+                Gender = user.Gender,
+                Id = user.Id,
+            };
+        }
     }
 }

@@ -138,6 +138,12 @@ namespace MagicLand_System.Controllers
             var result = await _userService.GetAdminLecturerResponses(startDate, endDate, searchString,slotId);
             return Ok(result);
         }
+        [HttpGet(ApiEndpointConstant.User.GetByPhone)]
+        public async Task<IActionResult> GetUserFromPhone(string phone)
+        {
+            var users = await _userService.GetUserFromPhone(phone);
+            return Ok(users);
+        }
 
     }
 }

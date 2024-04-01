@@ -21,7 +21,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<bool> GenerateCoursePrice(CoursePriceRequest request);
         Task<List<CoursePrice>> GetCoursePrices(string courseId);
         Task<List<StaffCourseResponse>> GetCourseResponse(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge);
-        Task<List<MyClassResponse>> GetClassesOfCourse(string courseId);
+        Task<List<MyClassResponse>> GetClassesOfCourse(string courseId,List<string>? dateOfWeeks);
 
     }
 }

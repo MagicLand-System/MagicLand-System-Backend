@@ -21,6 +21,7 @@
             public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
             public const string UpdateUser = UsersEndpoint + "/update";
             public const string GetByAdmin = UsersEndpoint + "/getByAdmin";
+            public const string GetByPhone = UsersEndpoint + "/getByPhone";
         }
         public static class Authentication
         {

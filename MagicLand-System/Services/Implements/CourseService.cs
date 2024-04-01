@@ -724,7 +724,7 @@ namespace MagicLand_System.Services.Implements
             return result;
         }
 
-        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId)
+        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId) && x.Status.Equals("UPCOMING"),include: x => x.Include(x => x.Schedules));
             List<MyClassResponse> result = new List<MyClassResponse>();
@@ -878,6 +878,25 @@ namespace MagicLand_System.Services.Implements
             if(result.Count == 0)
             {
                 return result;
+            }
+            List<MyClassResponse> finalResponse = new List<MyClassResponse>();  
+            if(dateOfWeeks != null && dateOfWeeks.Count > 0)
+            {
+                foreach(var r in result)
+                {
+                    var sch = r.Schedules;
+                    foreach(var d in dateOfWeeks)
+                    {
+                        var schList = sch.Select(x => x.DayOfWeek).ToList();
+                        var isExist = schList.Any(x => x.ToLower().Equals(d.ToLower()));
+                        if(isExist)
+                        {
+                            finalResponse.Add(r);
+                            break;
+                        }
+                    }
+                }
+                return finalResponse;
             }
             return result;
 
