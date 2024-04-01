@@ -22,6 +22,8 @@ namespace MagicLand_System.Services.Interfaces
         Task<UserResponse> UpdateUserAsync(UserRequest request);
         Task<List<LectureScheduleResponse>> GetLectureScheduleAsync();
         Task<List<AdminLecturerResponse>> GetAdminLecturerResponses(DateTime? startDate , DateTime? EndDate , string? searchString,string? slotId);
-        Task<UserResponse> GetUserFromPhone(string phone);  
+        Task<UserResponse> GetUserFromPhone(string phone);
+        Task<List<StudentResponse>> GetStudents(string classId, string phone);
+       
     }
 }

@@ -144,6 +144,12 @@ namespace MagicLand_System.Controllers
             var users = await _userService.GetUserFromPhone(phone);
             return Ok(users);
         }
+        [HttpGet(ApiEndpointConstant.User.GetStudent)]
+        public async Task<IActionResult> GetStudents(string classId,string phone)
+        {
+            var users = await _userService.GetStudents(classId,phone);
+            return Ok(users);
+        }
 
     }
 }

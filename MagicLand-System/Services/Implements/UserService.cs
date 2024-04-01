@@ -8,6 +8,7 @@ using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -593,6 +594,59 @@ namespace MagicLand_System.Services.Implements
                 Gender = user.Gender,
                 Id = user.Id,
             };
+        }
+
+        public async Task<List<StudentResponse>> GetStudents(string classId, string phone)
+        {
+            var checkphone = "+84" + phone.Substring(1);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(checkphone),include : x => x.Include(x => x.Students));
+            if(user == null)
+            {
+                return new List<StudentResponse>();
+            }
+            var students = user.Students;
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()), include : x => x.Include(x => x.Course));
+            var minAge = classx.Course.MinYearOldsStudent.Value;
+            var maxAge = classx.Course.MinYearOldsStudent.Value;
+            var startdate = classx.StartDate;
+            var enddate = classx.EndDate;
+            var year = DateTime.Now.Year;
+            students = students.Where(x => ((year - x.DateOfBirth.Year) >= minAge )).Where(x => ((year - x.DateOfBirth.Year) <= minAge)).ToList();
+            List<StudentResponse> st = new List<StudentResponse>();
+            foreach(var student in students)
+            {
+               var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId == student.Id, include: x => x.Include(x => x.Schedule));
+               if(attandances == null)
+                {
+                    continue;
+                }
+               var schedules = attandances.Where(x => (x.Schedule.Date >= startdate  && x.Schedule.Date.Date <= enddate)).Select(x => x.Schedule);
+                var DaysOfWeek = classx.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
+                bool flag = true;
+                foreach( var day in DaysOfWeek)
+                {
+                    var isExist = schedules.Any(x => x.DayOfWeek == day.DayOfWeek && x.SlotId == day.SlotId);
+                    if(isExist) 
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+                if(flag) 
+                {
+                    st.Add(new StudentResponse 
+                    { 
+                        Age = year - student.DateOfBirth.Year,
+                        AvatarImage = student.AvatarImage,  
+                        DateOfBirth = student.DateOfBirth,
+                        Email = student.Email,
+                        FullName = student.FullName,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                    });
+                }
+            }
+            return st;  
         }
     }
 }
