@@ -17,5 +17,7 @@
         public DateTime? UpdateDate { get; set; } = default;
         public Guid? SyllabusId { get; set; }
         public List<SubDescriptionTitleResponse> SubDescriptionTitles { get; set; }
+        public DateTime? EarliestClassTime { get; set; }
+        public string CategoryId {  get; set; }
     }
 }

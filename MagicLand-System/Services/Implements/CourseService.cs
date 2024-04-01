@@ -609,6 +609,116 @@ namespace MagicLand_System.Services.Implements
             var prices = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId));
             return prices.ToList();
         }
+
+        public async Task<List<StaffCourseResponse>> GetCourseResponse(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge)
+        {
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
+            List<Course> courseList = new List<Course>();
+            foreach (var course in courses)
+            {
+                var classList = course.Classes.ToList();
+                var isExist = classList.Any(x => x.Status.Equals("UPCOMING"));
+                if(isExist)
+                {
+                    courseList.Add(course);
+                }
+            }
+            List<StaffCourseResponse> result = new List<StaffCourseResponse>();
+            foreach(var course in courseList)
+            {
+                var courseFound = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(course.Id.ToString()), include: x => x.Include(x => x.SubDescriptionTitles).Include(x => x.Classes));
+                if (courseFound == null)
+                {
+                    throw new BadHttpRequestException("Không tìm thấy khóa thích hợp", StatusCodes.Status400BadRequest);
+                }
+                var courseSyllabus = courseFound.SyllabusId;
+                var subjectname = "undefined";
+                string categoryId = "";
+                if (courseSyllabus != null)
+                {
+                    subjectname = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Name;
+                    categoryId = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Id.ToString();    
+                }
+                var titles = courseFound.SubDescriptionTitles;
+                List<SubDescriptionTitleResponse> desResponse = new List<SubDescriptionTitleResponse>();
+                foreach (var title in titles)
+                {
+                    List<SubDescriptionContentResponse> req = new List<SubDescriptionContentResponse>();
+                    var content = new SubDescriptionTitleResponse
+                    {
+                        Title = title.Title,
+                    };
+                    var sc = (await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate: x => x.SubDescriptionTitleId.ToString().Equals(title.Id.ToString()))).ToList();
+                    foreach (var s in sc)
+                    {
+                        req.Add(new SubDescriptionContentResponse
+                        {
+                            Content = s.Content,
+                            Description = s.Description,
+                        });
+                    }
+                    content.Contents = req;
+                    desResponse.Add(content);
+
+                }
+                var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(course.Id.ToString()));
+                //var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
+                int ongoing = 0;
+                var count = (await _unitOfWork.GetRepository<Class>()
+                        .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(courseFound.Id.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
+                if (count == null)
+                {
+                    ongoing = 0;
+                }
+                else
+                {
+                    ongoing = count.Count();
+                }
+                var classList = course.Classes.ToList();
+                var earliestDate = (course.Classes.Where(x => x.Status.Equals("UPCOMING") && x.StartDate >= DateTime.Now).OrderBy(x => x.StartDate).ToArray())[0].StartDate;
+                StaffCourseResponse staffCourseResponse = new StaffCourseResponse
+                {
+                    AddedDate = courseFound.AddedDate,
+                    Id = courseFound.Id,
+                    Image = courseFound.Image,
+                    MainDescription = courseFound.MainDescription,
+                    MaxYearOldsStudent = courseFound.MaxYearOldsStudent,
+                    MinYearOldsStudent = courseFound.MinYearOldsStudent,
+                    Name = courseFound.Name,
+                    NumberOfSession = courseFound.NumberOfSession,
+                    Price = await GetDynamicPrice(course.Id,false),
+                    Status = courseFound.Status,
+                    SubjectName = subjectname,
+                    SyllabusId = courseFound.SyllabusId,
+                    UpdateDate = courseFound.UpdateDate,
+                    SubDescriptionTitles = desResponse,
+                    NumberOfClassOnGoing = ongoing,
+                    EarliestClassTime = earliestDate,
+                    CategoryId = categoryId,
+                };
+                result.Add(staffCourseResponse);
+            }
+            if(result.Count > 0)
+            {
+                if(categoryIds != null && categoryIds.Count > 0) 
+                {
+                    result = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList(); 
+                }
+                if(minAge != null)
+                {
+                    result = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
+                }
+                if(MaxAge != null)
+                {
+                    result = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
+                }
+                if(searchString != null)
+                {
+                    result = result.Where(x => x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim())).ToList();
+                }
+            }
+            return result;
+        }
         #endregion
     }
 }

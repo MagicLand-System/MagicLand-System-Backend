@@ -197,5 +197,11 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _courseService.GenerateCoursePrice(request);
             return Ok(isSuccess);
         }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseStaff)]
+        public async Task<IActionResult> GetCourseStaff([FromQuery] List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge)
+        {
+            var isSuccess = await _courseService.GetCourseResponse(categoryIds,searchString,minAge,MaxAge);
+            return Ok(isSuccess);
+        }
     }
 }
