@@ -131,6 +131,7 @@
             public const string GetBillTransactionById = GetAll + "/{id}/bill/status";
             public const string GetBillTransactionByTxnRefCode = GetAll + "/{txnRefCode}/bills/status";
             public const string GetRevenueTransactionByTime = GetAll + "/bills/revenue";
+            public const string CheckoutByStaff = GetAll + "/staff/checkout";
         }
         public static class SyllabusEndPoint
         {
