@@ -31,6 +31,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetNotifications()
         {
+            //return Ok(DateTime.Now);
             var responses = await _notificationService.GetCurrentUserNotificationsAsync();
             return Ok(responses);
         }

@@ -2099,7 +2099,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
-            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.Now.Date || sc.Date.Date == DateTime.Now.AddDays(1).Date)).ToList();
+            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.UtcNow.Date || sc.Date.Date == DateTime.UtcNow.AddDays(1).Date)).ToList();
 
             if (!nearestClasses.Any())
             {
@@ -2113,7 +2113,7 @@ namespace MagicLand_System.Services.Implements
         {
             var responses = new List<ClassWithSlotOutSideResponse>();
 
-            TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.Now);
+            TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.UtcNow);
 
             foreach (var cls in currentClasses)
             {
@@ -2121,7 +2121,7 @@ namespace MagicLand_System.Services.Implements
 
                 if (currentTime.Hour < 21 || currentTime.Hour != 0)
                 {
-                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.Date);
+                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.UtcNow.Date);
                     if (checkingSchedule == null)
                     {
                         continue;
@@ -2135,7 +2135,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 else
                 {
-                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.Now.AddDays(1).Date);
+                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.UtcNow.AddDays(1).Date);
                     if (checkingSchedule == null)
                     {
                         continue;
