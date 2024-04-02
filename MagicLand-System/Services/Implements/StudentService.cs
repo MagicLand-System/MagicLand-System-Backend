@@ -329,7 +329,7 @@ namespace MagicLand_System.Services.Implements
                 Body = body,
                 Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
                 Image = ImageUrlConstant.RefundImageUrl,
-                CreatedAt = DateTime.Now,
+                CreatedAt = GetCurrentTime(),
                 IsRead = false,
                 ActionData = actionData,
                 UserId = targetUser.Id,
@@ -348,10 +348,10 @@ namespace MagicLand_System.Services.Implements
                 Type = TransactionTypeEnum.Refund.ToString(),
                 Method = TransactionMethodEnum.SystemWallet.ToString(),
                 Description = $"Hoàn Tiền Lớp Học {className} Từ Hệ Thống",
-                CreateTime = DateTime.Now,
+                CreateTime = GetCurrentTime(),
                 PersonalWalletId = personalWallet.Id,
                 PersonalWallet = personalWallet,
-                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund) + signature.Substring(11),
+                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund) + signature.Substring(36),
                 Status = TransactionStatusEnum.Success.ToString(),
                 CreateBy = payer,
             };
@@ -394,7 +394,7 @@ namespace MagicLand_System.Services.Implements
 
             var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()).ToList();
 
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.UtcNow.Date);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == GetCurrentTime().Date);
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
             if (studentNotHaveAttendance.Count() > 0)
             {
@@ -409,7 +409,7 @@ namespace MagicLand_System.Services.Implements
             var cls = await CheckingCurrentClass(null, classId, SlotEnum.Default);
 
             var schedules = cls.Schedules;
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.UtcNow.Date);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == GetCurrentTime().Date);
 
             var responses = await GetStudentAttendanceProgress(cls, currentSchedule);
 
@@ -540,7 +540,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var students = await _unitOfWork.GetRepository<Student>()
-               .GetListAsync(predicate: x => x.AddedTime >= DateTime.Now.AddDays((int)time), include: x => x.Include(x => x.User));
+               .GetListAsync(predicate: x => x.AddedTime >= GetCurrentTime().AddDays((int)time), include: x => x.Include(x => x.User));
 
             return students.Select(stu => _mapper.Map<StudentStatisticResponse>(stu)).ToList();
         }
@@ -632,7 +632,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var schedule = cls.Schedules.ToList()[noSession - 1];
-            if (schedule.Date.Day > DateTime.Now.Day)
+            if (schedule.Date.Day > GetCurrentTime().Day)
             {
                 throw new BadHttpRequestException($"Số Thứ Tự Buổi Học Thuộc Ngày [{schedule.Date}] Vẫn Chưa Diễn Ra", StatusCodes.Status400BadRequest);
             }
@@ -804,7 +804,7 @@ namespace MagicLand_System.Services.Implements
                             {
                                 ExamId = test.ExamId,
                                 ExamName = test.ExamName!,
-                                NoAttemp = test.NoAttempt,
+                                NoAttempt = test.NoAttempt,
                                 QuizCategory = test.QuizCategory!,
                                 QuizType = test.QuizType!,
                                 QuizName = test.QuizName!,
@@ -1019,7 +1019,7 @@ namespace MagicLand_System.Services.Implements
             examProgress = (quizDone * 100) / totalQuiz;
 
             var schedules = cls.Schedules.ToList();
-            DateTime currentDate = DateTime.Now.Date;
+            DateTime currentDate = GetCurrentTime().Date;
             for (int i = 0; i < schedules.Count(); i++)
             {
                 DateTime scheduleDate = schedules[i].Date.Date;
@@ -1099,7 +1099,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var d in dayOffs)
             {
-                if (d <= DateOnly.FromDateTime(DateTime.UtcNow.Date))
+                if (d <= DateOnly.FromDateTime(GetCurrentTime().Date))
                 {
                     throw new BadHttpRequestException($"Ngày Nghĩ Không Hợp Lệ [{d}], Khi Sắp Diễn Ra Hoặc Đã Diễn Ra So Với Ngày Hiện Tại", StatusCodes.Status400BadRequest);
                 }

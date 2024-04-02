@@ -95,7 +95,7 @@ namespace MagicLand_System.Services.Implements
                 GenerateMCResultItems(testResultId, examQuestions, multipleChoiceAnswers, sqr, question, currentAnswer, answer, correctAnswer);
             }
 
-            string status = GenerateExamStatus(testResult.TotalMark, correctMark);
+            string status = "Chưa Có Đánh Giá";//GenerateExamStatus(testResult.TotalMark, correctMark);
 
             testResult.CorrectMark = correctMark;
             testResult.ScoreEarned = scoreEarned;
@@ -204,27 +204,27 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        private string GenerateExamStatus(int totalMark, int correctMark)
-        {
-            string status = string.Empty;
-            double percentage = (double)correctMark / (double)totalMark;
-            percentage = percentage * 100;
+        //private string GenerateExamStatus(int totalMark, int correctMark)
+        //{
+        //    string status = string.Empty;
+        //    double percentage = (double)correctMark / (double)totalMark;
+        //    percentage = percentage * 100;
 
-            if (percentage < 50)
-            {
-                status = "Not Good";
-            }
-            if (percentage >= 50 && percentage <= 70)
-            {
-                status = "Good";
-            }
-            if (percentage > 70)
-            {
-                status = "Excellent";
-            }
+        //    if (percentage < 50)
+        //    {
+        //        status = "Not Good";
+        //    }
+        //    if (percentage >= 50 && percentage <= 70)
+        //    {
+        //        status = "Good";
+        //    }
+        //    if (percentage > 70)
+        //    {
+        //        status = "Excellent";
+        //    }
 
-            return status;
-        }
+        //    return status;
+        //}
 
         private void GenrateTestResult(Syllabus syllabus, QuestionPackage? currentQuiz, int totalMark, StudentClass studentClass, int noAttempt, out Guid testResultId, out TestResult testResult)
         {
@@ -554,7 +554,7 @@ namespace MagicLand_System.Services.Implements
             //        }
             //    }
             //}
-            string status = GenerateExamStatus(testResult.TotalMark, (int)scoreEarned);
+            string status = "Chưa Có Đánh Giá";//GenerateExamStatus(testResult.TotalMark, (int)scoreEarned);
 
             //testResult.CorrectMark = correctMark;
             //testResult.ScoreEarned = scoreEarned;
@@ -719,7 +719,7 @@ namespace MagicLand_System.Services.Implements
                     QuizCategory = test.QuizCategory,
                     QuizType = test.QuizType,
                     QuizName = test.QuizName,
-                    NoAttemp = test.NoAttempt,
+                    NoAttempt = test.NoAttempt,
                     TotalMark = test.TotalMark,
                     CorrectMark = test.CorrectMark,
                     TotalScore = test.TotalScore,
@@ -1110,6 +1110,53 @@ namespace MagicLand_System.Services.Implements
             }
 
             return responses;
+        }
+
+        public async Task<string> EvaluateExamOnLineAsync(Guid studentId, Guid examId, string status, int? noAttempt)
+        {
+            var testResults = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+                orderBy: x => x.OrderByDescending(x => x.NoAttempt),
+                predicate: x => x.StudentClass!.StudentId == studentId && x.ExamId == examId,
+                include: x => x.Include(x => x.StudentClass!.Class)!);
+
+            if (testResults is null || testResults.Count == 0)
+            {
+                throw new BadHttpRequestException($"Id Của Lớp/Học Sinh Không Tồn Tại, Hoặc Học Sinh Chưa Làm Bài Kiểm Tra Này", StatusCodes.Status400BadRequest);
+            }
+
+            if (testResults.Any(x => x.StudentClass!.Class!.LecturerId != GetUserIdFromJwt()))
+            {
+                throw new BadHttpRequestException($"Bài Kiểm Tra Đang Đánh Giá Thuộc Lớp Không Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
+            }
+
+            var testResult = testResults.ToList()[0];
+            if (noAttempt != null)
+            {
+                testResult = testResults.SingleOrDefault(x => x.NoAttempt == noAttempt);
+                if (testResult is null)
+                {
+                    throw new BadHttpRequestException($"Thứ Tự Lần Làm Kiểm Tra Không Hợp Lệ Vui Lòng Xem Lại", StatusCodes.Status400BadRequest);
+                }
+            }
+
+            if (testResult!.QuizType == QuizTypeEnum.offline.ToString())
+            {
+                throw new BadHttpRequestException($"Bài Kiểm Tra Thuộc Dạng Tự Làm Tại Nhà Yêu Cầu Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+
+            try
+            {
+                testResult!.ExamStatus = status;
+                _unitOfWork.GetRepository<TestResult>().UpdateAsync(testResult);
+                _unitOfWork.Commit();
+
+                return "Đánh Giá Bài Kiểm Tra Hoàn Tất";
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex}{ex.InnerException}]", StatusCodes.Status500InternalServerError);
+            }
+
         }
 
         //public async Task<FullyExamRes> GetFullyExamInforStudent(Guid studentId, Guid examId)

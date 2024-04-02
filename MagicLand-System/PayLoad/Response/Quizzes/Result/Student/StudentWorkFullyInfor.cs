@@ -4,7 +4,7 @@
     {
         public required Guid ExamId { get; set; }
         public required string ExamName { get; set; } = string.Empty;
-        public required int NoAttemp { get; set; }
+        public required int NoAttempt { get; set; }
         public required string QuizCategory { get; set; } = string.Empty;
         public required string QuizType { get; set; } = string.Empty;
         public required string QuizName { get; set; } = string.Empty;

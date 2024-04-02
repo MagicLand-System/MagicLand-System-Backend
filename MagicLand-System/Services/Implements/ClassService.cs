@@ -1975,7 +1975,7 @@ namespace MagicLand_System.Services.Implements
             if (time != default)
             {
                 classes = (await _unitOfWork.GetRepository<Class>().GetListAsync(
-                predicate: x => DateTime.Now <= x.StartDate && x.StartDate <= DateTime.Now.AddDays((int)time),
+                predicate: x => GetCurrentTime() <= x.StartDate && x.StartDate <= GetCurrentTime().AddDays((int)time),
                 include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses))).ToList();
             }
             else
@@ -2099,7 +2099,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
-            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == DateTime.UtcNow.Date || sc.Date.Date == DateTime.UtcNow.AddDays(1).Date)).ToList();
+            var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == GetCurrentTime().Date || sc.Date.Date == GetCurrentTime().AddDays(1).Date)).ToList();
 
             if (!nearestClasses.Any())
             {
@@ -2113,7 +2113,7 @@ namespace MagicLand_System.Services.Implements
         {
             var responses = new List<ClassWithSlotOutSideResponse>();
 
-            TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.UtcNow);
+            TimeOnly currentTime = TimeOnly.FromDateTime(GetCurrentTime());
 
             foreach (var cls in currentClasses)
             {
@@ -2121,7 +2121,7 @@ namespace MagicLand_System.Services.Implements
 
                 if (currentTime.Hour < 21 || currentTime.Hour != 0)
                 {
-                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.UtcNow.Date);
+                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == GetCurrentTime().Date);
                     if (checkingSchedule == null)
                     {
                         continue;
@@ -2135,7 +2135,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 else
                 {
-                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == DateTime.UtcNow.AddDays(1).Date);
+                    var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == GetCurrentTime().AddDays(1).Date);
                     if (checkingSchedule == null)
                     {
                         continue;
@@ -2313,7 +2313,8 @@ namespace MagicLand_System.Services.Implements
                 foreach (Guid id in studentIdList)
                 {
                     var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id,
-                    include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!.ThenInclude(x => x.Slot!).Include(x => x.User));
+                    include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!
+                    .ThenInclude(x => x.Slot!).Include(x => x.User));
 
                     ValidateStudentChangeClassRequest(toClassId, studentIdList, fromClass, toClass, id, student);
 
@@ -2371,7 +2372,7 @@ namespace MagicLand_System.Services.Implements
                       student.FullName!, fromClass.Status == ClassStatusEnum.UPCOMING.ToString() ? ChangeClassReasoneEnum.REQUEST : ChangeClassReasoneEnum.CANCELED),
                 Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
                 Image = ImageUrlConstant.SystemImageUrl,
-                CreatedAt = DateTime.Now,
+                CreatedAt = GetCurrentTime(),
                 IsRead = false,
                 ActionData = StringHelper.GenerateJsonString(new List<(string, string)>
                       {

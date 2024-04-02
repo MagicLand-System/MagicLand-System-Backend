@@ -3,7 +3,6 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response.Attendances;
-using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;

@@ -47,6 +47,11 @@ namespace MagicLand_System.Services
             return account;
         }
 
+        protected DateTime GetCurrentTime()
+        {
+            return DateTime.UtcNow;
+        }
+
         protected async Task<double> GetDynamicPrice(Guid id, bool isClass)
         {
             var coursePrices = isClass

@@ -14,6 +14,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<QuizResultResponse> GradeQuizMCAsync(QuizMCRequest quizStudentWork);
         Task<QuizResultResponse> GradeQuizFCAsync(Guid classId, Guid examId, double score);
         Task<string> GradeExamOffLineAsync(ExamOffLineRequest exaOffLineStudentWork);
+        Task<string> EvaluateExamOnLineAsync(Guid studentId, Guid examId, string status, int? noAttempt);
         Task<string> SettingExamTimeAsync(Guid examId, Guid classId, SettingQuizTimeRequest settingInfor);
     }
 }

@@ -204,7 +204,7 @@ namespace MagicLand_System.Controllers
 
         #region document API Grade Quiz OffLine
         /// <summary>
-        ///  Lưu Điểm Bài Kiểm Tra Làm Tại Nhà Của Các Học Sinh
+        ///  Lưu/Cập Nhập Điểm Và Đánh Giá Bài Kiểm Tra Làm Tại Nhà Của Các Học Sinh
         /// </summary>
         /// <param name="quizInfor">Chứa Thông Tin Của Bài Kiểm Tra Làm Tại Nhà</param>
         /// <param name="studentExamGrades">Chứa Id Của Các Học Sinh Và Điểm Của Giáo Viên</param>
@@ -215,8 +215,9 @@ namespace MagicLand_System.Controllers
         ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
         ///    [
         ///      {
-        ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
-        ///        "answerId" : "417997AC-AFD7-4363-BFE5-6CDD46D4712B"
+        ///        "studentId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
+        ///        "score" : 10,
+        ///        "status": "Làm Tốt Lắm"
         ///      },
         ///      ]
         /// </remarks>
@@ -238,6 +239,38 @@ namespace MagicLand_System.Controllers
                 StudentQuizGardes = studentExamGrades,
             };
             var response = await _quizService.GradeExamOffLineAsync(examOffLineStudentWork);
+
+            return Ok(response);
+        }
+
+        #region document API Evaluate Quiz Online
+        /// <summary>
+        /// Lưu/Cập Nhập Đánh Giá Các Bài Kiểm Tra Đã Làm Trên Hệ Thống
+        /// </summary>
+        /// <param name="studentId">Id Của Học Sinh</param>
+        /// <param name="examId">Id Của Bài Kiểm Tra</param>
+        /// <param name="status">Trạng Thái Bài Kiểm Tra</param>
+        /// <param name="noAttempt">Thứ Tự Lần Làm Kiểm Tra Của Học Sinh, Mặc Định [Lần Làm Gần Nhất] (Option) </param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "studentId":"3c1849af-400c-43ca-979e-58c71ce9301d",
+        ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    "status" "Cần Cố Gắng",
+        ///    "noAttempt": 1,
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Báo</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.QuizEndPoint.EvaluateQuizOnLine)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> EvaluateQuizOnLine([FromQuery] Guid studentId, [FromQuery] Guid examId, [FromQuery] string status, [FromQuery] int? noAttempt)
+        {
+            var response = await _quizService.EvaluateExamOnLineAsync(studentId, examId, status, noAttempt);
 
             return Ok(response);
         }

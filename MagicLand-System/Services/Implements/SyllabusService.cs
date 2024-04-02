@@ -1105,7 +1105,7 @@ namespace MagicLand_System.Services.Implements
             {
                 string status = string.Empty;
                 var examDate = DateTime.Parse(exam.Date!).Date;
-                var currentDate = DateTime.Now.Date;
+                var currentDate = GetCurrentTime().Date;
 
                 var test = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
                 if (test != null)
