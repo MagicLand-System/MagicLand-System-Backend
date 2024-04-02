@@ -520,9 +520,11 @@ namespace MagicLand_System.Services.Implements
             }
             var courseSyllabus = courseFound.SyllabusId;
             var subjectname = "undefined";
+            var syllabusCode = "undefined";
             if (courseSyllabus != null)
             {
                 subjectname = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Name;
+                syllabusCode = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()))).SubjectCode;
             }
             var titles = courseFound.SubDescriptionTitles;
             List<SubDescriptionTitleResponse> desResponse = new List<SubDescriptionTitleResponse>();
@@ -576,6 +578,7 @@ namespace MagicLand_System.Services.Implements
                 UpdateDate = courseFound.UpdateDate,
                 SubDescriptionTitles = desResponse,
                 NumberOfClassOnGoing = ongoing,
+                SyllabusCode = syllabusCode,
             };
 
             return staffCourseResponse;

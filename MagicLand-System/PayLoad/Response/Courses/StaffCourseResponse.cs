@@ -19,5 +19,6 @@
         public List<SubDescriptionTitleResponse> SubDescriptionTitles { get; set; }
         public DateTime? EarliestClassTime { get; set; }
         public string CategoryId {  get; set; }
+        public string? SyllabusCode { get; set; }   
     }
 }
