@@ -305,7 +305,7 @@ namespace MagicLand_System.Services.Implements
                     LimitNumberStudent = c.LimitNumberStudent,
                     ClassCode = c.ClassCode,
                     LecturerName = lecturer.FullName,
-                    CoursePrice = await GetDynamicPrice(course.Id,false),
+                    CoursePrice = await GetDynamicPrice(course.Id, false),
                     EndDate = c.EndDate,
                     CourseId = c.CourseId,
                     Image = c.Image,
@@ -337,7 +337,7 @@ namespace MagicLand_System.Services.Implements
                     MaxYearOldsStudent = course.MaxYearOldsStudent,
                     MinYearOldsStudent = course.MinYearOldsStudent,
                     Name = course.Name,
-                    Price = await GetDynamicPrice(course.Id,false),
+                    Price = await GetDynamicPrice(course.Id, false),
                     SyllabusCode = syllabusCode,
                     SyllabusName = syllabusName,
                     SyllabusType = syllabusType,
@@ -2119,7 +2119,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var currentSchedule = new Schedule();
 
-                if (currentTime.Hour < 21 || currentTime.Hour != 0)
+                if (currentTime.Hour < 21 && currentTime.Hour != 0)
                 {
                     var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == GetCurrentTime().Date);
                     if (checkingSchedule == null)

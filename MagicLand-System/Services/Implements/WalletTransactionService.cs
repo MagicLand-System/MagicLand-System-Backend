@@ -253,7 +253,7 @@ namespace MagicLand_System.Services.Implements
                 Type = TransactionTypeEnum.Payment.ToString(),
                 Method = TransactionMethodEnum.SystemWallet.ToString(),
                 Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
-                CreateTime = DateTime.Now,
+                CreateTime = GetCurrentTime(),
                 PersonalWalletId = personalWallet.Id,
                 PersonalWallet = personalWallet,
                 CreateBy = currentPayer.FullName,

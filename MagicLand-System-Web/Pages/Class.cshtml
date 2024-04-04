@@ -1,5 +1,5 @@
 ﻿@page
-@model MagicLand_System_Web.Pages.ClassModel
+@model ClassModel
 @{
     ViewData["Title"] = "Class";
     var Message = ViewData["Message"]?.ToString();
@@ -22,121 +22,156 @@
             color: blue;
         }
 </style>
-<div class="loader"></div>
+
 <section class="body-class">
     <div class="text-center">
         <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Lớp Học Thuộc Ngẫu Nhiên Các Khóa Học</b></h6>
+
+        <div class="form-group" onsubmit="return setLoader()">
+            <form method="post">
+                <label for="inputField">Nhập Số Lương: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+            </form>
+        </div>
+
         @if (!string.IsNullOrEmpty(Message))
         {
-            <div class="alert alert-warning">
+            <div class="alert alert-warning" style="margin-left: auto; width: 75%;">
                 @Message
             </div>
         }
 
-        <div class="form-group">
-            <form method="post">
-                <label for="inputField">Nhập Số Lương: </label>
-                <input type="text" id="inputField" name="inputField" />
-                <button type="submit" style="background-color: white; color: black">Xử Lý</button>
-            </form>
-        </div>
-
-        @if (Model.messages != null && Model.messages.Count() > 0)
+        @if (Model.IsLoading)
         {
-            <table class="table" style="margin-top: 17px">
-                <thead>
-                    <tr>
-                        <th>
-                            Thứ Tự
-                        </th>
-                        <th>
-                            Mã Lớp
-                        </th>
-                        <th>
-                            Thuộc Khóa
-                        </th>
-                        <th>
-                            Ngày Bắt Đầu
-                        </th>
-                        <th style="width: 200px">
-                            Thuộc Giáo Viên
-                        </th>
-                        <th style="width: 200px">
-                            Lịch Học
-                        </th>
-                        <th>
-                            Trạng Thái
-                        </th>
-                        <th style="width: 170px">
-                            Ghi Chú
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        int index = 0;
-                    }
-                    @foreach (var item in Model.messages)
-                    {
-                        {
-                            index++;
-                        }
-                        <tr>
-                            <td>
-                                @index
-                            </td>
-                            <td>
-                                @item.Item1
-                            </td>
-                            <td>
-                                @item.Item2
-                            </td>
-                            <td>
-                                @item.Item3
-                            </td>
-                            <td>
-                                @item.Item4
-                            </td>
-                            <td>
-                                <table style="border-collapse: collapse; border: none; width: 200px; text-align: center">
-
-                                    @for (int i = 0; i < item.Item5.Count(); i++)
-                                    {
-                                        if (i != 0)
-                                        {
-                                            <tbody style="border-top: 1px solid black;">
-                                                <tr>
-                                                    <td style="border: none">@item.Item5[i].Item1</td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border: none">@item.Item5[i].Item2</td>
-                                                </tr>
-                                            </tbody>
-                                        }
-                                        else
-                                        {
-                                            <tbody>
-                                                <tr>
-                                                    <td style="border: none">@item.Item5[i].Item1</td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border: none">@item.Item5[i].Item2</td>
-                                                </tr>
-                                            </tbody>
-                                        }
-                                    }
-                                </table>
-                            </td>
-                            <td>
-                                @item.Item6
-                            </td>
-                            <td>
-                                @item.Item7
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <script>
+                setLoader();
+            </script>
         }
+
+        <div class="form-loader" id="loaderContainer" style="text-align: center; display:none;">
+            <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
+            <div style="margin-left: 29%;">Now Progressing...</div>
+        </div>
+        <div class="table-container" style="overflow-y: auto; height: 368px; width: 73%; margin-top: 22px; position: relative}">
+            @if (Model.ClassMessages != null && Model.ClassMessages.Count() > 0)
+            {
+                <table class="table">
+                    <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                        <tr>
+                            <th>
+                                Thứ Tự
+                            </th>
+                            <th>
+                                Mã Lớp
+                            </th>
+                            <th>
+                                Thuộc Khóa
+                            </th>
+                            <th>
+                                Ngày Bắt Đầu
+                            </th>
+                            <th style="width: 120px">
+                                Thuộc Giáo Viên
+                            </th>
+                            <th style="width: 200px">
+                                Lịch Học
+                            </th>
+                            <th style="width: 100px">
+                                Trạng Thái
+                            </th>
+                            <th style="width: 100px">
+                                Ghi Chú
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 0;
+                        }
+                        @foreach (var item in Model.ClassMessages)
+                        {
+                            {
+                                index++;
+                            }
+                            <tr>
+                                <td>
+                                    @index
+                                </td>
+                                <td>
+                                    @item.ClassCode
+                                </td>
+                                <td>
+                                    @item.CourseBeLong
+                                </td>
+                                <td>
+                                    @item.StartDate
+                                </td>
+                                <td>
+                                    @item.LecturerBeLong
+                                </td>
+                                <td>
+                                    <div class="table-container-schedule" style="overflow-y: auto; height: 120px">
+                                        <table style="border-collapse: collapse; border: none; text-align: center; width: 100%">
+                                            @for (int i = 0; i < item.Schedules.Count(); i++)
+                                            {
+                                                if (i != 0)
+                                                {
+                                                    <tbody style="border-top: 1px solid black;">
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].DayOfWeek</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].Slot</td>
+                                                        </tr>
+                                                    </tbody>
+                                                }
+                                                else
+                                                {
+                                                    <tbody>
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].DayOfWeek</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].Slot</td>
+                                                        </tr>
+                                                    </tbody>
+                                                }
+                                            }
+                                        </table>
+                                    </div>
+                                </td>
+                                <td>
+                                    @item.Status
+                                </td>
+                                <td>
+                                    @item.Note
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
     </div>
 </section>
+
+<script>
+    function setLoader() {
+        var loaderContainer = document.getElementById("loaderContainer");
+        var buttonSubmit = document.getElementById("button-submit");
+        if (loaderContainer.style.display === "none") {
+            loaderContainer.style.display = "block";
+            buttonSubmit.style.opacity = "0.5";
+            buttonSubmit.disabled = true;
+            return true;
+        } else {
+            loaderContainer.style.display = "none";
+        }
+
+        if (@Model.IsLoading) {
+            buttonSubmit.style.opacity = "1";
+            buttonSubmit.disabled = false;
+        }
+    }
+</script>

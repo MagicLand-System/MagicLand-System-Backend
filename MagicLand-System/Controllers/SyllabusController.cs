@@ -21,7 +21,7 @@ namespace MagicLand_System.Controllers
         }
 
         [HttpPost(ApiEndpointConstant.SyllabusEndPoint.AddSyllabus)]
-        public async Task<IActionResult> InsertCourse([FromBody] OverallSyllabusRequest request)
+        public async Task<IActionResult> InsertSyllabus([FromBody] OverallSyllabusRequest request)
         {
             var isSuccess = await _syllabusService.AddSyllabus(request);
             string message = "Tạo Giáo Trình Sảy Ra Lỗi";

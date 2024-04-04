@@ -246,7 +246,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(ScheduleWithAttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureClasses([FromQuery] Guid classId, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetCurrentLetureAttendanceOfClasses([FromQuery] Guid classId, [FromQuery] DateTime date)
         {
             var responses = await _classService.GetAttendanceOfClassesInDateAsync(classId, date);
             return Ok(responses);

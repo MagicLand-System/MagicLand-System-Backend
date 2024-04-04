@@ -1341,16 +1341,18 @@ namespace MagicLand_System.Services.Implements
         #region thuong code
         public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword = null)
         {
-            var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(include: x => x.Include<Syllabus, Course>(x => x.Course));
+            var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
             List<SyllabusResponseV2> responses = new List<SyllabusResponseV2>();
             foreach (var syl in syllabuses)
             {
                 var name = "undefined";
                 var subjectCode = "undefined";
                 var syllabusName = "undefined";
-                if (syl.Course != null)
+
+                var sylCourse = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == syl.CourseId);
+                if (sylCourse != null)
                 {
-                    name = syl.Course.Name;
+                    name = sylCourse.Name;
                 }
                 if (syl.SubjectCode != null)
                 {
@@ -1360,7 +1362,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     syllabusName = syl.Name;
                 }
-                if (syl.SubjectCode != null) { }
+
                 SyllabusResponseV2 syllabusResponseV2 = new SyllabusResponseV2
                 {
                     Id = syl.Id,
