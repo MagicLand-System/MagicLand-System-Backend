@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -22,6 +23,8 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<CoursePrice>> GetCoursePrices(string courseId);
         Task<List<StaffCourseResponse>> GetCourseResponse(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge);
         Task<List<MyClassResponse>> GetClassesOfCourse(string courseId,List<string>? dateOfWeeks);
+        Task<bool> UpdateCourse(string id, UpdateCourseRequest request);
+
 
     }
 }

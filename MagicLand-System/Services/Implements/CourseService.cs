@@ -5,6 +5,7 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Mappers.Custom;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -588,11 +589,15 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> GenerateCoursePrice(CoursePriceRequest request)
         {
-            if(request == null)
+            if (request != null)
             {
-                if (request.EffectiveDate < DateTime.Now.AddMinutes(-5))
+                if (request.StartTime < DateTime.Now.AddMinutes(-60))
                 {
-                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ",StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
+                }
+                if (request.EndTime < DateTime.Now.AddMinutes(-60))
+                {
+                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
                 }
                 if (request.Price < 0)
                 {
@@ -603,6 +608,9 @@ namespace MagicLand_System.Services.Implements
                     Price = request.Price,
                     CourseId = request.CourseId,
                     //EffectiveDate = request.EffectiveDate,
+                    StartDate = request.StartTime,
+                    EndDate = request.EndTime,
+                    Id = Guid.NewGuid(),
                 };
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(price);
                 bool isSuccess = await _unitOfWork.CommitAsync() > 0;
@@ -903,6 +911,43 @@ namespace MagicLand_System.Services.Implements
             }
             return result;
 
+        }
+        public async Task<bool> UpdateCourse(string id, UpdateCourseRequest request)
+        {
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id), include: x => x.Include(x => x.CoursePrices));
+            var courseprice = course.CoursePrices.SingleOrDefault(predicate: x => x.EndDate >= DateTime.Now.AddYears(13));
+            if (course == null)
+            {
+                return false;
+            }
+            if (request.Price != null)
+            {
+                courseprice.Price = request.Price.Value;
+            }
+            if (request.Img != null)
+            {
+                course.Image = request.Img;
+            }
+            if (request.CourseName != null)
+            {
+                course.Name = request.CourseName;
+            }
+            if (request.MaxAge != null)
+            {
+                course.MaxYearOldsStudent = request.MaxAge.Value;
+            }
+            if (request.MinAge != null)
+            {
+                course.MinYearOldsStudent = request.MinAge.Value;
+            }
+            if (request.MainDescription != null)
+            {
+                course.MainDescription = request.MainDescription;
+            }
+            _unitOfWork.GetRepository<Course>().UpdateAsync(course);
+            _unitOfWork.GetRepository<CoursePrice>().UpdateAsync(courseprice);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return isSuccess;
         }
         #endregion
     }

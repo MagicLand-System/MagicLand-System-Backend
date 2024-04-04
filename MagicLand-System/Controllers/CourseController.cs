@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -208,6 +209,12 @@ namespace MagicLand_System.Controllers
         {
             var isSuccess = await _courseService.GetClassesOfCourse(courseId,dateOfWeeks);
             return Ok(isSuccess);
+        }
+        [HttpPut(ApiEndpointConstant.CourseEnpoint.UpdateCourse)]
+        public async Task<IActionResult> UpdateCourse([FromRoute] string id, [FromBody] UpdateCourseRequest request)
+        {
+            var isSucc = await _courseService.UpdateCourse(id, request);
+            return Ok(isSucc);
         }
     }
 }
