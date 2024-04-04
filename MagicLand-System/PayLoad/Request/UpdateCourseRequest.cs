@@ -1,4 +1,6 @@
-﻿namespace MagicLand_System.PayLoad.Request
+﻿using MagicLand_System.PayLoad.Request.Course;
+
+namespace MagicLand_System.PayLoad.Request
 {
     public class UpdateCourseRequest
     {
@@ -8,5 +10,7 @@
         public int? MaxAge { get; set; }
         public string? MainDescription { get; set; }
         public string? Img { get; set; }
+        public List<SubDescriptionRequest>? SubDescriptions { get; set; } = null;
+
     }
 }

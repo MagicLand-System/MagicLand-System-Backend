@@ -944,6 +944,47 @@ namespace MagicLand_System.Services.Implements
             {
                 course.MainDescription = request.MainDescription;
             }
+            if (request.SubDescriptions != null)
+            {
+                var titles = await _unitOfWork.GetRepository<SubDescriptionTitle>().GetListAsync(predicate: x => x.CourseId == course.Id);
+                var courseDes = new List<SubDescriptionContent>();
+                foreach ( var title in titles) 
+                {
+                    courseDes.AddRange(await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate : x => x.SubDescriptionTitleId == title.Id));    
+                }
+                 _unitOfWork.GetRepository<SubDescriptionContent>().DeleteRangeAsync(courseDes);
+                _unitOfWork.GetRepository<SubDescriptionTitle>().DeleteRangeAsync(titles);
+                await _unitOfWork.CommitAsync();
+                List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();
+                var listSubDescription = request.SubDescriptions;
+                List<SubDescriptionContent> contents = new List<SubDescriptionContent>();
+                foreach (var sd in listSubDescription)
+                {
+                    var newTitle = new SubDescriptionTitle
+                    {
+                        Title = sd.Title,
+                        Id = Guid.NewGuid(),
+                        CourseId = course.Id,
+                    };
+                    var contentList = sd.SubDescriptionContentRequests;
+                    foreach (var content in contentList)
+                    {
+                        var newDescrption = new SubDescriptionContent
+                        {
+                            SubDescriptionTitleId = newTitle.Id,
+                            Content = content.Content,
+                            Description = content.Description,
+                            Id = Guid.NewGuid(),
+                        };
+                        contents.Add(newDescrption);
+                    }
+                    newTitle.SubDescriptionContents = contents;
+                    subDescriptionTitles.Add(newTitle);
+                    course.SubDescriptionTitles = subDescriptionTitles;
+                    await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
+                    await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
+                }
+            }
             _unitOfWork.GetRepository<Course>().UpdateAsync(course);
             _unitOfWork.GetRepository<CoursePrice>().UpdateAsync(courseprice);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
