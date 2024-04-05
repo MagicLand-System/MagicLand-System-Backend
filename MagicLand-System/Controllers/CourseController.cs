@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -204,10 +205,16 @@ namespace MagicLand_System.Controllers
             return Ok(isSuccess);
         }
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseClassStaff)]
-        public async Task<IActionResult> GetCourseClassStaff(string courseId, [FromQuery] List<string> dateOfWeeks)
+        public async Task<IActionResult> GetCourseClassStaff(string courseId, [FromQuery] List<string> dateOfWeeks,string? method,[FromQuery] List<string>? slotId)
         {
-            var isSuccess = await _courseService.GetClassesOfCourse(courseId,dateOfWeeks);
+            var isSuccess = await _courseService.GetClassesOfCourse(courseId,dateOfWeeks,method,slotId);
             return Ok(isSuccess);
+        }
+        [HttpPut(ApiEndpointConstant.CourseEnpoint.UpdateCourse)]
+        public async Task<IActionResult> UpdateCourse([FromRoute] string id, [FromBody] UpdateCourseRequest request)
+        {
+            var isSucc = await _courseService.UpdateCourse(id, request);
+            return Ok(isSucc);
         }
     }
 }

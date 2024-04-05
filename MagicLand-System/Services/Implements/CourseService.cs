@@ -5,6 +5,7 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Mappers.Custom;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -588,11 +589,15 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> GenerateCoursePrice(CoursePriceRequest request)
         {
-            if(request == null)
+            if (request != null)
             {
-                if (request.EffectiveDate < DateTime.Now.AddMinutes(-5))
+                if (request.StartTime < DateTime.Now.AddMinutes(-120))
                 {
-                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ",StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
+                }
+                if (request.EndTime < DateTime.Now.AddMinutes(-120))
+                {
+                    throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
                 }
                 if (request.Price < 0)
                 {
@@ -603,6 +608,9 @@ namespace MagicLand_System.Services.Implements
                     Price = request.Price,
                     CourseId = request.CourseId,
                     //EffectiveDate = request.EffectiveDate,
+                    StartDate = request.StartTime.AddHours(7),
+                    EndDate = request.EndTime.AddHours(7),
+                    Id = Guid.NewGuid(),
                 };
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(price);
                 bool isSuccess = await _unitOfWork.CommitAsync() > 0;
@@ -682,6 +690,10 @@ namespace MagicLand_System.Services.Implements
                     ongoing = count.Count();
                 }
                 var classList = course.Classes.ToList();
+                if(classList == null || classList.Count == 0)
+                {
+                    continue;
+                }
                 var earliestDate = (course.Classes.Where(x => x.Status.Equals("UPCOMING") && x.StartDate >= DateTime.Now).OrderBy(x => x.StartDate).ToArray())[0].StartDate;
                 StaffCourseResponse staffCourseResponse = new StaffCourseResponse
                 {
@@ -707,27 +719,36 @@ namespace MagicLand_System.Services.Implements
             }
             if(result.Count > 0)
             {
-                if(categoryIds != null && categoryIds.Count > 0) 
+                List<StaffCourseResponse> result1 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result2 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result3 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result4 = new List<StaffCourseResponse>();
+                if (categoryIds != null && categoryIds.Count > 0) 
                 {
-                    result = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList(); 
+                    result1 = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList(); 
                 }
                 if(minAge != null)
                 {
-                    result = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
+                     result2 = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
                 }
                 if(MaxAge != null)
                 {
-                    result = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
+                     result3 = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
                 }
                 if(searchString != null)
                 {
-                    result = result.Where(x => x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim())).ToList();
+                    result4 = result.Where(x => x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim())).ToList();
+                }
+                if(result1.Count > 0 || result2.Count > 0 || result3.Count > 0 || result4.Count > 0)
+                {
+                    var resultT = result1.UnionBy(result2, x => x.Id).UnionBy(result3, x => x.Id).UnionBy(result4, x => x.Id);
+                    result = resultT.ToList();
                 }
             }
             return result;
         }
 
-        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks)
+        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks , string? Method, List<string>? slotId)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId) && x.Status.Equals("UPCOMING"),include: x => x.Include(x => x.Schedules));
             List<MyClassResponse> result = new List<MyClassResponse>();
@@ -740,6 +761,7 @@ namespace MagicLand_System.Services.Implements
                 if (room == null) { continue; }
                 var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.LecturerId.ToString()));
                 if (lecturer == null) { continue; }
+                var students = (await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id)).Count;
                 RoomResponse roomResponse = new RoomResponse
                 {
                     Floor = room.Floor.Value,
@@ -772,6 +794,8 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Sunday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 2)
@@ -781,6 +805,8 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Monday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 4)
@@ -790,6 +816,8 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Tuesday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 8)
@@ -799,6 +827,8 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Wednesday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 16)
@@ -808,6 +838,9 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Thursday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
+
                         });
                     }
                     if (day.DayOfWeek == 32)
@@ -817,6 +850,8 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Friday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 64)
@@ -826,9 +861,12 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Saturday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,   
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                 }
+                schedules = schedules.OrderBy(x => x.DateOfWeekNumber).ToList();
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
                 MyClassResponse myClassResponse = new MyClassResponse
@@ -852,6 +890,7 @@ namespace MagicLand_System.Services.Implements
                     LecturerResponse = lecturerResponse,
                     RoomResponse = roomResponse,
                     CreatedDate = c.AddedDate.Value,
+                    NumberOfStudentsRegister = students,
                 };
                 var syllabusCode = "undefined";
                 var syllabusName = "undefined";
@@ -882,27 +921,139 @@ namespace MagicLand_System.Services.Implements
             {
                 return result;
             }
-            List<MyClassResponse> finalResponse = new List<MyClassResponse>();  
-            if(dateOfWeeks != null && dateOfWeeks.Count > 0)
+            List<MyClassResponse> finalResponse = new List<MyClassResponse>();
+            List<MyClassResponse> finalResponse2 = new List<MyClassResponse>();
+            List<MyClassResponse> finalResponse3 = new List<MyClassResponse>();
+            if(result.Count > 0)
             {
-                foreach(var r in result)
+                if (dateOfWeeks != null && dateOfWeeks.Count > 0)
                 {
-                    var sch = r.Schedules;
-                    foreach(var d in dateOfWeeks)
+                    foreach (var r in result)
                     {
-                        var schList = sch.Select(x => x.DayOfWeek).ToList();
-                        var isExist = schList.Any(x => x.ToLower().Equals(d.ToLower()));
-                        if(isExist)
+                        var sch = r.Schedules;
+                        foreach (var d in dateOfWeeks)
                         {
-                            finalResponse.Add(r);
-                            break;
+                            var schList = sch.Select(x => x.DayOfWeek).ToList();
+                            var isExist = schList.Any(x => x.ToLower().Equals(d.ToLower()));
+                            if (isExist)
+                            {
+                                finalResponse.Add(r);
+                                break;
+                            }
                         }
                     }
                 }
-                return finalResponse;
+                if(Method != null)
+                {
+                    finalResponse2 = result.Where(x => x.Method.ToLower().Contains(Method.ToLower())).ToList();
+                }
+                if(slotId != null && slotId.Count > 0)
+                {
+                    foreach (var r in result)
+                    {
+                        var sch = r.Schedules;
+                        foreach (var d in slotId)
+                        {
+                            var schList = sch.Select(x => x.SlotId).ToList();
+                            var isExist = schList.Any(x => x.ToString().ToLower().Equals(d.ToLower()));
+                            if (isExist)
+                            {
+                                finalResponse3.Add(r);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(finalResponse.Count > 0 || finalResponse2.Count > 0 || finalResponse3.Count > 0) 
+                {
+                    var rs = finalResponse.UnionBy(finalResponse2,x => x.ClassId).UnionBy(finalResponse3,x => x.ClassId).ToList();
+                    return rs.OrderByDescending(x => x.NumberOfStudentsRegister).ToList();
+                }
+                
             }
-            return result;
-
+            if((dateOfWeeks == null || dateOfWeeks.Count == 0) && (Method == null) && (slotId == null || slotId.Count == 0))
+            {
+                return result.OrderByDescending(x => x.NumberOfStudentsRegister).ToList();
+            }
+            return new List<MyClassResponse>();
+        }
+        public async Task<bool> UpdateCourse(string id, UpdateCourseRequest request)
+        {
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id), include: x => x.Include(x => x.CoursePrices));
+            var courseprice = course.CoursePrices.SingleOrDefault(predicate: x => x.EndDate >= DateTime.Now.AddYears(13));
+            if (course == null)
+            {
+                return false;
+            }
+            if (request.Price != null)
+            {
+                courseprice.Price = request.Price.Value;
+            }
+            if (request.Img != null)
+            {
+                course.Image = request.Img;
+            }
+            if (request.CourseName != null)
+            {
+                course.Name = request.CourseName;
+            }
+            if (request.MaxAge != null)
+            {
+                course.MaxYearOldsStudent = request.MaxAge.Value;
+            }
+            if (request.MinAge != null)
+            {
+                course.MinYearOldsStudent = request.MinAge.Value;
+            }
+            if (request.MainDescription != null)
+            {
+                course.MainDescription = request.MainDescription;
+            }
+            if (request.SubDescriptions != null)
+            {
+                var titles = await _unitOfWork.GetRepository<SubDescriptionTitle>().GetListAsync(predicate: x => x.CourseId == course.Id);
+                var courseDes = new List<SubDescriptionContent>();
+                foreach ( var title in titles) 
+                {
+                    courseDes.AddRange(await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate : x => x.SubDescriptionTitleId == title.Id));    
+                }
+                 _unitOfWork.GetRepository<SubDescriptionContent>().DeleteRangeAsync(courseDes);
+                _unitOfWork.GetRepository<SubDescriptionTitle>().DeleteRangeAsync(titles);
+                await _unitOfWork.CommitAsync();
+                List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();
+                var listSubDescription = request.SubDescriptions;
+                List<SubDescriptionContent> contents = new List<SubDescriptionContent>();
+                foreach (var sd in listSubDescription)
+                {
+                    var newTitle = new SubDescriptionTitle
+                    {
+                        Title = sd.Title,
+                        Id = Guid.NewGuid(),
+                        CourseId = course.Id,
+                    };
+                    var contentList = sd.SubDescriptionContentRequests;
+                    foreach (var content in contentList)
+                    {
+                        var newDescrption = new SubDescriptionContent
+                        {
+                            SubDescriptionTitleId = newTitle.Id,
+                            Content = content.Content,
+                            Description = content.Description,
+                            Id = Guid.NewGuid(),
+                        };
+                        contents.Add(newDescrption);
+                    }
+                    newTitle.SubDescriptionContents = contents;
+                    subDescriptionTitles.Add(newTitle);
+                    course.SubDescriptionTitles = subDescriptionTitles;
+                    await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
+                    await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
+                }
+            }
+            _unitOfWork.GetRepository<Course>().UpdateAsync(course);
+            _unitOfWork.GetRepository<CoursePrice>().UpdateAsync(courseprice);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+            return isSuccess;
         }
         #endregion
     }

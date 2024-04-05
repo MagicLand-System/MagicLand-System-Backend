@@ -23,6 +23,7 @@
             public const string GetByAdmin = UsersEndpoint + "/getByAdmin";
             public const string GetByPhone = UsersEndpoint + "/getByPhone";
             public const string GetStudent = UsersEndpoint + "/getStudent";
+            public const string GetFromName = UsersEndpoint + "/getFromName";
 
         }
         public static class Authentication
@@ -94,6 +95,7 @@
             public const string AddPrice = GetAll + "/addPrice";
             public const string GetCourseStaff = GetAll + "/staff/getCourse";
             public const string GetCourseClassStaff = GetAll + "/staff/getClass";
+            public const string UpdateCourse = GetAll + "/{id}/updateCourse";
         }
         public static class StudentEndpoint
         {

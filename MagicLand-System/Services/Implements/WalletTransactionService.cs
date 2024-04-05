@@ -1067,7 +1067,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<BillPaymentResponse> CheckoutByStaff(StaffCheckoutRequest request)
         {
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(request.StaffUserCheckout.Phone));
+            var checkphone = "+84" + request.StaffUserCheckout.Phone.Trim().Substring(1);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(checkphone));
             Guid id = Guid.Empty;
             if (user == null) 
             {
@@ -1149,7 +1150,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(user.Id.ToString()));
 
             double total = await CalculateTotal(request.Requests);
 
