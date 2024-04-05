@@ -958,12 +958,15 @@ namespace MagicLand_System.Services.Implements
                 if(finalResponse.Count > 0 || finalResponse2.Count > 0 || finalResponse3.Count > 0) 
                 {
                     var rs = finalResponse.UnionBy(finalResponse2,x => x.ClassId).UnionBy(finalResponse3,x => x.ClassId).ToList();
-                    return rs;
+                    return rs.OrderByDescending(x => x.NumberOfStudentsRegister).ToList();
                 }
                 
             }
-            return result;
-
+            if((dateOfWeeks == null || dateOfWeeks.Count == 0) && (Method == null) && (slotId == null || slotId.Count == 0))
+            {
+                return result.OrderByDescending(x => x.NumberOfStudentsRegister).ToList();
+            }
+            return new List<MyClassResponse>();
         }
         public async Task<bool> UpdateCourse(string id, UpdateCourseRequest request)
         {
