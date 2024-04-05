@@ -23,6 +23,7 @@
             public const string GetByAdmin = UsersEndpoint + "/getByAdmin";
             public const string GetByPhone = UsersEndpoint + "/getByPhone";
             public const string GetStudent = UsersEndpoint + "/getStudent";
+            public const string GetFromName = UsersEndpoint + "/getFromName";
 
         }
         public static class Authentication

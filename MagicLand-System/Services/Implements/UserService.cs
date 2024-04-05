@@ -648,5 +648,30 @@ namespace MagicLand_System.Services.Implements
             }
             return st;  
         }
+
+        public async Task<List<UserResponse>> GetUserFromName(string name)
+        {
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate : x => x.FullName.ToLower().Trim().Contains(name.ToLower().Trim()),include : x => x.Include(x => x.Role));
+            var responses = new List<UserResponse>();
+            foreach( var user in users)
+            {
+                if (user.Role.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()))
+                {
+                    var response = new UserResponse
+                    {
+                        Email = user.Email,
+                        Phone = user.Phone,
+                        Address = user.Address,
+                        AvatarImage = user.AvatarImage,
+                        DateOfBirth = user.DateOfBirth.Value,
+                        FullName = user.FullName,
+                        Gender = user.Gender,
+                        Id = user.Id,
+                    };
+                    responses.Add(response);
+                }
+            }
+            return responses;   
+        }
     }
 }
