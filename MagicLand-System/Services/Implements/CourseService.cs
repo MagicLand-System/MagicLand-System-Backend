@@ -690,6 +690,10 @@ namespace MagicLand_System.Services.Implements
                     ongoing = count.Count();
                 }
                 var classList = course.Classes.ToList();
+                if(classList == null || classList.Count == 0)
+                {
+                    continue;
+                }
                 var earliestDate = (course.Classes.Where(x => x.Status.Equals("UPCOMING") && x.StartDate >= DateTime.Now).OrderBy(x => x.StartDate).ToArray())[0].StartDate;
                 StaffCourseResponse staffCourseResponse = new StaffCourseResponse
                 {
@@ -715,21 +719,30 @@ namespace MagicLand_System.Services.Implements
             }
             if(result.Count > 0)
             {
-                if(categoryIds != null && categoryIds.Count > 0) 
+                List<StaffCourseResponse> result1 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result2 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result3 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result4 = new List<StaffCourseResponse>();
+                if (categoryIds != null && categoryIds.Count > 0) 
                 {
-                    result = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList(); 
+                    result1 = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList(); 
                 }
                 if(minAge != null)
                 {
-                    result = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
+                     result2 = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
                 }
                 if(MaxAge != null)
                 {
-                    result = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
+                     result3 = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
                 }
                 if(searchString != null)
                 {
-                    result = result.Where(x => x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim())).ToList();
+                    result4 = result.Where(x => x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim())).ToList();
+                }
+                if(result1.Count > 0 || result2.Count > 0 || result3.Count > 0 || result4.Count > 0)
+                {
+                    var resultT = result1.UnionBy(result2, x => x.Id).UnionBy(result3, x => x.Id).UnionBy(result4, x => x.Id);
+                    result = resultT.ToList();
                 }
             }
             return result;
