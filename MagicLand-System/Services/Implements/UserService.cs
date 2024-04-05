@@ -598,20 +598,20 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentResponse>> GetStudents(string classId, string phone)
         {
-            var checkphone = "+84" + phone.Substring(1);
+            var checkphone = "+84" + phone.Trim().Substring(1);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(checkphone),include : x => x.Include(x => x.Students));
             if(user == null)
             {
                 return new List<StudentResponse>();
             }
             var students = user.Students;
-            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()), include : x => x.Include(x => x.Course));
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()), include : x => x.Include(x => x.Course).Include(x => x.Schedules));
             var minAge = classx.Course.MinYearOldsStudent.Value;
-            var maxAge = classx.Course.MinYearOldsStudent.Value;
+            var maxAge = classx.Course.MaxYearOldsStudent.Value;
             var startdate = classx.StartDate;
             var enddate = classx.EndDate;
             var year = DateTime.Now.Year;
-            students = students.Where(x => ((year - x.DateOfBirth.Year) >= minAge )).Where(x => ((year - x.DateOfBirth.Year) <= minAge)).ToList();
+            students = students.Where(x => ((year - x.DateOfBirth.Year) >= minAge )).Where(x => ((year - x.DateOfBirth.Year) <= maxAge)).ToList();
             List<StudentResponse> st = new List<StudentResponse>();
             foreach(var student in students)
             {
@@ -623,12 +623,41 @@ namespace MagicLand_System.Services.Implements
                var schedules = attandances.Where(x => (x.Schedule.Date >= startdate  && x.Schedule.Date.Date <= enddate)).Select(x => x.Schedule);
                 var DaysOfWeek = classx.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
                 bool flag = true;
+                string existDateOfWeek = "";
                 foreach( var day in DaysOfWeek)
                 {
                     var isExist = schedules.Any(x => x.DayOfWeek == day.DayOfWeek && x.SlotId == day.SlotId);
                     if(isExist) 
                     {
                         flag = false;
+                        if(day.DayOfWeek == 1)
+                        {
+                            existDateOfWeek = "sunday";
+                        }
+                        if (day.DayOfWeek == 2)
+                        {
+                            existDateOfWeek = "monday";
+                        }
+                        if (day.DayOfWeek == 4)
+                        {
+                            existDateOfWeek = "tuesday";
+                        }
+                        if (day.DayOfWeek == 8)
+                        {
+                            existDateOfWeek = "wednesday";
+                        }
+                        if (day.DayOfWeek == 16)
+                        {
+                            existDateOfWeek = "thursday";
+                        }
+                        if (day.DayOfWeek == 32)
+                        {
+                            existDateOfWeek = "friday";
+                        }
+                        if (day.DayOfWeek == 64)
+                        {
+                            existDateOfWeek = "saturday";
+                        }
                         break;
                     }
                 }
@@ -643,7 +672,23 @@ namespace MagicLand_System.Services.Implements
                         FullName = student.FullName,
                         Gender = student.Gender,
                         StudentId = student.Id,
+                        CanRegistered = true,
                     });
+                } 
+                else
+                {
+                    st.Add(new StudentResponse
+                    {
+                        Age = year - student.DateOfBirth.Year,
+                        AvatarImage = student.AvatarImage,
+                        DateOfBirth = student.DateOfBirth,
+                        Email = student.Email,
+                        FullName = student.FullName,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                        CanRegistered = false,
+                        ReasonCannotRegistered = $"Học sinh tồn tại lịch vào {existDateOfWeek} trước đó",
+                    }) ;
                 }
             }
             return st;  
