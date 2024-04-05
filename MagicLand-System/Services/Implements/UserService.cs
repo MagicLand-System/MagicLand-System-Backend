@@ -611,11 +611,26 @@ namespace MagicLand_System.Services.Implements
             var startdate = classx.StartDate;
             var enddate = classx.EndDate;
             var year = DateTime.Now.Year;
-            students = students.Where(x => ((year - x.DateOfBirth.Year) >= minAge )).Where(x => ((year - x.DateOfBirth.Year) <= maxAge)).ToList();
             List<StudentResponse> st = new List<StudentResponse>();
             foreach(var student in students)
             {
-               var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId == student.Id, include: x => x.Include(x => x.Schedule));
+                if((year - student.DateOfBirth.Year) < minAge  && (year - student.DateOfBirth.Year) > maxAge)
+                {
+                    st.Add(new StudentResponse
+                    {
+                        Age = year - student.DateOfBirth.Year,
+                        AvatarImage = student.AvatarImage,
+                        DateOfBirth = student.DateOfBirth,
+                        Email = student.Email,
+                        FullName = student.FullName,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                        CanRegistered = false,
+                        ReasonCannotRegistered = $"Học sinh không đủ độ tuổi",
+                    });
+                    continue;
+                }
+                var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId == student.Id, include: x => x.Include(x => x.Schedule));
                if(attandances == null)
                 {
                     continue;
