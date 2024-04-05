@@ -795,6 +795,7 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 2)
@@ -805,6 +806,7 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 4)
@@ -815,6 +817,7 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 8)
@@ -825,6 +828,7 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 16)
@@ -835,6 +839,8 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
+
                         });
                     }
                     if (day.DayOfWeek == 32)
@@ -845,6 +851,7 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                     if (day.DayOfWeek == 64)
@@ -855,9 +862,11 @@ namespace MagicLand_System.Services.Implements
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                             SlotId = slot.Id,   
+                            DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
                 }
+                schedules = schedules.OrderBy(x => x.DateOfWeekNumber).ToList();
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
                 MyClassResponse myClassResponse = new MyClassResponse
