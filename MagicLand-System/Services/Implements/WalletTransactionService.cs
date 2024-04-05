@@ -1146,11 +1146,12 @@ namespace MagicLand_System.Services.Implements
                     await _unitOfWork.GetRepository<Student>().InsertAsync(newStudent);
                     await _unitOfWork.GetRepository<User>().InsertAsync(newStudentAccount);
                     _unitOfWork.Commit();
-                    request.Requests.FirstOrDefault().StudentIdList.Add(newStudentAccount.Id);
+                    request.Requests.FirstOrDefault().StudentIdList.Add(newStudentAccount.StudentIdAccount.Value);
                 }
             }
+            var x = request.Requests.FirstOrDefault();
             var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(user.Id.ToString()));
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.ToString().Equals(user.Id.ToString()));
 
             double total = await CalculateTotal(request.Requests);
 
