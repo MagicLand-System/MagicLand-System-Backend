@@ -748,7 +748,7 @@ namespace MagicLand_System.Services.Implements
             return result;
         }
 
-        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks)
+        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks , string? Method, List<string>? slotId)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId) && x.Status.Equals("UPCOMING"),include: x => x.Include(x => x.Schedules));
             List<MyClassResponse> result = new List<MyClassResponse>();
@@ -761,6 +761,7 @@ namespace MagicLand_System.Services.Implements
                 if (room == null) { continue; }
                 var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.LecturerId.ToString()));
                 if (lecturer == null) { continue; }
+                var students = (await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id)).Count;
                 RoomResponse roomResponse = new RoomResponse
                 {
                     Floor = room.Floor.Value,
@@ -793,6 +794,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Sunday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
                         });
                     }
                     if (day.DayOfWeek == 2)
@@ -802,6 +804,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Monday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
                         });
                     }
                     if (day.DayOfWeek == 4)
@@ -811,6 +814,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Tuesday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
                         });
                     }
                     if (day.DayOfWeek == 8)
@@ -820,6 +824,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Wednesday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
                         });
                     }
                     if (day.DayOfWeek == 16)
@@ -829,6 +834,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Thursday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
                         });
                     }
                     if (day.DayOfWeek == 32)
@@ -838,6 +844,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Friday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,
                         });
                     }
                     if (day.DayOfWeek == 64)
@@ -847,6 +854,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Saturday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
+                            SlotId = slot.Id,   
                         });
                     }
                 }
@@ -873,6 +881,7 @@ namespace MagicLand_System.Services.Implements
                     LecturerResponse = lecturerResponse,
                     RoomResponse = roomResponse,
                     CreatedDate = c.AddedDate.Value,
+                    NumberOfStudentsRegister = students,
                 };
                 var syllabusCode = "undefined";
                 var syllabusName = "undefined";
@@ -903,24 +912,55 @@ namespace MagicLand_System.Services.Implements
             {
                 return result;
             }
-            List<MyClassResponse> finalResponse = new List<MyClassResponse>();  
-            if(dateOfWeeks != null && dateOfWeeks.Count > 0)
+            List<MyClassResponse> finalResponse = new List<MyClassResponse>();
+            List<MyClassResponse> finalResponse2 = new List<MyClassResponse>();
+            List<MyClassResponse> finalResponse3 = new List<MyClassResponse>();
+            if(result.Count > 0)
             {
-                foreach(var r in result)
+                if (dateOfWeeks != null && dateOfWeeks.Count > 0)
                 {
-                    var sch = r.Schedules;
-                    foreach(var d in dateOfWeeks)
+                    foreach (var r in result)
                     {
-                        var schList = sch.Select(x => x.DayOfWeek).ToList();
-                        var isExist = schList.Any(x => x.ToLower().Equals(d.ToLower()));
-                        if(isExist)
+                        var sch = r.Schedules;
+                        foreach (var d in dateOfWeeks)
                         {
-                            finalResponse.Add(r);
-                            break;
+                            var schList = sch.Select(x => x.DayOfWeek).ToList();
+                            var isExist = schList.Any(x => x.ToLower().Equals(d.ToLower()));
+                            if (isExist)
+                            {
+                                finalResponse.Add(r);
+                                break;
+                            }
                         }
                     }
                 }
-                return finalResponse;
+                if(Method != null)
+                {
+                    finalResponse2 = result.Where(x => x.Method.ToLower().Contains(Method.ToLower())).ToList();
+                }
+                if(slotId != null && slotId.Count > 0)
+                {
+                    foreach (var r in result)
+                    {
+                        var sch = r.Schedules;
+                        foreach (var d in slotId)
+                        {
+                            var schList = sch.Select(x => x.SlotId).ToList();
+                            var isExist = schList.Any(x => x.ToString().ToLower().Equals(d.ToLower()));
+                            if (isExist)
+                            {
+                                finalResponse3.Add(r);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(finalResponse.Count > 0 || finalResponse2.Count > 0 || finalResponse3.Count > 0) 
+                {
+                    var rs = finalResponse.UnionBy(finalResponse2,x => x.ClassId).UnionBy(finalResponse3,x => x.ClassId).ToList();
+                    return rs;
+                }
+                
             }
             return result;
 
