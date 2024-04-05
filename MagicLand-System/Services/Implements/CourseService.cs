@@ -591,11 +591,11 @@ namespace MagicLand_System.Services.Implements
         {
             if (request != null)
             {
-                if (request.StartTime < DateTime.Now.AddMinutes(-60))
+                if (request.StartTime < DateTime.Now.AddMinutes(-120))
                 {
                     throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
                 }
-                if (request.EndTime < DateTime.Now.AddMinutes(-60))
+                if (request.EndTime < DateTime.Now.AddMinutes(-120))
                 {
                     throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
                 }
@@ -608,8 +608,8 @@ namespace MagicLand_System.Services.Implements
                     Price = request.Price,
                     CourseId = request.CourseId,
                     //EffectiveDate = request.EffectiveDate,
-                    StartDate = request.StartTime,
-                    EndDate = request.EndTime,
+                    StartDate = request.StartTime.AddHours(7),
+                    EndDate = request.EndTime.AddHours(7),
                     Id = Guid.NewGuid(),
                 };
                 await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(price);
