@@ -949,6 +949,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     var schedule = cls.Schedules.ToList()[i];
                     var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
+                    var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
 
                     var studentSchedule = new StudentScheduleResponse
                     {
@@ -972,7 +973,12 @@ namespace MagicLand_System.Services.Implements
                         AttendanceStatus = attendance.IsPresent == true ? "Có Mặt" : attendance.IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
                         Note = attendance.Note,
                         LecturerName = lecturerName,
+                        EvaluateLevel = evaluate.Status != null ? evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3 : null,
+                        EvaluateDescription = evaluate.Status != null ?  evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường" 
+                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt" : null,
+                        EvaluateNote = evaluate.Note,
                     };
+
                     listStudentSchedule.Add(studentSchedule);
                 }
             }

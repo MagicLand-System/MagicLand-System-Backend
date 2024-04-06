@@ -21,6 +21,9 @@ public class StudentScheduleResponse
     public string? AttendanceStatus { get; set; }
     public string? Note { get; set; }
     public string? LecturerName { get; set; }
+    public int? EvaluateLevel { get; set; }
+    public string? EvaluateDescription { get; set; }
+    public string? EvaluateNote { get; set; }
     public string? Status { get; set; }
 
 }
