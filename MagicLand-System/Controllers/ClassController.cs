@@ -397,7 +397,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
         {
             var isSuccess = await _classService.CreateNewClass(request);
-            if (!isSuccess)
+            if (!isSuccess.Success)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -406,7 +406,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            return Ok(new { Message = "Create Successfully" });
+            return Ok(isSuccess);
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]

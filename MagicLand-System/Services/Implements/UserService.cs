@@ -598,8 +598,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentResponse>> GetStudents(string classId, string phone)
         {
-            var checkphone = "+84" + phone.Trim().Substring(1);
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(checkphone),include : x => x.Include(x => x.Students));
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(phone),include : x => x.Include(x => x.Students));
             if(user == null)
             {
                 return new List<StudentResponse>();

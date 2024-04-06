@@ -384,6 +384,23 @@ namespace MagicLand_System.Services.Implements
 
             return bill;
         }
+        private BillPaymentResponse RenderStaffBill(User currentPayer, List<string> messageList, double total, double discount)
+        {
+            var bill = new BillPaymentResponse
+            {
+                Status = TransactionStatusMessageConstant.Success,
+                Message = string.Join(" , ", messageList),
+                MoneyAmount = total,
+                Discount = discount,
+                MoneyPaid = total - discount,
+                Date = DateTime.Now,
+                Method = "Thanh Toán Trực Tiếp Tại Quầy",
+                Type = TransactionTypeEnum.Payment.ToString(),
+                Payer = currentPayer.FullName!,
+            };
+
+            return bill;
+        }
 
         private async Task<(List<Attendance>, List<Evaluate>)> RenderStudentItemScheduleList(Guid classId, List<Guid> studentIds)
         {
@@ -1067,8 +1084,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<BillPaymentResponse> CheckoutByStaff(StaffCheckoutRequest request)
         {
-            var checkphone = "+84" + request.StaffUserCheckout.Phone.Trim().Substring(1);
-            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(checkphone));
+            //var checkphone = "+84" + request.StaffUserCheckout.Phone.Trim().Substring(1);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(request.StaffUserCheckout.Phone.Trim()));
             Guid id = Guid.Empty;
             if (user == null) 
             {
@@ -1146,11 +1163,12 @@ namespace MagicLand_System.Services.Implements
                     await _unitOfWork.GetRepository<Student>().InsertAsync(newStudent);
                     await _unitOfWork.GetRepository<User>().InsertAsync(newStudentAccount);
                     _unitOfWork.Commit();
-                    request.Requests.FirstOrDefault().StudentIdList.Add(newStudentAccount.Id);
+                    request.Requests.FirstOrDefault().StudentIdList.Add(newStudentAccount.StudentIdAccount.Value);
                 }
             }
+            var x = request.Requests.FirstOrDefault();
             var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(user.Id.ToString()));
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.ToString().Equals(user.Id.ToString()));
 
             double total = await CalculateTotal(request.Requests);
 
@@ -1158,7 +1176,7 @@ namespace MagicLand_System.Services.Implements
 
             var messageList = await PurchaseByStaff(request.Requests, personalWallet, currentPayer, discount);
 
-            return RenderBill(currentPayer, messageList, total, discount * request.Requests.Count());
+            return RenderStaffBill(currentPayer, messageList, total, discount * request.Requests.Count());
 
         }
         private async Task<int> GetNextAccountIndex(User currentUser)
