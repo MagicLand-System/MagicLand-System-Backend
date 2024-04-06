@@ -2,18 +2,14 @@
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Quizzes;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Customs;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
+using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
-using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
-using MagicLand_System.PayLoad.Response.Syllabuses;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -74,6 +70,31 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetQuizByCourseId([FromQuery] Guid id)
         {
             var responses = await _syllabusService.LoadQuizzesByCourseIdAsync(id);
+
+            return Ok(responses);
+        }
+        #region document API Get Question Package Flas Card
+        /// <summary>
+        ///  Truy Suất Toàn Bộ Gói Câu Hỏi Và Câu Trả Lời Của Một Bài Kiểm Tra (Chỉ Áp Dụng Dạng Nối Thẻ)
+        /// </summary>
+        /// <param name="examId">Id Của Bài Kiểm Tra Nối Thẻ</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "examId":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Các Câu Hỏi Và Cặp Thẻ Trả Lời</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.QuizEndPoint.GetFCQuestionPackage)]
+        [ProducesResponseType(typeof(FCQuizResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetFCQuestionPackage([FromQuery] Guid examId)
+        {
+            var responses = await _quizService.GetFCQuestionPackageAsync(examId);
 
             return Ok(responses);
         }
@@ -188,7 +209,7 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.QuizEndPoint.GetQuizOffExamByExamId)]
-        [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
         public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int? examPart)

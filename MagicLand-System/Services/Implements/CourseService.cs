@@ -132,29 +132,41 @@ namespace MagicLand_System.Services.Implements
             {
                 courses = courses.Where(c => c.Classes.Any() && c.Classes.Any(c => c.Status == ClassStatusEnum.UPCOMING.ToString())).ToList();
             }
+
+            var currentRole = GetRoleFromJwt();
+            var currentUser = await GetUserFromJwt();
+
+            courses = await FilterCompletedCourses(courses, currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : currentUser.StudentIdAccount!.Value);
+
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            var responses = new List<CourseWithScheduleShorten>();
-            foreach (var course in courses)
-            {
-                var currentCoursePrerequistites = new List<Course>();
-                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
-                {
-                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
-                    {
-                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
-                    }
-                }
-                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentCoursePrerequistites, coureSubsequents));
-            }
+            var responses = GenerateCoursesResponse(courses, coursePrerequisites, coureSubsequents);
 
+            await SettingLastResponse(isValid, currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : null, responses);
 
+            return responses;
+            //return courses.Select(c => CourseCustomMapper
+            //.fromCourseToCourseResExtraInfor(c, coursePrerequisites
+            //.Where(cp => c.Syllabus != null && c.Syllabus!.SyllabusPrerequisites!.Any(sp => cp.Syllabus != null && sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
+            //coureSubsequents)).ToList();
+        }
+
+        private async Task SettingLastResponse(bool isValid, Guid? userId, List<CourseWithScheduleShorten> responses)
+        {
             if (isValid)
             {
+                if (userId == null)
+                {
+                    responses.ForEach(res => res.IsInCart = null);
+                    return;
+                }
+
+
                 var currentUserCart = await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
-                     predicate: x => x.UserId == GetUserIdFromJwt(),
+                     predicate: x => x.UserId == userId,
                      include: x => x.Include(x => x.CartItems.OrderByDescending(ci => ci.DateCreated)).ThenInclude(cts => cts.StudentInCarts));
+
 
                 foreach (var response in responses)
                 {
@@ -176,12 +188,40 @@ namespace MagicLand_System.Services.Implements
             {
                 res.Price = await GetDynamicPrice(res.CourseId, false);
             }
+        }
+
+        private static List<CourseWithScheduleShorten> GenerateCoursesResponse(ICollection<Course> courses, Course[] coursePrerequisites, Course[] coureSubsequents)
+        {
+            var responses = new List<CourseWithScheduleShorten>();
+            foreach (var course in courses)
+            {
+                var currentCoursePrerequistites = new List<Course>();
+                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
+                {
+                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
+                    {
+                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
+                    }
+                }
+                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentCoursePrerequistites, coureSubsequents));
+            }
 
             return responses;
-            //return courses.Select(c => CourseCustomMapper
-            //.fromCourseToCourseResExtraInfor(c, coursePrerequisites
-            //.Where(cp => c.Syllabus != null && c.Syllabus!.SyllabusPrerequisites!.Any(sp => cp.Syllabus != null && sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
-            //coureSubsequents)).ToList();
+        }
+
+        private async Task<ICollection<Course>> FilterCompletedCourses(ICollection<Course> courses, Guid userId)
+        {
+            var completeCourses = (await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
+                predicate: x => (x.Student!.ParentId == userId || x.Student!.Id == userId) && x.Class!.Status == ClassStatusEnum.COMPLETED.ToString(),
+                selector: x => x.Class!.CourseId)).ToList();
+
+
+            if (completeCourses.Any())
+            {
+                courses = courses.Where(c => completeCourses.All(cpl => cpl != c.Id)).ToList();
+            }
+
+            return courses;
         }
 
         private async Task<ICollection<Course>> GetDefaultCourse()
@@ -633,13 +673,13 @@ namespace MagicLand_System.Services.Implements
             {
                 var classList = course.Classes.ToList();
                 var isExist = classList.Any(x => x.Status.Equals("UPCOMING"));
-                if(isExist)
+                if (isExist)
                 {
                     courseList.Add(course);
                 }
             }
             List<StaffCourseResponse> result = new List<StaffCourseResponse>();
-            foreach(var course in courseList)
+            foreach (var course in courseList)
             {
                 var courseFound = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(course.Id.ToString()), include: x => x.Include(x => x.SubDescriptionTitles).Include(x => x.Classes));
                 if (courseFound == null)
@@ -652,7 +692,7 @@ namespace MagicLand_System.Services.Implements
                 if (courseSyllabus != null)
                 {
                     subjectname = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Name;
-                    categoryId = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Id.ToString();    
+                    categoryId = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Id.ToString();
                 }
                 var titles = courseFound.SubDescriptionTitles;
                 List<SubDescriptionTitleResponse> desResponse = new List<SubDescriptionTitleResponse>();
@@ -690,7 +730,7 @@ namespace MagicLand_System.Services.Implements
                     ongoing = count.Count();
                 }
                 var classList = course.Classes.ToList();
-                if(classList == null || classList.Count == 0)
+                if (classList == null || classList.Count == 0)
                 {
                     continue;
                 }
@@ -705,7 +745,7 @@ namespace MagicLand_System.Services.Implements
                     MinYearOldsStudent = courseFound.MinYearOldsStudent,
                     Name = courseFound.Name,
                     NumberOfSession = courseFound.NumberOfSession,
-                    Price = await GetDynamicPrice(course.Id,false),
+                    Price = await GetDynamicPrice(course.Id, false),
                     Status = courseFound.Status,
                     SubjectName = subjectname,
                     SyllabusId = courseFound.SyllabusId,
@@ -717,29 +757,29 @@ namespace MagicLand_System.Services.Implements
                 };
                 result.Add(staffCourseResponse);
             }
-            if(result.Count > 0)
+            if (result.Count > 0)
             {
                 List<StaffCourseResponse> result1 = new List<StaffCourseResponse>();
                 List<StaffCourseResponse> result2 = new List<StaffCourseResponse>();
                 List<StaffCourseResponse> result3 = new List<StaffCourseResponse>();
                 List<StaffCourseResponse> result4 = new List<StaffCourseResponse>();
-                if (categoryIds != null && categoryIds.Count > 0) 
+                if (categoryIds != null && categoryIds.Count > 0)
                 {
-                    result1 = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList(); 
+                    result1 = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList();
                 }
-                if(minAge != null)
+                if (minAge != null)
                 {
-                     result2 = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
+                    result2 = result.Where(x => x.MinYearOldsStudent >= minAge.Value).ToList();
                 }
-                if(MaxAge != null)
+                if (MaxAge != null)
                 {
-                     result3 = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
+                    result3 = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
                 }
-                if(searchString != null)
+                if (searchString != null)
                 {
                     result4 = result.Where(x => x.Name.ToLower().Trim().Contains(searchString.ToLower().Trim())).ToList();
                 }
-                if(result1.Count > 0 || result2.Count > 0 || result3.Count > 0 || result4.Count > 0)
+                if (result1.Count > 0 || result2.Count > 0 || result3.Count > 0 || result4.Count > 0)
                 {
                     var resultT = result1.UnionBy(result2, x => x.Id).UnionBy(result3, x => x.Id).UnionBy(result4, x => x.Id);
                     result = resultT.ToList();
@@ -748,9 +788,9 @@ namespace MagicLand_System.Services.Implements
             return result;
         }
 
-        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks , string? Method, List<string>? slotId)
+        public async Task<List<MyClassResponse>> GetClassesOfCourse(string courseId, List<string>? dateOfWeeks, string? Method, List<string>? slotId)
         {
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId) && x.Status.Equals("UPCOMING"),include: x => x.Include(x => x.Schedules));
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId) && x.Status.Equals("UPCOMING"), include: x => x.Include(x => x.Schedules));
             List<MyClassResponse> result = new List<MyClassResponse>();
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
@@ -861,7 +901,7 @@ namespace MagicLand_System.Services.Implements
                             DayOfWeek = "Saturday",
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
-                            SlotId = slot.Id,   
+                            SlotId = slot.Id,
                             DateOfWeekNumber = day.DayOfWeek,
                         });
                     }
@@ -908,7 +948,7 @@ namespace MagicLand_System.Services.Implements
                     MaxYearOldsStudent = course.MaxYearOldsStudent,
                     MinYearOldsStudent = course.MinYearOldsStudent,
                     Name = course.Name,
-                    Price = await GetDynamicPrice(course.Id,false),
+                    Price = await GetDynamicPrice(course.Id, false),
                     SyllabusCode = syllabusCode,
                     SyllabusName = syllabusName,
                     SyllabusType = syllabusType,
@@ -917,14 +957,14 @@ namespace MagicLand_System.Services.Implements
                 myClassResponse.CourseResponse = customCourseResponse;
                 result.Add(myClassResponse);
             }
-            if(result.Count == 0)
+            if (result.Count == 0)
             {
                 return result;
             }
             List<MyClassResponse> finalResponse = new List<MyClassResponse>();
             List<MyClassResponse> finalResponse2 = new List<MyClassResponse>();
             List<MyClassResponse> finalResponse3 = new List<MyClassResponse>();
-            if(result.Count > 0)
+            if (result.Count > 0)
             {
                 if (dateOfWeeks != null && dateOfWeeks.Count > 0)
                 {
@@ -943,11 +983,11 @@ namespace MagicLand_System.Services.Implements
                         }
                     }
                 }
-                if(Method != null)
+                if (Method != null)
                 {
                     finalResponse2 = result.Where(x => x.Method.ToLower().Contains(Method.ToLower())).ToList();
                 }
-                if(slotId != null && slotId.Count > 0)
+                if (slotId != null && slotId.Count > 0)
                 {
                     foreach (var r in result)
                     {
@@ -964,14 +1004,14 @@ namespace MagicLand_System.Services.Implements
                         }
                     }
                 }
-                if(finalResponse.Count > 0 || finalResponse2.Count > 0 || finalResponse3.Count > 0) 
+                if (finalResponse.Count > 0 || finalResponse2.Count > 0 || finalResponse3.Count > 0)
                 {
-                    var rs = finalResponse.UnionBy(finalResponse2,x => x.ClassId).UnionBy(finalResponse3,x => x.ClassId).ToList();
+                    var rs = finalResponse.UnionBy(finalResponse2, x => x.ClassId).UnionBy(finalResponse3, x => x.ClassId).ToList();
                     return rs.OrderByDescending(x => x.NumberOfStudentsRegister).ToList();
                 }
-                
+
             }
-            if((dateOfWeeks == null || dateOfWeeks.Count == 0) && (Method == null) && (slotId == null || slotId.Count == 0))
+            if ((dateOfWeeks == null || dateOfWeeks.Count == 0) && (Method == null) && (slotId == null || slotId.Count == 0))
             {
                 return result.OrderByDescending(x => x.NumberOfStudentsRegister).ToList();
             }
@@ -1013,11 +1053,11 @@ namespace MagicLand_System.Services.Implements
             {
                 var titles = await _unitOfWork.GetRepository<SubDescriptionTitle>().GetListAsync(predicate: x => x.CourseId == course.Id);
                 var courseDes = new List<SubDescriptionContent>();
-                foreach ( var title in titles) 
+                foreach (var title in titles)
                 {
-                    courseDes.AddRange(await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate : x => x.SubDescriptionTitleId == title.Id));    
+                    courseDes.AddRange(await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate: x => x.SubDescriptionTitleId == title.Id));
                 }
-                 _unitOfWork.GetRepository<SubDescriptionContent>().DeleteRangeAsync(courseDes);
+                _unitOfWork.GetRepository<SubDescriptionContent>().DeleteRangeAsync(courseDes);
                 _unitOfWork.GetRepository<SubDescriptionTitle>().DeleteRangeAsync(titles);
                 await _unitOfWork.CommitAsync();
                 List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();

@@ -970,12 +970,12 @@ namespace MagicLand_System.Services.Implements
                         Method = cls.Method,
                         RoomInFloor = schedule.Room.Floor,
                         RoomName = schedule.Room.Name,
-                        AttendanceStatus = attendance.IsPresent == true ? "Có Mặt" : attendance.IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
-                        Note = attendance.Note,
+                        AttendanceStatus = attendance != null ? attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
+                        Note = attendance != null ? attendance.Note : null,
                         LecturerName = lecturerName,
-                        EvaluateLevel = evaluate.Status != null ? evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3 : null,
-                        EvaluateDescription = evaluate.Status != null ?  evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường" 
-                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt" : null,
+                        EvaluateLevel = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3,
+                        EvaluateDescription = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
+                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt",
                         EvaluateNote = evaluate.Note,
                     };
 

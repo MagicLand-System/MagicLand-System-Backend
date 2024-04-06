@@ -6,6 +6,8 @@ using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Quizzes;
+using MagicLand_System.PayLoad.Response.Quizzes.Answers;
+using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
@@ -1157,6 +1159,66 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex}{ex.InnerException}]", StatusCodes.Status500InternalServerError);
             }
 
+        }
+
+        public async Task<List<FCQuizResponse>> GetFCQuestionPackageAsync(Guid examId)
+        {
+            var fcQuestionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
+                predicate: x => x.Id == examId,
+                include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards)!.ThenInclude(fc => fc.SideFlashCards));
+
+            if (fcQuestionPackage == null)
+            {
+                throw new BadHttpRequestException($"Id Của Bài Kiểm Tra Không Tồn Tại [{examId}]", StatusCodes.Status400BadRequest);
+            }
+
+            if (fcQuestionPackage.QuizType.ToLower() != QuizTypeEnum.flashcard.ToString())
+            {
+                throw new BadHttpRequestException($"Bài Kiểm Tra Không Thuộc Dạng Nối Thẻ Yêu Cầu Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+
+            var questions = fcQuestionPackage.Questions;
+            if (questions == null || !questions.Any())
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Bài Kiểm Tra Không Tìm Thấy Gói Câu Hỏi, Vui Lòng Chờ Nhân Viên Sử Lý", StatusCodes.Status500InternalServerError);
+            }
+            var responses = new List<FCQuizResponse>();
+            foreach (var quest in questions)
+            {
+                var response = new FCQuizResponse
+                {
+                    QuestionId = quest.Id,
+                    QuestionDescription = quest.Description,
+                    QuestionImage = quest.Img,
+                };
+
+                var fcAnswers = new List<CoupleFCAnswerResponse>();
+                int numberCouple = 0;
+                foreach (var fc in quest.FlashCards!)
+                {
+                    numberCouple++;
+                    var coupleFcAnswer = new CoupleFCAnswerResponse();
+
+                    foreach (var sfc in fc.SideFlashCards)
+                    {
+                        coupleFcAnswer.CoupleFlashCard.Add(new FCAnswerResponse
+                        {
+                            CardId = sfc.Id,
+                            CardDescription = sfc.Description,
+                            CardImage = sfc.Image,
+                            NumberCoupleIdentify = numberCouple,
+                            Score = fc.Score / 2,
+                        });
+                    }
+
+                    fcAnswers.Add(coupleFcAnswer);
+                }
+
+                response.CardAnswers = fcAnswers;
+                responses.Add(response);
+            }
+
+            return responses;
         }
 
         //public async Task<FullyExamRes> GetFullyExamInforStudent(Guid studentId, Guid examId)

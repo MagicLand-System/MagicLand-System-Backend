@@ -208,6 +208,7 @@
             public const string GradeQuizOffLine = ApiEndpoint + "/exam/quiz/offLine/grade";
             public const string EvaluateQuizOnLine = ApiEndpoint + "/exam/quiz/onLine/evaluate";
             public const string GradeQuizFC = ApiEndpoint + "/exam/quiz/flashCard/grade";
+            public const string GetFCQuestionPackage = ApiEndpoint + "/exam/quiz/flashCard/package";
             public const string GetQuizOverallByCourseId = ApiEndpoint + "/exams/quizzes/course";
             public const string GetExamOffClassByClassId = ApiEndpoint + "/exams/class";
             public const string GetExamOffCurrentStudentByTime = ApiEndpoint + "/exams/student/byTime";

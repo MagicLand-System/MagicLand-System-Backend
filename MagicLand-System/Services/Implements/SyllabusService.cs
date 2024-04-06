@@ -1186,7 +1186,8 @@ namespace MagicLand_System.Services.Implements
                         selector: x => x.AttemptAllowed,
                         predicate: x => x.ExamId == res.ExamId);
 
-                    res.Score = isQuizDone == null ? null : isQuizDone.ScoreEarned;
+                    res.Score = isQuizDone != null ? isQuizDone.ScoreEarned : null;
+                    res.ExamStatus = isQuizDone != null ? isQuizDone.ExamStatus : null;
 
                     if (attemptSetting != 0)
                     {
