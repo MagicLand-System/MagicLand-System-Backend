@@ -24,7 +24,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students);
         Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);
-        Task<bool> CreateNewClass(CreateClassRequest request);
+        Task<CreateSingleClassResponse> CreateNewClass(CreateClassRequest request);
         Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null);
         Task<MyClassResponse> GetClassDetail(string id);
         Task<List<StudentInClass>> GetAllStudentInClass(string id);

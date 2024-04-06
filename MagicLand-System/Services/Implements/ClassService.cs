@@ -6,6 +6,7 @@ using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
+using MagicLand_System.PayLoad;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Class;
@@ -25,8 +26,10 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Data;
 using System.Globalization;
+using System.Net.WebSockets;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -63,7 +66,7 @@ namespace MagicLand_System.Services.Implements
             return abbreviation;
         }
 
-        public async Task<bool> CreateNewClass(CreateClassRequest request)
+        public async Task<CreateSingleClassResponse> CreateNewClass(CreateClassRequest request)
         {
             if (request.StartDate < DateTime.Now)
             {
@@ -191,7 +194,60 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Cập nhật lớp thất bại");
             }
-            return isSuccess;
+            var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.LecturerId.ToString()), selector: x => x.FullName);
+            var roomName = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.RoomId.ToString()), selector: x => x.Name);
+            var classCode = request.ClassCode;
+            List<ScheduleRequestV2> Times = new List<ScheduleRequestV2>();
+            foreach (var schedule in request.ScheduleRequests)
+            {
+                var dow = "";
+                if (schedule.DateOfWeek.ToLower().Equals("sunday"))
+                {
+                    dow = "Chủ Nhật";
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("monday"))
+                {
+                    dow = "Thứ 2";
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("tuesday"))
+                {
+                    dow = "Thứ 3";
+
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("wednesday"))
+                {
+                    dow = "Thứ 4";
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("thursday"))
+                {
+                    dow = "Thứ 5";
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("friday"))
+                {
+                    dow = "Thứ 6";
+                }
+                if (schedule.DateOfWeek.ToLower().Equals("saturday"))
+                {
+                    dow = "Thứ 7";
+                }
+                var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.SlotId.ToString()));
+                var startTime = slot.StartTime;
+                var endTime = slot.EndTime;
+                var time = dow + ": " + startTime + "-" + endTime;
+                Times.Add(new ScheduleRequestV2
+                {
+                    ScheduleTime = time,
+                });
+             }
+            return new CreateSingleClassResponse
+            {
+                ClassCode = classCode,
+                Times = Times,
+                LecturerName = lecturerName,
+                RoomName = roomName,
+                Success = isSuccess,
+            };
+                
         }
 
 
@@ -1411,7 +1467,7 @@ namespace MagicLand_System.Services.Implements
                     RoomId = roomLec.Room.Id,
                 };
                 var isSuccess = await CreateNewClass(myRequest);
-                if (!isSuccess)
+                if (!isSuccess.Success)
                 {
                     rows.Add(new RowInsertResponse
                     {
