@@ -11,6 +11,7 @@ using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NgrokAspNetCore;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
@@ -18,6 +19,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -132,9 +134,13 @@ builder.Services.AddSingleton(new Job(type: typeof(DailyUpdateJob), expression: 
 builder.Services.AddSingleton(new Job(type: typeof(DailyCreateJob), expression: DetermineCronExpression(quartzJobs, "DailyCreateJob")));
 builder.Services.AddSingleton(new Job(type: typeof(DailyDeleteJob), expression: DetermineCronExpression(quartzJobs, "DailyDeleteJob")));
 
+builder.Services.AddNgrok();
+
 var app = builder.Build();
 
+
 app.UseSwagger();
+
 app.UseSwaggerUI(c =>
 {
     if (env.IsDevelopment() || env.IsProduction())
@@ -147,6 +153,7 @@ app.UseSwaggerUI(c =>
     }
 
 });
+
 app.UseCors("MyDefaultPolicy");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
@@ -154,6 +161,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 
 app.Run();
 string DetermineCronExpression(IEnumerable<IConfigurationSection> quartzJobs, string jobName)

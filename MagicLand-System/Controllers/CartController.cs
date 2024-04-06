@@ -64,7 +64,7 @@ namespace MagicLand_System.Controllers
             var result = await _cartService.AddCourseFavoriteOffCurrentParentAsync(courseId);
             if (result != default)
             {
-                return Ok(result);
+                return Ok();
             }
 
             return BadRequest();

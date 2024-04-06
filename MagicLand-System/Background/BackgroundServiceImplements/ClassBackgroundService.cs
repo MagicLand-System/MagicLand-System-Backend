@@ -62,12 +62,14 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 //}
 
                 UpdateStudent(cls, ClassStatusEnum.PROGRESSING.ToString());
+                UpdateAttendance(cls, true);
                 return;
             }
 
             if (cls.EndDate.Date == currentDate.AddDays(-1).Date)
             {
-                UpdateAttendance(cls, ClassStatusEnum.COMPLETED.ToString());
+                UpdateStudent(cls, ClassStatusEnum.COMPLETED.ToString());
+                UpdateAttendance(cls, false);
             }
         }
 
@@ -77,14 +79,13 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             cls.StudentClasses.ToList().ForEach(stu => stu.CanChangeClass = false);
         }
 
-        private void UpdateAttendance(Class cls, string classStatus)
+        private void UpdateAttendance(Class cls, bool attendanceStatus)
         {
-            cls.Status = classStatus;
             var schedules = cls.Schedules;
 
             foreach (var schedule in schedules)
             {
-                schedule.Attendances.ToList().ForEach(att => att.IsValid = false);
+                schedule.Attendances.ToList().ForEach(att => att.IsValid = attendanceStatus);
             }
         }
     }
