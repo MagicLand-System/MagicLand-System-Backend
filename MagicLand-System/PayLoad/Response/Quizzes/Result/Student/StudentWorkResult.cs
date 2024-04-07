@@ -6,5 +6,6 @@
         public string? QuestionDescription { get; set; } = string.Empty;
         public string? QuestionImage { get; set; } = string.Empty;
         public MCAnswerResultResponse? MultipleChoiceAnswerResult { get; set; }
+        public List<FCAnswerResultResponse>? FlashCardAnswerResult { get; set; }
     }
 }

@@ -22,6 +22,7 @@ using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Ocsp;
 using Quartz;
 
@@ -776,7 +777,7 @@ namespace MagicLand_System.Services.Implements
                         var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
                             predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
                             orderBy: x => x.OrderByDescending(x => x.NoAttempt),
-                            include: x => x.Include(x => x.ExamQuestions).ThenInclude(ex => ex.MultipleChoiceAnswer)!);
+                            include: x => x.Include(x => x.ExamQuestions));
 
                         if (testResult != null)
                         {
@@ -788,7 +789,7 @@ namespace MagicLand_System.Services.Implements
                         var testResult = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
                            predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
                            orderBy: x => x.OrderBy(x => x.NoAttempt),
-                           include: x => x.Include(x => x.ExamQuestions).ThenInclude(ex => ex.MultipleChoiceAnswer)!);
+                           include: x => x.Include(x => x.ExamQuestions));
 
                         if (testResult?.Any() ?? false)
                         {
@@ -813,8 +814,7 @@ namespace MagicLand_System.Services.Implements
                                 TotalScore = test.TotalScore,
                                 ScoreEarned = test.ScoreEarned,
                                 ExamStatus = test.ExamStatus!,
-                                StudentWorkResult = test.ExamQuestions?.Any() ?? false ? GenerateStudentWorkResult(test.ExamQuestions.ToList()) : null,
-
+                                StudentWorkResult = test.ExamQuestions?.Any() ?? false ? await GenerateStudentWorkResult(test.ExamQuestions.ToList()) : null,
                             });
                         }
                     }
@@ -825,29 +825,45 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private List<StudentWorkResult> GenerateStudentWorkResult(List<ExamQuestion> examQuestions)
+        private async Task<List<StudentWorkResult>> GenerateStudentWorkResult(List<ExamQuestion> examQuestions)
         {
             var studentWorkResults = new List<StudentWorkResult>();
 
             foreach (var examQuestion in examQuestions)
             {
+                var mutipleChoiceAnswer = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().SingleOrDefaultAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
+                var flasCardAnswers = await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
 
                 studentWorkResults.Add(new StudentWorkResult
                 {
                     QuestionId = examQuestion.QuestionId,
                     QuestionDescription = examQuestion.Question,
                     QuestionImage = examQuestion.QuestionImage,
-                    MultipleChoiceAnswerResult = new MCAnswerResultResponse
+                    MultipleChoiceAnswerResult = mutipleChoiceAnswer != null ? new MCAnswerResultResponse
                     {
-                        StudentAnswerId = examQuestion.MultipleChoiceAnswer!.AnswerId,
-                        StudentAnswerDescription = examQuestion.MultipleChoiceAnswer.Answer,
-                        StudentAnswerImage = examQuestion.MultipleChoiceAnswer.AnswerImage,
-                        CorrectAnswerId = examQuestion.MultipleChoiceAnswer.CorrectAnswerId,
-                        CorrectAnswerDescription = examQuestion.MultipleChoiceAnswer.CorrectAnswer,
-                        CorrectAnswerImage = examQuestion.MultipleChoiceAnswer.CorrectAnswerImage,
-                        Score = examQuestion.MultipleChoiceAnswer.Score,
-                        Status = examQuestion.MultipleChoiceAnswer.Status,
-                    }
+                        StudentAnswerId = mutipleChoiceAnswer.AnswerId,
+                        StudentAnswerDescription = mutipleChoiceAnswer.Answer,
+                        StudentAnswerImage = mutipleChoiceAnswer.AnswerImage,
+                        CorrectAnswerId = mutipleChoiceAnswer.CorrectAnswerId,
+                        CorrectAnswerDescription = mutipleChoiceAnswer.CorrectAnswer,
+                        CorrectAnswerImage = mutipleChoiceAnswer.CorrectAnswerImage,
+                        Score = mutipleChoiceAnswer.Score,
+                        Status = mutipleChoiceAnswer.Status,
+                    } : null,
+                    FlashCardAnswerResult = flasCardAnswers != null && flasCardAnswers.Any() ? flasCardAnswers.Select(fca => new FCAnswerResultResponse
+                    {
+                        StudentFirstCardAnswerId = fca.LeftCardAnswerId,
+                        StudentFirstCardAnswerDecription = fca.LeftCardAnswer,
+                        StudentFirstCardAnswerImage = fca.LeftCardAnswerImage,
+                        StudentSecondCardAnswerId = fca.RightCardAnswerId,
+                        StudentSecondCardAnswerDescription = fca.RightCardAnswer,
+                        StudentSecondCardAnswerImage = fca.RightCardAnswerImage,
+                        CorrectSecondCardAnswerId = fca.CorrectRightCardAnswerId,
+                        CorrectSecondCardAnswerDescription = fca.CorrectRightCardAnswer,
+                        CorrectSecondCardAnswerImage = fca.CorrectRightCardAnswerImage,
+                        Score = fca.Score,
+                        Status = fca.Status,
+                    }).ToList() : null,
                 });
             }
 

@@ -22,6 +22,7 @@ namespace MagicLand_System.Domain.Models
         public string? Status { get; set; }
         public double Score { get; set; }
 
+
         [ForeignKey("ExamQuestion")]
         public Guid ExamQuestionId { get; set; }
         public ExamQuestion? ExamQuestion { get; set; }
