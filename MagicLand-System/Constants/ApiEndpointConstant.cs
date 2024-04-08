@@ -97,6 +97,7 @@
             public const string GetCourseStaff = GetAll + "/staff/getCourse";
             public const string GetCourseClassStaff = GetAll + "/staff/getClass";
             public const string UpdateCourse = GetAll + "/{id}/updateCourse";
+            public const string GetAllStaff = ApiEndpoint + "/staff/courses";
         }
         public static class StudentEndpoint
         {

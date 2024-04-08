@@ -24,7 +24,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StaffCourseResponse>> GetCourseResponse(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge);
         Task<List<MyClassResponse>> GetClassesOfCourse(string courseId,List<string>? dateOfWeeks,string? Method,List<string>? slotId);
         Task<bool> UpdateCourse(string id, UpdateCourseRequest request);
-
+        Task<List<CourseWithScheduleShorten>> GetCourseByStaff();
 
     }
 }

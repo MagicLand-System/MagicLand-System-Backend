@@ -234,9 +234,11 @@ namespace MagicLand_System.Services.Implements
                 var startTime = slot.StartTime;
                 var endTime = slot.EndTime;
                 var time = dow + ": " + startTime + "-" + endTime;
+                var slotx = startTime + " - " + endTime;
                 Times.Add(new ScheduleRequestV2
                 {
-                    ScheduleTime = time,
+                    Schedule= dow,
+                    Slot = slotx,
                 });
             }
             return new CreateSingleClassResponse
@@ -433,7 +435,20 @@ namespace MagicLand_System.Services.Implements
                 }
                 return res;
             }
-            return (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).ToList();
+            var numberOfClasses = 0;
+            if(status == null)
+            {
+                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync()).Count;
+            } else
+            {
+                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.Status.ToLower().Equals(status.ToLower()))).Count;
+            }
+             result = (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).ToList();
+            foreach(var rs in result)
+            {
+                rs.NumberOfClasses = numberOfClasses;
+            }
+            return result.OrderByDescending(x => x.CreatedDate).ToList();
         }
 
         public async Task<MyClassResponse> GetClassDetail(string id)
@@ -1282,12 +1297,12 @@ namespace MagicLand_System.Services.Implements
                 {
                     try
                     {
-                        string[] parts = schedule.ScheduleTime.Split(':');
-                        string day = parts[0].Trim(); // Thứ 2
-                        string timeRange = parts[1].Trim(); // 15:00 - 20:00
-                        string startTime = timeRange.Split('-')[0].Trim(); // 15:00
-                        var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
-                        if (slotId == null)
+                        //string[] parts = schedule.ScheduleTime.Split(':');
+                        string day = schedule.Schedule; // Thứ 2
+                        string timeRange = schedule.Slot.Trim(); // 15:00 - 20:00
+                        string startTime = timeRange.Substring(0, timeRange.IndexOf("-"));
+                        var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Equals(startTime.Trim()), selector: x => x.Id);
+                        if (slotId == null || slotId == Guid.Empty)
                         {
                             rows.Add(new RowInsertResponse
                             {
@@ -1487,7 +1502,7 @@ namespace MagicLand_System.Services.Implements
                         ClassCode = myRequest.ClassCode,
                         LecturerName = roomLec.Lecturer.FullName,
                         RoomName = roomLec.Room.Name,
-                        Times = rq.ScheduleRequests.Select(x => x.ScheduleTime).ToList(),
+                        Times = rq.ScheduleRequests.Select(x => x.Schedule + ":" + x.Slot).ToList(),
                         StartDate = date.Value,
                     }
                 });
@@ -1695,12 +1710,11 @@ namespace MagicLand_System.Services.Implements
             {
                 try
                 {
-                    string[] parts = schedule.ScheduleTime.Split(':');
-                    string day = parts[0].Trim(); // Thứ 2
-                    string timeRange = parts[1].Trim(); // 15:00 - 20:00
-                    string startTime = timeRange.Split('-')[0].Trim(); // 15:00
-                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
-                    if (slotId == null)
+                    string day = schedule.Schedule; // Thứ 2
+                    string timeRange = schedule.Slot.Trim(); // 15:00 - 20:00
+                    string startTime = timeRange.Substring(0, timeRange.IndexOf("-"));
+                    var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Equals(startTime.Trim()), selector: x => x.Id);
+                    if (slotId == null || slotId == Guid.Empty)
                     {
                         break;
                     }
@@ -1836,12 +1850,11 @@ namespace MagicLand_System.Services.Implements
                 {
                     try
                     {
-                        string[] parts = schedule.ScheduleTime.Split(':');
-                        string day = parts[0].Trim(); // Thứ 2
-                        string timeRange = parts[1].Trim(); // 15:00 - 20:00
-                        string startTime = timeRange.Split('-')[0].Trim(); // 15:00
-                        var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
-                        if (slotId == null)
+                        string day = schedule.Schedule; // Thứ 2
+                        string timeRange = schedule.Slot.Trim(); // 15:00 - 20:00
+                        string startTime = timeRange.Substring(0, timeRange.IndexOf("-"));
+                        var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Equals(startTime.Trim()), selector: x => x.Id);
+                        if (slotId == null || slotId == Guid.Empty)
                         {
                             rows.Add(new RowInsertResponse
                             {
@@ -2046,7 +2059,7 @@ namespace MagicLand_System.Services.Implements
                         ClassCode = myRequest.ClassCode,
                         LecturerName = roomLec.Lecturer.FullName,
                         RoomName = roomLec.Room.Name,
-                        Times = rq.ScheduleRequests.Select(x => x.ScheduleTime).ToList(),
+                        Times = rq.ScheduleRequests.Select(x => x.Schedule + ":" + x.Slot).ToList(),
                         StartDate = date.Value,
                     },
                 };

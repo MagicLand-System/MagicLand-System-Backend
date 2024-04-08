@@ -2,7 +2,8 @@
 {
     public class ScheduleRequestV2
     {
-        public string ScheduleTime { get; set; }
+        public string Schedule { get; set; }
+        public string Slot { get; set; }
 
     }
 }

@@ -15,5 +15,6 @@ namespace MagicLand_System.PayLoad.Response.Classes
         public DateTime CreatedDate { get; set; }
         public CustomCourseResponse CourseResponse { get; set; }    
         public int? NumberOfStudentsRegister { get; set; }
+        public int NumberOfClasses {  get; set; }   
     }
 }

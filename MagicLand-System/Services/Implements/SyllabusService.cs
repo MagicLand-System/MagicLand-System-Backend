@@ -582,6 +582,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords, DateTime? date, double? score)
         {
+            var numberOfSyll = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).Count;
             score ??= double.MaxValue;
 
             var syllabuses = await FetchAllSyllabus();
@@ -604,7 +605,12 @@ namespace MagicLand_System.Services.Implements
             }
             syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
 
-            return syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            var result =  syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            foreach ( var syll in result )
+            {
+                syll.NumberOfSyllabuses = numberOfSyll;
+            }
+            return result;
         }
 
 

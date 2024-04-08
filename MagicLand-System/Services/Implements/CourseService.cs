@@ -383,6 +383,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord)
         {
+            var courseCount = (await _unitOfWork.GetRepository<Course>().GetListAsync()).Count;
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
@@ -431,6 +432,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     course.NumberClassOnGoing = count.Count();
                 }
+                course.NumberOfCourses = courseCount;
                 var coursex = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(
                     course.CourseDetail!.Id.ToString()),
                     include: x => x.Include(x => x.Syllabus).ThenInclude(x => x!.SyllabusCategory)!);
@@ -1094,6 +1096,46 @@ namespace MagicLand_System.Services.Implements
             _unitOfWork.GetRepository<CoursePrice>().UpdateAsync(courseprice);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
+        }
+
+        public  async Task<List<CourseWithScheduleShorten>> GetCourseByStaff()
+        {
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents));
+
+            var coursePrerequisites = await GetCoursePrerequesites(courses);
+            var coureSubsequents = await GetCoureSubsequents(courses);
+
+            var responses = new List<CourseWithScheduleShorten>();
+
+            foreach (var course in courses)
+            {
+                course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.Id == course.SyllabusId,
+                include: x => x.Include(x => x.SyllabusPrerequisites!).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber))
+                .ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+
+                var currentCoursePrerequistites = new List<Course>();
+                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
+                {
+                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
+                    {
+                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
+                    }
+                }
+
+                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentCoursePrerequistites, coureSubsequents));
+            }
+
+            foreach (var res in responses)
+            {
+                res.Price = await GetDynamicPrice(res.CourseId, false);
+            }
+
+            return responses;
         }
         #endregion
     }
