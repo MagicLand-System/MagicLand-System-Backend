@@ -776,7 +776,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (MaxAge != null)
                 {
-                    result3 = result.Where(x => x.MaxYearOldsStudent <= MaxAge.Value).ToList();
+                    result3 = result.Where(x => x.MaxYearOldsStudent >= MaxAge.Value  && x.MinYearOldsStudent <= minAge.Value).ToList();
                 }
                 if (searchString != null)
                 {
@@ -784,7 +784,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (result1.Count > 0 || result2.Count > 0 || result3.Count > 0 || result4.Count > 0)
                 {
-                    var resultT = result1.UnionBy(result2, x => x.Id).UnionBy(result3, x => x.Id).UnionBy(result4, x => x.Id);
+                    var resultT = result1.UnionBy(result3, x => x.Id).UnionBy(result4, x => x.Id);
                     result = resultT.ToList();
                 }
             }

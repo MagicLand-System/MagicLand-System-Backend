@@ -540,5 +540,11 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.InsertClassesV2(requests);
             return Ok(isSuccess);
         }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClassesV3)]
+        public async Task<IActionResult> InsertClassV3([FromBody] InsertClassesResponse request)
+        {
+            var isSuccess = await _classService.InsertClassesSave(request);
+            return Ok(isSuccess);
+        }
     }
 }
