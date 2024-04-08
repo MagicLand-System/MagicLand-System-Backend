@@ -98,6 +98,7 @@
             public const string GetCourseClassStaff = GetAll + "/staff/getClass";
             public const string UpdateCourse = GetAll + "/{id}/updateCourse";
             public const string GetAllStaff = ApiEndpoint + "/staff/courses";
+            public const string GetAllStaffV2 = ApiEndpoint + "/staff/courses/search";
         }
         public static class StudentEndpoint
         {
@@ -158,6 +159,8 @@
             public const string ExamSyllabus = EndPointBase + "/staff/getExamSyllabus";
             public const string SessionSyllabus = EndPointBase + "/staff/getSessionSyllabus";
             public const string QuestionSyllabus = EndPointBase + "/staff/getQuestionSyllabus";
+            public const string StaffFilterSyllabus = EndPointBase + "/staff/filter";
+
         }
         public static class LectureEndPoint
         {

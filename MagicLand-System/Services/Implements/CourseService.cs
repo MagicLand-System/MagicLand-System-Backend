@@ -17,6 +17,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -1136,6 +1137,78 @@ namespace MagicLand_System.Services.Implements
             }
 
             return responses;
+        }
+
+        public async Task<CourseSearchResponse> GetCourseSearch(string keyword)
+        {
+            var courseCount = (await _unitOfWork.GetRepository<Course>().GetListAsync()).Count;
+            var courses = string.IsNullOrEmpty(keyword)
+            ? await GetDefaultCourse()
+            : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyword.ToLower()), include: x => x
+             .Include(x => x.Syllabus)
+            .Include(x => x.SubDescriptionTitles)
+            .ThenInclude(sdt => sdt.SubDescriptionContents));
+
+            var coursePrerequisites = await GetCoursePrerequesites(courses);
+            var coureSubsequents = await GetCoureSubsequents(courses);
+
+            var currentCoursePrerequistites = new List<Course>();
+            foreach (var course in courses)
+            {
+                course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == course.Id,
+                include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)).Include(x => x.SyllabusPrerequisites)!);
+
+
+                course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == course.Id,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)!);
+
+                if (course.Syllabus != null && course.Syllabus!.SyllabusPrerequisites!.Any())
+                {
+                    foreach (var cp in course.Syllabus!.SyllabusPrerequisites!)
+                    {
+                        currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
+                    }
+                }
+            }
+
+            var findCourse = courses.Select(c => CourseCustomMapper
+                  .fromCourseToCourseResExtraInfor(c, currentCoursePrerequistites,
+                  coureSubsequents)).ToList();
+
+            foreach (var course in findCourse)
+            {
+                var count = (await _unitOfWork.GetRepository<Class>().GetListAsync(
+                    predicate: x => (x.CourseId.ToString().Equals(course.CourseId.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
+
+                if (count == null)
+                {
+                    course.NumberClassOnGoing = 0;
+                }
+                else
+                {
+                    course.NumberClassOnGoing = count.Count();
+                }
+                course.NumberOfCourses = courseCount;
+                var coursex = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(
+                    course.CourseDetail!.Id.ToString()),
+                    include: x => x.Include(x => x.Syllabus).ThenInclude(x => x!.SyllabusCategory)!);
+
+                var name = "undefined";
+                if (coursex.Syllabus != null)
+                {
+                    name = coursex.Syllabus.SyllabusCategory!.Name;
+                }
+                course.CourseDetail!.Subject = name;
+            }
+
+            findCourse = findCourse.OrderByDescending(x => x.UpdateDate).ToList();
+            return new CourseSearchResponse
+            {
+                Courses = findCourse,
+                NumberOfCourse = courseCount,
+            };
         }
         #endregion
     }

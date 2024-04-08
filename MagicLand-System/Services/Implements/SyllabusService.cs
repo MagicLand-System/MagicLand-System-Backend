@@ -2143,6 +2143,43 @@ namespace MagicLand_System.Services.Implements
             return syllRes;
         }
 
+        public async Task<SyllabusResultResponse> FilterStaffSyllabusAsync(List<string>? keyWords, DateTime? date, double? score)
+        {
+            var numberOfSyll = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).Count;
+            score ??= double.MaxValue;
+
+            var syllabuses = await FetchAllSyllabus();
+
+            syllabuses = keyWords == null || keyWords.Count() == 0
+                ? syllabuses
+                : syllabuses.Where(syll =>
+                    keyWords.Any(k =>
+                        (k != null) &&
+                        (syll.Name != null && syll.Name!.ToLower().Contains(k.ToLower()) ||
+                         syll.SubjectCode != null && syll.SubjectCode!.ToString().ToLower().Contains(k.ToLower()) ||
+                         syll.ScoringScale >= score ||
+                         syll.MinAvgMarkToPass >= score)
+                    )
+                ).ToList();
+
+            if (date != default && date != null)
+            {
+                syllabuses = syllabuses.Where(syll => syll.UpdateTime.Date == date || syll.EffectiveDate != null && syll.EffectiveDate.Value.Date == date).ToList();
+            }
+            syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
+
+            var result = syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            foreach (var syll in result)
+            {
+                syll.NumberOfSyllabuses = numberOfSyll;
+            }
+            return new SyllabusResultResponse
+            {
+                NumberOfSyllabus = numberOfSyll,
+                Syllabuses = result
+            };
+        }
+
 
         #endregion
 

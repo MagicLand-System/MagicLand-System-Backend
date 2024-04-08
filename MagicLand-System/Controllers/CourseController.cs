@@ -223,5 +223,11 @@ namespace MagicLand_System.Controllers
             var isSucc = await _courseService.GetCourseByStaff();
             return Ok(isSucc);
         }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllStaffV2)]
+        public async Task<IActionResult> GetStaffCourseV2(string keyword)
+        {
+            var isSucc = await _courseService.GetCourseSearch(keyword);
+            return Ok(isSucc);
+        }
     }
 }
