@@ -20,6 +20,7 @@ namespace MagicLand_System.PayLoad.Response.Syllabuses
         public string? SubjectCode { get; set; } = string.Empty;
         public string? SyllabusLink { get; set; } = string.Empty;
         public DateTime UpdateDate { get; set; }
+        public int NumberOfSyllabuses {get; set; }  
         public List<MaterialResponse>? Materials { get; set; } = new List<MaterialResponse>();
         public SyllabusInforResponse? SyllabusInformations { get; set; } = new SyllabusInforResponse();
         public List<ExamSyllabusResponse>? Exams { get; set; } = new List<ExamSyllabusResponse>();

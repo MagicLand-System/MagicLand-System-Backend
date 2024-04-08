@@ -61,6 +61,7 @@
             public const string GetTopicLearning = GetAll + "/topic/learning";
             public const string GetStudentValid = GetAll + "/students/valid";
             public const string GetFromClassCode = GetAll + "/classCode";
+            public const string InsertClassesV2 =  GetAll + "/insertClassesV2";
         }
         public static class PromotionEnpoint
         {
@@ -96,6 +97,7 @@
             public const string GetCourseStaff = GetAll + "/staff/getCourse";
             public const string GetCourseClassStaff = GetAll + "/staff/getClass";
             public const string UpdateCourse = GetAll + "/{id}/updateCourse";
+            public const string GetAllStaff = ApiEndpoint + "/staff/courses";
         }
         public static class StudentEndpoint
         {

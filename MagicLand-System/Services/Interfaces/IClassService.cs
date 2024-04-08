@@ -25,7 +25,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);
         Task<CreateSingleClassResponse> CreateNewClass(CreateClassRequest request);
-        Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null);
+        Task<ClassResultResponse> GetAllClass(string searchString = null, string status = null);
         Task<MyClassResponse> GetClassDetail(string id);
         Task<List<StudentInClass>> GetAllStudentInClass(string id);
         Task<string> AutoCreateClassCode(string courseId);
@@ -43,5 +43,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId, string studentId, DateTime? date = null, string? keyword = null, string? slotId = null);
         Task<InsertClassesResponse> InsertClasses(List<CreateClassesRequest> request);
         Task<ClassFromClassCode> GetClassFromClassCode(string classCode);
+        Task<InsertClassesResponse> InsertClassesV2(List<CreateClassesRequest> request);
+
     }
 }
