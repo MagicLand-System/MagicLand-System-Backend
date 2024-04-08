@@ -238,7 +238,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     ScheduleTime = time,
                 });
-             }
+            }
             return new CreateSingleClassResponse
             {
                 ClassCode = classCode,
@@ -247,7 +247,7 @@ namespace MagicLand_System.Services.Implements
                 RoomName = roomName,
                 Success = isSuccess,
             };
-                
+
         }
 
 
@@ -1763,6 +1763,339 @@ namespace MagicLand_System.Services.Implements
             };
             return createClassResponse;
         }
+        public async Task<InsertClassesResponse> InsertClassesV2(List<CreateClassesRequest> request)
+        {
+            if (request == null)
+            {
+                throw new BadHttpRequestException("Request không có", StatusCodes.Status400BadRequest);
+            }
+            InsertClassesResponse response = new InsertClassesResponse
+            {
+                SuccessRow = 0,
+                FailureRow = 0,
+
+            };
+            List<RowInsertResponse> rows = new List<RowInsertResponse>();
+            foreach (var rq in request)
+            {
+                Guid? syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.SubjectCode.Trim().ToLower().Equals(rq.CourseCode.Trim().ToLower()), selector: x => x.Id);
+                Guid? courseId = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabusId, selector: x => x.Id);
+                if (syllabusId == Guid.Empty || courseId == Guid.Empty)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Không tìm thấy khóa học có mã như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (rq.LeastNumberStudent >= rq.LimitNumberStudent)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa không thể nhỏ hơn số lượng tối thiểu",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (rq.LimitNumberStudent < 0)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa phải lớn hơn 0",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (rq.LeastNumberStudent < 0)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối thiểu phải lớn hơn 0",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (rq.LimitNumberStudent > 30)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Số lượng tối đa phải nhỏ hơn 30",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                var schedules = rq.ScheduleRequests;
+                List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
+                foreach (var schedule in schedules)
+                {
+                    try
+                    {
+                        string[] parts = schedule.ScheduleTime.Split(':');
+                        string day = parts[0].Trim(); // Thứ 2
+                        string timeRange = parts[1].Trim(); // 15:00 - 20:00
+                        string startTime = timeRange.Split('-')[0].Trim(); // 15:00
+                        var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Trim().Contains(startTime.Trim()), selector: x => x.Id);
+                        if (slotId == null)
+                        {
+                            rows.Add(new RowInsertResponse
+                            {
+                                Index = rq.Index,
+                                Messsage = $" index {rq.Index} Không tìm thấy slot như vậy , slot có thời gian {timeRange} không tồn tại",
+                                IsSucess = false
+                            });
+                            break;
+                        }
+                        string dateofweek = "";
+                        if (day.ToLower().Equals("thứ 2"))
+                        {
+                            dateofweek = "monday";
+                        }
+                        if (day.ToLower().Equals("thứ 3"))
+                        {
+                            dateofweek = "tuesday";
+                        }
+                        if (day.ToLower().Equals("thứ 4"))
+                        {
+                            dateofweek = "wednesday";
+                        }
+                        if (day.ToLower().Equals("thứ 5"))
+                        {
+                            dateofweek = "thursday";
+                        }
+                        if (day.ToLower().Equals("thứ 6"))
+                        {
+                            dateofweek = "friday";
+                        }
+                        if (day.ToLower().Equals("thứ 7"))
+                        {
+                            dateofweek = "saturday";
+                        }
+                        if (day.ToLower().Equals("chủ nhật"))
+                        {
+                            dateofweek = "sunday";
+                        }
+                        scheduleRequests.Add(new ScheduleRequest
+                        {
+                            DateOfWeek = dateofweek,
+                            SlotId = slotId,
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        rows.Add(new RowInsertResponse
+                        {
+                            Index = rq.Index,
+                            Messsage = $" index {rq.Index} Không tìm thấy slot như vậy , slot có thời gian như vậy không tồn tại",
+                            IsSucess = false
+                        });
+                        break;
+                    }
+
+                }
+                var check = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.Equals(""));
+                if (check)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"không tồn tại thứ trong tuần có tên như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                string format = "dd/MM/yyyy";
+
+                var date = DateTime.TryParseExact(rq.StartDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate)
+                    ? (DateTime?)parsedDate
+                    : DateTime.Parse(rq.StartDate);
+                var doW = date.Value.DayOfWeek.ToString();
+                var isExist = scheduleRequests.Select(x => x.DateOfWeek).Any(x => x.ToLower().Trim().Equals(doW.ToLower().Trim()));
+                if (!isExist)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Ngày bắt đầu không trùng vào các thứ trong lịch học",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (date.Value < DateTime.Now)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $"Ngày bắt đầu không thể là ngày trong quá khứ",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                var roomLec = await GetRoomAndLecturer(new FilterLecturerRequest
+                {
+                    CourseId = courseId.ToString(),
+                    Schedules = scheduleRequests,
+                    StartDate = date,
+                });
+                if (roomLec.Lecturer == null && roomLec.Room == null)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" index {rq.Index} Không tìm thấy giáo viên phù hợp , phòng phù hợp với lịch như như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (roomLec.Lecturer == null)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" index {rq.Index} Không tìm thấy giáo viên phù hợp với lịch như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (roomLec.Room == null)
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = $" index {rq.Index} Không tìm thấy phòng phù hợp với lịch như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                var resultCheck = await CheckValidateSchedule(new FilterLecturerRequest
+                {
+                    CourseId = courseId.ToString(),
+                    Schedules = scheduleRequests,
+                    StartDate = date,
+                }, roomLec.Lecturer.LectureId.ToString(), roomLec.Room.Id.ToString());
+                if (resultCheck.Equals("FBRL"))
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = "Xuất hiện sự trùng cả giáo viên và phòng học nếu xếp  như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (resultCheck.Equals("FBR"))
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = "Xuất hiện sự trùng phòng học nếu xếp  như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                if (resultCheck.Equals("FBL"))
+                {
+                    rows.Add(new RowInsertResponse
+                    {
+                        Index = rq.Index,
+                        Messsage = "Xuất hiện sự trùng giảng viên nếu xếp  như vậy",
+                        IsSucess = false
+                    });
+                    continue;
+                }
+                var myRequest = new CreateClassRequest
+                {
+                    ClassCode = await AutoCreateClassCode(courseId.ToString()),
+                    CourseId = courseId.Value,
+                    LecturerId = roomLec.Lecturer.LectureId,
+                    LeastNumberStudent = rq.LeastNumberStudent,
+                    LimitNumberStudent = rq.LimitNumberStudent,
+                    Method = rq.Method,
+                    ScheduleRequests = scheduleRequests,
+                    StartDate = date.Value,
+                    RoomId = roomLec.Room.Id,
+                };
+
+                //    rows.Add(new RowInsertResponse
+                //    {
+                //        Index = rq.Index,
+                //        IsSucess = true,
+                //        Messsage = $"ClassCode : {myRequest.ClassCode} , LecturerName : {roomLec.Lecturer.FullName}, Room : {roomLec.Room.Name}",
+                //        SuccessfulInformation = new SuccessfulInformation
+                //        {
+                //            ClassCode = myRequest.ClassCode,
+                //            LecturerName = roomLec.Lecturer.FullName,
+                //            RoomName = roomLec.Room.Name,
+                //            Times = rq.ScheduleRequests.Select(x => x.ScheduleTime).ToList(),
+                //            StartDate = date.Value,
+                //        },
+                //        //CreateClass = await GenerateCreateClassFail(rq),
+                //    });
+                var newRIR = new RowInsertResponse
+                 {
+                    Index = rq.Index,
+                    IsSucess = true,
+                    Messsage = $"ClassCode : {myRequest.ClassCode} , LecturerName : {roomLec.Lecturer.FullName}, Room : {roomLec.Room.Name}",
+                    SuccessfulInformation = new SuccessfulInformation
+                    {
+                        ClassCode = myRequest.ClassCode,
+                        LecturerName = roomLec.Lecturer.FullName,
+                        RoomName = roomLec.Room.Name,
+                        Times = rq.ScheduleRequests.Select(x => x.ScheduleTime).ToList(),
+                        StartDate = date.Value,
+                    },
+                };
+                var createClass = await GenerateCreateClassFail(rq);
+                createClass.ClassCode = myRequest.ClassCode;
+                createClass.LecturerId = myRequest.LecturerId;
+                createClass.RoomId = myRequest.RoomId;
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Id == myRequest.LecturerId);
+                var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == myRequest.RoomId);
+                var lecturerResponse = new LecturerResponse
+                {
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    Email = lecturer.Email,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    LectureId = lecturer.Id,
+                    Phone = lecturer.Phone,
+                    Role = "Lecuterer",
+                };
+                var roomResponse = new RoomResponse
+                {
+                    Capacity = room.Capacity,
+                    Floor = room.Floor.Value,
+                    LinkUrl = room.LinkURL,
+                    Name = room.Name,
+                    RoomId = room.Id,
+                    Status = room.Status,
+                };
+                createClass.RoomResponse = roomResponse;
+                createClass.LecturerResponse = lecturerResponse;
+                newRIR.CreateClass = createClass;
+                rows.Add(newRIR);
+            }
+            response.RowInsertResponse = rows;
+            foreach (var row in rows)
+            {
+                if (!row.IsSucess)
+                {
+                    var requestx = request.Single(x => x.Index == row.Index);
+                    row.CreateClass = (await GenerateCreateClassFail(requestx));
+                }
+            }
+            var succ = response.RowInsertResponse.Where(x => x.IsSucess).Count();
+            var fail = response.RowInsertResponse.Where(x => !x.IsSucess).Count();
+            response.SuccessRow = succ;
+            response.FailureRow = fail;
+            return response;
+        }
         #endregion
         #region thanh_lee_code
         public async Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time)
@@ -3068,7 +3401,6 @@ namespace MagicLand_System.Services.Implements
             res.Lecturer = lecturerResponses.OrderBy(x => x.NumberOfClassesTeaching).ToArray()[0];
             return res;
         }
-
         #endregion
     }
 }
