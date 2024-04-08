@@ -25,12 +25,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
                     var currentDate = DateTime.Now;
 
-                    var newDeleteNotification = new Notification
-                    {
-                        Id = Guid.NewGuid(),
-                        Title = "Xóa Lúc " + DateTime.UtcNow,
-                    };
-
                     var tempQuiz = await _unitOfWork.GetRepository<TempQuiz>().GetListAsync(orderBy: x => x.OrderBy(x => x.CreatedTime));
 
                     foreach (var quiz in tempQuiz)
@@ -42,8 +36,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                             _unitOfWork.GetRepository<TempQuiz>().DeleteAsync(quiz);
                         }
                     }
-
-                    await _unitOfWork.GetRepository<Notification>().InsertAsync(newDeleteNotification);
                     _unitOfWork.Commit();
                 }
             }
@@ -54,6 +46,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Delete Temp Entity Success";
         }
 
-
+       
     }
 }

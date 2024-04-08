@@ -1,10 +1,12 @@
 ﻿using Quartz;
 using Quartz.Spi;
-using static Quartz.Logging.OperationName;
 
-namespace MagicLand_System.Background
+namespace MagicLand_System.Background.OldBackgroundService
 {
-    public class QuartzScheduler : IHostedService
+    public class QuartzScheduler { }
+}
+
+/* : IHostedService//BackgroundService
     {
         private readonly ILogger<QuartzScheduler> _logger;
         private readonly ISchedulerFactory _schedulerFactory;
@@ -37,6 +39,7 @@ namespace MagicLand_System.Background
 
             _logger.LogInformation($"Start All Job!");
             await _scheduler.Start(cancellationToken);
+
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
@@ -60,5 +63,14 @@ namespace MagicLand_System.Background
             return trigger;
         }
 
+        //protected async override Task ExecuteAsync(CancellationToken stoppingToken)
+        //{
+        //    while (!stoppingToken.IsCancellationRequested)
+        //    {
+        //        _logger.LogInformation($"Job Running At {DateTime.UtcNow}");
+        //        await Task.Delay(1000, stoppingToken);
+        //    }
+        //}
     }
 }
+    */

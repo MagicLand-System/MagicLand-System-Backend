@@ -90,12 +90,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     var newNotifications = new List<Notification>();
 
-                    newNotifications.Add(new Notification
-                    {
-                        Id = Guid.NewGuid(),
-                        Title = "Tạo Lúc  " + currentDate,
-                    });
-
                     foreach (var cls in classes)
                     {
                         cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
@@ -218,11 +212,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         foreach (var item in items)
                         {
                             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == item.ClassId);
-                            if (cls == null)
-                            {
-                                continue;
-                            }
-
                             if (cls.Status != ClassStatusEnum.UPCOMING.ToString())
                             {
                                 continue;

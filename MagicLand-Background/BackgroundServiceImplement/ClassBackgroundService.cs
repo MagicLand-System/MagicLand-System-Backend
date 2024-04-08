@@ -29,18 +29,11 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                        .GetListAsync(predicate: x => x.Status != ClassStatusEnum.CANCELED.ToString() && x.Status != ClassStatusEnum.COMPLETED.ToString(),
                             include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Attendances));
 
-                    var updateNotification = new Notification
-                    {
-                        Id = Guid.NewGuid(),
-                        Title = "Cập Nhập Lúc " + DateTime.UtcNow,
-                    };
-
                     foreach (var cls in classes)
                     {
                         CheckingDateTime(cls, currentDate);
                     }
 
-                    await _unitOfWork.GetRepository<Notification>().InsertAsync(updateNotification);
                     _unitOfWork.GetRepository<Class>().UpdateRange(classes);
                     _unitOfWork.Commit();
                 }

@@ -1,6 +1,7 @@
-using MagicLand_System.Background;
 using MagicLand_System.Background.BackgroundServiceImplements;
 using MagicLand_System.Background.BackgroundServiceInterfaces;
+using MagicLand_System.Background.BackgroundSetUp;
+using MagicLand_System.Background.DailyJob;
 using MagicLand_System.Config;
 using MagicLand_System.Domain;
 using MagicLand_System.Middlewares;
@@ -13,8 +14,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NgrokAspNetCore;
 using Quartz;
-using Quartz.Impl;
-using Quartz.Spi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Text;
@@ -117,22 +116,47 @@ builder.Services.AddScoped<IPersonalWalletService, PersonalWalletService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISyllabusService, SyllabusService>();
 
-var quartzJobs = builder.Configuration.GetSection("QuartzJobs").GetChildren();
+
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+
+builder.Services.AddQuartz(options =>
+{
+    options.UseMicrosoftDependencyInjectionJobFactory();
+});
+
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true;
+});
+
+builder.Services.ConfigureOptions<DailyCreateJobSetUp>();
+builder.Services.ConfigureOptions<DailyUpdateJobSetUp>();
+builder.Services.ConfigureOptions<DailyDeleteJobSetUp>();
+
 builder.Services.AddScoped<IClassBackgroundService, ClassBackgroundService>();
 builder.Services.AddScoped<ITransactionBackgroundService, TransactionBackgroundService>();
 builder.Services.AddScoped<INotificationBackgroundService, NotificationBackgroundService>();
 builder.Services.AddScoped<ITempEntityBackgroundService, TempEntityBackgroundService>();
-builder.Services.AddHostedService<QuartzScheduler>();
-builder.Services.AddSingleton<IJobFactory, JobFactoryService>();
-builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
-builder.Services.AddScoped<DailyUpdateJob>();
-builder.Services.AddScoped<DailyCreateJob>();
-builder.Services.AddScoped<DailyDeleteJob>();
-builder.Services.AddSingleton(new Job(type: typeof(DailyUpdateJob), expression: DetermineCronExpression(quartzJobs, "DailyUpdateJob")));
-builder.Services.AddSingleton(new Job(type: typeof(DailyCreateJob), expression: DetermineCronExpression(quartzJobs, "DailyCreateJob")));
-builder.Services.AddSingleton(new Job(type: typeof(DailyDeleteJob), expression: DetermineCronExpression(quartzJobs, "DailyDeleteJob")));
+
+#region Old Configure Task Schedule
+//var quartzJobs = builder.Configuration.GetSection("QuartzJobs").GetChildren();
+//string DetermineCronExpression(IEnumerable<IConfigurationSection> quartzJobs, string jobName)
+//{
+//    var selectedJob = quartzJobs.FirstOrDefault(job => job["JobName"] == jobName);
+//    return selectedJob?["CronExpression"] ?? "0/5 * * * * ?";
+//}
+//builder.Services.AddHostedService<QuartzScheduler>();
+//builder.Services.AddSingleton<IJobFactory, JobFactoryService>();
+//builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+//builder.Services.AddScoped<DailyUpdateJob>();
+//builder.Services.AddScoped<DailyCreateJob>();
+//builder.Services.AddScoped<DailyDeleteJob>();
+//builder.Services.AddSingleton(new Job(type: typeof(DailyUpdateJob), expression: DetermineCronExpression(quartzJobs, "DailyUpdateJob")));
+//builder.Services.AddSingleton(new Job(type: typeof(DailyCreateJob), expression: DetermineCronExpression(quartzJobs, "DailyCreateJob")));
+//builder.Services.AddSingleton(new Job(type: typeof(DailyDeleteJob), expression: DetermineCronExpression(quartzJobs, "DailyDeleteJob")));
+#endregion
+
 
 builder.Services.AddNgrok();
 
@@ -162,10 +186,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-
 app.Run();
-string DetermineCronExpression(IEnumerable<IConfigurationSection> quartzJobs, string jobName)
-{
-    var selectedJob = quartzJobs.FirstOrDefault(job => job["JobName"] == jobName);
-    return selectedJob?["CronExpression"] ?? "0/5 * * * * ?";
-}
+
+
+

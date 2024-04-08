@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System.Background
+﻿namespace MagicLand_System.Background.OldBackgroundService
 {
     public class Job
     {
