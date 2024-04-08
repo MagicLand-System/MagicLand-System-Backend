@@ -253,7 +253,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        public async Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null)
+        public async Task<ClassResultResponse> GetAllClass(string searchString = null, string status = null)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(include: x => x.Include(x => x.Schedules));
             List<MyClassResponse> result = new List<MyClassResponse>();
@@ -404,6 +404,16 @@ namespace MagicLand_System.Services.Implements
                 myClassResponse.CourseResponse = customCourseResponse;
                 result.Add(myClassResponse);
             }
+            var numberOfClasses = 0;
+            if (status == null)
+            {
+                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync()).Count;
+            }
+            else
+            {
+                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status.ToLower().Equals(status.ToLower()))).Count;
+            }
+            //
             if (result.Count == 0)
             {
                 return null;
@@ -414,11 +424,19 @@ namespace MagicLand_System.Services.Implements
             }
             if (searchString == null && status == null)
             {
-                return result;
+                return new ClassResultResponse
+                {
+                    MyClassResponses = result.OrderByDescending(x => x.CreatedDate).ToList(),
+                    NumberOfClasses = numberOfClasses,
+                };
             }
             if (searchString == null)
             {
-                return (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).ToList());
+                return new ClassResultResponse
+                {
+                    MyClassResponses = (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).OrderByDescending(x => x.CreatedDate ).ToList()),
+                    NumberOfClasses = numberOfClasses,
+                };
             }
             if (status == null)
             {
@@ -433,23 +451,19 @@ namespace MagicLand_System.Services.Implements
                 {
                     res.AddRange(filter2);
                 }
-                return res;
+                return new ClassResultResponse 
+                {
+                    MyClassResponses = res.OrderByDescending(x => x.CreatedDate).ToList(),
+                    NumberOfClasses = numberOfClasses,
+                };
             }
-            var numberOfClasses = 0;
-            if(status == null)
+            return new ClassResultResponse
             {
-                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync()).Count;
-            } else
-            {
-                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.Status.ToLower().Equals(status.ToLower()))).Count;
-            }
-             result = (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).ToList();
-            foreach(var rs in result)
-            {
-                rs.NumberOfClasses = numberOfClasses;
-            }
-            return result.OrderByDescending(x => x.CreatedDate).ToList();
-        }
+                MyClassResponses = (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).OrderByDescending(x => x.CreatedDate).ToList(),
+                NumberOfClasses = numberOfClasses,
+            };
+
+    }
 
         public async Task<MyClassResponse> GetClassDetail(string id)
         {
