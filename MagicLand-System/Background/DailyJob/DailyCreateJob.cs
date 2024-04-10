@@ -18,13 +18,13 @@ namespace MagicLand_System.Background.DailyJob
         public async Task Execute(IJobExecutionContext context)
         {
             string message = "";
-            _logger.LogInformation($"Daily Create Job Running At [{DateTime.UtcNow}]");
+            _logger.LogInformation($"Daily Create Job Running At [{BackgoundTime.GetTime()}]");
 
             message += await _notificationBackgroundService.CreateNewNotificationInCondition();
-            //message += await _notificationBackgroundService.CreateNotificationForLastRegisterTime();
-            //message += await _notificationBackgroundService.CreateNotificationForRemindRegisterCourse();
+            message += await _notificationBackgroundService.CreateNotificationForLastRegisterTime();
+            message += await _notificationBackgroundService.CreateNotificationForRemindRegisterCourse();
 
-            _logger.LogInformation($"Daily Create Job Completed At [{DateTime.UtcNow}] With Message [{string.Join(", ", message)}]");
+            _logger.LogInformation($"Daily Create Job Completed At [{BackgoundTime.GetTime()}] With Message [{string.Join(", ", message)}]");
         }
 
     }

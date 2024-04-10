@@ -195,11 +195,13 @@ namespace MagicLand_System.Controllers
         ///  Truy Suất Các Câu Hỏi (Quiz) Trong Bộ Đề Của Một Bài Kiểm Tra Dựa Vào Id Của Bài Kiểm Tra, *Các Câu Hỏi Sẽ Được Truy Suất Ngẫu Nhiên Và Thỏa Mãn Số Điểm Của Bài Kiểm Tra*
         /// </summary>
         /// <param name="id">Id Của Bài Kiểm Tra</param>
+        /// <param name="classId">Id Của Lớp Có Bài Kiểm Tra</param>
         /// <param name="examPart">Phần Đề Của Bài Kiểm Tra (Dạng Kiểm Tra)</param>
         /// <remarks>
         /// Sample request:
         ///{     
         ///    "id":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
+        ///    "classId":"ec98a490-ca85-4ebf-0f84-08dc4fcdee05",
         ///    "examPart": 1
         ///}
         /// </remarks>
@@ -212,9 +214,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] int? examPart)
+        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] Guid classId, [FromQuery] int? examPart)
         {
-            var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, examPart);
+            var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, classId, examPart);
             if (responses == default)
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");
@@ -296,7 +298,7 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
 
-        #region document API Get Grade Quiz Multiple Choice
+        #region document API Grade Quiz Multiple Choice
         /// <summary>
         ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Trắc Nghiệm] Của Học Sinh Hiện Tại
         /// </summary>
@@ -367,7 +369,7 @@ namespace MagicLand_System.Controllers
             return Ok(responses);
         }
 
-        #region document API Get Grade Quiz Flash Card
+        #region document API Grade Quiz Flash Card
         /// <summary>
         ///  Lưu Điểm Bài Kiểm Tra [Dạng Nối Thẻ] Của Học Sinh Hiện Tại
         /// </summary>

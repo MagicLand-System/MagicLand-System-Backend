@@ -1,7 +1,7 @@
+using MagicLand_System.Background;
 using MagicLand_System.Background.BackgroundServiceImplements;
 using MagicLand_System.Background.BackgroundServiceInterfaces;
 using MagicLand_System.Background.BackgroundSetUp;
-using MagicLand_System.Background.DailyJob;
 using MagicLand_System.Config;
 using MagicLand_System.Domain;
 using MagicLand_System.Middlewares;
@@ -10,12 +10,15 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NgrokAspNetCore;
 using Quartz;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Configuration;
 using System.Reflection;
+using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -119,6 +122,9 @@ builder.Services.AddScoped<ISyllabusService, SyllabusService>();
 
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+
+builder.Services.Configure<List<JobCronExpression>>(builder.Configuration.GetSection("QuartzJobs"));
+
 
 builder.Services.AddQuartz(options =>
 {

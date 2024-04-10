@@ -500,6 +500,7 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.ClassId == cls.Id,
                 include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
             }
+
             if (!classes.Any())
             {
                 throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);

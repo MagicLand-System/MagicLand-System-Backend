@@ -386,18 +386,17 @@ namespace MagicLand_System.Services.Implements
         }
         private List<QuestionPackage> GenerateExerciseItems(List<QuestionPackageRequest> questionPackageRequest, List<ExamSyllabusRequest> examRequest, List<Session> sessions)
         {
-            int orderPackage = 0;
+
 
             questionPackageRequest = questionPackageRequest.OrderBy(qp => qp.NoOfSession).ToList();
             var questionPackages = new List<QuestionPackage>();
 
             foreach (var qpr in questionPackageRequest)
             {
-                orderPackage++;
                 Guid newQuestionPackageId = Guid.NewGuid();
                 var examFound = examRequest.SingleOrDefault(er => StringHelper.TrimStringAndNoSpace(er.ContentName).ToLower() == StringHelper.TrimStringAndNoSpace(qpr.ContentName).ToLower());
 
-                var questionPackage = GenerateQuestionPackage(sessions, qpr, examFound, newQuestionPackageId, orderPackage);
+                var questionPackage = GenerateQuestionPackage(sessions, qpr, examFound, newQuestionPackageId);
 
                 if (qpr.QuestionRequests.Count > 0)
                 {
@@ -408,11 +407,23 @@ namespace MagicLand_System.Services.Implements
                 questionPackages.Add(questionPackage);
             }
 
+            var groupedObjects = questionPackages.GroupBy(qp => qp.PackageType);
+
+            foreach (var gruop in groupedObjects)
+            {
+                int orderPackageType = 0;
+                foreach (var qp in gruop.ToList())
+                {
+                    orderPackageType++;
+                    qp.OrderPackage = orderPackageType;
+                }
+            }
+
             return questionPackages;
 
         }
 
-        private QuestionPackage GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, ExamSyllabusRequest? exam, Guid newQuestionPackageId, int orderPackage)
+        private QuestionPackage GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, ExamSyllabusRequest? exam, Guid newQuestionPackageId)
         {
             var sessionFound = sessions.SingleOrDefault(x => x.NoSession == qp.NoOfSession);
             string packageType = PackageTypeEnum.Review.ToString();
@@ -445,7 +456,6 @@ namespace MagicLand_System.Services.Implements
                 Title = qp.Title,
                 ContentName = qp.ContentName,
                 Score = qp.Score,
-                OrderPackage = orderPackage,
                 NoSession = qp.NoOfSession,
                 PackageType = packageType,
                 QuizType = qp.Type,
@@ -605,8 +615,8 @@ namespace MagicLand_System.Services.Implements
             }
             syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
 
-            var result =  syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
-            foreach ( var syll in result )
+            var result = syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            foreach (var syll in result)
             {
                 syll.NumberOfSyllabuses = numberOfSyll;
             }
@@ -698,11 +708,12 @@ namespace MagicLand_System.Services.Implements
             }
 
             int part = quiz.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
+            var extenstionName = quiz.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + quiz.OrderPackage;
 
             ssr.Quiz = new QuizInforResponse
             {
                 ExamId = quiz.Id,
-                ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
+                ExamName = "Bài " + quiz.ContentName.ToLower() + extenstionName,
                 ExamPart = part,
                 QuizName = quiz.Title!,
                 QuizDuration = isNonRequireTime ? null : duration,
@@ -1220,8 +1231,17 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, int? examPart)
+        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, Guid classId, int? examPart)
         {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.Id == classId,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Không Tồn Tại Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
             var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
                 predicate: x => x.Id == examId,
                 include: x => x.Include(x => x.Questions!));
@@ -1235,6 +1255,8 @@ namespace MagicLand_System.Services.Implements
             {
                 return default!;
             }
+
+            await ValidateDayDoingExam(examId, cls, quiz);
 
             foreach (var question in quiz.Questions!)
             {
@@ -1255,6 +1277,25 @@ namespace MagicLand_System.Services.Implements
 
             await GenereateTempExam(examId, quiz, responses);
             return responses;
+        }
+
+        private async Task ValidateDayDoingExam(Guid examId, Class cls, QuestionPackage quiz)
+        {
+            var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == cls.CourseId,
+                selector: x => x.Topics!.SelectMany(tp => tp.Sessions!));
+
+            if (!sessions.Any(ses => ses.Id == quiz.SessionId))
+            {
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Thuộc Lớp Đang Truy Suất", StatusCodes.Status400BadRequest);
+            }
+
+            var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
+
+            if (dayDoingExam.Date > GetCurrentTime().Date)
+            {
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
+            }
         }
 
         private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)

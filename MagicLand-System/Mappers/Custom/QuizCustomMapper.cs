@@ -65,15 +65,16 @@ namespace MagicLand_System.Mappers.Custom
                     totalMark = quizzes.Count();
                 }
             }
+            var extensionName = questionPackage.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + questionPackage.OrderPackage;
             return new ExamResponse
             {
                 ExamPart = part,
-                ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
+                ExamName = "Bài " + questionPackage.ContentName.ToLower() + extensionName,
                 QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString(),
                 QuizType = questionPackage.QuizType.ToLower(),
                 QuizName = questionPackage.Title,
-                Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part: 0,
-                CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria :  null,
+                Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part : 0,
+                CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria : null,
                 TotalScore = (double)questionPackage.Score!,
                 TotalMark = totalMark,
                 NoSession = questionPackage.NoSession,

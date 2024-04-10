@@ -26,7 +26,7 @@ namespace MagicLand_System.Mappers.Schedules
                .ForMember(dest => dest.AttendanceInformation, opt => opt.MapFrom(src => src.Attendances));
 
             CreateMap<Schedule, ScheduleResponse>()
-                  .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                  .ForMember(dest => dest.ScheduleId, opt => opt.MapFrom(src => src.Id))
                   .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date))
                   .ForMember(dest => dest.Slot, opt => opt.MapFrom(src => SlotCustomMapper.fromSlotToSlotResponse(src.Slot!)))
                   .ForMember(dest => dest.Room, opt => opt.MapFrom(src => RoomCustomMapper.fromRoomToRoomResponse(src.Room!)))

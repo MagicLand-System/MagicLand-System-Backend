@@ -841,7 +841,7 @@ namespace MagicLand_System.Services.Implements
                     QuestionImage = examQuestion.QuestionImage,
                     MultipleChoiceAnswerResult = mutipleChoiceAnswer != null ? new MCAnswerResultResponse
                     {
-                        StudentAnswerId = mutipleChoiceAnswer.AnswerId,
+                        StudentAnswerId = mutipleChoiceAnswer.AnswerId == default ? null : mutipleChoiceAnswer.AnswerId,
                         StudentAnswerDescription = mutipleChoiceAnswer.Answer,
                         StudentAnswerImage = mutipleChoiceAnswer.AnswerImage,
                         CorrectAnswerId = mutipleChoiceAnswer.CorrectAnswerId,
@@ -1041,25 +1041,26 @@ namespace MagicLand_System.Services.Implements
             examProgress = (quizDone * 100) / totalQuiz;
 
             var schedules = cls.Schedules.ToList();
-            DateTime currentDate = GetCurrentTime().Date;
+            var currentDate = GetCurrentTime().Date;
+
             for (int i = 0; i < schedules.Count(); i++)
             {
-                DateTime scheduleDate = schedules[i].Date.Date;
-                TimeSpan difference = scheduleDate - currentDate;
-
+                var scheduleDate = schedules[i].Date.Date;
+                var difference = scheduleDate - currentDate;
                 int day = difference.Days;
 
                 if (day < 0)
                 {
                     continue;
                 }
-                if (day == 0)
+
+                if (day >= 0)
                 {
-                    learningProgress = ((i + 1) * 100) / schedules.Count();
-                    break;
-                }
-                if (day > 1)
-                {
+                    if (i == 0)
+                    {
+                        break;
+                    }
+
                     learningProgress = (i * 100) / schedules.Count();
                     break;
                 }

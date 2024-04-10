@@ -6,26 +6,25 @@ namespace MagicLand_System.Background.BackgroundSetUp
 {
     public class DailyCreateJobSetUp : IConfigureOptions<QuartzOptions>
     {
-        private readonly QuartzJobCronExpression _quartzJobCronExpression;
+        private readonly List<JobCronExpression> _cronExpressions;
 
-        public DailyCreateJobSetUp(IOptions<QuartzJobCronExpression> quartzJobSettings)
+        public DailyCreateJobSetUp(IOptions<List<JobCronExpression>> cronExpressions)
         {
-            _quartzJobCronExpression = quartzJobSettings.Value;
+            _cronExpressions = cronExpressions.Value;
         }
         public void Configure(QuartzOptions options)
         {
             var jobKey = JobKey.Create(nameof(DailyCreateJob));
 
-            var cronExpression = _quartzJobCronExpression.QuartzJobs != null && _quartzJobCronExpression.QuartzJobs.Any()
-               ? _quartzJobCronExpression.QuartzJobs.FirstOrDefault(job => job.JobName == nameof(DailyCreateJob))?.CronExpression
-               : "0 0 0/1 ? * * *";
-
+            var cronExpression = _cronExpressions
+           .FirstOrDefault(j => j.JobName == nameof(DailyCreateJob))?
+           .CronExpression ?? "0 0 0/1 ? * * *";
 
             options
             .AddJob<DailyCreateJob>(jobBuilder => jobBuilder.WithIdentity(jobKey))
             .AddTrigger(trigger => trigger
             .ForJob(jobKey)
-            .WithCronSchedule("0 3 0 * * ?"));
+            .WithCronSchedule(cronExpression));
         }
     }
 }

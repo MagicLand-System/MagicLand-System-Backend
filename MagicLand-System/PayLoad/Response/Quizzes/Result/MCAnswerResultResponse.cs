@@ -2,7 +2,7 @@
 {
     public class MCAnswerResultResponse
     {
-        public Guid StudentAnswerId { get; set; }
+        public Guid? StudentAnswerId { get; set; }
         public string? StudentAnswerDescription { get; set; } = string.Empty;
         public string? StudentAnswerImage { get; set; } = string.Empty;
         public Guid CorrectAnswerId { get; set; }

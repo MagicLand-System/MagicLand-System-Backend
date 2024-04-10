@@ -23,19 +23,19 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
+                    var currentTime = BackgoundTime.GetTime();
 
                     var newDeleteNotification = new Notification
                     {
                         Id = Guid.NewGuid(),
-                        Title = "Xóa Lúc " + DateTime.UtcNow,
+                        Title = "Xóa Lúc " + currentTime,
                     };
 
                     var tempQuiz = await _unitOfWork.GetRepository<TempQuiz>().GetListAsync(orderBy: x => x.OrderBy(x => x.CreatedTime));
 
                     foreach (var quiz in tempQuiz)
                     {
-                        int time = currentDate.Day - quiz.CreatedTime.Day;
+                        int time = currentTime.Day - quiz.CreatedTime.Day;
 
                         if (time >= 1)
                         {

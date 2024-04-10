@@ -237,7 +237,7 @@ namespace MagicLand_System.Services.Implements
                 var slotx = startTime + " - " + endTime;
                 Times.Add(new ScheduleRequestV2
                 {
-                    Schedule= dow,
+                    Schedule = dow,
                     Slot = slotx,
                 });
             }
@@ -434,7 +434,7 @@ namespace MagicLand_System.Services.Implements
             {
                 return new ClassResultResponse
                 {
-                    MyClassResponses = (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).OrderByDescending(x => x.CreatedDate ).ToList()),
+                    MyClassResponses = (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).OrderByDescending(x => x.CreatedDate).ToList()),
                     NumberOfClasses = numberOfClasses,
                 };
             }
@@ -451,7 +451,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     res.AddRange(filter2);
                 }
-                return new ClassResultResponse 
+                return new ClassResultResponse
                 {
                     MyClassResponses = res.OrderByDescending(x => x.CreatedDate).ToList(),
                     NumberOfClasses = numberOfClasses,
@@ -463,7 +463,7 @@ namespace MagicLand_System.Services.Implements
                 NumberOfClasses = numberOfClasses,
             };
 
-    }
+        }
 
         public async Task<MyClassResponse> GetClassDetail(string id)
         {
@@ -1176,7 +1176,7 @@ namespace MagicLand_System.Services.Implements
 
                 ScheduleResponse scheduleResponse = new ScheduleResponse
                 {
-                    Id = schedulex.Id,
+                    ScheduleId = schedulex.Id,
                     Date = schedulex.Date,
                     Room = new RoomResponse
                     {
@@ -1218,7 +1218,7 @@ namespace MagicLand_System.Services.Implements
             List<ScheduleResponse> resultList = new List<ScheduleResponse>();
             foreach (var response in responses)
             {
-                var isExist = attendance.SingleOrDefault(x => x.ScheduleId.ToString().Equals(response.Id.ToString()));
+                var isExist = attendance.SingleOrDefault(x => x.ScheduleId.ToString().Equals(response.ScheduleId.ToString()));
                 if (isExist == null)
                 {
                     resultList.Add(response);
@@ -2064,7 +2064,7 @@ namespace MagicLand_System.Services.Implements
                 //        //CreateClass = await GenerateCreateClassFail(rq),
                 //    });
                 var newRIR = new RowInsertResponse
-                 {
+                {
                     Index = rq.Index,
                     IsSucess = true,
                     Messsage = $"ClassCode : {myRequest.ClassCode} , LecturerName : {roomLec.Lecturer.FullName}, Room : {roomLec.Room.Name}",
@@ -2081,7 +2081,7 @@ namespace MagicLand_System.Services.Implements
                 createClass.ClassCode = myRequest.ClassCode;
                 createClass.LecturerId = myRequest.LecturerId;
                 createClass.RoomId = myRequest.RoomId;
-                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Id == myRequest.LecturerId);
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == myRequest.LecturerId);
                 var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == myRequest.RoomId);
                 var lecturerResponse = new LecturerResponse
                 {
@@ -3177,10 +3177,11 @@ namespace MagicLand_System.Services.Implements
 
             int part = quiz.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
 
+            var extenstionName = quiz.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + quiz.OrderPackage;
             ssr.Quiz = new QuizInforResponse
             {
                 ExamId = quiz.Id,
-                ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
+                ExamName = "Bài " + quiz.ContentName.ToLower() + extenstionName,
                 ExamPart = part,
                 QuizName = quiz.Title!,
                 QuizDuration = isNonRequireTime ? null : duration,

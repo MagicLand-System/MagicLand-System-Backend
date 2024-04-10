@@ -2,6 +2,11 @@
 {
     public class QuartzJobCronExpression
     {
+        public QuartzJobCronExpression()
+        {
+
+        }
+
         public List<JobCronExpression>? QuartzJobs { get; set; }
     }
 
