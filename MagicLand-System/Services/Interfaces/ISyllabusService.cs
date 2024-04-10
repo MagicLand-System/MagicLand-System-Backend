@@ -38,5 +38,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StaffSessionResponse>> GetAllSessionResponses(string syllabusId);
         Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId);
         Task<GeneralSyllabusResponse> GetGeneralSyllabusResponse(string syllabusId);
+        Task<SyllabusResultResponse> FilterStaffSyllabusAsync(List<string>? keyWords, DateTime? date, double? score);
+
     }
 }

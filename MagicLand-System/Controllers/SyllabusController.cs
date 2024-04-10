@@ -263,5 +263,13 @@ namespace MagicLand_System.Controllers
             var result = await _syllabusService.GetStaffQuestionPackageResponses(id);
             return Ok(result);
         }
+        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.StaffFilterSyllabus)]
+        public async Task<IActionResult> FilterStaffSyllabus([FromQuery] List<string>? keyWords,
+          [FromQuery] DateTime? date,
+          [FromQuery] double? score)
+        {
+            var syllabuses = await _syllabusService.FilterStaffSyllabusAsync(keyWords, date, score);
+            return Ok(syllabuses);
+        }
     }
 }

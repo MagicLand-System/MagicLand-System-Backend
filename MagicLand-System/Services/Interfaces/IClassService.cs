@@ -44,6 +44,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<InsertClassesResponse> InsertClasses(List<CreateClassesRequest> request);
         Task<ClassFromClassCode> GetClassFromClassCode(string classCode);
         Task<InsertClassesResponse> InsertClassesV2(List<CreateClassesRequest> request);
+        Task<InsertClassesResponse> InsertClassesSave(InsertClassesResponse request);
 
     }
 }
