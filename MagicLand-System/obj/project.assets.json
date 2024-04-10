@@ -1086,7 +1086,7 @@
           }
         }
       },
-      "Quartz/3.8.1": {
+      "Quartz/3.8.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "2.1.1",
@@ -1103,13 +1103,13 @@
           }
         }
       },
-      "Quartz.Extensions.DependencyInjection/3.8.1": {
+      "Quartz.Extensions.DependencyInjection/3.8.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0",
           "Microsoft.Extensions.Options": "6.0.0",
-          "Quartz": "3.8.1"
+          "Quartz": "3.8.0"
         },
         "compile": {
           "lib/net6.0/Quartz.Extensions.DependencyInjection.dll": {
@@ -1122,11 +1122,11 @@
           }
         }
       },
-      "Quartz.Extensions.Hosting/3.8.1": {
+      "Quartz.Extensions.Hosting/3.8.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Hosting.Abstractions": "6.0.0",
-          "Quartz.Extensions.DependencyInjection": "3.8.1"
+          "Quartz.Extensions.DependencyInjection": "3.8.0"
         },
         "compile": {
           "lib/net6.0/Quartz.Extensions.Hosting.dll": {
@@ -3432,10 +3432,10 @@
         "portable.bouncycastle.nuspec"
       ]
     },
-    "Quartz/3.8.1": {
-      "sha512": "HlKm+43iG8LmXfejL1kIijO107x8ozEShLT2PFIkOWNSHUj7O7yTl6icFrn6DocPvigudQ90a6h2gdFShOwyXw==",
+    "Quartz/3.8.0": {
+      "sha512": "XYg+O+yw24kNLqp1YyEaZCzpQyVhcLQ5vep61RDKPZFjRNMBfBxcZiHNRFMNuN0XQIQ6zTGTHdZl9h7CuEVvXA==",
       "type": "package",
-      "path": "quartz/3.8.1",
+      "path": "quartz/3.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3448,15 +3448,14 @@
         "lib/netstandard2.0/Quartz.dll",
         "lib/netstandard2.0/Quartz.xml",
         "quartz-logo-small.png",
-        "quartz.3.8.1.nupkg.sha512",
-        "quartz.nuspec",
-        "quick-start.md"
+        "quartz.3.8.0.nupkg.sha512",
+        "quartz.nuspec"
       ]
     },
-    "Quartz.Extensions.DependencyInjection/3.8.1": {
-      "sha512": "wXHLkm9fTFsIfaR8JHp4ttYYZB6fRjH7ZEgbhPtiiMp6V4LposWLC0UpG5ZLWjjIFk2LTr/N9fK983W+lJAo7w==",
+    "Quartz.Extensions.DependencyInjection/3.8.0": {
+      "sha512": "pJK26rqgTXTUdpA4TSRO6upn1YGcOKJhNw0WcIeD8ShLaO1lviM9KNE+Q5knIF4osdjOcTOsu7Rtjofth7olEw==",
       "type": "package",
-      "path": "quartz.extensions.dependencyinjection/3.8.1",
+      "path": "quartz.extensions.dependencyinjection/3.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3468,20 +3467,18 @@
         "lib/netcoreapp3.1/Quartz.Extensions.DependencyInjection.xml",
         "lib/netstandard2.0/Quartz.Extensions.DependencyInjection.dll",
         "lib/netstandard2.0/Quartz.Extensions.DependencyInjection.xml",
-        "microsoft-di-integration.md",
         "quartz-logo-small.png",
-        "quartz.extensions.dependencyinjection.3.8.1.nupkg.sha512",
+        "quartz.extensions.dependencyinjection.3.8.0.nupkg.sha512",
         "quartz.extensions.dependencyinjection.nuspec"
       ]
     },
-    "Quartz.Extensions.Hosting/3.8.1": {
-      "sha512": "pgxrlRNF8b0kFLduCknTxoQ8zhB+HB6i8NrTD6LxS8aw4ByRSl1Gb9hsgWff7YGAeJ/OK92p7tptQhSDWn8G4Q==",
+    "Quartz.Extensions.Hosting/3.8.0": {
+      "sha512": "cNSrx0ifPTRL6AVXPTTXS6Yzv8Zc6pq0GXtdOOFfBAuWBmBRzZy1XZLl5ylOIWNFW3BHbwHOXm4NJ85WT/LKfw==",
       "type": "package",
-      "path": "quartz.extensions.hosting/3.8.1",
+      "path": "quartz.extensions.hosting/3.8.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "hosted-services-integration.md",
         "lib/net6.0/Quartz.Extensions.Hosting.dll",
         "lib/net6.0/Quartz.Extensions.Hosting.xml",
         "lib/net8.0/Quartz.Extensions.Hosting.dll",
@@ -3491,7 +3488,7 @@
         "lib/netstandard2.0/Quartz.Extensions.Hosting.dll",
         "lib/netstandard2.0/Quartz.Extensions.Hosting.xml",
         "quartz-logo-small.png",
-        "quartz.extensions.hosting.3.8.1.nupkg.sha512",
+        "quartz.extensions.hosting.3.8.0.nupkg.sha512",
         "quartz.extensions.hosting.nuspec"
       ]
     },
@@ -4631,8 +4628,7 @@
       "NLog >= 5.2.5",
       "Newtonsoft.Json >= 13.0.3",
       "Ngrok.AspNetCore >= 1.0.6",
-      "Quartz >= 3.8.1",
-      "Quartz.Extensions.Hosting >= 3.8.1",
+      "Quartz.Extensions.Hosting >= 3.8.0",
       "Swashbuckle.AspNetCore >= 6.5.0"
     ]
   },
@@ -4749,13 +4745,9 @@
             "target": "Package",
             "version": "[1.0.6, )"
           },
-          "Quartz": {
-            "target": "Package",
-            "version": "[3.8.1, )"
-          },
           "Quartz.Extensions.Hosting": {
             "target": "Package",
-            "version": "[3.8.1, )"
+            "version": "[3.8.0, )"
           },
           "Swashbuckle.AspNetCore": {
             "target": "Package",

@@ -24,7 +24,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Ocsp;
-using Quartz;
 
 
 namespace MagicLand_System.Services.Implements

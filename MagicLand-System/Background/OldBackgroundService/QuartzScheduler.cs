@@ -1,7 +1,4 @@
-﻿using Quartz;
-using Quartz.Spi;
-
-namespace MagicLand_System.Background.OldBackgroundService
+﻿namespace MagicLand_System.Background.OldBackgroundService
 {
     public class QuartzScheduler { }
 }

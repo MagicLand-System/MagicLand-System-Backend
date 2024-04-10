@@ -20,11 +20,19 @@ namespace MagicLand_System.Background.BackgroundSetUp
            .FirstOrDefault(j => j.JobName == nameof(DailyCreateJob))?
            .CronExpression ?? "0 0 0/1 ? * * *";
 
+            //for local
             options
             .AddJob<DailyCreateJob>(jobBuilder => jobBuilder.WithIdentity(jobKey))
             .AddTrigger(trigger => trigger
             .ForJob(jobKey)
             .WithCronSchedule(cronExpression));
+            //for server
+            // options
+            //.AddJob<DailyCreateJob>(jobBuilder => jobBuilder.WithIdentity(jobKey))
+            //.AddTrigger(trigger => trigger
+            //.ForJob(jobKey)
+            //.WithSimpleSchedule(schedule => schedule.WithIntervalInSeconds(30).RepeatForever()).StartNow().Build());
+
         }
     }
 }
