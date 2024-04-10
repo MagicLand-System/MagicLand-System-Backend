@@ -49,7 +49,7 @@ namespace MagicLand_System.Services
 
         protected DateTime GetCurrentTime()
         {
-            return DateTime.UtcNow;
+            return DateTime.Now;
         }
 
         protected async Task<double> GetDynamicPrice(Guid id, bool isClass)

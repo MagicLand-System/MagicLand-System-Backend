@@ -1769,10 +1769,13 @@ namespace MagicLand_System.Services.Implements
                     {
                         dateofweek = "sunday";
                     }
+                    var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(slotId.ToString()));
                     scheduleRequests.Add(new ScheduleRequest
                     {
                         DateOfWeek = dateofweek,
                         SlotId = slotId,
+                        StartTime = slot.StartTime,
+                        EndTime = slot.EndTime,
                     });
                 }
                 catch (Exception ex)
@@ -1916,7 +1919,7 @@ namespace MagicLand_System.Services.Implements
                         {
                             dateofweek = "sunday";
                         }
-                        var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(slotId));   
+                        var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(slotId.ToString()));   
                         scheduleRequests.Add(new ScheduleRequest
                         {
                             DateOfWeek = dateofweek,
