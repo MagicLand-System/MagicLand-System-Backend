@@ -308,6 +308,7 @@ namespace MagicLand_System.Services.Implements
                     return finalResult.OrderBy(x => x.Name).ToList();
                 }
             }
+            rooms = rooms.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).ToList();   
             return rooms.OrderBy(x => x.Name).ToList();
         }
 

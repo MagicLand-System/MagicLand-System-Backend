@@ -1193,6 +1193,8 @@ namespace MagicLand_System.Services.Implements
                         SlotId = schedulex.SlotId,
                         EndTime = TimeOnly.Parse(schedulex.Slot.EndTime),
                         StartTime = TimeOnly.Parse(schedulex.Slot.StartTime),
+                        StartTimeString = schedulex.Slot.StartTime,
+                        EndTimeString = schedulex.Slot.EndTime,
                     },
                     DayOfWeeks = dateOfWeek,
                     Lecturer = new LecturerResponse
@@ -1225,6 +1227,7 @@ namespace MagicLand_System.Services.Implements
                     resultList.Add(response);
                 }
             }
+            resultList = resultList.Where(x => x.Date.Date > DateTime.Now.Date).ToList();
             if (date != null && responses != null)
             {
                 resultList = (responses.Where(x => (x.Date.Day == date.Value.Day && x.Date.Month == date.Value.Month && x.Date.Year == date.Value.Year))).ToList();

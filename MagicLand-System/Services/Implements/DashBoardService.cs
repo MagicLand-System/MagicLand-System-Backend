@@ -23,6 +23,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<DashboardRegisterResponse>> GetDashboardRegisterResponses(DateTime? startDate, DateTime? endDate)
         {
+            startDate = startDate.Value.AddHours(7);
             var listStudentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.AddedTime >= startDate && x.AddedTime <= endDate);
             var listx = listStudentClass.GroupBy(x => x.AddedTime).ToList();
             List<DashboardRegisterResponse> responses = new List<DashboardRegisterResponse>();   
@@ -132,6 +133,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<RevenueDashBoardResponse>> GetRevenueDashBoardResponse(DateTime? startDate, DateTime? endDate)
         {
+            startDate = startDate.Value.AddHours(7);
             var wallettransaction = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate : x => x.CreateTime >= startDate && x.CreateTime <= endDate);
             var groupwallet = wallettransaction.GroupBy(x => new { x.CreateTime, x.Method }).Select(g => new
             {
