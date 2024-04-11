@@ -776,7 +776,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (MaxAge != null)
                 {
-                    result3 = result.Where(x => x.MaxYearOldsStudent >= MaxAge.Value  && x.MinYearOldsStudent <= minAge.Value).ToList();
+                    result3 = result.Where(x =>(x.MaxYearOldsStudent >= MaxAge.Value  && x.MinYearOldsStudent <= MaxAge.Value) || (x.MaxYearOldsStudent >= minAge.Value && x.MinYearOldsStudent <= minAge.Value)).ToList();
                 }
                 if (searchString != null)
                 {

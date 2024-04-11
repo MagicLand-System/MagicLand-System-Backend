@@ -271,6 +271,7 @@ namespace MagicLand_System.Services.Implements
                 Id = new Guid(),
                 StudentId = sil,
                 ClassId = cls.Id,
+                AddedTime = DateTime.Now.AddHours(7),
             }).ToList();
 
             string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
