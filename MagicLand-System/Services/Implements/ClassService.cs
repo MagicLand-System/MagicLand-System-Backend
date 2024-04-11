@@ -87,7 +87,7 @@ namespace MagicLand_System.Services.Implements
                 Id = Guid.NewGuid(),
                 ClassCode = request.ClassCode,
                 CourseId = request.CourseId,
-                StartDate = request.StartDate,
+                StartDate = request.StartDate.AddHours(7),
                 EndDate = DateTime.UtcNow,
                 LeastNumberStudent = request.LeastNumberStudent,
                 LimitNumberStudent = request.LimitNumberStudent,
@@ -2464,6 +2464,86 @@ namespace MagicLand_System.Services.Implements
             }
             return lecturers.OrderBy(x => x.NumberOfClassesTeaching).ToList();
         }
+        public async Task<List<Room>> GetRoomForUpdateSession(string classId, string slotId, DateTime date)
+        {
+            var myResponse = await GetClassDetail(classId);
+            var listSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Date.Date == date.Date && x.SlotId == Guid.Parse(slotId));
+            if(listSchedule == null || listSchedule.Count == 0)
+            {
+                var rm = await _unitOfWork.GetRepository<Room>().GetListAsync();
+                return rm.Where(x => x.Type.ToLower().Equals(myResponse.Method.ToLower())).ToList();
+            }
+            List<Room> list = new List<Room>();
+            var rooms = await _unitOfWork.GetRepository<Room>().GetListAsync();
+            foreach (var room in rooms)
+            {
+                var isExít = listSchedule.Any(x => x.RoomId == room.Id);
+                if (!isExít)
+                {
+                    list.Add(room);
+                }
+            }
+            list = list.Where(x => x.Type.ToLower().Equals(myResponse.Method.ToLower())).ToList();
+            return list;
+        }
+        public async Task<List<LecturerResponse>> GetLecturerResponseForUpdateSession(string classId, string slotId, DateTime date)
+        {
+            var myResponse = await GetClassDetail(classId);
+            var listSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.Date.Date == date.Date && x.SlotId.ToString().Equals(slotId),include : x => x.Include(x => x.Class));
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(myResponse.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+            var cate = course.Syllabus.SyllabusCategory.Name;
+            if (listSchedule == null || listSchedule.Count == 0)
+            {
+                var userList = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role).Include(x => x.Classes));
+                userList = userList.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>())).ToList();
+                List<LecturerResponse> lecturers = new List<LecturerResponse>();
+                foreach(var oldLecutrer in userList)
+                {
+                    LecturerResponse response = new LecturerResponse
+                    {
+                        FullName = oldLecutrer.FullName,
+                        LectureId = oldLecutrer.Id,
+                        AvatarImage = oldLecutrer.AvatarImage,
+                        DateOfBirth = oldLecutrer.DateOfBirth,
+                        Email = oldLecutrer.Email,
+                        Gender = oldLecutrer.Gender,
+                        LecturerField = oldLecutrer.LecturerField.Name,
+                        NumberOfClassesTeaching = oldLecutrer.Classes.Count,
+                        Phone = oldLecutrer.Phone,
+                        Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>(),
+                    };
+                    lecturers.Add(response);
+                }
+                lecturers = lecturers.Where(x => x.LecturerField.ToLower().Equals(cate.ToLower())).ToList();
+                return lecturers.OrderBy(x => x.NumberOfClassesTeaching).ToList();
+            }
+            List<LecturerResponse> list = new List<LecturerResponse>();
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(include : x => x.Include(x => x.Role).Include(x => x.Classes).Include(x => x.LecturerField));
+            users = users.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>())).ToList();
+            foreach (var userx in users)
+            {
+                var isExít = listSchedule.Any(x => x.Class.LecturerId == userx.Id || x.SubLecturerId == userx.Id);
+                if (!isExít)
+                {
+                    LecturerResponse response = new LecturerResponse
+                    {
+                        FullName = userx.FullName,
+                        LectureId = userx.Id,
+                        AvatarImage = userx.AvatarImage,
+                        DateOfBirth = userx.DateOfBirth,
+                        Email = userx.Email,
+                        Gender = userx.Gender,
+                        LecturerField = userx.LecturerField.Name,
+                        NumberOfClassesTeaching = userx.Classes.Count,
+                        Phone = userx.Phone,
+                        Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>(),
+                    };
+                    list.Add(response);
+                }
+            }
+            list = list.Where(x => x.LecturerField.ToLower().Equals(cate.ToLower())).ToList();
+            return list.OrderBy(x => x.NumberOfClassesTeaching).ToList();
+        }
         #endregion
         #region thanh_lee_code
         public async Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time)
@@ -3770,7 +3850,6 @@ namespace MagicLand_System.Services.Implements
             res.Lecturer = lecturerResponses.OrderBy(x => x.NumberOfClassesTeaching).ToArray()[0];
             return res;
         }
-
         #endregion
     }
 }

@@ -65,6 +65,8 @@
             public const string InsertClassesV3 = GetAll + "/insertClasses/save";
             public const string RoomForUpdateClass = GetAll + "/getRoomForUpdate";
             public const string LecturerForUpdateClass = GetAll + "/getLecturerForUpdate";
+            public const string LecturerForUpdateSession = GetAll + "/getLecturerForUpdateSession";
+            public const string RoomForUpdateSession = GetAll + "/getRoomForUpdateSession";
         }
         public static class PromotionEnpoint
         {

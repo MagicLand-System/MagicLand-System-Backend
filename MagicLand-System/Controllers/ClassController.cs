@@ -558,5 +558,17 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.GetLecturerForUpdate(classId);
             return Ok(isSuccess);
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.RoomForUpdateSession)]
+        public async Task<IActionResult> UpdateSessionRoom(string classId, string slotId, DateTime date)
+        {
+            var isSuccess = await _classService.GetRoomForUpdateSession(classId,slotId,date);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.LecturerForUpdateSession)]
+        public async Task<IActionResult> UpdateSesionLecturer(string classId, string slotId, DateTime date)
+        {
+            var isSuccess = await _classService.GetLecturerResponseForUpdateSession(classId,slotId,date);
+            return Ok(isSuccess);
+        }
     }
 }
