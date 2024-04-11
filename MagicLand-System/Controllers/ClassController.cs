@@ -546,5 +546,17 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.InsertClassesSave(request);
             return Ok(isSuccess);
         }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.RoomForUpdateClass)]
+        public async Task<IActionResult> UpdateClassRoom(string classId)
+        {
+            var isSuccess = await _classService.GetRoomsForUpdate(classId);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.LecturerForUpdateClass)]
+        public async Task<IActionResult> UpdateClassLecturer(string classId)
+        {
+            var isSuccess = await _classService.GetLecturerForUpdate(classId);
+            return Ok(isSuccess);
+        }
     }
 }

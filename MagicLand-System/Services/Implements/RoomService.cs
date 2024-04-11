@@ -305,10 +305,17 @@ namespace MagicLand_System.Services.Implements
                             finalResult.Add(room);
                         }
                     }
+                    if(request.Method != null)
+                    {
+                        finalResult = finalResult.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).ToList();
+                    }
                     return finalResult.OrderBy(x => x.Name).ToList();
                 }
             }
-            rooms = rooms.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).ToList();   
+            if (request.Method != null)
+            {
+                rooms = rooms.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).ToList();
+            }
             return rooms.OrderBy(x => x.Name).ToList();
         }
 

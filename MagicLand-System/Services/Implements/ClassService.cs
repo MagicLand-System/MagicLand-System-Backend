@@ -36,8 +36,12 @@ namespace MagicLand_System.Services.Implements
 {
     public class ClassService : BaseService<ClassService>, IClassService
     {
-        public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private IRoomService _roomService;
+        private IUserService _userService;
+        public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,IRoomService roomService, IUserService userService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _roomService = roomService;
+            _userService = userService; 
         }
 
         #region gia_thuong_code
@@ -2383,6 +2387,82 @@ namespace MagicLand_System.Services.Implements
             response.SuccessRow = succ;
             response.FailureRow = fail;
             return response;
+        }
+        public async Task<List<Room>> GetRoomsForUpdate(string classId)
+        {
+            var myResponse = await GetClassDetail(classId);
+            var schedule = myResponse.Schedules;
+            List<ScheduleRequest> requests = new List<ScheduleRequest>();
+            foreach(var sch in schedule)
+            {
+                var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Equals(sch.StartTime),selector : x => x.Id);
+                requests.Add(new ScheduleRequest
+                {
+                    DateOfWeek = sch.DayOfWeek.ToLower(),
+                    SlotId = slotId,
+                    StartTime = sch.StartTime,
+                    EndTime =sch.EndTime,
+                });
+            }
+            FilterRoomRequest filterRoomRequest = new FilterRoomRequest
+            {
+                CourseId = myResponse.CourseId.ToString(),
+                Method = myResponse.Method,
+                StartDate = myResponse.StartDate,
+                Schedules = requests,
+            };
+            var rooms = await _roomService.GetRoomList(filterRoomRequest);
+            var oldroom = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == myResponse.RoomResponse.RoomId);
+            var exist = rooms.Any(x => x.Id == oldroom.Id);
+            if (!exist)
+            {
+                rooms.Add(oldroom);
+            }
+            return rooms.OrderBy(x => x.Name).ToList();
+        }
+        public async Task<List<LecturerResponse>> GetLecturerForUpdate(string classId)
+        {
+            var myResponse = await GetClassDetail(classId);
+            var schedule = myResponse.Schedules;
+            List<ScheduleRequest> requests = new List<ScheduleRequest>();
+            foreach (var sch in schedule)
+            {
+                var slotId = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.StartTime.Equals(sch.StartTime), selector: x => x.Id);
+                requests.Add(new ScheduleRequest
+                {
+                    DateOfWeek = sch.DayOfWeek.ToLower(),
+                    SlotId = slotId,
+                    StartTime = sch.StartTime,
+                    EndTime = sch.EndTime,
+                });
+            }
+            FilterLecturerRequest filterRoomRequest = new FilterLecturerRequest
+            {
+                CourseId = myResponse.CourseId.ToString(),
+                StartDate = myResponse.StartDate,
+                Schedules = requests,
+            };
+            var lecturers = await _userService.GetLecturers(filterRoomRequest);
+            var oldLecutrer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == myResponse.LecturerResponse.LectureId,include : x => x.Include(x => x.LecturerField).Include(x => x.Classes));
+            var exist = lecturers.Any(x => x.LectureId == oldLecutrer.Id);
+            if (!exist)
+            {
+                LecturerResponse response = new LecturerResponse
+                {
+                    FullName = oldLecutrer.FullName,
+                    LectureId = oldLecutrer.Id,
+                    AvatarImage = oldLecutrer.AvatarImage,
+                    DateOfBirth = oldLecutrer.DateOfBirth,
+                    Email = oldLecutrer.Email,
+                    Gender = oldLecutrer.Gender,
+                    LecturerField = oldLecutrer.LecturerField.Name,
+                    NumberOfClassesTeaching = oldLecutrer.Classes.Count,
+                    Phone = oldLecutrer.Phone,
+                    Role = RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>(),
+                };
+                lecturers.Add(response);
+            }
+            return lecturers.OrderBy(x => x.NumberOfClassesTeaching).ToList();
         }
         #endregion
         #region thanh_lee_code
