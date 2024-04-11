@@ -4,6 +4,7 @@ using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -38,6 +39,45 @@ namespace MagicLand_System.Services.Implements
             return responses;   
         }
 
+        public async Task<List<FavoriteCourseResponse>> GetFavoriteCourseResponse(DateTime? startDate, DateTime? endDate)
+        {
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+            List<FavoriteCourseResponse> responses = new List<FavoriteCourseResponse>();
+            foreach (var course in courses)
+            {
+                var numberOfclass = 0;
+                var numberOfStudent = 0;
+                var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status.Equals("UPCOMING") && x.CourseId == course.Id);
+                if(classes == null || classes.Count == 0)
+                {
+                    numberOfclass = 0;
+                } else
+                {
+                    numberOfclass = classes.Count;  
+                    foreach (var c in classes)
+                    {
+                        var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.ClassId == c.Id && x.AddedTime >= startDate && x.AddedTime <= endDate);
+                        if(students != null)
+                        {
+                            numberOfStudent = numberOfStudent + students.Count;
+                        }
+                    }
+                }
+                responses.Add(new FavoriteCourseResponse 
+                {
+                    Id = course.Id,
+                    CourseName = course.Name,
+                    NumberClassUpComing = numberOfclass,
+                    NumberStudentsRegister = numberOfStudent,
+                    Subject = course.Syllabus.SyllabusCategory.Name,
+                    SubjectName = course.Syllabus.SubjectCode,
+                }
+                );
+            }
+            responses = responses.Where(x => x.NumberStudentsRegister > 0).OrderByDescending(x => x.NumberStudentsRegister).ToList();
+            return responses;
+        }
+
         public async Task<NumberOfMemberResponse> GetOfMemberResponse()
         {
             var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
@@ -52,6 +92,49 @@ namespace MagicLand_System.Services.Implements
                 NumOfParents = parents.Count(),
                 NumOfStaffs = staff.Count(),
             };
+        }
+
+        public async Task<List<RevenueDashBoardResponse>> GetRevenueDashBoardResponse(DateTime? startDate, DateTime? endDate)
+        {
+            var wallettransaction = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate : x => x.CreateTime >= startDate && x.CreateTime <= endDate);
+            var groupwallet = wallettransaction.GroupBy(x => new { x.CreateTime, x.Method }).Select(g => new
+            {
+                CreateTime = g.Key.CreateTime,
+                Method = g.Key.Method,  
+                Revenue = g.Sum(x => x.Money),
+            });
+            List<RevenueDashBoardResponse> revenueDashBoardResponses = new List<RevenueDashBoardResponse>();    
+            foreach ( var group in groupwallet)
+            {
+                var date = group.CreateTime;
+                var day = date.Day;
+                var month = date.Month;
+                var revenueRes = new RevenueDashBoardResponse
+                {
+                    Method = group.Method,
+                    Date = day + "/" + month,
+                    Revenue = group.Revenue,
+                };
+                if (group.Method.Equals("SystemWallet")) 
+                {
+                    revenueRes.Method = "Ví";
+                    revenueDashBoardResponses.Add(revenueRes);
+                }
+                if (group.Method.Equals("DirectionTransaction"))
+                {
+                    revenueRes.Method = "Trực Tiếp";
+                    revenueDashBoardResponses.Add(revenueRes);
+                }
+            }
+            var groupedTransactions = revenueDashBoardResponses
+            .GroupBy(t => new { t.Date, t.Method })
+            .Select(g => new RevenueDashBoardResponse
+            {
+                Date = g.Key.Date,
+                Method = g.Key.Method,
+                Revenue = g.Sum(t => t.Revenue),
+            });
+            return groupedTransactions.ToList();   
         }
     }
 }

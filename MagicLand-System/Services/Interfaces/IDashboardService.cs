@@ -7,5 +7,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<DashboardRegisterResponse>> GetDashboardRegisterResponses(DateTime? startDate, DateTime? endDate);
         Task<NumberOfMemberResponse> GetOfMemberResponse();
+        Task<List<FavoriteCourseResponse>> GetFavoriteCourseResponse(DateTime? startDate, DateTime? endDate);
+        Task<List<RevenueDashBoardResponse>> GetRevenueDashBoardResponse(DateTime? startDate, DateTime? endDate);
     }
 }

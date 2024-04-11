@@ -229,7 +229,7 @@ namespace MagicLand_System.Services.Implements
                 List<StudentClass> newStudentInClassList;
                 Notification newNotification;
 
-                GenerateNewItems(personalWallet, currentPayer, discountEachItem, request, cls, currentRequestTotal, studentNameString, out newTransaction, out newStudentInClassList, out newNotification);
+                GenerateStaffNewItems(personalWallet, currentPayer, discountEachItem, request, cls, currentRequestTotal, studentNameString, out newTransaction, out newStudentInClassList, out newNotification);
                 await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentItemScheduleList, newNotification);
 
                 string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.ClassCode}]";
@@ -253,7 +253,7 @@ namespace MagicLand_System.Services.Implements
                 Type = TransactionTypeEnum.Payment.ToString(),
                 Method = TransactionMethodEnum.SystemWallet.ToString(),
                 Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
-                CreateTime = GetCurrentTime(),
+                CreateTime = DateTime.Now.AddHours(7),
                 PersonalWalletId = personalWallet.Id,
                 PersonalWallet = personalWallet,
                 CreateBy = currentPayer.FullName,
@@ -283,6 +283,51 @@ namespace MagicLand_System.Services.Implements
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
             NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
         }
+        private void GenerateStaffNewItems(
+         PersonalWallet personalWallet, User currentPayer,
+         double discountEachItem, CheckoutRequest request, Class cls, double currentRequestTotal, string studentNameString,
+         out WalletTransaction newTransaction, out List<StudentClass> newStudentInClassList, out Notification newNotification)
+        {
+            newTransaction = new WalletTransaction
+            {
+                Id = new Guid(),
+                TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Payment),
+                Money = currentRequestTotal,
+                Discount = discountEachItem,
+                Type = TransactionTypeEnum.Payment.ToString(),
+                Method = "DirectionTransaction",
+                Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
+                CreateTime = DateTime.Now.AddHours(7),
+                PersonalWalletId = personalWallet.Id,
+                PersonalWallet = personalWallet,
+                CreateBy = currentPayer.FullName + "-" + currentPayer.Phone,
+                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Payment) + StringHelper.GenerateAttachValueForTxnRefCode(new ItemGenerate
+                {
+                    ClassId = request.ClassId,
+                    StudentIdList = request.StudentIdList
+                }),
+                Status = TransactionStatusEnum.Success.ToString(),
+            };
+
+            newStudentInClassList = request.StudentIdList.Select(sil =>
+            new StudentClass
+            {
+                Id = new Guid(),
+                StudentId = sil,
+                ClassId = cls.Id,
+                AddedTime = DateTime.Now.AddHours(7),
+            }).ToList();
+
+            string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                    {
+                      ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                      ($"{AttachValueEnum.StudentId}", $"{string.Join(", ", request.StudentIdList)}"),
+                    });
+
+            newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
+            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
+        }
+
 
         private Notification GenerateNewNotification(User targetUser, string title, string body, string type, string image, string actionData)
         {
@@ -311,6 +356,7 @@ namespace MagicLand_System.Services.Implements
                 Identify = identify,
             };
         }
+
 
         private async Task SavePurchaseProgressed(
             Class cls,
@@ -1168,7 +1214,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             var x = request.Requests.FirstOrDefault();
-            var currentPayer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+            var currentPayer = await GetUserFromJwt();
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.ToString().Equals(user.Id.ToString()));
 
             double total = await CalculateTotal(request.Requests);
