@@ -1819,6 +1819,8 @@ namespace MagicLand_System.Services.Implements
                 FailureRow = 0,
 
             };
+            List<Guid> lecturerIds = new List<Guid>();
+            List<Guid> roomIds = new List<Guid>();
             List<RowInsertResponse> rows = new List<RowInsertResponse>();
             foreach (var rq in request)
             {
@@ -1923,7 +1925,7 @@ namespace MagicLand_System.Services.Implements
                         {
                             dateofweek = "sunday";
                         }
-                        var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(slotId));   
+                        var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(slotId.ToString()));   
                         scheduleRequests.Add(new ScheduleRequest
                         {
                             DateOfWeek = dateofweek,
@@ -1987,7 +1989,15 @@ namespace MagicLand_System.Services.Implements
                     CourseId = courseId.ToString(),
                     Schedules = scheduleRequests,
                     StartDate = date,
-                });
+                },lecturerIds,roomIds);
+                if(roomLec.Lecturer != null)
+                {
+                    lecturerIds.Add(roomLec.Lecturer.LectureId);
+                }
+                    if(roomLec.Room != null)
+                {
+                    roomIds.Add(roomLec.Room.Id);
+                }
                 if (roomLec.Lecturer == null && roomLec.Room == null)
                 {
                     rows.Add(new RowInsertResponse
@@ -3612,7 +3622,7 @@ namespace MagicLand_System.Services.Implements
             };
         }
 
-        private async Task<FilterRoomAndLecturer> GetRoomAndLecturer(FilterLecturerRequest request)
+        private async Task<FilterRoomAndLecturer> GetRoomAndLecturer(FilterLecturerRequest request,List<Guid>? LecturerIdsx = null, List<Guid>? RoomIdx = null)
         {
             var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
             if (users == null)
@@ -3809,7 +3819,11 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (!LecturerIds.Contains(resx.LectureId))
                         {
-                            final.Add(resx);
+                            var exist = LecturerIdsx.Any(x => x == resx.LectureId);
+                            if (!exist)
+                            {
+                                final.Add(resx);
+                            }
                         }
                     }
                     if (final == null || final.Count == 0)
@@ -3830,7 +3844,11 @@ namespace MagicLand_System.Services.Implements
                     {
                         if (!roomIds.Contains(room.Id))
                         {
-                            finalResult.Add(room);
+                            var exist = roomIds.Any(x => x == room.Id);
+                            if (!exist) 
+                            {
+                                finalResult.Add(room);
+                            }
                         }
                     }
                     if (final == null || final.Count == 0)
