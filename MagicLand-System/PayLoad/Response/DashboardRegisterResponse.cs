@@ -4,5 +4,6 @@
     {
         public string Date {  get; set; }
         public int NumberOfRegisters { get; set; }  
+        public DateTime DateIn {  get; set; }   
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
@@ -9,6 +10,8 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -33,10 +36,43 @@ namespace MagicLand_System.Services.Implements
                 {
                     NumberOfRegisters = count,
                     Date = day + "/" + month,
+                    DateIn = date.Value,
                 };
                 responses.Add(response);
             }
-            return responses;   
+            var resArray = responses.OrderBy(x => x.DateIn).ToArray();
+            for (int i = 1; i < resArray.Length; i++)
+            {
+                var anchor = resArray[i-1].DateIn;
+                if ( i - 1 == 0)
+                {
+                    anchor = startDate.Value;
+                }
+                var begin = anchor.AddDays(1);
+                var nextDate = resArray[i].DateIn;
+                while(begin < nextDate)
+                {
+                    responses.Add(new DashboardRegisterResponse
+                    {
+                        Date = begin.Day + "/" + begin.Month,
+                        NumberOfRegisters = 0,
+                        DateIn = begin
+                    });
+                  begin =  begin.AddDays(1);   
+                }
+            }
+            var endx = resArray[resArray.Length-1].DateIn.AddDays(1);
+            while (endx <= endDate)
+            {
+                responses.Add(new DashboardRegisterResponse
+                {
+                    Date = endx.Day + "/" + endx.Month,
+                    NumberOfRegisters = 0,
+                    DateIn = endx
+                });
+               endx =  endx.AddDays(1);
+            }
+            return responses.OrderBy(x => x.DateIn).ToList();
         }
 
         public async Task<List<FavoriteCourseResponse>> GetFavoriteCourseResponse(DateTime? startDate, DateTime? endDate)
@@ -102,6 +138,7 @@ namespace MagicLand_System.Services.Implements
                 CreateTime = g.Key.CreateTime,
                 Method = g.Key.Method,  
                 Revenue = g.Sum(x => x.Money),
+                DateIn = g.Key.CreateTime,
             });
             List<RevenueDashBoardResponse> revenueDashBoardResponses = new List<RevenueDashBoardResponse>();    
             foreach ( var group in groupwallet)
@@ -114,6 +151,7 @@ namespace MagicLand_System.Services.Implements
                     Method = group.Method,
                     Date = day + "/" + month,
                     Revenue = group.Revenue,
+                    DateIn = date,  
                 };
                 if (group.Method.Equals("SystemWallet")) 
                 {
@@ -127,14 +165,63 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             var groupedTransactions = revenueDashBoardResponses
-            .GroupBy(t => new { t.Date, t.Method })
+            .GroupBy(t => new { t.Date, t.Method})
             .Select(g => new RevenueDashBoardResponse
             {
                 Date = g.Key.Date,
                 Method = g.Key.Method,
                 Revenue = g.Sum(t => t.Revenue),
-            });
-            return groupedTransactions.ToList();   
+                DateIn = g.First(t => t.Date == t.Date).DateIn,
+            }).ToList();
+            var resArray = groupedTransactions.OrderBy(x => x.DateIn).ToArray();
+            for (int i = 1; i < resArray.Length; i++)
+            {
+                var anchor = resArray[i - 1].DateIn;
+                if (i - 1 == 0)
+                {
+                    anchor = startDate.Value;
+                }
+                var begin = anchor.AddDays(1);
+                var nextDate = resArray[i].DateIn;
+                while (begin.Date < nextDate.Date)
+                {
+                    groupedTransactions.Add(new RevenueDashBoardResponse
+                    {
+                        Date = begin.Day + "/" + begin.Month,
+                        Revenue = 0,
+                        DateIn = begin,
+                        Method = "Ví"
+                    });
+                    groupedTransactions.Add(new RevenueDashBoardResponse
+                    {
+                        Date = begin.Day + "/" + begin.Month,
+                        Revenue = 0,
+                        DateIn = begin,
+                        Method = "Trực Tiếp"
+                    });
+                    begin = begin.AddDays(1);
+                }
+            }
+            var endx = resArray[resArray.Length - 1].DateIn.AddDays(1);
+            while (endx.Date <= endDate.Value.Date)
+            {
+                groupedTransactions.Add(new RevenueDashBoardResponse
+                {
+                    Date = endx.Day + "/" + endx.Month,
+                    Revenue = 0,
+                    DateIn = endx,
+                    Method = "Ví",
+                });
+                groupedTransactions.Add(new RevenueDashBoardResponse
+                {
+                    Date = endx.Day + "/" + endx.Month,
+                    Revenue = 0,
+                    DateIn = endx,
+                    Method = "Trực Tiếp",
+                });
+                endx = endx.AddDays(1);
+            }
+            return groupedTransactions.OrderBy(x => x.DateIn).ToList();   
         }
     }
 }
