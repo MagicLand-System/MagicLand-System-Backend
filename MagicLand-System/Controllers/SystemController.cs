@@ -17,6 +17,11 @@ namespace MagicLand_System.Controllers
         {
             return Ok(DateTime.Now);
         }
+        [HttpGet("System/GetNumberOfUser")]
+        public async Task<IActionResult> GetNumber()
+        {
+            return Ok(await _dashboardService.GetOfMemberResponse());
+        }
         [HttpGet("System/GetRegistered")]
         public async Task<IActionResult> GetRegistered(DateTime? startDate,DateTime? endDate) 
         {
