@@ -2143,6 +2143,7 @@ namespace MagicLand_System.Services.Implements
                     SubjectCode = syllabus.SubjectCode,
 
                 };
+                createClass.ScheduleRequests = scheduleRequests;
                 newRIR.CreateClass = createClass;
                 rows.Add(newRIR);
             }
