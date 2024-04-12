@@ -68,14 +68,19 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác", StatusCodes.Status400BadRequest);
             }
-            ValidateTempQuizDB(quizStudentWork.StudentQuestionResults.Count(), currentQuiz, currentTempQuiz);
+
+            Guid testResultId;
+            TestResult testResult;
+
+            if (quizStudentWork.StudentQuestionResults.Count > 0)
+            {
+                ValidateTempQuizDB(quizStudentWork.StudentQuestionResults.Count(), currentQuiz, currentTempQuiz);
+            }
 
             var questionItems = ValidateStudentMCWorkRequest(quizStudentWork, currentTempQuiz);
 
             int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentId, cls.Id, currentQuiz!.PackageType);
 
-            Guid testResultId;
-            TestResult testResult;
             GenrateTestResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, cls.StudentClasses.ToList().Find(sc => sc.StudentId == currentStudentId)!, noAttempt, out testResultId, out testResult);
 
             var examQuestions = new List<ExamQuestion>();
@@ -83,24 +88,27 @@ namespace MagicLand_System.Services.Implements
             int correctMark = 0;
             double scoreEarned = 0;
 
-            foreach (var sqr in quizStudentWork.StudentQuestionResults)
+            if (quizStudentWork.StudentQuestionResults.Count > 0)
             {
-                var currentTempQuestion = questionItems.Item1.Find(q => q.QuestionId == sqr.QuestionId);
+                foreach (var sqr in quizStudentWork.StudentQuestionResults)
+                {
+                    var currentTempQuestion = questionItems.Item1.Find(q => q.QuestionId == sqr.QuestionId);
 
-                var currentQuestion = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
-                predicate: x => x.Id == currentTempQuestion!.QuestionId,
-                include: x => x.Include(x => x.MutipleChoices!));
+                    var currentQuestion = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == currentTempQuestion!.QuestionId,
+                    include: x => x.Include(x => x.MutipleChoices!));
 
-                var currentAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.AnswerId == sqr.AnswerId);
-                var currentCorrectAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.Score != 0);
+                    var currentAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.AnswerId == sqr.AnswerId);
+                    var currentCorrectAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.Score != 0);
 
-                correctMark += currentAnswer!.Score != 0 ? +1 : 0;
-                scoreEarned += currentAnswer!.Score != 0 ? currentAnswer.Score : 0;
+                    correctMark += currentAnswer!.Score != 0 ? +1 : 0;
+                    scoreEarned += currentAnswer!.Score != 0 ? currentAnswer.Score : 0;
 
-                var answer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentAnswer!.AnswerId);
-                var correctAnswer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentCorrectAnswer!.AnswerId);
+                    var answer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentAnswer!.AnswerId);
+                    var correctAnswer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentCorrectAnswer!.AnswerId);
 
-                GenerateMCResultItems(testResultId, examQuestions, multipleChoiceAnswers, sqr, currentQuestion, currentAnswer, answer, correctAnswer);
+                    GenerateMCResultItems(testResultId, examQuestions, multipleChoiceAnswers, sqr, currentQuestion, currentAnswer, answer, correctAnswer);
+                }
             }
 
             await GenerateMCResultNonAnswerItems(questionItems.Item2, testResultId, examQuestions, multipleChoiceAnswers);
@@ -442,12 +450,12 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
-            var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
+            //var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
 
-            if (dayDoingExam.Date > GetCurrentTime().Date)
-            {
-                throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
-            }
+            //if (dayDoingExam.Date > GetCurrentTime().Date)
+            //{
+            //    throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
+            //}
 
         }
 
@@ -487,7 +495,7 @@ namespace MagicLand_System.Services.Implements
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
                 predicate: x => x.Id == classId,
-                include: x => x.Include(x => x.StudentClasses!));
+                include: x => x.Include(x => x.StudentClasses!).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
 
             if (cls == null)
             {
@@ -671,6 +679,12 @@ namespace MagicLand_System.Services.Implements
             if (currentQuiz.Score != 0)
             {
                 throw new BadHttpRequestException($"Bài Kiểm Tra Không Thuộc Dạng Tự Làm Tại Nhà, Yêu Cầu Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+
+            var dayDoingExam = cls.Schedules.ToList()[currentQuiz.NoSession - 1].Date;
+            if (dayDoingExam.Date > GetCurrentTime().Date)
+            {
+                throw new BadHttpRequestException($"Id [{exaOffLineStudentWork.ExamId}] Vẫn Chưa Tới Ngày Nhập Điểm", StatusCodes.Status400BadRequest);
             }
 
             var newTestResults = new List<TestResult>();

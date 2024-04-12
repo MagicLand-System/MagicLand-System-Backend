@@ -1066,9 +1066,13 @@ namespace MagicLand_System.Services.Implements
             examResponse.SessionId = session.Id;
             examResponse.CourseId = cls.Course!.Id;
             examResponse.Date = date;
+
             examResponse.AttemptAlloweds = isNonRequireTime ? null : attempt;
             examResponse.ExamStartTime = isNonRequireTime ? null : startTime;
             examResponse.ExamEndTime = isNonRequireTime ? null : endTime;
+
+            //examResponse.ExamStartTime = isNonRequireTime ? startTime.Date.Add(new TimeSpan(6, 0, 0)) : startTime;
+            //examResponse.ExamEndTime = isNonRequireTime ? endTime.Date.Add(new TimeSpan(23, 59, 0)) : endTime;
             examResponse.Duration = isNonRequireTime ? null : duration;
 
             examsResponse.Add(examResponse);
