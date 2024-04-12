@@ -269,6 +269,10 @@
               "target": "Package",
               "version": "[1.0.6, )"
             },
+            "Quartz": {
+              "target": "Package",
+              "version": "[3.8.1, )"
+            },
             "Quartz.Extensions.Hosting": {
               "target": "Package",
               "version": "[3.8.0, )"

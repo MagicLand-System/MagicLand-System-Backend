@@ -2,6 +2,8 @@ using MagicLand_System.Background;
 using MagicLand_System.Background.BackgroundServiceImplements;
 using MagicLand_System.Background.BackgroundServiceInterfaces;
 using MagicLand_System.Background.BackgroundSetUp;
+using MagicLand_System.Background.DailyJob;
+using MagicLand_System.Background.OldBackgroundService;
 using MagicLand_System.Config;
 using MagicLand_System.Domain;
 using MagicLand_System.Middlewares;
@@ -10,15 +12,14 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NgrokAspNetCore;
 using Quartz;
+using Quartz.Impl;
+using Quartz.Spi;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Configuration;
 using System.Reflection;
-using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -164,7 +165,7 @@ builder.Services.AddScoped<ITempEntityBackgroundService, TempEntityBackgroundSer
 #endregion
 
 
-builder.Services.AddNgrok();
+//builder.Services.AddNgrok();
 
 var app = builder.Build();
 

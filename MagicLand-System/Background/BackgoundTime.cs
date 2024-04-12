@@ -8,5 +8,6 @@ namespace MagicLand_System.Background
         {
             return DateTime.Now;
         }
+
     }
 }

@@ -2,13 +2,13 @@
 {
     public class Job
     {
-        public Type _type { get; }
-        public string _expression { get; }
+        //public Type _type { get; }
+        //public string _expression { get; }
 
-        public Job(string expression, Type type)
-        {
-            _expression = expression;
-            _type = type;
-        }
+        //public Job(string expression, Type type)
+        //{
+        //    _expression = expression;
+        //    _type = type;
+        //}
     }
 }

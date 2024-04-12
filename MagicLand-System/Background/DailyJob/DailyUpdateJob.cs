@@ -3,7 +3,7 @@ using Quartz;
 
 namespace MagicLand_System.Background.DailyJob
 {
-    [DisallowConcurrentExecution]
+    //[DisallowConcurrentExecution]
     public class DailyUpdateJob : IJob
     {
         private readonly ILogger<DailyUpdateJob> _logger;
@@ -23,13 +23,13 @@ namespace MagicLand_System.Background.DailyJob
         public async Task Execute(IJobExecutionContext context)
         {
             string message = "";
-            _logger.LogInformation($"Daily Update Job Running At [{DateTime.UtcNow}]");
+            _logger.LogInformation($"Daily Update Job Running At [{BackgoundTime.GetTime()}]");
 
             message += await _classBackgroundService.UpdateClassInTimeAsync();
             message += await _transactionBackgroundService.UpdateTransactionAfterTime();
             message += await _notificationBackgroundService.ModifyNotificationAfterTime();
 
-            _logger.LogInformation($"Daily Update Job Completed At [{DateTime.UtcNow}] With Message [{string.Join(", ", message)}]");
+            _logger.LogInformation($"Daily Update Job Completed At [{BackgoundTime.GetTime()}] With Message [{string.Join(", ", message)}]");
         }
 
     }

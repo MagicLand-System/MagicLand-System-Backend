@@ -1086,7 +1086,7 @@
           }
         }
       },
-      "Quartz/3.8.0": {
+      "Quartz/3.8.1": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "2.1.1",
@@ -3432,10 +3432,10 @@
         "portable.bouncycastle.nuspec"
       ]
     },
-    "Quartz/3.8.0": {
-      "sha512": "XYg+O+yw24kNLqp1YyEaZCzpQyVhcLQ5vep61RDKPZFjRNMBfBxcZiHNRFMNuN0XQIQ6zTGTHdZl9h7CuEVvXA==",
+    "Quartz/3.8.1": {
+      "sha512": "HlKm+43iG8LmXfejL1kIijO107x8ozEShLT2PFIkOWNSHUj7O7yTl6icFrn6DocPvigudQ90a6h2gdFShOwyXw==",
       "type": "package",
-      "path": "quartz/3.8.0",
+      "path": "quartz/3.8.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3448,8 +3448,9 @@
         "lib/netstandard2.0/Quartz.dll",
         "lib/netstandard2.0/Quartz.xml",
         "quartz-logo-small.png",
-        "quartz.3.8.0.nupkg.sha512",
-        "quartz.nuspec"
+        "quartz.3.8.1.nupkg.sha512",
+        "quartz.nuspec",
+        "quick-start.md"
       ]
     },
     "Quartz.Extensions.DependencyInjection/3.8.0": {
@@ -4628,6 +4629,7 @@
       "NLog >= 5.2.5",
       "Newtonsoft.Json >= 13.0.3",
       "Ngrok.AspNetCore >= 1.0.6",
+      "Quartz >= 3.8.1",
       "Quartz.Extensions.Hosting >= 3.8.0",
       "Swashbuckle.AspNetCore >= 6.5.0"
     ]
@@ -4744,6 +4746,10 @@
           "Ngrok.AspNetCore": {
             "target": "Package",
             "version": "[1.0.6, )"
+          },
+          "Quartz": {
+            "target": "Package",
+            "version": "[3.8.1, )"
           },
           "Quartz.Extensions.Hosting": {
             "target": "Package",

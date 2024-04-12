@@ -44,7 +44,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     }
 
                     await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
-                    _unitOfWork.GetRepository<Class>().UpdateRange(classes);
                     _unitOfWork.Commit();
                 }
             }
@@ -57,39 +56,62 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         private async Task CheckingDateTime(Class cls, DateTime currentTime, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
         {
-            if (cls.StartDate.Date == currentTime.AddDays(3).Date)
+            try
             {
-                UpdateStudent(cls, ClassStatusEnum.LOCKED.ToString());
-                return;
-            }
-
-            if (cls.StartDate.Date == currentTime.Date)
-            {
-                //if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                //if(cls.ClassCode.ToLower() == "LTS101-1".ToLower())
                 //{
-                //    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
-                //    return;
+                //    var a = "g";
                 //}
 
-                await UpdateItem(cls, currentTime, ClassStatusEnum.PROGRESSING, newNotifications, _unitOfWork);
+                if (cls.StartDate.Date == currentTime.AddDays(3).Date)
+                {
+                    cls.Status = ClassStatusEnum.LOCKED.ToString();
 
-                return;
+                    if (cls.StudentClasses.Any() && cls.StudentClasses != null)
+                    {
+                        cls.StudentClasses.ToList().ForEach(stu => stu.CanChangeClass = false);
+                    }
+
+                    _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
+                    await _unitOfWork.CommitAsync();
+                    return;
+                }
+
+                if (cls.StartDate.Date == currentTime.Date)
+                {
+                    //if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                    //{
+                    //    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
+                    //    return;
+                    //}
+
+                    await UpdateItem(cls, currentTime, ClassStatusEnum.PROGRESSING, newNotifications, _unitOfWork);
+                    _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
+                    await _unitOfWork.CommitAsync();
+                    return;
+                }
+
+                if (cls.EndDate.Date == currentTime.AddDays(-1).Date)
+                {
+                    await UpdateItem(cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
+                    _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
+                    await _unitOfWork.CommitAsync();
+                    return;
+                }
+
             }
-
-            if (cls.EndDate.Date == currentTime.AddDays(-1).Date)
+            catch (Exception ex)
             {
-                await UpdateItem(cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
+                throw;
             }
         }
 
         private async Task UpdateItem(Class cls, DateTime currentTime, ClassStatusEnum classStatus, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
         {
-            UpdateStudent(cls, classStatus.ToString());
-            UpdateAttendance(cls, classStatus);
-
-            if (cls.StudentClasses.Any() && cls.StudentClasses != null)
+            var studentClass = cls.StudentClasses.ToList();
+            if (studentClass.Count > 0 && !studentClass.Any())
             {
-                foreach (var stu in cls.StudentClasses)
+                foreach (var stu in studentClass)
                 {
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
@@ -104,8 +126,13 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                            ? NotificationMessageContant.ClassStartedBody(stu.Student!.FullName!, cls.ClassCode!)
                            : NotificationMessageContant.ClassCompletedBody(stu.Student!.FullName!, cls.ClassCode!),
                            NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, currentTime, actionData, stu.Student.ParentId, newNotifications, _unitOfWork);
+
+                    stu.CanChangeClass = false;
                 }
             }
+
+            cls.Status = classStatus.ToString();
+            UpdateAttendance(cls, classStatus);
         }
 
         private async Task GenerateRemindClassNotification(string title, string body, string priority, string image, DateTime createAt, string actionData, Guid targetUserId, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
@@ -139,12 +166,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 UserId = targetUserId,
                 Identify = identify,
             });
-        }
-
-        private void UpdateStudent(Class cls, string classStatus)
-        {
-            cls.Status = classStatus;
-            cls.StudentClasses.ToList().ForEach(stu => stu.CanChangeClass = false);
         }
 
         private void UpdateAttendance(Class cls, ClassStatusEnum classStatus)
