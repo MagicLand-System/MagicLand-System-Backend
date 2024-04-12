@@ -715,7 +715,7 @@ namespace MagicLand_System.Services.Implements
                 ExamId = quiz.Id,
                 ExamName = "Bài " + quiz.ContentName.ToLower() + extenstionName,
                 ExamPart = part,
-                QuizName = quiz.Title!,
+                QuizName = quiz.Score == 0 ? "Làm Tại Lớp" : quiz.Title!,
                 QuizDuration = isNonRequireTime ? null : duration,
                 Attempts = isNonRequireTime ? null : attempt,
                 QuizStartTime = isNonRequireTime ? null : startTime,

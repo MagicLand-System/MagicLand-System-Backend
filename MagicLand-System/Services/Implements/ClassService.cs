@@ -1722,10 +1722,10 @@ namespace MagicLand_System.Services.Implements
             var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabusId);
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.SubjectCode.Trim().ToLower().Equals(rq.CourseCode.Trim().ToLower()));
             MyCourseResponse myCourseResponse = null;
-            if (courseId != null || courseId != Guid.Empty) 
+            if (courseId != null || courseId != Guid.Empty)
             {
-                myCourseResponse = new MyCourseResponse { CourseId = courseId.Value, CourseName = course.Name,SubjectCode = syllabus.SubjectCode};
-            } 
+                myCourseResponse = new MyCourseResponse { CourseId = courseId.Value, CourseName = course.Name, SubjectCode = syllabus.SubjectCode };
+            }
             var schedules = rq.ScheduleRequests;
             List<ScheduleRequest> scheduleRequests = new List<ScheduleRequest>();
             foreach (var schedule in schedules)
@@ -1916,7 +1916,7 @@ namespace MagicLand_System.Services.Implements
                         {
                             dateofweek = "sunday";
                         }
-                        var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(slotId));   
+                        var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(slotId));
                         scheduleRequests.Add(new ScheduleRequest
                         {
                             DateOfWeek = dateofweek,
@@ -2149,7 +2149,7 @@ namespace MagicLand_System.Services.Implements
             var courseCode = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == request.CourseId, selector: x => x.SubjectCode);
             List<ScheduleRequestV2> requestV2s = new List<ScheduleRequestV2>();
             var schedules = request.ScheduleRequests;
-            foreach(var sch in schedules)
+            foreach (var sch in schedules)
             {
                 var dateOfWeek = sch.DateOfWeek;
                 var dow = "";
@@ -2212,7 +2212,7 @@ namespace MagicLand_System.Services.Implements
             List<RowInsertResponse> rows = new List<RowInsertResponse>();
             List<CreateClassesRequest> createClassesRequest = new List<CreateClassesRequest>();
             var changeList = request.RowInsertResponse;
-            foreach(var c in changeList)
+            foreach (var c in changeList)
             {
                 CreateClassesRequest changed = await FromCToC(c.CreateClass);
                 changed.Index = c.Index;
@@ -2278,7 +2278,7 @@ namespace MagicLand_System.Services.Implements
                     CourseId = createClass.CourseId.ToString(),
                     Schedules = createClass.ScheduleRequests,
                     StartDate = createClass.StartDate,
-                }, createClassRequest.LecturerId.ToString(),createClassRequest.RoomId.ToString());
+                }, createClassRequest.LecturerId.ToString(), createClassRequest.RoomId.ToString());
                 if (resultCheck.Equals("FBRL"))
                 {
                     rows.Add(new RowInsertResponse
@@ -2333,7 +2333,7 @@ namespace MagicLand_System.Services.Implements
                         ClassCode = createClass.ClassCode,
                         LecturerName = lecturer.FullName,
                         RoomName = room.Name,
-                        Times = cr.ScheduleRequests.Select(x => x.Schedule + ":"  +  x.Slot).ToList(),
+                        Times = cr.ScheduleRequests.Select(x => x.Schedule + ":" + x.Slot).ToList(),
                         StartDate = createClass.StartDate.Value,
                     },
                 };
@@ -3441,7 +3441,7 @@ namespace MagicLand_System.Services.Implements
                 ExamId = quiz.Id,
                 ExamName = "Bài " + quiz.ContentName.ToLower() + extenstionName,
                 ExamPart = part,
-                QuizName = quiz.Title!,
+                QuizName = quiz.Score == 0 ? "Làm Tại Lớp" : quiz.Title!,
                 QuizDuration = isNonRequireTime ? null : duration,
                 Attempts = isNonRequireTime ? null : attempt,
                 QuizStartTime = isNonRequireTime ? null : startTime,
