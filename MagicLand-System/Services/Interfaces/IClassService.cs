@@ -11,6 +11,7 @@ using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Topics;
+using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -45,6 +46,9 @@ namespace MagicLand_System.Services.Interfaces
         Task<ClassFromClassCode> GetClassFromClassCode(string classCode);
         Task<InsertClassesResponse> InsertClassesV2(List<CreateClassesRequest> request);
         Task<InsertClassesResponse> InsertClassesSave(InsertClassesResponse request);
-
+        Task<List<Room>> GetRoomsForUpdate(string classId);
+        Task<List<LecturerResponse>> GetLecturerForUpdate(string classId);
+        Task<List<Room>> GetRoomForUpdateSession(string classId, string slotId,DateTime date);
+        Task<List<LecturerResponse>> GetLecturerResponseForUpdateSession(string classId, string slotId, DateTime date);
     }
 }
