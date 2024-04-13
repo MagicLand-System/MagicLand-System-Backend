@@ -410,18 +410,6 @@ namespace MagicLand_System.Controllers
                .SelectMany(g => g)
                .Distinct();
 
-            duplicateCards.AddRange(studentAnswers
-           .GroupBy(x => x.FirstCardId)
-           .Where(g => g.Count() > 1)
-           .SelectMany(g => g)
-           .Distinct().Select(x => x.FirstCardId));
-
-            duplicateCards.AddRange(studentAnswers
-            .GroupBy(x => x.SecondCardId)
-            .Where(g => g.Count() > 1)
-            .SelectMany(g => g)
-            .Distinct().Select(x => x.SecondCardId));
-
             if (duplicateQuestions != null && duplicateQuestions.Any())
             {
                 return BadRequest(new ErrorResponse
@@ -431,15 +419,28 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            if (duplicateCards != null && duplicateCards.Any())
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Có Nhiều Hơn Các Id Của Thẻ Bị Trùng Lặp [{string.Join(", ", duplicateCards)}]",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
+
+
+           // duplicateCards.AddRange(studentAnswers
+           //.GroupBy(x => x.FirstCardId)
+           //.Where(g => g.Count() > 1)
+           //.SelectMany(g => g)
+           //.Distinct().Select(x => x.FirstCardId));
+
+           // duplicateCards.AddRange(studentAnswers
+           // .GroupBy(x => x.SecondCardId)
+           // .Where(g => g.Count() > 1)
+           // .SelectMany(g => g)
+           // .Distinct().Select(x => x.SecondCardId));
+           // if (duplicateCards != null && duplicateCards.Any())
+           // {
+           //     return BadRequest(new ErrorResponse
+           //     {
+           //         Error = $"Có Nhiều Hơn Các Id Của Thẻ Bị Trùng Lặp [{string.Join(", ", duplicateCards)}]",
+           //         StatusCode = StatusCodes.Status400BadRequest,
+           //         TimeStamp = DateTime.Now,
+           //     });
+           // }
 
             var quizFCStudentWork = new QuizFCRequest
             {

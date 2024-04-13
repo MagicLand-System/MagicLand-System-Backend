@@ -91,7 +91,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     return;
                 }
 
-                if (cls.EndDate.Date == currentTime.AddDays(-1).Date)
+                if (cls.EndDate.Date == currentTime.AddDays(1).Date)
                 {
                     await UpdateItem(cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
                     _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
