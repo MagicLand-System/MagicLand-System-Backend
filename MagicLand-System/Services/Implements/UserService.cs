@@ -242,7 +242,7 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-            var lecturers = users.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
+            var lecturers = users.Where(x => x.Role.Name.Trim().Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
             List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
             foreach (var user in lecturers)
             {

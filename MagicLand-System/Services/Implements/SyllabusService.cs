@@ -832,6 +832,10 @@ namespace MagicLand_System.Services.Implements
             }
 
             string role = GetRoleFromJwt();
+            if(role == null)
+            {
+                return syllabuses.ToList();
+            }
             if (role.ToLower() == RoleEnum.LECTURER.ToString().ToLower())
             {
                 var coursesOfLecturer = await _unitOfWork.GetRepository<Course>().GetListAsync(
