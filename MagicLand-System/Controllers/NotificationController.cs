@@ -1,7 +1,9 @@
 ﻿using MagicLand_System.Config;
 using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Attendance;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Notifications;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -66,9 +68,19 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> UpdateNotification([FromQuery] Guid id)
+        public async Task<IActionResult> UpdateNotification([FromQuery] List<Guid> ids)
         {
-            var response = await _notificationService.UpdateNotificationAsync(id);
+            if (ids == null || !ids.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+
+            var response = await _notificationService.UpdateNotificationAsync(ids);
             return Ok(response);
         }
 
@@ -84,9 +96,18 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
-        public async Task<IActionResult> DeleteNotification([FromRoute] Guid id)
+        public async Task<IActionResult> DeleteNotification([FromQuery] List<Guid> ids)
         {
-            var response = await _notificationService.DeleteNotificationAsync(id);
+            if(ids == null || !ids.Any())
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Yêu Cầu Không Hợp Lệ",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var response = await _notificationService.DeleteNotificationAsync(ids);
             return Ok(response);
         }
 

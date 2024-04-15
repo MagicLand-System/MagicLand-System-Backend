@@ -8,8 +8,8 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<NotificationResponse>> GetCurrentUserNotificationsAsync();
         Task<List<NotificationResponse>> GetStaffNotificationsAsync();
-        Task<string> UpdateNotificationAsync(Guid id);
-        Task<string> DeleteNotificationAsync(Guid id);
+        Task<string> UpdateNotificationAsync(List<Guid> ids);
+        Task<string> DeleteNotificationAsync(List<Guid> ids);
         Task<PushNotificationResponse> SendNotification(NotificationModel notificationModel);
     }
 }

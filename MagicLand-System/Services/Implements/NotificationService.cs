@@ -34,36 +34,57 @@ namespace MagicLand_System.Services.Implements
             return notifications.Select(noti => _mapper.Map<NotificationResponse>(noti)).ToList();
         }
 
-        public async Task<string> UpdateNotificationAsync(Guid id)
+        public async Task<string> UpdateNotificationAsync(List<Guid> ids)
         {
             try
             {
-                var notification = await _unitOfWork.GetRepository<Notification>().SingleOrDefaultAsync(predicate: x => x.Id == id);
-                notification.IsRead = true;
+                var notifications = new List<Notification>();
+                foreach (var id in ids)
+                {
+                    var notification = await _unitOfWork.GetRepository<Notification>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+                    if (notification == null)
+                    {
+                        throw new BadHttpRequestException($"Id [{id}]Của Thông Báo Không Tồn Tại", StatusCodes.Status400BadRequest);
+                    }
 
-                _unitOfWork.GetRepository<Notification>().UpdateAsync(notification);
+                    notifications.Add(notification);
+                }
+
+                notifications.ForEach(noti => noti.IsRead = true);
+                _unitOfWork.GetRepository<Notification>().UpdateRange(notifications);
                 _unitOfWork.Commit();
             }
             catch (Exception ex)
             {
-                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status500InternalServerError);
             }
             return "Cập Nhập Thành Công";
         }
 
 
-        public async Task<string> DeleteNotificationAsync(Guid id)
+        public async Task<string> DeleteNotificationAsync(List<Guid> ids)
         {
             try
             {
-                var notification = await _unitOfWork.GetRepository<Notification>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+                var notifications = new List<Notification>();
+                foreach (var id in ids)
+                {
+                    var notification = await _unitOfWork.GetRepository<Notification>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+                    if (notification == null)
+                    {
+                        throw new BadHttpRequestException($"Id [{id}]Của Thông Báo Không Tồn Tại", StatusCodes.Status400BadRequest);
+                    }
 
-                _unitOfWork.GetRepository<Notification>().DeleteAsync(notification);
+                    notifications.Add(notification);
+                }
+
+
+                _unitOfWork.GetRepository<Notification>().DeleteRangeAsync(notifications);
                 _unitOfWork.Commit();
             }
             catch (Exception ex)
             {
-                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status500InternalServerError);
             }
             return "Xóa Thông Báo Thành Công";
 
