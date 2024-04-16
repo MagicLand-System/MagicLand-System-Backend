@@ -1294,12 +1294,12 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Thuộc Lớp Đang Truy Suất", StatusCodes.Status400BadRequest);
             }
 
-            //var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
+            var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
 
-            //if (dayDoingExam.Date > GetCurrentTime().Date)
-            //{
-            //    throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
-            //}
+            if (dayDoingExam.Date > GetCurrentTime().Date)
+            {
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
+            }
         }
 
         private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)
