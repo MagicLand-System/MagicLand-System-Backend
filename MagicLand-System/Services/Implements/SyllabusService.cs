@@ -386,18 +386,17 @@ namespace MagicLand_System.Services.Implements
         }
         private List<QuestionPackage> GenerateExerciseItems(List<QuestionPackageRequest> questionPackageRequest, List<ExamSyllabusRequest> examRequest, List<Session> sessions)
         {
-            int orderPackage = 0;
+
 
             questionPackageRequest = questionPackageRequest.OrderBy(qp => qp.NoOfSession).ToList();
             var questionPackages = new List<QuestionPackage>();
 
             foreach (var qpr in questionPackageRequest)
             {
-                orderPackage++;
                 Guid newQuestionPackageId = Guid.NewGuid();
                 var examFound = examRequest.SingleOrDefault(er => StringHelper.TrimStringAndNoSpace(er.ContentName).ToLower() == StringHelper.TrimStringAndNoSpace(qpr.ContentName).ToLower());
 
-                var questionPackage = GenerateQuestionPackage(sessions, qpr, examFound, newQuestionPackageId, orderPackage);
+                var questionPackage = GenerateQuestionPackage(sessions, qpr, examFound, newQuestionPackageId);
 
                 if (qpr.QuestionRequests.Count > 0)
                 {
@@ -408,11 +407,23 @@ namespace MagicLand_System.Services.Implements
                 questionPackages.Add(questionPackage);
             }
 
+            var groupedObjects = questionPackages.GroupBy(qp => qp.PackageType);
+
+            foreach (var gruop in groupedObjects)
+            {
+                int orderPackageType = 0;
+                foreach (var qp in gruop.ToList())
+                {
+                    orderPackageType++;
+                    qp.OrderPackage = orderPackageType;
+                }
+            }
+
             return questionPackages;
 
         }
 
-        private QuestionPackage GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, ExamSyllabusRequest? exam, Guid newQuestionPackageId, int orderPackage)
+        private QuestionPackage GenerateQuestionPackage(List<Session> sessions, QuestionPackageRequest qp, ExamSyllabusRequest? exam, Guid newQuestionPackageId)
         {
             var sessionFound = sessions.SingleOrDefault(x => x.NoSession == qp.NoOfSession);
             string packageType = PackageTypeEnum.Review.ToString();
@@ -445,7 +456,6 @@ namespace MagicLand_System.Services.Implements
                 Title = qp.Title,
                 ContentName = qp.ContentName,
                 Score = qp.Score,
-                OrderPackage = orderPackage,
                 NoSession = qp.NoOfSession,
                 PackageType = packageType,
                 QuizType = qp.Type,
@@ -582,6 +592,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<SyllabusResponse>> FilterSyllabusAsync(List<string>? keyWords, DateTime? date, double? score)
         {
+            var numberOfSyll = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).Count;
             score ??= double.MaxValue;
 
             var syllabuses = await FetchAllSyllabus();
@@ -604,7 +615,12 @@ namespace MagicLand_System.Services.Implements
             }
             syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
 
-            return syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            var result = syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            foreach (var syll in result)
+            {
+                syll.NumberOfSyllabuses = numberOfSyll;
+            }
+            return result;
         }
 
 
@@ -692,13 +708,14 @@ namespace MagicLand_System.Services.Implements
             }
 
             int part = quiz.QuizType.ToLower() == QuizTypeEnum.flashcard.ToString() ? 2 : 1;
+            var extenstionName = quiz.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + quiz.OrderPackage;
 
             ssr.Quiz = new QuizInforResponse
             {
                 ExamId = quiz.Id,
-                ExamName = "Bài Kiểm Tra Số " + quiz.OrderPackage,
+                ExamName = "Bài " + quiz.ContentName.ToLower() + extenstionName,
                 ExamPart = part,
-                QuizName = quiz.Title!,
+                QuizName = quiz.Score == 0 ? "Làm Tại Lớp" : quiz.Title!,
                 QuizDuration = isNonRequireTime ? null : duration,
                 Attempts = isNonRequireTime ? null : attempt,
                 QuizStartTime = isNonRequireTime ? null : startTime,
@@ -815,6 +832,10 @@ namespace MagicLand_System.Services.Implements
             }
 
             string role = GetRoleFromJwt();
+            if(role == null)
+            {
+                return syllabuses.ToList();
+            }
             if (role.ToLower() == RoleEnum.LECTURER.ToString().ToLower())
             {
                 var coursesOfLecturer = await _unitOfWork.GetRepository<Course>().GetListAsync(
@@ -1049,9 +1070,13 @@ namespace MagicLand_System.Services.Implements
             examResponse.SessionId = session.Id;
             examResponse.CourseId = cls.Course!.Id;
             examResponse.Date = date;
+
             examResponse.AttemptAlloweds = isNonRequireTime ? null : attempt;
             examResponse.ExamStartTime = isNonRequireTime ? null : startTime;
             examResponse.ExamEndTime = isNonRequireTime ? null : endTime;
+
+            //examResponse.ExamStartTime = isNonRequireTime ? startTime.Date.Add(new TimeSpan(6, 0, 0)) : startTime;
+            //examResponse.ExamEndTime = isNonRequireTime ? endTime.Date.Add(new TimeSpan(23, 59, 0)) : endTime;
             examResponse.Duration = isNonRequireTime ? null : duration;
 
             examsResponse.Add(examResponse);
@@ -1105,7 +1130,7 @@ namespace MagicLand_System.Services.Implements
             {
                 string status = string.Empty;
                 var examDate = DateTime.Parse(exam.Date!).Date;
-                var currentDate = DateTime.Now.Date;
+                var currentDate = GetCurrentTime().Date;
 
                 var test = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
                 if (test != null)
@@ -1186,7 +1211,8 @@ namespace MagicLand_System.Services.Implements
                         selector: x => x.AttemptAllowed,
                         predicate: x => x.ExamId == res.ExamId);
 
-                    res.Score = isQuizDone == null ? null : isQuizDone.ScoreEarned;
+                    res.Score = isQuizDone != null ? isQuizDone.ScoreEarned : null;
+                    res.ExamStatus = isQuizDone != null ? isQuizDone.ExamStatus : null;
 
                     if (attemptSetting != 0)
                     {
@@ -1213,8 +1239,17 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, int? examPart)
+        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, Guid classId, int? examPart)
         {
+            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                predicate: x => x.Id == classId,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Không Tồn Tại Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
             var quiz = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
                 predicate: x => x.Id == examId,
                 include: x => x.Include(x => x.Questions!));
@@ -1228,6 +1263,8 @@ namespace MagicLand_System.Services.Implements
             {
                 return default!;
             }
+
+            await ValidateDayDoingExam(examId, cls, quiz);
 
             foreach (var question in quiz.Questions!)
             {
@@ -1250,6 +1287,25 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
+        private async Task ValidateDayDoingExam(Guid examId, Class cls, QuestionPackage quiz)
+        {
+            var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.CourseId == cls.CourseId,
+                selector: x => x.Topics!.SelectMany(tp => tp.Sessions!));
+
+            if (!sessions.Any(ses => ses.Id == quiz.SessionId))
+            {
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Thuộc Lớp Đang Truy Suất", StatusCodes.Status400BadRequest);
+            }
+
+            //var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
+
+            //if (dayDoingExam.Date > GetCurrentTime().Date)
+            //{
+            //    throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
+            //}
+        }
+
         private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)
         {
             try
@@ -1266,7 +1322,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 var tempQuestions = new List<TempQuestion>();
                 var tempMCAnswers = new List<TempMCAnswer>();
-                //var tempFCAnswers = new List<TempFCAnswer>();
+                var tempFCAnswers = new List<TempFCAnswer>();
 
                 Guid tempQuizId = Guid.NewGuid();
                 var tempQuiz = new TempQuiz
@@ -1303,21 +1359,21 @@ namespace MagicLand_System.Services.Implements
                             });
                         }
                     }
-                    //var flashCardAnswers = res.AnwserFlashCarsInfor;
-                    //if (flashCardAnswers != null && flashCardAnswers.Count > 0)
-                    //{
-                    //    foreach (var answer in flashCardAnswers)
-                    //    {
-                    //        tempFCAnswers.Add(new TempFCAnswer
-                    //        {
-                    //            Id = Guid.NewGuid(),
-                    //            CardId = answer.CardId,
-                    //            Score = answer.Score,
-                    //            NumberCoupleIdentify = answer.NumberCoupleIdentify,
-                    //            TempQuestionId = tempQuestionId,
-                    //        });
-                    //    }
-                    //}
+                    var flashCardAnswers = res.AnwserFlashCarsInfor;
+                    if (flashCardAnswers != null && flashCardAnswers.Count > 0)
+                    {
+                        foreach (var answer in flashCardAnswers)
+                        {
+                            tempFCAnswers.Add(new TempFCAnswer
+                            {
+                                Id = Guid.NewGuid(),
+                                CardId = answer.CardId,
+                                Score = answer.Score,
+                                NumberCoupleIdentify = answer.NumberCoupleIdentify,
+                                TempQuestionId = tempQuestionId,
+                            });
+                        }
+                    }
                 }
 
                 await _unitOfWork.GetRepository<TempQuiz>().InsertAsync(tempQuiz);
@@ -1326,10 +1382,10 @@ namespace MagicLand_System.Services.Implements
                 {
                     await _unitOfWork.GetRepository<TempMCAnswer>().InsertRangeAsync(tempMCAnswers);
                 }
-                //if (tempFCAnswers.Any())
-                //{
-                //    await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
-                //}
+                if (tempFCAnswers.Any())
+                {
+                    await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
+                }
                 _unitOfWork.Commit();
             }
             catch (Exception ex)
@@ -1341,16 +1397,18 @@ namespace MagicLand_System.Services.Implements
         #region thuong code
         public async Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword = null)
         {
-            var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync(include: x => x.Include<Syllabus, Course>(x => x.Course));
+            var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
             List<SyllabusResponseV2> responses = new List<SyllabusResponseV2>();
             foreach (var syl in syllabuses)
             {
                 var name = "undefined";
                 var subjectCode = "undefined";
                 var syllabusName = "undefined";
-                if (syl.Course != null)
+
+                var sylCourse = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == syl.CourseId);
+                if (sylCourse != null)
                 {
-                    name = syl.Course.Name;
+                    name = sylCourse.Name;
                 }
                 if (syl.SubjectCode != null)
                 {
@@ -1360,7 +1418,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     syllabusName = syl.Name;
                 }
-                if (syl.SubjectCode != null) { }
+
                 SyllabusResponseV2 syllabusResponseV2 = new SyllabusResponseV2
                 {
                     Id = syl.Id,
@@ -2005,7 +2063,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var syl in allSyllabus)
             {
                 var ix = syl.CourseName.Trim().ToLower().Equals("undefined");
-                if (syl.CourseName.Trim().ToLower().Equals("undefined") && (syl.EffectiveDate < DateTime.Now))
+                if (syl.CourseName.Trim().ToLower().Equals("undefined") && (syl.EffectiveDate.Value.AddDays(-2) < DateTime.Now))
                 {
                     filterSyllabus.Add(syl);
                 }
@@ -2132,6 +2190,43 @@ namespace MagicLand_System.Services.Implements
                 };
             }
             return syllRes;
+        }
+
+        public async Task<SyllabusResultResponse> FilterStaffSyllabusAsync(List<string>? keyWords, DateTime? date, double? score)
+        {
+            var numberOfSyll = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).Count;
+            score ??= double.MaxValue;
+
+            var syllabuses = await FetchAllSyllabus();
+
+            syllabuses = keyWords == null || keyWords.Count() == 0
+                ? syllabuses
+                : syllabuses.Where(syll =>
+                    keyWords.Any(k =>
+                        (k != null) &&
+                        (syll.Name != null && syll.Name!.ToLower().Contains(k.ToLower()) ||
+                         syll.SubjectCode != null && syll.SubjectCode!.ToString().ToLower().Contains(k.ToLower()) ||
+                         syll.ScoringScale >= score ||
+                         syll.MinAvgMarkToPass >= score)
+                    )
+                ).ToList();
+
+            if (date != default && date != null)
+            {
+                syllabuses = syllabuses.Where(syll => syll.UpdateTime.Date == date || syll.EffectiveDate != null && syll.EffectiveDate.Value.Date == date).ToList();
+            }
+            syllabuses = syllabuses.OrderByDescending(x => x.UpdateTime).ToList();
+
+            var result = syllabuses.Select(syll => _mapper.Map<SyllabusResponse>(syll)).OrderByDescending(x => x.UpdateDate).ToList();
+            foreach (var syll in result)
+            {
+                syll.NumberOfSyllabuses = numberOfSyll;
+            }
+            return new SyllabusResultResponse
+            {
+                NumberOfSyllabus = numberOfSyll,
+                Syllabuses = result
+            };
         }
 
 

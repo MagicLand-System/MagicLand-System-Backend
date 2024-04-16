@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.WalletTransactions;
 using MagicLand_System.Services.Interfaces;
@@ -121,5 +122,15 @@ namespace MagicLand_System.Controllers
             var response = await _walletTransactionService.GetRevenueTransactionByTimeAsync(time);
             return Ok(response);
         }
+        [HttpPost(ApiEndpointConstant.WalletTransactionEndPoint.CheckoutByStaff)]
+        [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckoutByStaff(StaffCheckoutRequest request)
+        {
+            var response = await _walletTransactionService.CheckoutByStaff(request);    
+            return Ok(response);
+        }
+
     }
 }

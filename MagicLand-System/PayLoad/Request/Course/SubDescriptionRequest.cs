@@ -2,7 +2,7 @@
 {
     public class SubDescriptionRequest
     {
-        public string Title {  get; set; }  
-        public List<SubDescriptionContentRequest> SubDescriptionContentRequests { get; set; }
+        public string? Title { get; set; } = string.Empty;
+        public List<SubDescriptionContentRequest>? SubDescriptionContentRequests { get; set; }
     }
 }

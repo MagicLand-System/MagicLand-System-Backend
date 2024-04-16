@@ -43,8 +43,13 @@ namespace MagicLand_System.Services
         {
             Guid id = Guid.Parse(_httpContextAccessor?.HttpContext?.User?.FindFirstValue("userId"));
 
-            var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role));
+            var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Role).Include(x => x.PersonalWallet));
             return account;
+        }
+
+        protected DateTime GetCurrentTime()
+        {
+            return DateTime.Now;
         }
 
         protected async Task<double> GetDynamicPrice(Guid id, bool isClass)

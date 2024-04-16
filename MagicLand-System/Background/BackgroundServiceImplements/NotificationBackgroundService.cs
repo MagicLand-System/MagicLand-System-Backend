@@ -26,14 +26,14 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
+                    var currentTime = BackgoundTime.GetTime();
 
                     var notifications = await _unitOfWork.GetRepository<Notification>()
                      .GetListAsync(predicate: x => x.IsRead == false);
 
                     foreach (var noti in notifications)
                     {
-                        int time = currentDate.Day - noti.CreatedAt.Day;
+                        int time = currentTime.Day - noti.CreatedAt.Day;
 
                         if (time >= 1)
                         {
@@ -82,13 +82,19 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.UtcNow;
+                    var currentTime = BackgoundTime.GetTime();
 
                     var classes = await _unitOfWork.GetRepository<Class>()
                       .GetListAsync(predicate: x => x.Status == ClassStatusEnum.CANCELED.ToString() || x.Status == ClassStatusEnum.PROGRESSING.ToString(),
                        include: x => x.Include(x => x.StudentClasses).ThenInclude(sc => sc.Student)!);
 
                     var newNotifications = new List<Notification>();
+
+                    newNotifications.Add(new Notification
+                    {
+                        Id = Guid.NewGuid(),
+                        Title = "Tạo Lúc  " + currentTime,
+                    });
 
                     foreach (var cls in classes)
                     {
@@ -109,16 +115,16 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                          ($"{AttachValueEnum.StudentId}", $"{stu.StudentId}"),
                                        });
 
-                                    await GenerateNotification(currentDate, newNotifications, null, NotificationMessageContant.ChangeClassRequestTitle,
+                                    await GenerateNotification(currentTime, newNotifications, null, NotificationMessageContant.ChangeClassRequestTitle,
                                                  NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
-                                                 currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                                                 currentTime.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
                                 }
                             }
                             continue;
                         }
                         if (cls.Status == ClassStatusEnum.PROGRESSING.ToString())
                         {
-                            await ForProgressingClass(currentDate, newNotifications, cls, _unitOfWork);
+                            await ForProgressingClass(currentTime, newNotifications, cls, _unitOfWork);
                         }
                     }
 
@@ -200,7 +206,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
+                    var currentTime = BackgoundTime.GetTime();
+
                     var newNotifications = new List<Notification>();
 
                     var usersId = await _unitOfWork.GetRepository<User>().GetListAsync(selector: x => x.Id, predicate: x => x.Role!.Name == RoleEnum.PARENT.ToString());
@@ -212,23 +219,28 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         foreach (var item in items)
                         {
                             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == item.ClassId);
+                            if (cls == null)
+                            {
+                                continue;
+                            }
+
                             if (cls.Status != ClassStatusEnum.UPCOMING.ToString())
                             {
                                 continue;
                             }
 
-                            if (cls.StartDate.AddDays(-4).Date == currentDate.Date)
+                            if (cls.StartDate.AddDays(-4).Date == currentTime.Date)
                             {
                                 string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                                 {
                                   ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
                                 });
 
-                                await GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.LastDayRegisterTitle, NotificationMessageContant.LastDayRegisterBody(cls.ClassCode!),
+                                await GenerateNotification(currentTime, newNotifications, userId, NotificationMessageContant.LastDayRegisterTitle, NotificationMessageContant.LastDayRegisterBody(cls.ClassCode!),
                                        NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, actionData, _unitOfWork);
                             }
 
-                            if (cls.StartDate.AddDays(-3).Date == currentDate.Date)
+                            if (cls.StartDate.AddDays(-3).Date == currentTime.Date)
                             {
                                 _unitOfWork.GetRepository<CartItem>().DeleteAsync(item);
                             }
@@ -248,7 +260,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Create New Notifications Success";
         }
 
-        private async Task GenerateNotification(DateTime currentDate, List<Notification> newNotifications, Guid? targetUser, string title, string body, string type, string image, string actionData, IUnitOfWork _unitOfWork)
+        private async Task GenerateNotification(DateTime currentTime, List<Notification> newNotifications, Guid? targetUser, string title, string body, string type, string image, string actionData, IUnitOfWork _unitOfWork)
         {
 
             var listItemIdentify = new List<string>
@@ -274,7 +286,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 Body = body,
                 Priority = type,
                 Image = image,
-                CreatedAt = currentDate,
+                CreatedAt = currentTime,
                 IsRead = false,
                 ActionData = actionData,
                 Identify = identify,
@@ -290,7 +302,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
+                    var currentTime = BackgoundTime.GetTime();
+
                     var newNotifications = new List<Notification>();
 
                     var usersId = await _unitOfWork.GetRepository<User>().GetListAsync(selector: x => x.Id, predicate: x => x.Role!.Name == RoleEnum.PARENT.ToString());
@@ -305,14 +318,14 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                             if (course.Classes.Any(sc => sc.Status == ClassStatusEnum.UPCOMING.ToString()))
                             {
-                                if (currentDate.Day % 2 == 0)
+                                if (currentTime.Day % 2 == 0)
                                 {
                                     string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                                     {
                                       ($"{AttachValueEnum.CourseId}", $"{course.Id}"),
                                     });
 
-                                    await GenerateNotification(currentDate, newNotifications, userId, NotificationMessageContant.RemindRegisterCourseTitle,
+                                    await GenerateNotification(currentTime, newNotifications, userId, NotificationMessageContant.RemindRegisterCourseTitle,
                                         NotificationMessageContant.RemindRegisterCourseBody(course.Name!),
                                    NotificationPriorityEnum.REMIND.ToString(), course.Image!, actionData, _unitOfWork);
                                 }

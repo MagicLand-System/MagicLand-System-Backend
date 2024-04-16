@@ -3,7 +3,6 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response.Attendances;
-using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
@@ -247,7 +246,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(ScheduleWithAttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureClasses([FromQuery] Guid classId, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetCurrentLetureAttendanceOfClasses([FromQuery] Guid classId, [FromQuery] DateTime date)
         {
             var responses = await _classService.GetAttendanceOfClassesInDateAsync(classId, date);
             return Ok(responses);

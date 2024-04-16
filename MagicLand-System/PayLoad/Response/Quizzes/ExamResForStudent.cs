@@ -6,5 +6,6 @@ namespace MagicLand_System.PayLoad.Response.Quizzes
     {
         public double? Score { get; set; }
         public int? AttemptLeft { get; set; }
+        public string? ExamStatus { get; set; }
     }
 }

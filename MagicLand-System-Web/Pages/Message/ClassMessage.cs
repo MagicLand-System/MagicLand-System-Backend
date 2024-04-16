@@ -2,7 +2,7 @@
 
 namespace MagicLand_System_Web.Pages.Message
 {
-    public class MessageClass
+    public class ClassMessage
     {
         public string ClassCode { get; set; } = string.Empty;
         public string CourseBeLong { get; set; } = string.Empty;

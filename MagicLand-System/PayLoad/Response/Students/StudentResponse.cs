@@ -9,5 +9,7 @@
         public string? Gender { get; set; }
         public string? AvatarImage { get; set; }
         public string? Email { get; set; }
+        public bool? CanRegistered { get; set; }    
+        public string? ReasonCannotRegistered {  get; set; }    
     }
 }

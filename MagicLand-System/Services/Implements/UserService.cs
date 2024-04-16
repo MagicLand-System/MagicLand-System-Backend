@@ -8,6 +8,7 @@ using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -241,7 +242,7 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-            var lecturers = users.Where(x => x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
+            var lecturers = users.Where(x => x.Role.Name.Trim().Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
             List<LecturerResponse> lecturerResponses = new List<LecturerResponse>();
             foreach (var user in lecturers)
             {
@@ -499,6 +500,7 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.ClassId == cls.Id,
                 include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
             }
+
             if (!classes.Any())
             {
                 throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);
@@ -572,6 +574,164 @@ namespace MagicLand_System.Services.Implements
             }
             return adminLecturerResponses;
 
+        }
+
+        public async Task<UserResponse> GetUserFromPhone(string phone)
+        {
+            var checkphone = "+84" + phone.Substring(1);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Phone.Equals(checkphone));
+            if(user == null) 
+            {
+                return new UserResponse();
+            }
+            return new UserResponse
+            {
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                AvatarImage = user.AvatarImage,
+                DateOfBirth = user.DateOfBirth.Value,
+                FullName = user.FullName,
+                Gender = user.Gender,
+                Id = user.Id,
+            };
+        }
+
+        public async Task<List<StudentResponse>> GetStudents(string classId, string phone)
+        {
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(phone),include : x => x.Include(x => x.Students));
+            if(user == null)
+            {
+                return new List<StudentResponse>();
+            }
+            var students = user.Students;
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId.ToString()), include : x => x.Include(x => x.Course).Include(x => x.Schedules));
+            var minAge = classx.Course.MinYearOldsStudent.Value;
+            var maxAge = classx.Course.MaxYearOldsStudent.Value;
+            var startdate = classx.StartDate;
+            var enddate = classx.EndDate;
+            var year = DateTime.Now.Year;
+            List<StudentResponse> st = new List<StudentResponse>();
+            foreach(var student in students)
+            {
+                if((year - student.DateOfBirth.Year) < minAge  && (year - student.DateOfBirth.Year) > maxAge)
+                {
+                    st.Add(new StudentResponse
+                    {
+                        Age = year - student.DateOfBirth.Year,
+                        AvatarImage = student.AvatarImage,
+                        DateOfBirth = student.DateOfBirth,
+                        Email = student.Email,
+                        FullName = student.FullName,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                        CanRegistered = false,
+                        ReasonCannotRegistered = $"Học sinh không đủ độ tuổi",
+                    });
+                    continue;
+                }
+                var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId == student.Id, include: x => x.Include(x => x.Schedule));
+               if(attandances == null)
+                {
+                    continue;
+                }
+               var schedules = attandances.Where(x => (x.Schedule.Date >= startdate  && x.Schedule.Date.Date <= enddate)).Select(x => x.Schedule);
+                var DaysOfWeek = classx.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
+                bool flag = true;
+                string existDateOfWeek = "";
+                foreach( var day in DaysOfWeek)
+                {
+                    var isExist = schedules.Any(x => x.DayOfWeek == day.DayOfWeek && x.SlotId == day.SlotId);
+                    if(isExist) 
+                    {
+                        flag = false;
+                        if(day.DayOfWeek == 1)
+                        {
+                            existDateOfWeek = "sunday";
+                        }
+                        if (day.DayOfWeek == 2)
+                        {
+                            existDateOfWeek = "monday";
+                        }
+                        if (day.DayOfWeek == 4)
+                        {
+                            existDateOfWeek = "tuesday";
+                        }
+                        if (day.DayOfWeek == 8)
+                        {
+                            existDateOfWeek = "wednesday";
+                        }
+                        if (day.DayOfWeek == 16)
+                        {
+                            existDateOfWeek = "thursday";
+                        }
+                        if (day.DayOfWeek == 32)
+                        {
+                            existDateOfWeek = "friday";
+                        }
+                        if (day.DayOfWeek == 64)
+                        {
+                            existDateOfWeek = "saturday";
+                        }
+                        break;
+                    }
+                }
+                if(flag) 
+                {
+                    st.Add(new StudentResponse 
+                    { 
+                        Age = year - student.DateOfBirth.Year,
+                        AvatarImage = student.AvatarImage,  
+                        DateOfBirth = student.DateOfBirth,
+                        Email = student.Email,
+                        FullName = student.FullName,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                        CanRegistered = true,
+                    });
+                } 
+                else
+                {
+                    st.Add(new StudentResponse
+                    {
+                        Age = year - student.DateOfBirth.Year,
+                        AvatarImage = student.AvatarImage,
+                        DateOfBirth = student.DateOfBirth,
+                        Email = student.Email,
+                        FullName = student.FullName,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                        CanRegistered = false,
+                        ReasonCannotRegistered = $"Học sinh tồn tại lịch vào {existDateOfWeek} trước đó",
+                    }) ;
+                }
+            }
+            return st;  
+        }
+
+        public async Task<List<UserResponse>> GetUserFromName(string name)
+        {
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate : x => x.FullName.ToLower().Trim().Contains(name.ToLower().Trim()),include : x => x.Include(x => x.Role));
+            var responses = new List<UserResponse>();
+            foreach( var user in users)
+            {
+                if (user.Role.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()))
+                {
+                    var response = new UserResponse
+                    {
+                        Email = user.Email,
+                        Phone = user.Phone,
+                        Address = user.Address,
+                        AvatarImage = user.AvatarImage,
+                        DateOfBirth = user.DateOfBirth.Value,
+                        FullName = user.FullName,
+                        Gender = user.Gender,
+                        Id = user.Id,
+                    };
+                    responses.Add(response);
+                }
+            }
+            return responses;   
         }
     }
 }

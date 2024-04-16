@@ -26,7 +26,7 @@ namespace MagicLand_System.Mappers.Custom
                 ExamPart = part,
                 QuizCategory = examSyllabus == null ? "Review" : examSyllabus.Category,
                 QuizType = questionPackage.QuizType.ToLower(),
-                QuizName = questionPackage.Title,
+                QuizName = questionPackage.Score == 0 ? "Làm Tại Lớp" : questionPackage.Title,
                 Weight = examSyllabus == null ? 0 : examSyllabus.Weight / examSyllabus.Part,
                 CompletionCriteria = examSyllabus == null ? 0 : examSyllabus.CompleteionCriteria,
                 TotalScore = questionPackage.Questions!.SelectMany(quest => quest.MutipleChoices!.Select(mutiple => mutiple.Score).ToList()).Sum(),
@@ -65,15 +65,16 @@ namespace MagicLand_System.Mappers.Custom
                     totalMark = quizzes.Count();
                 }
             }
+            var extensionName = questionPackage.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + questionPackage.OrderPackage;
             return new ExamResponse
             {
                 ExamPart = part,
-                ExamName = "Bài Kiểm Tra Số " + questionPackage.OrderPackage,
+                ExamName = "Bài " + questionPackage.ContentName.ToLower() + extensionName,
                 QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString(),
                 QuizType = questionPackage.QuizType.ToLower(),
-                QuizName = questionPackage.Title,
-                Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part: 0,
-                CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria :  null,
+                QuizName = questionPackage.Score == 0 ? "Làm Tại Lớp" : questionPackage.Title,
+                Weight = examSyllabus != null ? examSyllabus.Weight / examSyllabus.Part : 0,
+                CompletionCriteria = examSyllabus != null ? examSyllabus.CompleteionCriteria : null,
                 TotalScore = (double)questionPackage.Score!,
                 TotalMark = totalMark,
                 NoSession = questionPackage.NoSession,

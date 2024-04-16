@@ -6,7 +6,7 @@ namespace MagicLand_System.PayLoad.Response.Schedules
 {
     public class ScheduleResponse
     {
-        public Guid? Id { get; set; }
+        public Guid? ScheduleId { get; set; }
         public string? DayOfWeeks { get; set; }
         public DateTime Date { get; set; }
         

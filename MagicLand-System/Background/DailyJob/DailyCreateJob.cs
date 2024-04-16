@@ -1,8 +1,9 @@
 ﻿using MagicLand_System.Background.BackgroundServiceInterfaces;
 using Quartz;
 
-namespace MagicLand_System.Background
+namespace MagicLand_System.Background.DailyJob
 {
+    //[DisallowConcurrentExecution]
     public class DailyCreateJob : IJob
     {
         private readonly ILogger<DailyCreateJob> _logger;
@@ -17,13 +18,13 @@ namespace MagicLand_System.Background
         public async Task Execute(IJobExecutionContext context)
         {
             string message = "";
-            _logger.LogInformation($"Daily Create Job Running At [{DateTime.Now}]");
+            _logger.LogInformation($"Daily Create Job Running At [{BackgoundTime.GetTime()}]");
 
             message += await _notificationBackgroundService.CreateNewNotificationInCondition();
             message += await _notificationBackgroundService.CreateNotificationForLastRegisterTime();
             message += await _notificationBackgroundService.CreateNotificationForRemindRegisterCourse();
 
-            _logger.LogInformation($"Daily Create Job Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
+            _logger.LogInformation($"Daily Create Job Completed At [{BackgoundTime.GetTime()}] With Message [{string.Join(", ", message)}]");
         }
 
     }

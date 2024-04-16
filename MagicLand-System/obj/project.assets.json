@@ -164,6 +164,74 @@
           "Microsoft.AspNetCore.App"
         ]
       },
+      "Microsoft.AspNetCore.Hosting.Abstractions/2.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Hosting.Server.Abstractions": "2.1.1",
+          "Microsoft.AspNetCore.Http.Abstractions": "2.1.1",
+          "Microsoft.Extensions.Hosting.Abstractions": "2.1.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Hosting.Server.Abstractions/2.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Http.Features": "2.1.1",
+          "Microsoft.Extensions.Configuration.Abstractions": "2.1.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Server.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Server.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Http.Abstractions/2.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Http.Features": "2.1.1",
+          "System.Text.Encodings.Web": "4.5.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Http.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Http.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.AspNetCore.Http.Features/2.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "2.1.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Http.Features.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.AspNetCore.Http.Features.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.OpenApi/7.0.13": {
         "type": "package",
         "dependencies": {
@@ -624,6 +692,42 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
+      "Microsoft.Extensions.Hosting.Abstractions/6.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "6.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "6.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.1/Microsoft.Extensions.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Microsoft.Extensions.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.Extensions.Http/2.1.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.1.1",
+          "Microsoft.Extensions.Logging": "2.1.1",
+          "Microsoft.Extensions.Options": "2.1.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/Microsoft.Extensions.Http.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.Http.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Extensions.Logging/7.0.0": {
         "type": "package",
         "dependencies": {
@@ -941,6 +1045,21 @@
           }
         }
       },
+      "Ngrok.AspNetCore/1.0.6": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Hosting.Abstractions": "2.1.1",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.1.1",
+          "Microsoft.Extensions.Http": "2.1.1",
+          "Newtonsoft.Json": "12.0.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/NgrokAspNetCore.Lib.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/NgrokAspNetCore.Lib.dll": {}
+        }
+      },
       "NLog/5.2.5": {
         "type": "package",
         "compile": {
@@ -967,7 +1086,7 @@
           }
         }
       },
-      "Quartz/3.8.0": {
+      "Quartz/3.8.1": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "2.1.1",
@@ -999,6 +1118,23 @@
         },
         "runtime": {
           "lib/net6.0/Quartz.Extensions.DependencyInjection.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Quartz.Extensions.Hosting/3.8.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting.Abstractions": "6.0.0",
+          "Quartz.Extensions.DependencyInjection": "3.8.0"
+        },
+        "compile": {
+          "lib/net6.0/Quartz.Extensions.Hosting.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Quartz.Extensions.Hosting.dll": {
             "related": ".xml"
           }
         }
@@ -1725,6 +1861,58 @@
         "lib/net7.0/Microsoft.AspNetCore.Authentication.JwtBearer.xml",
         "microsoft.aspnetcore.authentication.jwtbearer.7.0.13.nupkg.sha512",
         "microsoft.aspnetcore.authentication.jwtbearer.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Hosting.Abstractions/2.1.1": {
+      "sha512": "76cKcp2pWhvdV2TXTqMg/DyW7N6cDzTEhtL8vVWFShQN+Ylwv3eO/vUQr2BS3Hz4IZHEpL+FOo2T+MtymHDqDQ==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.hosting.abstractions/2.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Abstractions.xml",
+        "microsoft.aspnetcore.hosting.abstractions.2.1.1.nupkg.sha512",
+        "microsoft.aspnetcore.hosting.abstractions.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Hosting.Server.Abstractions/2.1.1": {
+      "sha512": "+vD7HJYzAXNq17t+NgRkpS38cxuAyOBu8ixruOiA3nWsybozolUdALWiZ5QFtGRzajSLPFA2YsbO3NPcqoUwcw==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.hosting.server.abstractions/2.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Server.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Hosting.Server.Abstractions.xml",
+        "microsoft.aspnetcore.hosting.server.abstractions.2.1.1.nupkg.sha512",
+        "microsoft.aspnetcore.hosting.server.abstractions.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Http.Abstractions/2.1.1": {
+      "sha512": "kQUEVOU4loc8CPSb2WoHFTESqwIa8Ik7ysCBfTwzHAd0moWovc9JQLmhDIHlYLjHbyexqZAlkq/FPRUZqokebw==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.http.abstractions/2.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Http.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Http.Abstractions.xml",
+        "microsoft.aspnetcore.http.abstractions.2.1.1.nupkg.sha512",
+        "microsoft.aspnetcore.http.abstractions.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Http.Features/2.1.1": {
+      "sha512": "VklZ7hWgSvHBcDtwYYkdMdI/adlf7ebxTZ9kdzAhX+gUs5jSHE9mZlTamdgf9miSsxc1QjNazHXTDJdVPZKKTw==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.http.features/2.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Http.Features.dll",
+        "lib/netstandard2.0/Microsoft.AspNetCore.Http.Features.xml",
+        "microsoft.aspnetcore.http.features.2.1.1.nupkg.sha512",
+        "microsoft.aspnetcore.http.features.nuspec"
       ]
     },
     "Microsoft.AspNetCore.OpenApi/7.0.13": {
@@ -2586,6 +2774,40 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Microsoft.Extensions.Hosting.Abstractions/6.0.0": {
+      "sha512": "GcT5l2CYXL6Sa27KCSh0TixsRfADUgth+ojQSD5EkzisZxmGFh7CwzkcYuGwvmXLjr27uWRNrJ2vuuEjMhU05Q==",
+      "type": "package",
+      "path": "microsoft.extensions.hosting.abstractions/6.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net461/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/net461/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "microsoft.extensions.hosting.abstractions.6.0.0.nupkg.sha512",
+        "microsoft.extensions.hosting.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Http/2.1.1": {
+      "sha512": "GOly249seL3HL2+lgfLWHirsggRwK4EmSa6zUb+sPbgXHN+f9w/y/6XV3DPjYjtyt3v38FkPTD6odPcJJKtvlg==",
+      "type": "package",
+      "path": "microsoft.extensions.http/2.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.Extensions.Http.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Http.xml",
+        "microsoft.extensions.http.2.1.1.nupkg.sha512",
+        "microsoft.extensions.http.nuspec"
+      ]
+    },
     "Microsoft.Extensions.Logging/7.0.0": {
       "sha512": "Nw2muoNrOG5U5qa2ZekXwudUn2BJcD41e65zwmDHb1fQegTX66UokLWZkJRpqSSHXDOWZ5V0iqhbxOEky91atA==",
       "type": "package",
@@ -3159,6 +3381,18 @@
         "packageIcon.png"
       ]
     },
+    "Ngrok.AspNetCore/1.0.6": {
+      "sha512": "i3TF0C2rnSQP0HO/2oN3dHykFPDO7a1W7z9B0pDS5OQ/vZsICElwEv5mo0nP4JDuVZeciVMArTMMtlAouh8Zgg==",
+      "type": "package",
+      "path": "ngrok.aspnetcore/1.0.6",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/NgrokAspNetCore.Lib.dll",
+        "ngrok.aspnetcore.1.0.6.nupkg.sha512",
+        "ngrok.aspnetcore.nuspec"
+      ]
+    },
     "NLog/5.2.5": {
       "sha512": "mMXtbAxfNzqkXcBjhJ3wN3rH7kwUZ0JL0GrUBI/lso7+tQ/HC4e5SnlmR3R5qQ9zWbqMbjxeH37rIf0yQGWTiA==",
       "type": "package",
@@ -3198,10 +3432,10 @@
         "portable.bouncycastle.nuspec"
       ]
     },
-    "Quartz/3.8.0": {
-      "sha512": "XYg+O+yw24kNLqp1YyEaZCzpQyVhcLQ5vep61RDKPZFjRNMBfBxcZiHNRFMNuN0XQIQ6zTGTHdZl9h7CuEVvXA==",
+    "Quartz/3.8.1": {
+      "sha512": "HlKm+43iG8LmXfejL1kIijO107x8ozEShLT2PFIkOWNSHUj7O7yTl6icFrn6DocPvigudQ90a6h2gdFShOwyXw==",
       "type": "package",
-      "path": "quartz/3.8.0",
+      "path": "quartz/3.8.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3214,8 +3448,9 @@
         "lib/netstandard2.0/Quartz.dll",
         "lib/netstandard2.0/Quartz.xml",
         "quartz-logo-small.png",
-        "quartz.3.8.0.nupkg.sha512",
-        "quartz.nuspec"
+        "quartz.3.8.1.nupkg.sha512",
+        "quartz.nuspec",
+        "quick-start.md"
       ]
     },
     "Quartz.Extensions.DependencyInjection/3.8.0": {
@@ -3236,6 +3471,26 @@
         "quartz-logo-small.png",
         "quartz.extensions.dependencyinjection.3.8.0.nupkg.sha512",
         "quartz.extensions.dependencyinjection.nuspec"
+      ]
+    },
+    "Quartz.Extensions.Hosting/3.8.0": {
+      "sha512": "cNSrx0ifPTRL6AVXPTTXS6Yzv8Zc6pq0GXtdOOFfBAuWBmBRzZy1XZLl5ylOIWNFW3BHbwHOXm4NJ85WT/LKfw==",
+      "type": "package",
+      "path": "quartz.extensions.hosting/3.8.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net6.0/Quartz.Extensions.Hosting.dll",
+        "lib/net6.0/Quartz.Extensions.Hosting.xml",
+        "lib/net8.0/Quartz.Extensions.Hosting.dll",
+        "lib/net8.0/Quartz.Extensions.Hosting.xml",
+        "lib/netcoreapp3.1/Quartz.Extensions.Hosting.dll",
+        "lib/netcoreapp3.1/Quartz.Extensions.Hosting.xml",
+        "lib/netstandard2.0/Quartz.Extensions.Hosting.dll",
+        "lib/netstandard2.0/Quartz.Extensions.Hosting.xml",
+        "quartz-logo-small.png",
+        "quartz.extensions.hosting.3.8.0.nupkg.sha512",
+        "quartz.extensions.hosting.nuspec"
       ]
     },
     "Swashbuckle.AspNetCore/6.5.0": {
@@ -4373,29 +4628,30 @@
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets >= 1.18.1",
       "NLog >= 5.2.5",
       "Newtonsoft.Json >= 13.0.3",
-      "Quartz >= 3.8.0",
-      "Quartz.Extensions.DependencyInjection >= 3.8.0",
+      "Ngrok.AspNetCore >= 1.0.6",
+      "Quartz >= 3.8.1",
+      "Quartz.Extensions.Hosting >= 3.8.0",
       "Swashbuckle.AspNetCore >= 6.5.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Administrator\\.nuget\\packages\\": {},
+    "C:\\Users\\Thuong\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "projectUniqueName": "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
       "projectName": "MagicLand-System",
-      "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
-      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
+      "projectPath": "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
+      "outputPath": "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Thuong\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4404,19 +4660,17 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
-        "C:\\Program Files\\dotnet\\sdk\\7.0.302\\Sdks\\Microsoft.NET.Sdk.Web\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
-              "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
+            "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+              "projectPath": "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
             },
-            "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
-              "projectPath": "E:\\GitHub\\Teams GitHub Projects\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
+            "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
+              "projectPath": "D:\\Code-164\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
             }
           }
         }
@@ -4487,11 +4741,15 @@
             "target": "Package",
             "version": "[13.0.3, )"
           },
+          "Ngrok.AspNetCore": {
+            "target": "Package",
+            "version": "[1.0.6, )"
+          },
           "Quartz": {
             "target": "Package",
-            "version": "[3.8.0, )"
+            "version": "[3.8.1, )"
           },
-          "Quartz.Extensions.DependencyInjection": {
+          "Quartz.Extensions.Hosting": {
             "target": "Package",
             "version": "[3.8.0, )"
           },
@@ -4519,7 +4777,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.302\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.102\\RuntimeIdentifierGraph.json"
       }
     }
   }

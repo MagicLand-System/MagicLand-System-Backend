@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
@@ -44,7 +45,8 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllValid)]
         [ProducesResponseType(typeof(CourseResExtraInfor), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "PARENT")]
+        [Authorize(Roles = "PARENT, STUDENT")]
+
         public async Task<IActionResult> GetCoursesValid()
         {
             var courses = await _courseService.GetCoursesAsync(true);
@@ -196,6 +198,36 @@ namespace MagicLand_System.Controllers
         {
             var isSuccess = await _courseService.GenerateCoursePrice(request);
             return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseStaff)]
+        public async Task<IActionResult> GetCourseStaff([FromQuery] List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge)
+        {
+            var isSuccess = await _courseService.GetCourseResponse(categoryIds, searchString, minAge, MaxAge);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseClassStaff)]
+        public async Task<IActionResult> GetCourseClassStaff(string courseId, [FromQuery] List<string> dateOfWeeks, string? method, [FromQuery] List<string>? slotId)
+        {
+            var isSuccess = await _courseService.GetClassesOfCourse(courseId, dateOfWeeks, method, slotId);
+            return Ok(isSuccess);
+        }
+        [HttpPut(ApiEndpointConstant.CourseEnpoint.UpdateCourse)]
+        public async Task<IActionResult> UpdateCourse([FromRoute] string id, [FromBody] UpdateCourseRequest request)
+        {
+            var isSucc = await _courseService.UpdateCourse(id, request);
+            return Ok(isSucc);
+        }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllStaff)]
+        public async Task<IActionResult> GetStaffCourse()
+        {
+            var isSucc = await _courseService.GetCourseByStaff();
+            return Ok(isSucc);
+        }
+        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllStaffV2)]
+        public async Task<IActionResult> GetStaffCourseV2(string keyword)
+        {
+            var isSucc = await _courseService.GetCourseSearch(keyword);
+            return Ok(isSucc);
         }
     }
 }

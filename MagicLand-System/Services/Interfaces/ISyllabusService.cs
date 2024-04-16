@@ -23,7 +23,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id);
         Task<List<ExamResForStudent>> LoadExamOfClassByClassIdAsync(Guid id, Guid? studentId);
         Task<List<ExamExtraClassInfor>> LoadExamOfCurrentStudentAsync(int numberOfDate);
-        Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid id, int? examPart);
+        Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, Guid classId, int? examPart);
         Task<List<SyllabusResponseV2>> GetAllSyllabus(string? keyword);
         Task<bool> UpdateSyllabus(OverallSyllabusRequest request, string id);
         Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id);
@@ -38,5 +38,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StaffSessionResponse>> GetAllSessionResponses(string syllabusId);
         Task<List<StaffQuestionPackageResponse>> GetStaffQuestionPackageResponses(string sylId);
         Task<GeneralSyllabusResponse> GetGeneralSyllabusResponse(string syllabusId);
+        Task<SyllabusResultResponse> FilterStaffSyllabusAsync(List<string>? keyWords, DateTime? date, double? score);
+
     }
 }

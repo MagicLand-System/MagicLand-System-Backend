@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Request.Student;
@@ -21,5 +22,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<(string, bool)> HandelSuccessReturnDataVnpayAsync(string transactionCode, string signature, string bankCode, TransactionTypeEnum type);
         Task<(string, bool)> HandelFailedReturnDataVnpayAsync(string transactionCode, string signature, string bankCode, TransactionTypeEnum type);
         Task<List<RevenueResponse>> GetRevenueTransactionByTimeAsync(RevenueTimeEnum time);
+        Task<BillPaymentResponse> CheckoutByStaff(StaffCheckoutRequest request);
     }
 }

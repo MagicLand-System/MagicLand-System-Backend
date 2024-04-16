@@ -11,27 +11,28 @@ using System.Text.Json;
 
 namespace MagicLand_System_Web.Pages
 {
-    public class IndexModel : PageModel
+    public class SyllabusModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
+        private readonly ILogger<SyllabusModel> _logger;
 
         private readonly HttpClient _httpClient;
         private string baseUrl;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public IndexModel(ILogger<IndexModel> logger, IHttpContextAccessor httpContextAccessor)
+        public SyllabusModel(ILogger<SyllabusModel> logger, IHttpContextAccessor httpContextAccessor)
         {
             _httpClient = new HttpClient();
             var contentType = new MediaTypeWithQualityHeaderValue("application/json");
             _httpClient.DefaultRequestHeaders.Accept.Add(contentType);
-            baseUrl = "https://magiclandapiv2.somee.com/api/v1";
+            //baseUrl = "https://magiclandapiv2.somee.com/api/v1";
+            //baseUrl = "http://localhost:5097/api/v1";
+            baseUrl = "http://localhost:5097/api/v1";
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
         [BindProperty]
-        public List<SyllabusMessage> SyllabusMessages { get; set; }
-        [BindProperty]
-        public List<(string, string, string, string)> messages { get; set; } = new List<(string, string, string, string)>();
+        public List<SyllabusMessage> SyllabusMessages { get; set; } = new List<SyllabusMessage>();
+
         [BindProperty]
         public bool IsLoading { get; set; }
 
@@ -41,9 +42,9 @@ namespace MagicLand_System_Web.Pages
             var token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
             var data = SessionHelper.GetObjectFromJson<List<SyllabusMessage>>(_httpContextAccessor.HttpContext!.Session, "DataSyllabus");
 
-            if (data != null)
+            if (data != null && data.Count > 0)
             {
-                messages.Add(new(data[0].Status, data[0].SyllabusCode, data[0].SyllabusName, data[0].Note));
+                SyllabusMessages = data;
             }
 
             if (token != null)
@@ -51,10 +52,26 @@ namespace MagicLand_System_Web.Pages
                 return Page();
             }
 
+            
             var loginContent = new StringContent(JsonSerializer.Serialize(new LoginRequest { Phone = "+84971822093" }), Encoding.UTF8, "application/json");
-            var userApiResponse = await _httpClient.PostAsync(baseUrl + "/auth", loginContent);
+            
+            //var userApiResponse = await _httpClient.PostAsync(baseUrl + "/auth", loginContent);
+
+            //var userContent = await userApiResponse.Content.ReadAsStringAsync();
+            //var user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginResponse>(userContent);
+
+
+            var loginRequestMessage = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/auth");
+
+
+            loginRequestMessage.Headers.Add("ngrok-skip-browser-warning", "true");
+
+            loginRequestMessage.Content = loginContent;
+
+            var userApiResponse = await _httpClient.SendAsync(loginRequestMessage);
             var userContent = await userApiResponse.Content.ReadAsStringAsync();
             var user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginResponse>(userContent);
+
 
             SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
 
@@ -63,17 +80,6 @@ namespace MagicLand_System_Web.Pages
 
         public async Task<IActionResult> OnPostAsync(int inputField)
         {
-            IsLoading = true;
-            SyllabusMessages.Add(new SyllabusMessage
-            {
-                SyllabusName = "a",
-                Status = "200",
-                SyllabusCode = "b",
-                Note = "aa",
-            });
-            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", SyllabusMessages);
-            return Page();
-
             if (inputField == 0 || inputField < 0 || inputField >= 100)
             {
                 ViewData["Message"] = "Số Lượng không Hợp Lệ";
@@ -110,16 +116,54 @@ namespace MagicLand_System_Web.Pages
                 };
 
 
+                //string token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
+                //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                //var jsonContent = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
+                //var insertResponse = await _httpClient.PostAsync(baseUrl + "/Syllabus/insertSyllabus", jsonContent);
+
+                //int statusCode = (int)insertResponse.StatusCode;
+                //string responseMessage = await insertResponse.Content.ReadAsStringAsync();
+
+                //IsLoading = true;
+
+                //SyllabusMessages.Add(new SyllabusMessage
+                //{
+                //    SyllabusName = requestData.SyllabusName,
+                //    Status = statusCode.ToString(),
+                //    Subject = requestData.Type,
+                //    SyllabusCode = requestData.SubjectCode,
+                //    Note = responseMessage,
+                //});
+                //SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", SyllabusMessages);
+
+
                 string token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
+
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                _httpClient.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
                 var jsonContent = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
+
                 var insertResponse = await _httpClient.PostAsync(baseUrl + "/Syllabus/insertSyllabus", jsonContent);
+
 
                 int statusCode = (int)insertResponse.StatusCode;
                 string responseMessage = await insertResponse.Content.ReadAsStringAsync();
 
-                messages.Add(($"{requestData.SyllabusName}", $"{requestData.SubjectCode}", $"{statusCode}", responseMessage));
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", messages);
+                IsLoading = true;
+
+
+                SyllabusMessages.Add(new SyllabusMessage
+                {
+                    SyllabusName = requestData.SyllabusName,
+                    Status = statusCode.ToString(),
+                    Subject = requestData.Type,
+                    SyllabusCode = requestData.SubjectCode,
+                    Note = responseMessage,
+                });
+
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", SyllabusMessages);
+
             }
 
             return Page();

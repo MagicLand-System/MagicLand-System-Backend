@@ -10,6 +10,8 @@
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn);1591</NoWarn>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -31,9 +33,10 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Ngrok.AspNetCore" Version="1.0.6" />
 		<PackageReference Include="NLog" Version="5.2.5" />
-		<PackageReference Include="Quartz" Version="3.8.0" />
-		<PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.8.0" />
+		<PackageReference Include="Quartz" Version="3.8.1" />
+		<PackageReference Include="Quartz.Extensions.Hosting" Version="3.8.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 	</ItemGroup>
 

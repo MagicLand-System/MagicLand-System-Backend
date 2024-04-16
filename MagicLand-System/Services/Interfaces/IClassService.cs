@@ -11,6 +11,7 @@ using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Topics;
+using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -24,8 +25,8 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students);
         Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);
-        Task<bool> CreateNewClass(CreateClassRequest request);
-        Task<List<MyClassResponse>> GetAllClass(string searchString = null, string status = null);
+        Task<CreateSingleClassResponse> CreateNewClass(CreateClassRequest request);
+        Task<ClassResultResponse> GetAllClass(string searchString = null, string status = null);
         Task<MyClassResponse> GetClassDetail(string id);
         Task<List<StudentInClass>> GetAllStudentInClass(string id);
         Task<string> AutoCreateClassCode(string courseId);
@@ -43,5 +44,11 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId, string studentId, DateTime? date = null, string? keyword = null, string? slotId = null);
         Task<InsertClassesResponse> InsertClasses(List<CreateClassesRequest> request);
         Task<ClassFromClassCode> GetClassFromClassCode(string classCode);
+        Task<InsertClassesResponse> InsertClassesV2(List<CreateClassesRequest> request);
+        Task<InsertClassesResponse> InsertClassesSave(InsertClassesResponse request);
+        Task<List<Room>> GetRoomsForUpdate(string classId);
+        Task<List<LecturerResponse>> GetLecturerForUpdate(string classId);
+        Task<List<Room>> GetRoomForUpdateSession(string classId, string slotId,DateTime date);
+        Task<List<LecturerResponse>> GetLecturerResponseForUpdateSession(string classId, string slotId, DateTime date);
     }
 }

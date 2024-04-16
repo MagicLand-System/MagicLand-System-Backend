@@ -21,6 +21,10 @@
             public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
             public const string UpdateUser = UsersEndpoint + "/update";
             public const string GetByAdmin = UsersEndpoint + "/getByAdmin";
+            public const string GetByPhone = UsersEndpoint + "/getByPhone";
+            public const string GetStudent = UsersEndpoint + "/getStudent";
+            public const string GetFromName = UsersEndpoint + "/getFromName";
+
         }
         public static class Authentication
         {
@@ -57,6 +61,12 @@
             public const string GetTopicLearning = GetAll + "/topic/learning";
             public const string GetStudentValid = GetAll + "/students/valid";
             public const string GetFromClassCode = GetAll + "/classCode";
+            public const string InsertClassesV2 =  GetAll + "/insertClassesV2";
+            public const string InsertClassesV3 = GetAll + "/insertClasses/save";
+            public const string RoomForUpdateClass = GetAll + "/getRoomForUpdate";
+            public const string LecturerForUpdateClass = GetAll + "/getLecturerForUpdate";
+            public const string LecturerForUpdateSession = GetAll + "/getLecturerForUpdateSession";
+            public const string RoomForUpdateSession = GetAll + "/getRoomForUpdateSession";
         }
         public static class PromotionEnpoint
         {
@@ -89,6 +99,11 @@
             public const string GetCourseByStaff = GetAll + "/staff/get";
             public const string GetCoursePrice = GetAll + "/getCoursePrice";
             public const string AddPrice = GetAll + "/addPrice";
+            public const string GetCourseStaff = GetAll + "/staff/getCourse";
+            public const string GetCourseClassStaff = GetAll + "/staff/getClass";
+            public const string UpdateCourse = GetAll + "/{id}/updateCourse";
+            public const string GetAllStaff = ApiEndpoint + "/staff/courses";
+            public const string GetAllStaffV2 = ApiEndpoint + "/staff/courses/search";
         }
         public static class StudentEndpoint
         {
@@ -126,6 +141,7 @@
             public const string GetBillTransactionById = GetAll + "/{id}/bill/status";
             public const string GetBillTransactionByTxnRefCode = GetAll + "/{txnRefCode}/bills/status";
             public const string GetRevenueTransactionByTime = GetAll + "/bills/revenue";
+            public const string CheckoutByStaff = GetAll + "/staff/checkout";
         }
         public static class SyllabusEndPoint
         {
@@ -148,6 +164,8 @@
             public const string ExamSyllabus = EndPointBase + "/staff/getExamSyllabus";
             public const string SessionSyllabus = EndPointBase + "/staff/getSessionSyllabus";
             public const string QuestionSyllabus = EndPointBase + "/staff/getQuestionSyllabus";
+            public const string StaffFilterSyllabus = EndPointBase + "/staff/filter";
+
         }
         public static class LectureEndPoint
         {
@@ -198,7 +216,9 @@
             public const string GetFinalResult = ApiEndpoint + "/exams/quiz/finalResult";
             public const string GradeQuizMC = ApiEndpoint + "/exam/quiz/multipleChoice/grade";
             public const string GradeQuizOffLine = ApiEndpoint + "/exam/quiz/offLine/grade";
+            public const string EvaluateQuizOnLine = ApiEndpoint + "/exam/quiz/onLine/evaluate";
             public const string GradeQuizFC = ApiEndpoint + "/exam/quiz/flashCard/grade";
+            public const string GetFCQuestionPackage = ApiEndpoint + "/exam/quiz/flashCard/package";
             public const string GetQuizOverallByCourseId = ApiEndpoint + "/exams/quizzes/course";
             public const string GetExamOffClassByClassId = ApiEndpoint + "/exams/class";
             public const string GetExamOffCurrentStudentByTime = ApiEndpoint + "/exams/student/byTime";

@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response.Bills;
@@ -206,7 +207,38 @@ namespace MagicLand_System.Services.Implements
 
             return messageList;
         }
+        private async Task<List<string>> PurchaseByStaff(List<CheckoutRequest> requests,PersonalWallet personalWallet, User currentPayer, double discountEachItem)
+        {
+            var messageList = new List<string>();
 
+            foreach (var request in requests)
+            {
+                var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == request.ClassId,
+                    include: x => x.Include(x => x.Course!)
+                    .Include(x => x.Schedules)
+                    .Include(x => x.StudentClasses));
+
+                var currentRequestTotal = await GetDynamicPrice(cls.Id, true) * request.StudentIdList.Count();
+
+                string studentNameString = await GenerateStudentNameString(request.StudentIdList);
+
+                var newStudentItemScheduleList = await RenderStudentItemScheduleList(cls.Id, request.StudentIdList);
+
+                WalletTransaction newTransaction;
+                List<StudentClass> newStudentInClassList;
+                Notification newNotification;
+
+                GenerateStaffNewItems(personalWallet, currentPayer, discountEachItem, request, cls, currentRequestTotal, studentNameString, out newTransaction, out newStudentInClassList, out newNotification);
+                await SavePurchaseProgressed(cls, personalWallet, newTransaction, newStudentInClassList, newStudentItemScheduleList, newNotification);
+
+                string message = "Học Sinh [" + studentNameString + $"] Đã Được Thêm Vào Lớp [{cls.ClassCode}]";
+                messageList.Add(message);
+            }
+
+            return messageList;
+
+        }
         private void GenerateNewItems(
             PersonalWallet personalWallet, User currentPayer,
             double discountEachItem, CheckoutRequest request, Class cls, double currentRequestTotal, string studentNameString,
@@ -221,7 +253,7 @@ namespace MagicLand_System.Services.Implements
                 Type = TransactionTypeEnum.Payment.ToString(),
                 Method = TransactionMethodEnum.SystemWallet.ToString(),
                 Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
-                CreateTime = DateTime.Now,
+                CreateTime = DateTime.Now.AddHours(7),
                 PersonalWalletId = personalWallet.Id,
                 PersonalWallet = personalWallet,
                 CreateBy = currentPayer.FullName,
@@ -239,6 +271,7 @@ namespace MagicLand_System.Services.Implements
                 Id = new Guid(),
                 StudentId = sil,
                 ClassId = cls.Id,
+                AddedTime = DateTime.Now.AddHours(7),
             }).ToList();
 
             string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
@@ -250,6 +283,51 @@ namespace MagicLand_System.Services.Implements
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
             NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
         }
+        private void GenerateStaffNewItems(
+         PersonalWallet personalWallet, User currentPayer,
+         double discountEachItem, CheckoutRequest request, Class cls, double currentRequestTotal, string studentNameString,
+         out WalletTransaction newTransaction, out List<StudentClass> newStudentInClassList, out Notification newNotification)
+        {
+            newTransaction = new WalletTransaction
+            {
+                Id = new Guid(),
+                TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Payment),
+                Money = currentRequestTotal,
+                Discount = discountEachItem,
+                Type = TransactionTypeEnum.Payment.ToString(),
+                Method = "DirectionTransaction",
+                Description = $"Đăng Ký Học Sinh {studentNameString} Vào Lớp {cls.ClassCode}",
+                CreateTime = DateTime.Now.AddHours(7),
+                PersonalWalletId = personalWallet.Id,
+                PersonalWallet = personalWallet,
+                CreateBy = currentPayer.FullName + "-" + currentPayer.Phone,
+                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Payment) + StringHelper.GenerateAttachValueForTxnRefCode(new ItemGenerate
+                {
+                    ClassId = request.ClassId,
+                    StudentIdList = request.StudentIdList
+                }),
+                Status = TransactionStatusEnum.Success.ToString(),
+            };
+
+            newStudentInClassList = request.StudentIdList.Select(sil =>
+            new StudentClass
+            {
+                Id = new Guid(),
+                StudentId = sil,
+                ClassId = cls.Id,
+                AddedTime = DateTime.Now.AddHours(7),
+            }).ToList();
+
+            string actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                    {
+                      ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                      ($"{AttachValueEnum.StudentId}", $"{string.Join(", ", request.StudentIdList)}"),
+                    });
+
+            newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
+            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
+        }
+
 
         private Notification GenerateNewNotification(User targetUser, string title, string body, string type, string image, string actionData)
         {
@@ -278,6 +356,7 @@ namespace MagicLand_System.Services.Implements
                 Identify = identify,
             };
         }
+
 
         private async Task SavePurchaseProgressed(
             Class cls,
@@ -346,6 +425,23 @@ namespace MagicLand_System.Services.Implements
                 MoneyPaid = total - discount,
                 Date = DateTime.Now,
                 Method = TransactionMethodEnum.SystemWallet.ToString(),
+                Type = TransactionTypeEnum.Payment.ToString(),
+                Payer = currentPayer.FullName!,
+            };
+
+            return bill;
+        }
+        private BillPaymentResponse RenderStaffBill(User currentPayer, List<string> messageList, double total, double discount)
+        {
+            var bill = new BillPaymentResponse
+            {
+                Status = TransactionStatusMessageConstant.Success,
+                Message = string.Join(" , ", messageList),
+                MoneyAmount = total,
+                Discount = discount,
+                MoneyPaid = total - discount,
+                Date = DateTime.Now,
+                Method = "Thanh Toán Trực Tiếp Tại Quầy",
                 Type = TransactionTypeEnum.Payment.ToString(),
                 Payer = currentPayer.FullName!,
             };
@@ -1033,5 +1129,125 @@ namespace MagicLand_System.Services.Implements
             return default;
         }
 
+        public async Task<BillPaymentResponse> CheckoutByStaff(StaffCheckoutRequest request)
+        {
+            //var checkphone = "+84" + request.StaffUserCheckout.Phone.Trim().Substring(1);
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(request.StaffUserCheckout.Phone.Trim()));
+            Guid id = Guid.Empty;
+            if (user == null) 
+            {
+                var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()), selector: x => x.Id);
+                User userx = new User
+                {
+                    Email = request.StaffUserCheckout.Email,
+                    FullName = request.StaffUserCheckout.FullName,
+                    Phone = request.StaffUserCheckout.Phone,
+                    RoleId = role,
+                    Id = Guid.NewGuid(),
+                };
+                await _unitOfWork.GetRepository<User>().InsertAsync(userx);
+                var isUserSuccess = await _unitOfWork.CommitAsync() > 0;
+                if (!isUserSuccess)
+                {
+                    throw new BadHttpRequestException("Không thể thêm user này", StatusCodes.Status400BadRequest);
+                }
+                Cart cart = new Cart
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userx.Id,
+                };
+                await _unitOfWork.GetRepository<Cart>().InsertAsync(cart);
+                var isCartSuccess = await _unitOfWork.CommitAsync() > 0;
+                if (!isCartSuccess)
+                {
+                    throw new BadHttpRequestException("Không thể thêm user này", StatusCodes.Status400BadRequest);
+                }
+                PersonalWallet personalWalletx = new PersonalWallet
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userx.Id,
+                    Balance = 0
+                };
+                user.CartId = cart.Id;
+                user.PersonalWalletId = personalWalletx.Id;
+                _unitOfWork.GetRepository<User>().UpdateAsync(userx);
+                await _unitOfWork.GetRepository<PersonalWallet>().InsertAsync(personalWalletx);
+                var isSuccess = await _unitOfWork.CommitAsync() > 0;
+                id = userx.Id;
+
+            } else
+            {
+                id = user.Id;
+            }
+            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
+
+            if (request.CreateStudentRequest != null && request.CreateStudentRequest.Count > 0)
+            { 
+                foreach (var studentRequest in request.CreateStudentRequest)
+                {
+                    Guid studentId = Guid.NewGuid();
+                    var newStudent = _mapper.Map<Student>(studentRequest);
+                    newStudent.ParentId = currentUser!.Id;
+                    newStudent.IsActive = true;
+                    newStudent.Id = studentId;
+                    var accountsIndex = await GetNextAccountIndex(currentUser);
+
+                    var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name == RoleEnum.STUDENT.ToString(), selector: x => x.Id);
+                    var newStudentAccount = new User
+                    {
+                        Id = Guid.NewGuid(),
+                        FullName = studentRequest.FullName,
+                        Phone = currentUser.Phone + "_" + accountsIndex,
+                        Email = string.Empty, // studentRequest.Email != null ? studentRequest.Email :
+                        Gender = studentRequest.Gender,
+                        AvatarImage = studentRequest.AvatarImage,
+                        DateOfBirth = studentRequest.DateOfBirth,
+                        Address = currentUser.Address,
+                        RoleId = role,
+                        StudentIdAccount = studentId,
+                    };
+
+                    await _unitOfWork.GetRepository<Student>().InsertAsync(newStudent);
+                    await _unitOfWork.GetRepository<User>().InsertAsync(newStudentAccount);
+                    _unitOfWork.Commit();
+                    request.Requests.FirstOrDefault().StudentIdList.Add(newStudentAccount.StudentIdAccount.Value);
+                }
+            }
+            var x = request.Requests.FirstOrDefault();
+            var currentPayer = await GetUserFromJwt();
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.ToString().Equals(user.Id.ToString()));
+
+            double total = await CalculateTotal(request.Requests);
+
+            double discount = CalculateDiscountEachItem(request.Requests.Count(), total);
+
+            var messageList = await PurchaseByStaff(request.Requests, personalWallet, currentPayer, discount);
+
+            return RenderStaffBill(currentPayer, messageList, total, discount * request.Requests.Count());
+
+        }
+        private async Task<int> GetNextAccountIndex(User currentUser)
+        {
+            var currentUserAccountStudents = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Role!.Name == RoleEnum.STUDENT.ToString());
+
+            if (!currentUserAccountStudents.Any())
+            {
+                return 1;
+            }
+            currentUserAccountStudents = currentUserAccountStudents.Where(stu => StringHelper.GetStringWithoutSpecificSyntax(stu.Phone!, "_", true) == currentUser.Phone!).ToList();
+            if (!currentUserAccountStudents.Any())
+            {
+                return 1;
+            }
+
+            var accountsIndex = new List<int>();
+            foreach (var student in currentUserAccountStudents)
+            {
+                accountsIndex.Add(int.Parse(StringHelper.GetStringWithoutSpecificSyntax(student.Phone!, "_", false)));
+            }
+            int maxIndex = accountsIndex.Max();
+
+            return maxIndex + 1;
+        }
     }
 }

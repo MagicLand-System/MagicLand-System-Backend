@@ -2,9 +2,10 @@
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
-using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Users;
+using MagicLand_System_Web.Pages.Message;
+using MagicLand_System_Web.Pages.Message.SubMessage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,12 +17,12 @@ namespace MagicLand_System_Web.Pages
 {
     public class ClassModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
+        private readonly ILogger<SyllabusModel> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly HttpClient _httpClient;
         private string baseUrl;
 
-        public ClassModel(ILogger<IndexModel> logger, IHttpContextAccessor httpContextAccessor)
+        public ClassModel(ILogger<SyllabusModel> logger, IHttpContextAccessor httpContextAccessor)
         {
             _httpClient = new HttpClient();
             var contentType = new MediaTypeWithQualityHeaderValue("application/json");
@@ -32,15 +33,23 @@ namespace MagicLand_System_Web.Pages
             _logger = logger;
         }
 
+        [BindProperty]
+        public bool IsLoading { get; set; }
+
+        [BindProperty]
+        public List<ClassMessage> ClassMessages { get; set; } = new List<ClassMessage>();
         public void OnGet()
         {
+            IsLoading = false;
+            var data = SessionHelper.GetObjectFromJson<List<ClassMessage>>(_httpContextAccessor.HttpContext!.Session, "DataClass");
 
+            if (data != null && data.Count > 0)
+            {
+                ClassMessages = data;
+            }
         }
-        [BindProperty]
-        public List<(string, string, string, string, List<(string, string, int)>, string, string)> messages { get; set; } = default!;
         public async Task<IActionResult> OnPostAsync(int inputField)
         {
-
             if (inputField == 0 || inputField < 0 || inputField >= 100)
             {
                 ViewData["Message"] = "Số Lượng không Hợp Lệ";
@@ -61,13 +70,16 @@ namespace MagicLand_System_Web.Pages
                 await RenderProgress(courses!.ToList()[courseIndex], order, courseIndex, random);
             }
 
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataClass", ClassMessages);
+            IsLoading = true;
+
             return Page();
         }
 
         private async Task RenderProgress(CourseResExtraInfor course, int order, int courseIndex, Random random)
         {
             var scheduleRequests = new List<ScheduleRequest>();
-            var schedules = new List<(string, string, int)>();
+            var schedules = new List<ClassSubMessage>();
             var startDate = DateTime.UtcNow.AddDays(random.Next(1, 4));
 
             InitData(out List<(string, string)> roomOnline, out List<(string, string)> roomOffline, out List<(string, string)> slots, out List<(string, int)> dayOfWeeks);
@@ -90,7 +102,17 @@ namespace MagicLand_System_Web.Pages
 
             if (lecturer.LectureId == default)
             {
-                messages.Add(new($"{createClassRequestData.ClassCode}", $"{course.CourseDetail!.CourseName}", $"{startDate.Date}", "Không", schedules.OrderBy(sc => sc.Item3).ToList(), $"{400}", $"Không Có Giáo Viên Phù Hợp"));
+                ClassMessages.Add(new ClassMessage
+                {
+                    ClassCode = createClassRequestData.ClassCode,
+                    CourseBeLong = course.CourseDetail!.CourseName!,
+                    StartDate = startDate.ToString("MM/dd/yyyy"),
+                    LecturerBeLong = "Không",
+                    Schedules = schedules.OrderBy(sc => sc.Order).ToList(),
+                    Status = "400",
+                    Note = "Không Có Giáo Viên Phù Hợp",
+                });
+
                 return;
             }
 
@@ -100,10 +122,21 @@ namespace MagicLand_System_Web.Pages
             int statusCode = (int)insertResponse.StatusCode;
             string responseMessage = await insertResponse.Content.ReadAsStringAsync();
 
-            messages.Add(new($"{createClassRequestData.ClassCode}", $"{course.CourseDetail!.CourseName}", $"{startDate.ToString("MM/dd/yyyy")}", lecturer.FullName!, schedules.OrderBy(sc => sc.Item3).ToList(), $"{statusCode}", $"{responseMessage}"));
+            ClassMessages.Add(new ClassMessage
+            {
+                ClassCode = createClassRequestData.ClassCode,
+                CourseBeLong = course.CourseDetail!.CourseName!,
+                StartDate = startDate.ToString("MM/dd/yyyy"),
+                LecturerBeLong = lecturer.FullName!,
+                Schedules = schedules.OrderBy(sc => sc.Order).ToList(),
+                Status = statusCode.ToString(),
+                Note = responseMessage,
+            });
         }
 
-        private async Task<LecturerResponse> GetLecturer(CourseResExtraInfor course, Random random, List<ScheduleRequest> scheduleRequests, List<(string, string, int)> schedules, DateTime startDate, List<(string, string)> slots, List<(string, int)> dayOfWeeks)
+        private async Task<LecturerResponse> GetLecturer(
+            CourseResExtraInfor course, Random random, List<ScheduleRequest> scheduleRequests, List<ClassSubMessage> schedules,
+            DateTime startDate, List<(string, string)> slots, List<(string, int)> dayOfWeeks)
         {
             int numberSchedule = random.Next(1, 4);
 
@@ -118,7 +151,12 @@ namespace MagicLand_System_Web.Pages
                     SlotId = Guid.Parse(slot.Item1),
                 });
 
-                schedules.Add(new(dayOfWeek.Item1, slot.Item2, dayOfWeek.Item2));
+                schedules.Add(new ClassSubMessage
+                {
+                    DayOfWeek = dayOfWeek.Item1,
+                    Slot = slot.Item2,
+                    Order = dayOfWeek.Item2
+                });
 
             }
 

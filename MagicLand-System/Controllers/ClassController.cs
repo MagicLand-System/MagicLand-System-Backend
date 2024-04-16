@@ -397,7 +397,7 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
         {
             var isSuccess = await _classService.CreateNewClass(request);
-            if (!isSuccess)
+            if (!isSuccess.Success)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -406,7 +406,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            return Ok(new { Message = "Create Successfully" });
+            return Ok(isSuccess);
         }
 
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetAllV2)]
@@ -529,9 +529,45 @@ namespace MagicLand_System.Controllers
             return Ok(isSuccess);
         }
         [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClasses)]
-        public async Task<IActionResult> GetMakeUpClass([FromBody] List<CreateClassesRequest> requests)
+        public async Task<IActionResult> InsertClass([FromBody] List<CreateClassesRequest> requests)
         {
             var isSuccess = await _classService.InsertClasses(requests);
+            return Ok(isSuccess);
+        }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClassesV2)]
+        public async Task<IActionResult> InsertClassV2([FromBody] List<CreateClassesRequest> requests)
+        {
+            var isSuccess = await _classService.InsertClassesV2(requests);
+            return Ok(isSuccess);
+        }
+        [HttpPost(ApiEndpointConstant.ClassEnpoint.InsertClassesV3)]
+        public async Task<IActionResult> InsertClassV3([FromBody] InsertClassesResponse request)
+        {
+            var isSuccess = await _classService.InsertClassesSave(request);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.RoomForUpdateClass)]
+        public async Task<IActionResult> UpdateClassRoom(string classId)
+        {
+            var isSuccess = await _classService.GetRoomsForUpdate(classId);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.LecturerForUpdateClass)]
+        public async Task<IActionResult> UpdateClassLecturer(string classId)
+        {
+            var isSuccess = await _classService.GetLecturerForUpdate(classId);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.RoomForUpdateSession)]
+        public async Task<IActionResult> UpdateSessionRoom(string classId, string slotId, DateTime date)
+        {
+            var isSuccess = await _classService.GetRoomForUpdateSession(classId,slotId,date);
+            return Ok(isSuccess);
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.LecturerForUpdateSession)]
+        public async Task<IActionResult> UpdateSesionLecturer(string classId, string slotId, DateTime date)
+        {
+            var isSuccess = await _classService.GetLecturerResponseForUpdateSession(classId,slotId,date);
             return Ok(isSuccess);
         }
     }

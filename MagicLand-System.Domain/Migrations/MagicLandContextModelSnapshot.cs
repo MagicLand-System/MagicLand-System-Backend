@@ -707,6 +707,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Type")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Room", (string)null);
@@ -887,6 +890,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AddedTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("CanChangeClass")
                         .HasColumnType("bit");

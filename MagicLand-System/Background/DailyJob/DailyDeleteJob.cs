@@ -1,7 +1,7 @@
 ﻿using MagicLand_System.Background.BackgroundServiceInterfaces;
 using Quartz;
 
-namespace MagicLand_System.Background
+namespace MagicLand_System.Background.DailyJob
 {
     public class DailyDeleteJob : IJob
     {
@@ -16,11 +16,11 @@ namespace MagicLand_System.Background
         public async Task Execute(IJobExecutionContext context)
         {
             string message = "";
-            _logger.LogInformation($"Daily Update Job Running At [{DateTime.Now}]");
+            _logger.LogInformation($"Daily Update Job Running At [{BackgoundTime.GetTime()}]");
 
             message += await _tempEntityBackgroundService.DeleteTempEntityByCondition();
 
-            _logger.LogInformation($"Daily Update Job Completed At [{DateTime.Now}] With Message [{string.Join(", ", message)}]");
+            _logger.LogInformation($"Daily Update Job Completed At [{BackgoundTime.GetTime()}] With Message [{string.Join(", ", message)}]");
         }
 
     }

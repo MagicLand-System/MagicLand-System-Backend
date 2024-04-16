@@ -22,17 +22,17 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
+                    var currentTime = BackgoundTime.GetTime();
 
                     var transactions = await _unitOfWork.GetRepository<WalletTransaction>()
                       .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
 
                     foreach(var trans in transactions)
                     {
-                        if(currentDate.Day - trans.CreateTime.Day >= 5)
+                        if(currentTime.Day - trans.CreateTime.Day >= 5)
                         {
                             trans.Status = TransactionStatusEnum.Failed.ToString();
-                            trans.UpdateTime = currentDate;
+                            trans.UpdateTime = currentTime;
                         }
                     }
 

@@ -22,8 +22,8 @@ using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Ocsp;
-using Quartz;
 
 
 namespace MagicLand_System.Services.Implements
@@ -329,7 +329,7 @@ namespace MagicLand_System.Services.Implements
                 Body = body,
                 Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
                 Image = ImageUrlConstant.RefundImageUrl,
-                CreatedAt = DateTime.Now,
+                CreatedAt = GetCurrentTime(),
                 IsRead = false,
                 ActionData = actionData,
                 UserId = targetUser.Id,
@@ -348,10 +348,10 @@ namespace MagicLand_System.Services.Implements
                 Type = TransactionTypeEnum.Refund.ToString(),
                 Method = TransactionMethodEnum.SystemWallet.ToString(),
                 Description = $"Hoàn Tiền Lớp Học {className} Từ Hệ Thống",
-                CreateTime = DateTime.Now,
+                CreateTime = GetCurrentTime(),
                 PersonalWalletId = personalWallet.Id,
                 PersonalWallet = personalWallet,
-                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund) + signature.Substring(11),
+                Signature = StringHelper.GenerateTransactionTxnRefCode(TransactionTypeEnum.Refund) + signature.Substring(36),
                 Status = TransactionStatusEnum.Success.ToString(),
                 CreateBy = payer,
             };
@@ -394,7 +394,7 @@ namespace MagicLand_System.Services.Implements
 
             var schedules = cls.Schedules.Where(sc => sc.Slot!.StartTime.Trim() == EnumUtil.GetDescriptionFromEnum(slot).Trim()).ToList();
 
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == GetCurrentTime().Date);
             var studentNotHaveAttendance = await TakeAttenDanceProgress(request, cls, currentSchedule);
             if (studentNotHaveAttendance.Count() > 0)
             {
@@ -409,7 +409,7 @@ namespace MagicLand_System.Services.Implements
             var cls = await CheckingCurrentClass(null, classId, SlotEnum.Default);
 
             var schedules = cls.Schedules;
-            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == DateTime.Now.Date);
+            var currentSchedule = schedules.SingleOrDefault(x => x.Date.Date == GetCurrentTime().Date);
 
             var responses = await GetStudentAttendanceProgress(cls, currentSchedule);
 
@@ -540,7 +540,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var students = await _unitOfWork.GetRepository<Student>()
-               .GetListAsync(predicate: x => x.AddedTime >= DateTime.Now.AddDays((int)time), include: x => x.Include(x => x.User));
+               .GetListAsync(predicate: x => x.AddedTime >= GetCurrentTime().AddDays((int)time), include: x => x.Include(x => x.User));
 
             return students.Select(stu => _mapper.Map<StudentStatisticResponse>(stu)).ToList();
         }
@@ -632,7 +632,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var schedule = cls.Schedules.ToList()[noSession - 1];
-            if (schedule.Date.Day > DateTime.Now.Day)
+            if (schedule.Date.Day > GetCurrentTime().Day)
             {
                 throw new BadHttpRequestException($"Số Thứ Tự Buổi Học Thuộc Ngày [{schedule.Date}] Vẫn Chưa Diễn Ra", StatusCodes.Status400BadRequest);
             }
@@ -776,7 +776,7 @@ namespace MagicLand_System.Services.Implements
                         var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
                             predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
                             orderBy: x => x.OrderByDescending(x => x.NoAttempt),
-                            include: x => x.Include(x => x.ExamQuestions).ThenInclude(ex => ex.MultipleChoiceAnswer)!);
+                            include: x => x.Include(x => x.ExamQuestions));
 
                         if (testResult != null)
                         {
@@ -788,7 +788,7 @@ namespace MagicLand_System.Services.Implements
                         var testResult = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
                            predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
                            orderBy: x => x.OrderBy(x => x.NoAttempt),
-                           include: x => x.Include(x => x.ExamQuestions).ThenInclude(ex => ex.MultipleChoiceAnswer)!);
+                           include: x => x.Include(x => x.ExamQuestions));
 
                         if (testResult?.Any() ?? false)
                         {
@@ -804,7 +804,7 @@ namespace MagicLand_System.Services.Implements
                             {
                                 ExamId = test.ExamId,
                                 ExamName = test.ExamName!,
-                                NoAttemp = test.NoAttempt,
+                                NoAttempt = test.NoAttempt,
                                 QuizCategory = test.QuizCategory!,
                                 QuizType = test.QuizType!,
                                 QuizName = test.QuizName!,
@@ -813,8 +813,7 @@ namespace MagicLand_System.Services.Implements
                                 TotalScore = test.TotalScore,
                                 ScoreEarned = test.ScoreEarned,
                                 ExamStatus = test.ExamStatus!,
-                                StudentWorkResult = test.ExamQuestions?.Any() ?? false ? GenerateStudentWorkResult(test.ExamQuestions.ToList()) : null,
-
+                                StudentWorkResult = test.ExamQuestions?.Any() ?? false ? await GenerateStudentWorkResult(test.ExamQuestions.ToList()) : null,
                             });
                         }
                     }
@@ -825,29 +824,45 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private List<StudentWorkResult> GenerateStudentWorkResult(List<ExamQuestion> examQuestions)
+        private async Task<List<StudentWorkResult>> GenerateStudentWorkResult(List<ExamQuestion> examQuestions)
         {
             var studentWorkResults = new List<StudentWorkResult>();
 
             foreach (var examQuestion in examQuestions)
             {
+                var mutipleChoiceAnswer = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().SingleOrDefaultAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
+                var flasCardAnswers = await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => x.ExamQuestionId == examQuestion.Id);
 
                 studentWorkResults.Add(new StudentWorkResult
                 {
                     QuestionId = examQuestion.QuestionId,
                     QuestionDescription = examQuestion.Question,
                     QuestionImage = examQuestion.QuestionImage,
-                    MultipleChoiceAnswerResult = new MCAnswerResultResponse
+                    MultipleChoiceAnswerResult = mutipleChoiceAnswer != null ? new MCAnswerResultResponse
                     {
-                        StudentAnswerId = examQuestion.MultipleChoiceAnswer!.AnswerId,
-                        StudentAnswerDescription = examQuestion.MultipleChoiceAnswer.Answer,
-                        StudentAnswerImage = examQuestion.MultipleChoiceAnswer.AnswerImage,
-                        CorrectAnswerId = examQuestion.MultipleChoiceAnswer.CorrectAnswerId,
-                        CorrectAnswerDescription = examQuestion.MultipleChoiceAnswer.CorrectAnswer,
-                        CorrectAnswerImage = examQuestion.MultipleChoiceAnswer.CorrectAnswerImage,
-                        Score = examQuestion.MultipleChoiceAnswer.Score,
-                        Status = examQuestion.MultipleChoiceAnswer.Status,
-                    }
+                        StudentAnswerId = mutipleChoiceAnswer.AnswerId == default ? null : mutipleChoiceAnswer.AnswerId,
+                        StudentAnswerDescription = mutipleChoiceAnswer.Answer,
+                        StudentAnswerImage = mutipleChoiceAnswer.AnswerImage,
+                        CorrectAnswerId = mutipleChoiceAnswer.CorrectAnswerId,
+                        CorrectAnswerDescription = mutipleChoiceAnswer.CorrectAnswer,
+                        CorrectAnswerImage = mutipleChoiceAnswer.CorrectAnswerImage,
+                        Score = mutipleChoiceAnswer.Score,
+                        Status = mutipleChoiceAnswer.Status,
+                    } : null,
+                    FlashCardAnswerResult = flasCardAnswers != null && flasCardAnswers.Any() ? flasCardAnswers.Select(fca => new FCAnswerResultResponse
+                    {
+                        StudentFirstCardAnswerId = fca.LeftCardAnswerId,
+                        StudentFirstCardAnswerDecription = fca.LeftCardAnswer,
+                        StudentFirstCardAnswerImage = fca.LeftCardAnswerImage,
+                        StudentSecondCardAnswerId = fca.RightCardAnswerId,
+                        StudentSecondCardAnswerDescription = fca.RightCardAnswer,
+                        StudentSecondCardAnswerImage = fca.RightCardAnswerImage,
+                        CorrectSecondCardAnswerId = fca.CorrectRightCardAnswerId,
+                        CorrectSecondCardAnswerDescription = fca.CorrectRightCardAnswer,
+                        CorrectSecondCardAnswerImage = fca.CorrectRightCardAnswerImage,
+                        Score = fca.Score,
+                        Status = fca.Status,
+                    }).ToList() : null,
                 });
             }
 
@@ -949,6 +964,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     var schedule = cls.Schedules.ToList()[i];
                     var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
+                    var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
 
                     var studentSchedule = new StudentScheduleResponse
                     {
@@ -969,10 +985,15 @@ namespace MagicLand_System.Services.Implements
                         Method = cls.Method,
                         RoomInFloor = schedule.Room.Floor,
                         RoomName = schedule.Room.Name,
-                        AttendanceStatus = attendance.IsPresent == true ? "Có Mặt" : attendance.IsPresent == false ? "Vắng Mặt" : "Chưa Điểm Danh",
-                        Note = attendance.Note,
+                        AttendanceStatus = attendance != null ? attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
+                        Note = attendance != null ? attendance.Note : null,
                         LecturerName = lecturerName,
+                        EvaluateLevel = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3,
+                        EvaluateDescription = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
+                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt",
+                        EvaluateNote = evaluate.Note,
                     };
+
                     listStudentSchedule.Add(studentSchedule);
                 }
             }
@@ -1019,25 +1040,26 @@ namespace MagicLand_System.Services.Implements
             examProgress = (quizDone * 100) / totalQuiz;
 
             var schedules = cls.Schedules.ToList();
-            DateTime currentDate = DateTime.Now.Date;
+            var currentDate = GetCurrentTime().Date;
+
             for (int i = 0; i < schedules.Count(); i++)
             {
-                DateTime scheduleDate = schedules[i].Date.Date;
-                TimeSpan difference = scheduleDate - currentDate;
-
+                var scheduleDate = schedules[i].Date.Date;
+                var difference = scheduleDate - currentDate;
                 int day = difference.Days;
 
                 if (day < 0)
                 {
                     continue;
                 }
-                if (day == 0)
+
+                if (day >= 0)
                 {
-                    learningProgress = ((i + 1) * 100) / schedules.Count();
-                    break;
-                }
-                if (day > 1)
-                {
+                    if (i == 0)
+                    {
+                        break;
+                    }
+
                     learningProgress = (i * 100) / schedules.Count();
                     break;
                 }
@@ -1099,7 +1121,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var d in dayOffs)
             {
-                if (d <= DateOnly.FromDateTime(DateTime.UtcNow.Date))
+                if (d <= DateOnly.FromDateTime(GetCurrentTime().Date))
                 {
                     throw new BadHttpRequestException($"Ngày Nghĩ Không Hợp Lệ [{d}], Khi Sắp Diễn Ra Hoặc Đã Diễn Ra So Với Ngày Hiện Tại", StatusCodes.Status400BadRequest);
                 }

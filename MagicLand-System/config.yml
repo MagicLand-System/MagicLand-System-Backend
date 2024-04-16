@@ -1,0 +1,5 @@
+﻿authtoken: 2HQnQzq2ULt7664zVnp1RJqw34S_4AGN5YRS9pm6kRMU2GG1E
+tunnels:
+  magic-land-system:
+    addr: 5097 
+    hostname:  magic-land-system.ngrok.io

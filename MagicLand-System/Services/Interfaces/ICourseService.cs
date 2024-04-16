@@ -1,5 +1,7 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Courses.Custom;
 
@@ -19,5 +21,11 @@ namespace MagicLand_System.Services.Interfaces
         Task<StaffCourseResponse> GetStaffCourseByCourseId(string courseid);
         Task<bool> GenerateCoursePrice(CoursePriceRequest request);
         Task<List<CoursePrice>> GetCoursePrices(string courseId);
+        Task<List<StaffCourseResponse>> GetCourseResponse(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge);
+        Task<List<MyClassResponse>> GetClassesOfCourse(string courseId,List<string>? dateOfWeeks,string? Method,List<string>? slotId);
+        Task<bool> UpdateCourse(string id, UpdateCourseRequest request);
+        Task<List<CourseWithScheduleShorten>> GetCourseByStaff();
+        Task<CourseSearchResponse> GetCourseSearch(string keyword);
+
     }
 }

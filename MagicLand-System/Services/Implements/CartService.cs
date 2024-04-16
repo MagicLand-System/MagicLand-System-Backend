@@ -113,13 +113,13 @@ namespace MagicLand_System.Services.Implements
 
 
         #endregion
-        public async Task<bool> AddCourseFavoriteOffCurrentParentAsync(Guid courseId)
+        public async Task<Guid> AddCourseFavoriteOffCurrentParentAsync(Guid courseId)
         {
             var currentParentCart = await FetchCurrentParentCart();
 
             //var favoriteResponse = new FavoriteResponse();
             //string message = string.Empty;
-            bool result = true;
+            //bool result = true;
 
             var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                     selector: x => x.Name,
@@ -128,15 +128,17 @@ namespace MagicLand_System.Services.Implements
             {
                 if (currentParentCart.CartItems.Count() > 0 && currentParentCart.CartItems.Any(x => x.CourseId == courseId))
                 {
-                    return false;
+                    return default;
+                    //return false;
                     //throw new BadHttpRequestException($"Id [{courseId}] Của Khóa Đã Có Trong Danh Sách Yêu Thích", StatusCodes.Status400BadRequest);
                     //return $"Khóa Học [{courseName}] Đã Có Trong Danh Sách Quan Tâm";
                 }
                 else
                 {
+                    var newItemId = Guid.NewGuid();
                     var newItem = new CartItem
                     {
-                        Id = new Guid(),
+                        Id = newItemId,
                         CartId = currentParentCart.Id,
                         CourseId = courseId,
                         DateCreated = DateTime.Now,
@@ -152,10 +154,9 @@ namespace MagicLand_System.Services.Implements
                     //        ? $"Bạn Đã Quan Tâm Khóa Học [{courseName}]"
                     //        : $"Quan Tâm Khóa Học [{courseName}] Thất Bại, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
 
-                    result = await _unitOfWork.CommitAsync() > 0;
-
+                    await _unitOfWork.CommitAsync();
+                    return newItemId;
                 }
-                return result;
             }
             catch (Exception ex)
             {

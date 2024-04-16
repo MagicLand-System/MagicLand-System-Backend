@@ -4,6 +4,7 @@
     {
         public Guid CourseId { get; set; }
         public double Price {  get; set; }
-        public DateTime EffectiveDate { get; set; } 
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
     }
 }
