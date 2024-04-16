@@ -6,4 +6,5 @@
         public List<CartItemForClassResponse> Items { get; set; } = new List<CartItemForClassResponse>();
 
     }
+    //
 }

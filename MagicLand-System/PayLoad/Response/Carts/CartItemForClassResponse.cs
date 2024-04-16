@@ -17,4 +17,5 @@ namespace MagicLand_System.PayLoad.Response.Carts
         public required UserResponse Lecture { get; set; }
         public required List<ScheduleResWithSession> Schedules { get; set; }
     }
+    //
 }

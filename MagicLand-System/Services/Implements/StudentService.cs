@@ -813,6 +813,7 @@ namespace MagicLand_System.Services.Implements
                                 TotalScore = test.TotalScore,
                                 ScoreEarned = test.ScoreEarned,
                                 ExamStatus = test.ExamStatus!,
+                                DoingTime = test.DoingTime,
                                 StudentWorkResult = test.ExamQuestions?.Any() ?? false ? await GenerateStudentWorkResult(test.ExamQuestions.ToList()) : null,
                             });
                         }
@@ -1173,7 +1174,7 @@ namespace MagicLand_System.Services.Implements
                             var scheduleReLearn = _mapper.Map<ScheduleResponse>(dayOfSession);
                             scheduleReLearn.Lecturer = _mapper.Map<LecturerResponse>(lecturer);
                             scheduleReLearn.ClassCode = cr.ClassCode;
-                            scheduleReLearn.ClassName = cr.ClassCode;
+                            scheduleReLearn.ClassName = cr.Course!.Name;
                             scheduleReLearn.ClassSubject = cls.Course!.SubjectName;
                             scheduleReLearn.Method = cls.Method;
 

@@ -5,4 +5,5 @@
         public Guid CartId { get; set; }
         public List<CartItemForCourseResponse> Items { get; set; } = new List<CartItemForCourseResponse>();
     }
+//
 }

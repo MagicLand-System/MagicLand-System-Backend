@@ -12,6 +12,7 @@ using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Numerics;
 
 namespace MagicLand_System.Controllers
 {
@@ -303,12 +304,14 @@ namespace MagicLand_System.Controllers
         ///  Chấm Và Lưu Điểm Bài Kiểm Tra [Dạng Trắc Nghiệm] Của Học Sinh Hiện Tại
         /// </summary>
         /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra</param>
+        /// <param name="doingTime">Tổng Thời Gian Làm Bài</param>
         /// <param name="studentWorkResults">Chứa Câu Hỏi Và Câu Trả Lời Của Học Sinh</param>
         /// <remarks>
         /// Sample request:
         ///{     
         ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
         ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    "doingTime": 5:39,
         ///    [
         ///      {
         ///        "questionId": "735616C5-B24A-4C16-A30A-A27A511CD6FA",
@@ -325,7 +328,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizMC([FromQuery] QuizRequest quizInfor, [FromBody] List<MCStudentAnswer> studentWorkResults)
+        public async Task<IActionResult> GradeQuizMC([FromQuery] QuizRequest quizInfor, [FromQuery] TimeOnly doingTime, [FromBody] List<MCStudentAnswer> studentWorkResults)
         {
             var duplicateQuestions = studentWorkResults
                 .GroupBy(x => x.QuestionId)
@@ -364,7 +367,8 @@ namespace MagicLand_System.Controllers
                 ExamId = quizInfor.ExamId,
                 StudentQuestionResults = studentWorkResults,
             };
-            var responses = await _quizService.GradeQuizMCAsync(quizMcStudentWork);
+
+            var responses = await _quizService.GradeQuizMCAsync(quizMcStudentWork, doingTime);
 
             return Ok(responses);
         }
@@ -374,12 +378,14 @@ namespace MagicLand_System.Controllers
         ///  Lưu Điểm Bài Kiểm Tra [Dạng Nối Thẻ] Của Học Sinh Hiện Tại
         /// </summary>
         /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra</param>
+        /// <param name="doingTime">Tổng Thời Gian Làm Bài</param>
         /// <param name="studentWorkResults">Chứa Câu Hỏi Và Câu Trả Lời Của Học Sinh</param>
         /// <remarks>
         /// Sample request:
         ///{     
         ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d",
         ///    "examId":"5229E1A5-79F9-48A5-B8ED-0A53F963CB29",
+        ///    "doingTime":5:19,
         ///    [{
         ///      "questionId": "4729E1A5-79F9-48A5-B8ED-0A53F963Cc00",
         ///      {
@@ -397,7 +403,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor, [FromBody] List<FCStudentQuestion> studentWorkResults)
+        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor,[FromQuery] TimeOnly doingTime, [FromBody] List<FCStudentQuestion> studentWorkResults)
         {
 
             var studentAnswers = studentWorkResults.SelectMany(sr => sr.Answers).ToList();
@@ -420,27 +426,60 @@ namespace MagicLand_System.Controllers
                 });
             }
 
+            var similarCoupleCards = new HashSet<FCStudentAnswer>();
 
-           // duplicateCards.AddRange(studentAnswers
-           //.GroupBy(x => x.FirstCardId)
-           //.Where(g => g.Count() > 1)
-           //.SelectMany(g => g)
-           //.Distinct().Select(x => x.FirstCardId));
+            for (int i = 0; i < studentAnswers.Count; i++)
+            {
+                var currentPair = studentAnswers[i];
 
-           // duplicateCards.AddRange(studentAnswers
-           // .GroupBy(x => x.SecondCardId)
-           // .Where(g => g.Count() > 1)
-           // .SelectMany(g => g)
-           // .Distinct().Select(x => x.SecondCardId));
-           // if (duplicateCards != null && duplicateCards.Any())
-           // {
-           //     return BadRequest(new ErrorResponse
-           //     {
-           //         Error = $"Có Nhiều Hơn Các Id Của Thẻ Bị Trùng Lặp [{string.Join(", ", duplicateCards)}]",
-           //         StatusCode = StatusCodes.Status400BadRequest,
-           //         TimeStamp = DateTime.Now,
-           //     });
-           // }
+                if (similarCoupleCards.Contains(currentPair))
+                {
+                    continue;
+                }
+
+                for (int j = i + 1; j < studentAnswers.Count; j++)
+                {
+                    var nextPair = studentAnswers[j];
+
+                    if ((currentPair.FirstCardId == nextPair.FirstCardId && currentPair.SecondCardId == nextPair.SecondCardId) ||
+                        (currentPair.FirstCardId == nextPair.SecondCardId && currentPair.SecondCardId == nextPair.FirstCardId))
+                    {
+                        similarCoupleCards.Add(currentPair);
+                        similarCoupleCards.Add(nextPair);
+                    }
+                }
+            }
+
+
+            //var similarCoupleCards = studentAnswers
+            //.GroupBy(answer => new HashSet<Guid> { answer.FirstCardId, answer.SecondCardId })
+            //.Where(group => group.Count() > 1)
+            //.SelectMany(group => group)
+            //.ToList();
+
+            // duplicateCards.AddRange(studentAnswers
+            //.GroupBy(x => x.FirstCardId)
+            //.Where(g => g.Count() > 1)
+            //.SelectMany(g => g)
+            //.Distinct().Select(x => x.FirstCardId));
+
+            // duplicateCards.AddRange(studentAnswers
+            // .GroupBy(x => x.SecondCardId)
+            // .Where(g => g.Count() > 1)
+            // .SelectMany(g => g)
+            // .Distinct().Select(x => x.SecondCardId));
+            if (similarCoupleCards != null && similarCoupleCards.Any())
+            {
+                var duplicateCardStrings = similarCoupleCards.Select(card => $"({card.FirstCardId}, {card.SecondCardId})");
+                string duplicateCardsMessage = string.Join(", ", duplicateCardStrings);
+
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Có Nhiều Hơn Các Cặp Thẻ Bị Trùng Lặp {duplicateCardsMessage}",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
 
             var quizFCStudentWork = new QuizFCRequest
             {
@@ -449,7 +488,7 @@ namespace MagicLand_System.Controllers
                 StudentQuestionResults = studentWorkResults,
             };
             //var responses = await _quizService.GradeQuizFCAsync(classId, examId, scoreEarned);
-            var responses = await _quizService.GradeQuizFCAsync(quizFCStudentWork);
+            var responses = await _quizService.GradeQuizFCAsync(quizFCStudentWork, doingTime);
 
             return Ok(responses);
         }

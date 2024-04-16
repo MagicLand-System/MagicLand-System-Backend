@@ -12,5 +12,7 @@
         public int MinYearOldStudent { get; set; }
         public int MaxYearOldStudent { get; set; }
         public string? Image { get; set; } = string.Empty;
+
+        
     }
 }

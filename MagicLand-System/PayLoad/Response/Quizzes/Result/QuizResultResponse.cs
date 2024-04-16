@@ -6,6 +6,7 @@
         public required int CorrectMark { get; set; }
         public required double TotalScore { get; set; }
         public required double ScoreEarned { get; set; }
+        public required TimeSpan DoingTime { get; set; }
         public required string ExamStatus { get; set; }
     }
 }
