@@ -486,12 +486,12 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
-            var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
+            //var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
 
-            if (dayDoingExam.Date > GetCurrentTime().Date)
-            {
-                throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
-            }
+            //if (dayDoingExam.Date > GetCurrentTime().Date)
+            //{
+            //    throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
+            //}
 
         }
 
