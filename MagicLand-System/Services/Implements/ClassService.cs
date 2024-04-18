@@ -1726,7 +1726,7 @@ namespace MagicLand_System.Services.Implements
             var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syllabusId);
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.SubjectCode.Trim().ToLower().Equals(rq.CourseCode.Trim().ToLower()));
             MyCourseResponse myCourseResponse = null;
-            if (courseId != null || courseId != Guid.Empty)
+            if (courseId != null && courseId != Guid.Empty)
             {
                 myCourseResponse = new MyCourseResponse { CourseId = courseId.Value, CourseName = course.Name, SubjectCode = syllabus.SubjectCode };
             }
