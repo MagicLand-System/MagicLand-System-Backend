@@ -27,7 +27,7 @@ namespace MagicLand_System.Background.DailyJob
 
             message += await _classBackgroundService.UpdateClassInTimeAsync();
             message += await _transactionBackgroundService.UpdateTransactionAfterTime();
-            message += await _notificationBackgroundService.ModifyNotificationAfterTime();
+            //message += await _notificationBackgroundService.ModifyNotificationAfterTime();
 
             _logger.LogInformation($"Daily Update Job Completed At [{BackgoundTime.GetTime()}] With Message [{string.Join(", ", message)}]");
         }

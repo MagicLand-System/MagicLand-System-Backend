@@ -6,6 +6,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
@@ -58,32 +59,23 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
         {
             try
             {
-                //if(cls.ClassCode.ToLower() == "LTS101-1".ToLower())
-                //{
-                //    var a = "g";
-                //}
-
                 if (cls.StartDate.Date == currentTime.AddDays(3).Date)
                 {
-                    cls.Status = ClassStatusEnum.LOCKED.ToString();
-
-                    if (cls.StudentClasses.Any() && cls.StudentClasses != null)
+                    if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
                     {
-                        cls.StudentClasses.ToList().ForEach(stu => stu.CanChangeClass = false);
+                        await UpdateItem(cls, currentTime, ClassStatusEnum.CANCELED, newNotifications, _unitOfWork);
+                        _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
+                        await _unitOfWork.CommitAsync();
+                        return;
                     }
-
-                    _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
-                    await _unitOfWork.CommitAsync();
-                    return;
                 }
 
                 if (cls.StartDate.Date == currentTime.Date)
                 {
-                    //if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
-                    //{
-                    //    UpdateAttendance(cls, ClassStatusEnum.CANCELED.ToString());
-                    //    return;
-                    //}
+                    if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                    {
+                        return;
+                    }
 
                     await UpdateItem(cls, currentTime, ClassStatusEnum.PROGRESSING, newNotifications, _unitOfWork);
                     _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
@@ -121,9 +113,13 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     await GenerateRemindClassNotification(classStatus == ClassStatusEnum.PROGRESSING
                            ? NotificationMessageContant.ClassStartedTitle
+                           : classStatus == ClassStatusEnum.CANCELED
+                           ? NotificationMessageContant.ClassCanceledTitle
                            : NotificationMessageContant.ClassCompletedTitle,
                            classStatus == ClassStatusEnum.PROGRESSING
                            ? NotificationMessageContant.ClassStartedBody(stu.Student!.FullName!, cls.ClassCode!)
+                           : classStatus == ClassStatusEnum.CANCELED
+                           ? NotificationMessageContant.ClassCanceledBody(stu.Student!.FullName!, cls.ClassCode!)
                            : NotificationMessageContant.ClassCompletedBody(stu.Student!.FullName!, cls.ClassCode!),
                            NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, currentTime, actionData, stu.Student.ParentId, newNotifications, _unitOfWork);
 

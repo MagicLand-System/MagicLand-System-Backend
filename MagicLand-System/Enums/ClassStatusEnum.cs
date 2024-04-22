@@ -8,8 +8,6 @@ namespace MagicLand_System.Enums
         DEFAULT,
         [Description("Sắp Diễn Ra")]
         UPCOMING,
-        [Description("Đã Chốt Học Sinh")]
-        LOCKED,
         [Description("Đã Bắt Đầu")]
         PROGRESSING,
         [Description("Đã Hoàn Thành")]

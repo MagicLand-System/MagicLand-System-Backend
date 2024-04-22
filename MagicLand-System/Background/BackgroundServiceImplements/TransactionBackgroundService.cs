@@ -29,7 +29,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     foreach(var trans in transactions)
                     {
-                        if(currentTime.Day - trans.CreateTime.Day >= 5)
+                        if(currentTime.Day - trans.CreateTime.Day >= 30)
                         {
                             trans.Status = TransactionStatusEnum.Failed.ToString();
                             trans.UpdateTime = currentTime;

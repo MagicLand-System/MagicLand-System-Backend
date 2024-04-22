@@ -21,7 +21,9 @@ namespace MagicLand_System.Constants
         public const string NoRefundTitle = "Không Hoàn Tiền Từ Hệ Thống";
         public const string LastDayRegisterTitle = "Hạn Cuối Đăng Ký";
         public const string RemindRegisterCourseTitle = "Nhanh Tay Đăng Ký Lớp Học";
+        public const string ClassUpComingTitle = "Lớp Học Sắp Bắt Đầu";
         public const string ClassStartedTitle = "Lớp Học Đã Bắt Đầu";
+        public const string ClassCanceledTitle = "Lớp Học Đã Hủy";
         public const string ClassCompletedTitle = "Bé Đã Hoàn Thành Lớp Học";
 
         public static string ChangeClassRequestBody(string classCode, string studentName)
@@ -83,10 +85,19 @@ namespace MagicLand_System.Constants
         {
             return $"Khóa Học {courseName} Vẫn Đang Có Các Lớp Đang Mở Và Còn Thời Hạn Đăng Ký, Hãy Nhanh Tay Đăng Ký Cho Bé Vào Lớp";
         }
+        public static string ClassUpComingBody(string studentName, string classCode, int day)
+        {
+            return $"Lớp Học {classCode} Của Bé {studentName} Sẽ Sớm Bắt Đầu Trong {day} Ngày Tới, Phụ Huynh Nhớ Nhắc Bé Đi Học Đầy Đủ Nhé";
+        }
 
         public static string ClassStartedBody(string studentName, string classCode)
         {
             return $"Bé {studentName} Có Lịch Học Lớp {classCode} Đã Bắt Đầu Ngày Hôm Nay {DateTime.UtcNow.ToString("MM/dd/yyyy")}";
+        }
+
+        public static string ClassCanceledBody(string studentName, string classCode)
+        {
+            return $"Lớp Học {classCode} Của Bé {studentName} Đã Hủy Do Không Đủ Chỉ Số, Nhân Viên Sẽ Sớm Liên Hệ Đến Bạn Sau";
         }
 
         public static string ClassCompletedBody(string studentName, string classCode)

@@ -38,7 +38,7 @@ namespace MagicLand_System.Services.Implements
     {
         private IRoomService _roomService;
         private IUserService _userService;
-        public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,IRoomService roomService,IUserService userService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IRoomService roomService, IUserService userService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _roomService = roomService;
             _userService = userService;
@@ -884,10 +884,9 @@ namespace MagicLand_System.Services.Implements
 
             if (currentClass.Status != ClassStatusEnum.UPCOMING.ToString() && currentClass.Status != ClassStatusEnum.CANCELED.ToString())
             {
-                string errorMessage = currentClass.Status == ClassStatusEnum.LOCKED.ToString()
-                    ? "Đã Chốt Số Lượng Học Sinh"
-                    : currentClass.Status == ClassStatusEnum.COMPLETED.ToString()
-                    ? "Đã Hoàn Thành" : "Đã Bắt Đầu";
+                string errorMessage = currentClass.Status == ClassStatusEnum.PROGRESSING.ToString()
+                    ? "Đã Bắt Đầu"
+                    : "Đã Hoàn Thành";
 
                 throw new BadHttpRequestException($"Chỉ Có Thể Chuyển Học Sinh Thuộc Lớp Sắp Bắt Đầu Hoặc Đã Hủy, Lớp [{currentClass.ClassCode}] [{errorMessage}], Không Thể Chuyển Lớp",
                       StatusCodes.Status400BadRequest);

@@ -19,43 +19,43 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        public async Task<string> ModifyNotificationAfterTime()
-        {
-            try
-            {
-                using (var scope = _serviceScopeFactory.CreateScope())
-                {
-                    var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentTime = BackgoundTime.GetTime();
+        //public async Task<string> ModifyNotificationAfterTime()
+        //{
+        //    try
+        //    {
+        //        using (var scope = _serviceScopeFactory.CreateScope())
+        //        {
+        //            var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
+        //            var currentTime = BackgoundTime.GetTime();
 
-                    var notifications = await _unitOfWork.GetRepository<Notification>()
-                     .GetListAsync(predicate: x => x.IsRead == false);
+        //            var notifications = await _unitOfWork.GetRepository<Notification>()
+        //             .GetListAsync(predicate: x => x.IsRead == false);
 
-                    foreach (var noti in notifications)
-                    {
-                        int time = currentTime.Day - noti.CreatedAt.Day;
+        //            foreach (var noti in notifications)
+        //            {
+        //                int time = currentTime.Day - noti.CreatedAt.Day;
 
-                        if (time >= 1)
-                        {
-                            noti.IsRead = true;
-                        }
+        //                if (time >= 30)
+        //                {
+        //                    noti.IsRead = true;
+        //                }
 
-                        if (time >= 2)
-                        {
-                            _unitOfWork.GetRepository<Notification>().DeleteAsync(noti);
-                        }
-                    }
+        //                if (time >= 2)
+        //                {
+        //                    _unitOfWork.GetRepository<Notification>().DeleteAsync(noti);
+        //                }
+        //            }
 
-                    _unitOfWork.GetRepository<Notification>().UpdateRange(notifications);
-                    _unitOfWork.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                return $"Push Notifications Got An Error: [{ex.Message}]";
-            }
-            return "Push Notifications Success";
-        }
+        //            _unitOfWork.GetRepository<Notification>().UpdateRange(notifications);
+        //            _unitOfWork.Commit();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return $"Push Notifications Got An Error: [{ex.Message}]";
+        //    }
+        //    return "Push Notifications Success";
+        //}
         public async Task<string> PushNotificationRealTime()
         {
             try
@@ -85,7 +85,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     var currentTime = BackgoundTime.GetTime();
 
                     var classes = await _unitOfWork.GetRepository<Class>()
-                      .GetListAsync(predicate: x => x.Status == ClassStatusEnum.CANCELED.ToString() || x.Status == ClassStatusEnum.PROGRESSING.ToString(),
+                      .GetListAsync(predicate: x => x.Status == ClassStatusEnum.CANCELED.ToString() || x.Status == ClassStatusEnum.PROGRESSING.ToString() || x.Status == ClassStatusEnum.UPCOMING.ToString(),
                        include: x => x.Include(x => x.StudentClasses).ThenInclude(sc => sc.Student)!);
 
                     var newNotifications = new List<Notification>();
@@ -98,33 +98,27 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     foreach (var cls in classes)
                     {
+                        if (cls.Status == ClassStatusEnum.UPCOMING.ToString())
+                        {
+                            await CheckingUpComingClass(_unitOfWork, currentTime, newNotifications, cls);
+                            continue;
+                        }
+
                         cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                         orderBy: x => x.OrderBy(x => x.Date),
                         predicate: x => x.ClassId == cls.Id,
                         include: x => x.Include(x => x.Slot)!);
 
+
                         if (cls.Status == ClassStatusEnum.CANCELED.ToString())
                         {
-                            foreach (var stu in cls.StudentClasses)
-                            {
-                                if (stu.CanChangeClass)
-                                {
-                                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
-                                       {
-                                         ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
-                                         ($"{AttachValueEnum.StudentId}", $"{stu.StudentId}"),
-                                       });
-
-                                    await GenerateNotification(currentTime, newNotifications, null, NotificationMessageContant.ChangeClassRequestTitle,
-                                                 NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
-                                                 currentTime.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
-                                }
-                            }
+                            await CheckingCanceledClass(_unitOfWork, currentTime, newNotifications, cls);
                             continue;
                         }
+
                         if (cls.Status == ClassStatusEnum.PROGRESSING.ToString())
                         {
-                            await ForProgressingClass(currentTime, newNotifications, cls, _unitOfWork);
+                            await CheckingProgressingClass(currentTime, newNotifications, cls, _unitOfWork);
                         }
                     }
 
@@ -143,7 +137,48 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             return "Create New Notifications Success";
         }
 
-        private async Task ForProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
+        private async Task CheckingCanceledClass(IUnitOfWork<MagicLandContext> _unitOfWork, DateTime currentTime, List<Notification> newNotifications, Class cls)
+        {
+            foreach (var stu in cls.StudentClasses)
+            {
+                if (stu.CanChangeClass)
+                {
+                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                                       {
+                                         ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                                         ($"{AttachValueEnum.StudentId}", $"{stu.StudentId}"),
+                                       });
+
+                    await GenerateNotification(currentTime, newNotifications, null, NotificationMessageContant.ChangeClassRequestTitle,
+                                 NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
+                                 currentTime.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                }
+            }
+        }
+
+        private async Task CheckingUpComingClass(IUnitOfWork<MagicLandContext> _unitOfWork, DateTime currentTime, List<Notification> newNotifications, Class cls)
+        {
+            var differents = cls.StartDate - currentTime;
+            var dayDifferent = differents.Days;
+
+            if (dayDifferent <= 3 && dayDifferent > 0)
+            {
+                foreach (var stu in cls.StudentClasses)
+                {
+                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                                         {
+                                           ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                                           ($"{AttachValueEnum.StudentId}", $"{stu.StudentId}"),
+                                         });
+
+                    await GenerateNotification(currentTime, newNotifications, stu.Student!.ParentId, NotificationMessageContant.ClassUpComingTitle,
+                           NotificationMessageContant.ClassUpComingBody(stu.Student.FullName!, cls.ClassCode!, dayDifferent),
+                         dayDifferent <= 1 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.REMIND.ToString(), cls.Image!, actionData, _unitOfWork);
+                }
+            }
+        }
+
+        private async Task CheckingProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
         {
             var checkingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date && sc.Date.Date > currentDate.Date.AddDays(-10)).ToList();
 
