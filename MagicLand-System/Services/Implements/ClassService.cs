@@ -9,6 +9,7 @@ using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
@@ -1801,7 +1802,7 @@ namespace MagicLand_System.Services.Implements
                 Method = rq.Method,
                 RoomId = null,
                 ScheduleRequests = scheduleRequests,
-                StartDate = date,
+                StartDate = date.Value.AddHours(7),
                 MyCourseResponse = myCourseResponse,
             };
             return createClassResponse;
@@ -1985,7 +1986,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     CourseId = courseId.ToString(),
                     Schedules = scheduleRequests,
-                    StartDate = date,
+                    StartDate = date.Value.AddHours(7),
                 });
                 if (roomLec.Lecturer == null && roomLec.Room == null)
                 {
@@ -2062,7 +2063,7 @@ namespace MagicLand_System.Services.Implements
                     LimitNumberStudent = rq.LimitNumberStudent,
                     Method = rq.Method,
                     ScheduleRequests = scheduleRequests,
-                    StartDate = date.Value,
+                    StartDate = date.Value.AddHours(7),
                     RoomId = roomLec.Room.Id,
                 };
 
@@ -2092,7 +2093,7 @@ namespace MagicLand_System.Services.Implements
                         LecturerName = roomLec.Lecturer.FullName,
                         RoomName = roomLec.Room.Name,
                         Times = rq.ScheduleRequests.Select(x => x.Schedule + ":" + x.Slot).ToList(),
-                        StartDate = date.Value,
+                        StartDate = date,
                     },
                 };
                 var createClass = await GenerateCreateClassFail(rq);
@@ -3854,6 +3855,31 @@ namespace MagicLand_System.Services.Implements
             }
             list = list.Where(x => x.LecturerField.ToLower().Equals(cate.ToLower())).ToList();
             return list.OrderBy(x => x.NumberOfClassesTeaching).ToList();
+        }
+
+        public async Task<List<StudentGradeResponse>> GetStudentGradeResponses(string classId)
+        {
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId));
+            List<StudentGradeResponse> response = new List<StudentGradeResponse>();
+            foreach(var st in students) 
+            {
+                var studentId = st.StudentId;
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate : x => x.Id ==  studentId,include : x => x.Include(x => x.User));
+                var res = new StudentGradeResponse
+                {
+                    DateOfBirth = student.DateOfBirth,
+                    Gender = student.Gender,
+                    Id = student.Id,
+                    ImgAvatar = student.AvatarImage,
+                    Name = student.FullName,
+                    ParentPhoneNumber = student.User.Phone,
+                };
+                var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.CourseId);
+                var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate : x => x.CourseId == courseId,selector : x => x.Id);
+                var examSyll = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId == syllabusId);
+
+            }
+            return response;
         }
 
         #endregion

@@ -3,6 +3,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.Student;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Class;
 using MagicLand_System.PayLoad.Response.Classes;
@@ -50,5 +51,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<LecturerResponse>> GetLecturerForUpdate(string classId);
         Task<List<Room>> GetRoomForUpdateSession(string classId, string slotId,DateTime date);
         Task<List<LecturerResponse>> GetLecturerResponseForUpdateSession(string classId, string slotId, DateTime date);
+        Task<List<StudentGradeResponse>> GetStudentGradeResponses(string classId);  
     }
 }
