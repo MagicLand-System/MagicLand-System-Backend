@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
+using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Bills;
@@ -25,6 +26,9 @@ namespace MagicLand_System.Services.Interfaces
         Task<UserResponse> GetUserFromPhone(string phone);
         Task<List<StudentResponse>> GetStudents(string classId, string phone);
         Task<List<UserResponse>> GetUserFromName(string name);  
-       
+        Task<List<StudentResultResponse>> GetFromNameAndBirthDate(string? name , DateTime? birthdate,string? id);
+        Task<ClassResultResponse> GetClassOfStudent(string studentId,string? status,string? searchstring);
+        Task<List<StudentScheduleResponse>> GetScheduleOfStudentInDate(string studentId, DateTime date);
+        Task<StudentSessionResponse> GetStudentSession(string scheduleId);
     }
 }

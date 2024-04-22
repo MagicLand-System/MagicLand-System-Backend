@@ -24,7 +24,10 @@
             public const string GetByPhone = UsersEndpoint + "/getByPhone";
             public const string GetStudent = UsersEndpoint + "/getStudent";
             public const string GetFromName = UsersEndpoint + "/getFromName";
-
+            public const string GetStudentInfor = UsersEndpoint + "/getStudentInfor";
+            public const string GetClassOfStudent = UsersEndpoint + "/getClassOfStudent";
+            public const string GetScheduleOfStudent = UsersEndpoint + "/getScheduleOfStudent";
+            public const string GetSessionOfStudent = UsersEndpoint + "/getSessionOfStudent";
         }
         public static class Authentication
         {

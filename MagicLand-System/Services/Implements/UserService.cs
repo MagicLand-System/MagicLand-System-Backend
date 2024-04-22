@@ -3,11 +3,19 @@ using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request;
+using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
+using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Rooms;
+using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
+using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
@@ -753,6 +761,383 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             return responses;
+        }
+
+        public async Task<List<StudentResultResponse>> GetFromNameAndBirthDate(string? name, DateTime? birthdate,string? id)
+        {
+            var students = await _unitOfWork.GetRepository<Student>().GetListAsync(include: x => x.Include(x => x.User));
+            if (name != null)
+            {
+                students = students.Where(x => x.FullName.ToLower().Trim().Contains(name.ToLower().Trim())).ToList();
+            }
+            if (birthdate != null)
+            {
+                students = students.Where(x => x.DateOfBirth.Date == birthdate.Value.Date).ToList();
+            }
+            if (id != null)
+            {
+                students = students.Where(x => x.Id.ToString().Equals(id)).ToList();
+            }
+            List<StudentResultResponse> responses = new List<StudentResultResponse>();  
+            foreach (var student in students) 
+            {
+                var res = new StudentResultResponse
+                {
+                    StudentResponse = new StudentResponse
+                    {
+                        Age = (DateTime.Now.Year - student.DateOfBirth.Year),
+                        AvatarImage = student.AvatarImage,
+                        DateOfBirth = student.DateOfBirth,
+                        FullName = student.FullName,
+                        Email = student.Email,
+                        Gender = student.Gender,
+                        StudentId = student.Id,
+                    },
+                    Parent = new UserResponse
+                    {
+                        FullName = student.User.FullName,
+                        Gender = student.User.Gender,
+                        Email = student.User.Email,
+                        DateOfBirth = student.User.DateOfBirth.Value,
+                        Address = student.User.Address,
+                        AvatarImage = student.User.AvatarImage,
+                        Id = student.User.Id,
+                        Phone = student.User.Phone
+                    }
+                };
+                responses.Add(res);
+            }
+            return responses;   
+        }
+
+        public async Task<ClassResultResponse> GetClassOfStudent(string studentId,string? status,string? searchString)
+        {
+            var classxx = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.StudentId.ToString().Equals(studentId),selector : x => x.ClassId);
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => classxx.Any(p => p == x.Id),include: x => x.Include(x => x.Schedules));
+            if(classes.Count < 1)
+            {
+                return new ClassResultResponse();
+            }
+            List<MyClassResponse> result = new List<MyClassResponse>();
+            var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
+            foreach (var c in classes)
+            {
+                var schedulex = (await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == c.Id)).FirstOrDefault();
+                if (schedulex == null) { continue; }
+                var room = (await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == schedulex.RoomId));
+                if (room == null) { continue; }
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.LecturerId.ToString()));
+                if (lecturer == null) { continue; }
+                RoomResponse roomResponse = new RoomResponse
+                {
+                    Floor = room.Floor.Value,
+                    Capacity = room.Capacity,
+                    RoomId = room.Id,
+                    Name = room.Name,
+                    Status = room.Status,
+                    LinkUrl = room.LinkURL,
+
+                };
+                LecturerResponse lecturerResponse = new LecturerResponse
+                {
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    Email = lecturer.Email,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    LectureId = lecturer.Id,
+                    Phone = lecturer.Phone,
+                };
+                List<DailySchedule> schedules = new List<DailySchedule>();
+                var DaysOfWeek = c.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
+                foreach (var day in DaysOfWeek)
+                {
+                    var slot = slots.Where(x => x.Id.ToString().ToLower().Equals(day.SlotId.ToString().ToLower())).FirstOrDefault();
+                    if (day.DayOfWeek == 1)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Sunday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 2)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Monday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 4)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Tuesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 8)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Wednesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 16)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Thursday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 32)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Friday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 64)
+                    {
+                        schedules.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Saturday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                }
+                Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                MyClassResponse myClassResponse = new MyClassResponse
+                {
+                    ClassId = c.Id,
+                    LimitNumberStudent = c.LimitNumberStudent,
+                    ClassCode = c.ClassCode,
+                    LecturerName = lecturer.FullName,
+                    CoursePrice = await GetDynamicPrice(course.Id, false),
+                    EndDate = c.EndDate,
+                    CourseId = c.CourseId,
+                    Image = c.Image,
+                    LeastNumberStudent = c.LeastNumberStudent,
+                    Method = c.Method,
+                    StartDate = c.StartDate,
+                    Status = c.Status,
+                    Video = c.Video,
+                    NumberStudentRegistered = studentList.Count,
+                    Schedules = schedules,
+                    CourseName = course.Name,
+                    LecturerResponse = lecturerResponse,
+                    RoomResponse = roomResponse,
+                    CreatedDate = c.AddedDate.Value,
+                };
+                var syllabusCode = "undefined";
+                var syllabusName = "undefined";
+                var syllabusType = "undefined";
+                if (course.Syllabus != null)
+                {
+                    syllabusCode = course.Syllabus.SubjectCode;
+                    syllabusName = course.Syllabus.Name;
+                    syllabusType = course.Syllabus.SyllabusCategory.Name;
+                }
+                CustomCourseResponse customCourseResponse = new CustomCourseResponse
+                {
+                    Image = course.Image,
+                    MainDescription = course.MainDescription,
+                    MaxYearOldsStudent = course.MaxYearOldsStudent,
+                    MinYearOldsStudent = course.MinYearOldsStudent,
+                    Name = course.Name,
+                    Price = await GetDynamicPrice(course.Id, false),
+                    SyllabusCode = syllabusCode,
+                    SyllabusName = syllabusName,
+                    SyllabusType = syllabusType,
+                    Status = course.Status
+                };
+                myClassResponse.CourseResponse = customCourseResponse;
+                result.Add(myClassResponse);
+            }
+            var numberOfClasses = 0;
+            if (status == null)
+            {
+                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync()).Count;
+            }
+            else
+            {
+                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status.ToLower().Equals(status.ToLower()))).Count;
+            }
+            //
+            if (result.Count == 0)
+            {
+                return null;
+            }
+            if (result != null)
+            {
+                result = result.OrderByDescending(x => x.CreatedDate).ToList();
+            }
+            if (searchString == null && status == null)
+            {
+                return new ClassResultResponse
+                {
+                    MyClassResponses = result.OrderByDescending(x => x.CreatedDate).ToList(),
+                    NumberOfClasses = result.Count,
+                };
+            }
+            if (searchString == null)
+            {
+                return new ClassResultResponse
+                {
+                    MyClassResponses = (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).OrderByDescending(x => x.CreatedDate).ToList()),
+                    NumberOfClasses = result.Count,
+                };
+            }
+            if (status == null)
+            {
+                List<MyClassResponse> res = new List<MyClassResponse>();
+                var filter1 = result.Where(x => x.ClassCode.ToLower().Contains(searchString.ToLower()));
+                if (filter1 != null)
+                {
+                    res.AddRange(filter1);
+                }
+                var filter2 = result.Where(x => x.CourseName.ToLower().Contains((searchString.ToLower())));
+                if (filter2 != null)
+                {
+                    res.AddRange(filter2);
+                }
+                return new ClassResultResponse
+                {
+                    MyClassResponses = res.OrderByDescending(x => x.CreatedDate).ToList(),
+                    NumberOfClasses = result.Count,
+                };
+            }
+            return new ClassResultResponse
+            {
+                MyClassResponses = (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).OrderByDescending(x => x.CreatedDate).ToList(),
+                NumberOfClasses = result.Count,
+            };
+
+        }
+
+        public async Task<List<StudentScheduleResponse>> GetScheduleOfStudentInDate(string studentId, DateTime date)
+        {
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
+            if (student == null)
+            {
+                throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().Equals(studentId)),
+                include: x => x.Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Slot)
+                .Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Room!));
+
+            if (!classes.Any())
+            {
+                return new List<StudentScheduleResponse>();
+            }
+            var listStudentSchedule = new List<StudentScheduleResponse>();
+            foreach (var cls in classes)
+            {
+                var lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(selector: x => x.FullName, predicate: x => x.Id.Equals(cls.LecturerId));
+
+                var subject = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                       selector: x => x.SubjectName,
+                       predicate: x => x.Id == cls.CourseId);
+
+                var topics = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    selector: x => x.Topics,
+                    predicate: x => x.CourseId == cls.CourseId,
+                    include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                var identifySession = new List<(int, Guid, Guid)>();
+
+                int sessionIndex = 0;
+                foreach (var topic in topics!)
+                {
+                    foreach (var session in topic.Sessions!)
+                    {
+                        sessionIndex++;
+                        identifySession.Add(new(sessionIndex, topic.Id, session.Id));
+                    }
+                }
+
+                for (int i = 0; i < cls.Schedules.Count(); i++)
+                {
+                    var schedule = cls.Schedules.ToList()[i];
+                    var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
+                    var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
+                    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate : x => x.Id == cls.CourseId);
+                    var studentSchedule = new StudentScheduleResponse
+                    {
+                        Address = cls.Street + " " + cls.District + " " + cls.City,
+                        ClassName = cls.ClassCode!,
+                        ClassId = cls.Id,
+                        CourseId = cls.CourseId,
+                        ClassSubject = subject!,
+                        StudentName = student.FullName!,
+                        Date = schedule.Date,
+                        ClassCode = cls.ClassCode!,
+                        TopicId = identifySession.Find(x => x.Item1 == i + 1).Item2,
+                        SessionId = schedule.Id,
+                        DayOfWeek = DateTimeHelper.GetDatesFromDateFilter(schedule.DayOfWeek)[0].ToString(),
+                        EndTime = schedule.Slot!.EndTime,
+                        StartTime = schedule.Slot.StartTime,
+                        LinkURL = schedule.Room!.LinkURL,
+                        Method = cls.Method,
+                        RoomInFloor = schedule.Room.Floor,
+                        RoomName = schedule.Room.Name,
+                        AttendanceStatus = attendance != null ? attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
+                        Note = attendance != null ? attendance.Note : null,
+                        LecturerName = lecturerName,
+                        EvaluateLevel = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3,
+                        EvaluateDescription = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
+                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt",
+                        EvaluateNote = evaluate.Note,
+                        CourseName = course.Name,
+                        SessionIdInDate = identifySession.Find(x => x.Item1 == i + 1).Item3,
+                    };
+
+                    listStudentSchedule.Add(studentSchedule);
+                }
+            }
+            listStudentSchedule = listStudentSchedule.Where(x => x.Date.Date == date.Date).ToList();
+            return listStudentSchedule;
+        }
+
+        public async Task<StudentSessionResponse> GetStudentSession(string scheduleId)
+        {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(scheduleId));
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == schedule.ClassId);
+            var studentId = (students.FirstOrDefault()).StudentId.ToString();
+            var res = await GetScheduleOfStudentInDate(studentId, schedule.Date.Date);
+            var response = res.Single(x => x.SessionId.ToString().Equals(scheduleId));
+            var session = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.Id == response.SessionIdInDate, include: x => x.Include(x => x.SessionDescriptions));
+            List< SessionContentReponse> sessionContentReponses = new List< SessionContentReponse>();
+            foreach(var ss in session.SessionDescriptions)
+            {
+                var content = ss.Content;
+                var description = ss.Detail.Split("/r/n").ToList();
+                sessionContentReponses.Add(new SessionContentReponse
+                {
+                    Content = content,
+                    Details = description,
+                });
+            }
+            var result =  new StudentSessionResponse
+            {
+              CourseName = response.CourseName,
+              ClassCode = response.ClassCode,
+              Contents = sessionContentReponses,
+            };
+            return result;
         }
     }
 }

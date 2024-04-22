@@ -25,5 +25,6 @@ public class StudentScheduleResponse
     public string? EvaluateDescription { get; set; }
     public string? EvaluateNote { get; set; }
     public string? Status { get; set; }
-
+    public string CourseName {  get; set; }    
+    public Guid SessionIdInDate { get; set; }   
 }
