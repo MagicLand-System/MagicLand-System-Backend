@@ -3861,10 +3861,10 @@ namespace MagicLand_System.Services.Implements
         {
             var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId));
             List<StudentGradeResponse> response = new List<StudentGradeResponse>();
-            foreach(var st in students) 
+            foreach (var st in students)
             {
                 var studentId = st.StudentId;
-                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate : x => x.Id ==  studentId,include : x => x.Include(x => x.User));
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId, include: x => x.Include(x => x.User));
                 var res = new StudentGradeResponse
                 {
                     DateOfBirth = student.DateOfBirth,
@@ -3875,11 +3875,140 @@ namespace MagicLand_System.Services.Implements
                     ParentPhoneNumber = student.User.Phone,
                 };
                 var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.CourseId);
-                var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate : x => x.CourseId == courseId,selector : x => x.Id);
+                var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == courseId, selector: x => x.Id);
                 var examSyll = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId == syllabusId);
 
             }
             return response;
+        }
+
+        public async Task<List<ClassWithDailyScheduleRes>> GetClassWithDailyScheduleRes(string classId, string studentId)
+        {
+            var currentClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId),
+         include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules));
+
+            if (currentClass == null)
+            {
+                throw new BadHttpRequestException($"Id [{classId}] Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
+            var classes = new List<Class>();
+
+            var allCourseClass = await _unitOfWork.GetRepository<Class>()
+               .GetListAsync(predicate: x => x.CourseId == currentClass.CourseId,
+               include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
+               .Include(x => x.Lecture)
+               .Include(x => x.StudentClasses).Include(x => x.Course));
+
+            var suitableClasses = allCourseClass.Where(courCls =>
+                !courCls.Schedules.Any(courSchedule =>
+                    classes.Any(currCls =>
+                        currCls.Schedules.Any(schedule =>
+                            schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
+                .ToList();
+            suitableClasses = suitableClasses
+           .Where(cls => cls.StudentClasses.Count + 1 <= cls.LimitNumberStudent)
+           .Where(cls => cls.Id != currentClass.Id).ToList();
+            if (currentClass.Status.ToLower().Equals("upcoming"))
+            {
+                suitableClasses = suitableClasses.Where(x => x.Status.ToLower().Equals("upcoming")).ToList();
+            }
+            else
+            {
+                var schedule = currentClass.Schedules.OrderBy(x => x.Date).ToArray();
+                var index = 0;
+                for (int i = 0; i < schedule.Length; i++)
+                {
+                    if (schedule[i].Date.Date >= DateTime.Now.Date)
+                    {
+                        index = i; break;
+                    }
+                }
+                List<Class> result = new List<Class>();
+                foreach (var sc in suitableClasses)
+                {
+                    var schedules = sc.Schedules.OrderBy(x => x.Date).ToArray();
+                    if (schedules[index].Date.Date > DateTime.Now.Date)
+                    {
+                        result.Add(sc);
+                    }
+                }
+                suitableClasses = result;
+            }
+
+            var suitableClassesx = suitableClasses.Select(cls => _mapper.Map<ClassWithDailyScheduleRes>(cls)).ToList();
+            List<ClassWithDailyScheduleRes> res = new List<ClassWithDailyScheduleRes>();
+            foreach (var suitableClass in suitableClassesx)
+            {
+                var groupBy = from schedule in suitableClass.Schedules
+                              group schedule by new { schedule.DayOfWeek, schedule.StartTime, schedule.EndTime } into grouped
+                              select new DailySchedule
+                              {
+                                  DayOfWeek = grouped.Key.DayOfWeek,
+                                  StartTime = grouped.Key.StartTime,
+                                  EndTime = grouped.Key.EndTime,
+                              };
+                foreach (var sch in groupBy)
+                {
+                    if (sch.DayOfWeek.Equals("Sunday"))
+                    {
+                        sch.DayOfWeek = "Chủ Nhật";
+                    }
+                    if (sch.DayOfWeek.Equals("Monday"))
+                    {
+                        sch.DayOfWeek = "Thứ Hai";
+                    }
+                    if (sch.DayOfWeek.Equals("Tuesday"))
+                    {
+                        sch.DayOfWeek = "Thứ Ba";
+                    }
+                    if (sch.DayOfWeek.Equals("Wednesday"))
+                    {
+                        sch.DayOfWeek = "Thứ Tư";
+                    }
+                    if (sch.DayOfWeek.Equals("Thursday"))
+                    {
+                        sch.DayOfWeek = "Thứ Năm";
+                    }
+                    if (sch.DayOfWeek.Equals("Friday"))
+                    {
+                        sch.DayOfWeek = "Thứ Sáu";
+                    }
+                    if (sch.DayOfWeek.Equals("Saturday"))
+                    {
+                        sch.DayOfWeek = "Thứ Bảy";
+                    }
+                }
+                suitableClass.Schedules = groupBy.ToList();
+
+            }
+            return suitableClassesx;
+        }
+
+        public async Task<string> ChangeStaffStudentClassAsync(string fromClassId, string toClassId, string studentId)
+        {
+            try
+            {
+                var fromClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(fromClassId),
+                include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
+
+                var toClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(toClassId),
+               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
+
+
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId),
+                include: x => x.Include(x => x.StudentClasses.Where(sc =>!sc.ClassId.ToString().Equals(fromClass))).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!
+                .ThenInclude(x => x.Slot!).Include(x => x.User));
+
+
+                await ChangeClassProgress(fromClass, toClass, student);
+                _unitOfWork.Commit();
+                return "Đổi Lớp Thành Công";
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
+            }
         }
 
         #endregion

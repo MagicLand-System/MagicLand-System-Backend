@@ -336,13 +336,13 @@ namespace MagicLand_System.Controllers
         ///  Tìm Kiếm Các Lớp Học Phù Hợp Với Id Lớp Học Hiện Tại Và Id Các Học Sinh Trong Lớp Cần Chuyển
         /// </summary>
         /// <param name="classId">Id Của Lớp Học Cần Kiểm Tra</param>
-        /// <param name="studentIdList">Id Của Các Học Sinh Trong Lớp Cần Chuyển</param>
+        /// <param name="studentId">Id Của Học Sinh Trong Lớp Cần Chuyển</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
         ///        "classId": "c6d70a5f-56ae-7e0-b441-c080da024524"
-        ///        "studentIdList": ["1a2ff-afgf-h6ae-4890-b9441-a80sa034aa4", "g3h70ao-5d2e-11e3-j441-cjk0da92aad9"]
+        ///        "studentId":"1a2ff-afgf-h6ae-4890-b9441-a80sa034aa4"
         ///     }
         ///
         /// </remarks>
@@ -354,10 +354,10 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetStuitableClass)]
         [ProducesResponseType(typeof(ClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
-        [Authorize(Roles = "STAFF")]
-        public async Task<IActionResult> FindSuitableClass([FromQuery] Guid classId, [FromQuery] List<Guid> studentIdList)
+        //[Authorize(Roles = "STAFF")]
+        public async Task<IActionResult> FindSuitableClass([FromQuery] string classId, [FromQuery] string studentId)
         {
-            var classes = await _classService.GetSuitableClassAsync(classId, studentIdList);
+            var classes = await _classService.GetClassWithDailyScheduleRes(classId, studentId);
             return Ok(classes);
         }
 
@@ -367,13 +367,13 @@ namespace MagicLand_System.Controllers
         /// </summary>
         /// <param name="fromClassId">Id Của Lớp Cần Phải Chuyển</param>
         /// <param name="toClassId">Id Của Lớp Sẽ Chuyển Học Sinh Qua</param>
-        /// <param name="studentIdList">Id Của Các Học Sinh Sẽ Chuyển Lớp</param>
+        /// <param name="studentId">Id Của Các Học Sinh Sẽ Chuyển Lớp</param>
         /// <remarks>
         /// Sample request:
         ///
         ///     {
         ///        "classId": "c6d70a5f-56ae-7e0-b441-c080da024524"
-        ///        "studentIdList": ["1a2ff-afgf-h6ae-4890-b9441-a80sa034aa4", "g3h70ao-5d2e-11e3-j441-cjk0da92aad9"]
+        ///        "studentIdList": "1a2ff-afgf-h6ae-4890-b9441-a80sa034aa4"
         ///     }
         ///
         /// </remarks>
@@ -386,9 +386,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "STAFF")]
-        public async Task<IActionResult> ChangeStudentClass([FromQuery] Guid fromClassId, [FromQuery] Guid toClassId, [FromQuery] List<Guid> studentIdList)
+        public async Task<IActionResult> ChangeStudentClass([FromQuery] string fromClassId, [FromQuery] string toClassId, [FromQuery] string studentId)
         {
-            var classes = await _classService.ChangeStudentClassAsync(fromClassId, toClassId, studentIdList);
+            var classes = await _classService.ChangeStaffStudentClassAsync(fromClassId, toClassId, studentId);
             return Ok(classes);
         }
 

@@ -51,6 +51,8 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<LecturerResponse>> GetLecturerForUpdate(string classId);
         Task<List<Room>> GetRoomForUpdateSession(string classId, string slotId,DateTime date);
         Task<List<LecturerResponse>> GetLecturerResponseForUpdateSession(string classId, string slotId, DateTime date);
-        Task<List<StudentGradeResponse>> GetStudentGradeResponses(string classId);  
+        Task<List<StudentGradeResponse>> GetStudentGradeResponses(string classId);
+        Task<List<ClassWithDailyScheduleRes>> GetClassWithDailyScheduleRes(string classId,string studentId);
+        Task<string> ChangeStaffStudentClassAsync(string fromClassId, string toClassId, string studentId);
     }
 }
