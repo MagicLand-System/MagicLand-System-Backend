@@ -68,41 +68,9 @@ namespace MagicLand_System.Mappers.Custom
             return response;
         }
 
-        public static CourseResponseCustom fromCourseToCourseReponseCustom(Course course, IEnumerable<Course> coursePrerequisites, ICollection<Course> coureSubsequents)
-        {
-            if (course == null)
-            {
-                return new CourseResponseCustom();
-            }
-
-            var response = new CourseResponseCustom
-            {
-                CourseId = course.Id,
-                Image = course.Image,
-                MainDescription = course.MainDescription,
-                SubDescriptionTitle = course.SubDescriptionTitles
-                .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
-                CourseName = course.Name,
-                Subject = course.SubjectName,
-                SubjectCode = course.Syllabus!.SubjectCode,
-                MinAgeStudent = course.MinYearOldsStudent.ToString(),
-                MaxAgeStudent = course.MaxYearOldsStudent.ToString(),
-                AddedDate = course.AddedDate,
-                Method = string.Join(" / ", course.Classes.Select(c => c.Method!.ToString()).ToList().Distinct().ToList()),
-                NumberOfSession = course.NumberOfSession,
-                CoursePrerequisites = coursePrerequisites != null
-                ? coursePrerequisites.Select(cp => cp.Name).ToList()!
-                : new List<string>(),
-                OpeningSchedules = course.Classes.Select(cls => ScheduleCustomMapper.fromClassInforToOpeningScheduleResponse(cls)).ToList(),
-                RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites!, coureSubsequents),
-                UpdateDate = course.UpdateDate,
-            };
-
-            return response;
-        }
-
         public static CourseWithScheduleShorten fromCourseToCourseWithScheduleShorten(
       Course course,
+      Guid studentId,
       IEnumerable<Course> coursePrerequisites,
       ICollection<Course> coureSubsequents)
         {
@@ -112,14 +80,14 @@ namespace MagicLand_System.Mappers.Custom
             }
 
             var classOpeningInfors = new List<ClassOpeningInfor>();
-            foreach(var cls in course.Classes)
+            foreach (var cls in course.Classes)
             {
                 classOpeningInfors.Add(new ClassOpeningInfor()
                 {
                     ClassId = cls.Id,
                     OpeningDay = cls.StartDate,
                     Schedules = ScheduleCustomMapper.fromScheduleToScheduleShortenResponses(cls),
-                }) ;
+                });
             }
 
             var response = new CourseWithScheduleShorten
@@ -135,6 +103,17 @@ namespace MagicLand_System.Mappers.Custom
                 RelatedCourses = fromCourseInformationToRealtedCourseResponse(coursePrerequisites, coureSubsequents),
                 UpdateDate = course.UpdateDate,
             };
+
+            var classRegistereds = course.Classes.Where(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId));
+            var status = new List<string>();
+            if (classRegistereds != null && classRegistereds.Any())
+            {
+                foreach (var cls in classRegistereds)
+                {
+                    status.Add(cls.Status!);
+                }
+                response.Status = string.Join("/", status);
+            }
 
             return response;
         }

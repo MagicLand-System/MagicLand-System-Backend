@@ -301,7 +301,7 @@ namespace MagicLand_System.Controllers
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
         [HttpGet(ApiEndpointConstant.StudentEndpoint.GetStudentCourseRegistered)]
-        [ProducesResponseType(typeof(CourseResExtraInfor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [AllowAnonymous]
         public async Task<IActionResult> GetStudentCourseRegistered([FromRoute] Guid id)

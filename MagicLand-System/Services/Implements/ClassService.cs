@@ -3024,27 +3024,47 @@ namespace MagicLand_System.Services.Implements
             };
 
             var oldStudentAttendance = new List<Attendance>();
+            var oldStudentEvaluate = new List<Evaluate>();
+
             foreach (var schedule in fromClass.Schedules)
             {
                 var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.StudentId == student.Id && x.ScheduleId == schedule.Id);
+                var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.StudentId == student.Id && x.ScheduleId == schedule.Id);
                 if (attendance != null)
                 {
                     oldStudentAttendance.Add(attendance);
                 }
+                if (evaluate != null)
+                {
+                    oldStudentEvaluate.Add(evaluate);
+                }
             }
 
+
             var newStudentAttendance = new List<Attendance>();
+            var newStudentEvaluate = new List<Evaluate>();
             foreach (var schedule in toClass.Schedules)
             {
                 newStudentAttendance.Add(new Attendance
                 {
-                    Id = new Guid(),
+                    Id = Guid.NewGuid(),
                     IsPublic = true,
                     IsPresent = default,
                     StudentId = student.Id,
-                    ScheduleId = schedule.Id
+                    ScheduleId = schedule.Id,
+                });
+
+                newStudentEvaluate.Add(new Evaluate
+                {
+                    Id = Guid.NewGuid(),
+                    Status = null,
+                    Note = null,
+                    IsValid = true,
+                    StudentId = student.Id,
+                    ScheduleId = schedule.Id,
                 });
             }
+
 
             var newNotification = new Notification
             {
@@ -3064,10 +3084,11 @@ namespace MagicLand_System.Services.Implements
                 UserId = student.User.Id,
             };
 
-            await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance, newNotification);
+            await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance, oldStudentEvaluate, newStudentEvaluate, newNotification);
         }
 
-        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass, List<Attendance> oldStudentAttendance, List<Attendance> newStudentAttendance, Notification newNotification)
+        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass, 
+            List<Attendance> oldStudentAttendance, List<Attendance> newStudentAttendance, List<Evaluate> oldStudentEvaluate, List<Evaluate> newStudentEvaluate, Notification newNotification)
         {
             var listItemIdentify = new List<string>
             {
@@ -3083,11 +3104,16 @@ namespace MagicLand_System.Services.Implements
 
             await _unitOfWork.GetRepository<StudentClass>().InsertAsync(newStudentClass);
             await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newStudentAttendance);
+            await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newStudentEvaluate);
             await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
 
             if (oldStudentAttendance.Any())
             {
                 _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldStudentAttendance);
+            }
+            if (oldStudentEvaluate.Any())
+            {
+                _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldStudentEvaluate);
             }
 
             if (fromClass.Status == ClassStatusEnum.UPCOMING.ToString())
@@ -3997,7 +4023,7 @@ namespace MagicLand_System.Services.Implements
 
 
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId),
-                include: x => x.Include(x => x.StudentClasses.Where(sc =>!sc.ClassId.ToString().Equals(fromClass))).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!
+                include: x => x.Include(x => x.StudentClasses.Where(sc => !sc.ClassId.ToString().Equals(fromClass))).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!
                 .ThenInclude(x => x.Slot!).Include(x => x.User));
 
 

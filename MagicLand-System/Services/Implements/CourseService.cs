@@ -46,7 +46,7 @@ namespace MagicLand_System.Services.Implements
             var coursePrerequisitesFilter = await GetCoursePrerequesites(filteredCourses);
             var coureSubsequentsFilter = await GetCoureSubsequents(filteredCourses);
             var responses = filteredCourses.Select(fc => CourseCustomMapper
-                   .fromCourseToCourseWithScheduleShorten(fc, coursePrerequisitesFilter
+                   .fromCourseToCourseWithScheduleShorten(fc, default, coursePrerequisitesFilter
                    .Where(cpf => fc.Syllabus!.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == cpf.Syllabus!.Id)),
                    coureSubsequentsFilter)).ToList();
 
@@ -120,7 +120,7 @@ namespace MagicLand_System.Services.Implements
 
             var coureSubsequents = await GetCoureSubsequents(courses);
 
-            var response = CourseCustomMapper.fromCourseToCourseWithScheduleShorten(courses.ToList()[0], coursePrerequisites, coureSubsequents);
+            var response = CourseCustomMapper.fromCourseToCourseWithScheduleShorten(courses.ToList()[0], default, coursePrerequisites, coureSubsequents);
             response.Price = await GetDynamicPrice(response.CourseId, false);
             return response;
         }
@@ -191,7 +191,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        private static List<CourseWithScheduleShorten> GenerateCoursesResponse(ICollection<Course> courses, Course[] coursePrerequisites, Course[] coureSubsequents)
+        private List<CourseWithScheduleShorten> GenerateCoursesResponse(ICollection<Course> courses, Course[] coursePrerequisites, Course[] coureSubsequents)
         {
             var responses = new List<CourseWithScheduleShorten>();
             foreach (var course in courses)
@@ -204,7 +204,7 @@ namespace MagicLand_System.Services.Implements
                         currentCoursePrerequistites = coursePrerequisites.Where(x => x.Syllabus!.Id == cp.PrerequisiteSyllabusId).ToList();
                     }
                 }
-                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentCoursePrerequistites, coureSubsequents));
+                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, default, currentCoursePrerequistites, coureSubsequents));
             }
 
             return responses;
@@ -291,7 +291,7 @@ namespace MagicLand_System.Services.Implements
             return coursePrerequesites.ToArray();
         }
 
-        public async Task<List<CourseResponseCustom>> GetCoursesOfStudentByIdAsync(Guid studentId)
+        public async Task<List<CourseWithScheduleShorten>> GetCoursesOfStudentByIdAsync(Guid studentId)
         {
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId);
             if (student == null)
@@ -301,10 +301,10 @@ namespace MagicLand_System.Services.Implements
             var courseRegisteredIdList = await _unitOfWork.GetRepository<Course>().GetListAsync(selector: x => x.Id, predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId == studentId)));
             if (courseRegisteredIdList == null)
             {
-                return new List<CourseResponseCustom>();
+                return new List<CourseWithScheduleShorten>();
             }
 
-            var listCourseResExtraInfror = new List<CourseResponseCustom>();
+            var courseResponses = new List<CourseWithScheduleShorten>();
 
             foreach (Guid id in courseRegisteredIdList)
             {
@@ -314,7 +314,7 @@ namespace MagicLand_System.Services.Implements
 
                 course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
                 predicate: x => x.CourseId == course.Id,
-                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!).Include(x => x.StudentClasses));
 
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.CourseId == course.Id,
@@ -329,14 +329,14 @@ namespace MagicLand_System.Services.Implements
 
                 var coureSubsequents = await GetCoureSubsequents(courses);
 
-                var response = CourseCustomMapper.fromCourseToCourseReponseCustom(courses.ToList()[0], coursePrerequisites, coureSubsequents);
+                var response = CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, studentId, coursePrerequisites, coureSubsequents);
                 response.Price = await GetDynamicPrice(id, false);
 
-                listCourseResExtraInfror.Add(response);
+                courseResponses.Add(response);
             }
 
 
-            return listCourseResExtraInfror;
+            return courseResponses;
         }
 
         public async Task<List<CourseWithScheduleShorten>> GetCurrentStudentCoursesAsync()
@@ -371,7 +371,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentCoursePrerequistites, coureSubsequents));
+                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentStudent.StudentIdAccount!.Value, currentCoursePrerequistites, coureSubsequents));
             }
 
             foreach (var res in responses)
@@ -776,7 +776,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (MaxAge != null)
                 {
-                    result3 = result.Where(x =>(x.MaxYearOldsStudent >= MaxAge.Value  && x.MinYearOldsStudent <= MaxAge.Value) || (x.MaxYearOldsStudent >= minAge.Value && x.MinYearOldsStudent <= minAge.Value)).ToList();
+                    result3 = result.Where(x => (x.MaxYearOldsStudent >= MaxAge.Value && x.MinYearOldsStudent <= MaxAge.Value) || (x.MaxYearOldsStudent >= minAge.Value && x.MinYearOldsStudent <= minAge.Value)).ToList();
                 }
                 if (searchString != null)
                 {
@@ -1099,7 +1099,7 @@ namespace MagicLand_System.Services.Implements
             return isSuccess;
         }
 
-        public  async Task<List<CourseWithScheduleShorten>> GetCourseByStaff()
+        public async Task<List<CourseWithScheduleShorten>> GetCourseByStaff()
         {
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
                 include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents));
@@ -1128,7 +1128,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, currentCoursePrerequistites, coureSubsequents));
+                responses.Add(CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, default, currentCoursePrerequistites, coureSubsequents));
             }
 
             foreach (var res in responses)
