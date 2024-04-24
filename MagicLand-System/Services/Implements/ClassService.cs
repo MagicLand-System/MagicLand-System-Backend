@@ -2568,9 +2568,8 @@ namespace MagicLand_System.Services.Implements
             //        Price = Couresult,
             //    });
             //}
-
             //var eva = new List<Evaluate>();
-            //var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("98c21f9d-0cf6-4076-a001-2f0e054e92ae"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            //var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("f1b36690-3ced-4136-8cc5-f56b72844d2a"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
             //foreach (var stu in cls.StudentClasses)
             //{
             //    foreach (var sch in cls.Schedules)

@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Courses.Custom;
 using MagicLand_System.PayLoad.Response.Schedules;
@@ -105,14 +106,20 @@ namespace MagicLand_System.Mappers.Custom
             };
 
             var classRegistereds = course.Classes.Where(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId));
-            var status = new List<string>();
+            var status = new List<(string, int)>();
             if (classRegistereds != null && classRegistereds.Any())
             {
                 foreach (var cls in classRegistereds)
                 {
-                    status.Add(cls.Status!);
+                    if (cls.Status == ClassStatusEnum.CANCELED.ToString())
+                    {
+                        continue;
+                    }
+
+                    status.Add(new(cls.Status!, cls.Status == ClassStatusEnum.UPCOMING.ToString() ? 1 : cls.Status == ClassStatusEnum.PROGRESSING.ToString() ? 2 : 3));
                 }
-                response.Status = string.Join("/", status);
+
+                response.Status = status.OrderByDescending(x => x.Item2).First().Item1;
             }
 
             return response;
