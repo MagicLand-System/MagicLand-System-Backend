@@ -2,8 +2,8 @@
 {
     public class DashboardRegisterResponse
     {
-        public string Date {  get; set; }
+        public string Date { get; set; }    
         public int NumberOfRegisters { get; set; }  
-        public DateTime DateIn {  get; set; }   
+        public DateTime StartDateIn {  get; set; } 
     }
 }

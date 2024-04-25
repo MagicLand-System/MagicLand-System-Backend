@@ -28,9 +28,9 @@ namespace MagicLand_System.Controllers
             return Ok(await _dashboardService.GetRevenueDashBoardResponse(startDate, endDate));
         }
         [HttpGet("System/GetRegistered")]
-        public async Task<IActionResult> GetRegistered(DateTime? startDate,DateTime? endDate) 
+        public async Task<IActionResult> GetRegistered(string quarter,string? courseId) 
         {
-            return Ok(await _dashboardService.GetDashboardRegisterResponses(startDate, endDate));
+            return Ok(await _dashboardService.GetDashboardRegisterResponses(quarter,courseId));
         }
         [HttpGet("System/GetFavoriteCourse")]
         public async Task<IActionResult> GetFavoriteCourse(DateTime? startDate , DateTime? endDate)

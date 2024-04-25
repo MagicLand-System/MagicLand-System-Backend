@@ -29,6 +29,7 @@ using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Data;
+using System.Formats.Asn1;
 using System.Globalization;
 using System.Net.WebSockets;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -1197,6 +1198,8 @@ namespace MagicLand_System.Services.Implements
                         SlotId = schedulex.SlotId,
                         EndTime = TimeOnly.Parse(schedulex.Slot.EndTime),
                         StartTime = TimeOnly.Parse(schedulex.Slot.StartTime),
+                        StartTimeString = schedulex.Slot.StartTime,
+                        EndTimeString = schedulex.Slot.EndTime,
                     },
                     DayOfWeeks = dateOfWeek,
                     Lecturer = new LecturerResponse
@@ -1240,6 +1243,10 @@ namespace MagicLand_System.Services.Implements
             if (keyword != null && responses != null)
             {
                 resultList = (responses.Where(x => (x.ClassCode.Trim().ToLower().Contains(keyword.Trim().ToLower()) || x.Lecturer.FullName.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
+            }
+            if(resultList != null)
+            {
+                resultList = resultList.Where(x => x.Date > DateTime.Now).OrderBy(x => x.Date).ToList();
             }
             return resultList;
         }
@@ -3086,7 +3093,7 @@ namespace MagicLand_System.Services.Implements
             await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance, oldStudentEvaluate, newStudentEvaluate, newNotification);
         }
 
-        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass, 
+        private async Task SaveChangeProgress(Class fromClass, StudentClass oldStudentClass, StudentClass newStudentClass,
             List<Attendance> oldStudentAttendance, List<Attendance> newStudentAttendance, List<Evaluate> oldStudentEvaluate, List<Evaluate> newStudentEvaluate, Notification newNotification)
         {
             var listItemIdentify = new List<string>
@@ -3115,7 +3122,7 @@ namespace MagicLand_System.Services.Implements
                 _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldStudentEvaluate);
             }
 
-            if (fromClass.Status == ClassStatusEnum.UPCOMING.ToString())
+            if (fromClass.Status == ClassStatusEnum.UPCOMING.ToString() || fromClass.Status == ClassStatusEnum.PROGRESSING.ToString())
             {
                 _unitOfWork.GetRepository<StudentClass>().DeleteAsync(oldStudentClass);
             }
@@ -4005,12 +4012,21 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 suitableClass.Schedules = groupBy.ToList();
+                var schedules = await  _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id == suitableClass.ClassId,include : x => x.Include(x => x.Schedules));
+                var sc = schedules.Schedules.Where(x => x.Date.Date <= DateTime.Now.Date);
+                if (sc == null)
+                {
+                    suitableClass.CurrentSession = 0;
+                } else
+                {
+                    suitableClass.CurrentSession = sc.Count();
+                }
 
             }
             return suitableClassesx;
         }
 
-        public async Task<string> ChangeStaffStudentClassAsync(string fromClassId, string toClassId, string studentId)
+        public async Task<ChangeClassResponse> ChangeStaffStudentClassAsync(string fromClassId, string toClassId, string studentId)
         {
             try
             {
@@ -4028,7 +4044,21 @@ namespace MagicLand_System.Services.Implements
 
                 await ChangeClassProgress(fromClass, toClass, student);
                 _unitOfWork.Commit();
-                return "Đổi Lớp Thành Công";
+                var schedules = toClass.Schedules.Where(x => x.Date.Date <= DateTime.Now.Date).OrderByDescending(x => x.Date).ToArray();
+                if (schedules == null || schedules.Length == 0)
+                {
+                    return new ChangeClassResponse
+                    {
+                        CurrentSession = 0,
+                        Message = "Đổi lớp thành công",
+                    };
+                }
+                return new ChangeClassResponse
+                {
+                    CurrentSession = schedules.Length,
+                    Message = "Đổi lớp thành công",
+                };
+                //return "Đổi Lớp Thành Công";
             }
             catch (Exception ex)
             {

@@ -27,8 +27,10 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StudentResponse>> GetStudents(string classId, string phone);
         Task<List<UserResponse>> GetUserFromName(string name);  
         Task<List<StudentResultResponse>> GetFromNameAndBirthDate(string? name , DateTime? birthdate,string? id);
-        Task<ClassResultResponse> GetClassOfStudent(string studentId,string? status,string? searchstring);
+        Task<ClassResultResponse> GetClassOfStudent(string studentId,string? status,string? searchstring,DateTime? dateTime);
         Task<List<StudentScheduleResponse>> GetScheduleOfStudentInDate(string studentId, DateTime date);
         Task<StudentSessionResponse> GetStudentSession(string scheduleId);
+        Task<List<ClassScheduleResponse>> GetStudentSessionAsync(string classId,string studentId,DateTime? date);
+
     }
 }

@@ -10,6 +10,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Drawing;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -21,59 +22,60 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<DashboardRegisterResponse>> GetDashboardRegisterResponses(DateTime? startDate, DateTime? endDate)
+        public async Task<List<DashboardRegisterResponse>> GetDashboardRegisterResponses(string quarter,string? courseId)
         {
-            startDate = startDate.Value.AddHours(7);
-            var listStudentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.AddedTime >= startDate && x.AddedTime <= endDate);
-            var listx = listStudentClass.GroupBy(x => x.AddedTime).ToList();
-            List<DashboardRegisterResponse> responses = new List<DashboardRegisterResponse>();   
-            foreach (var item in listx)
+            string[] parts = quarter.Split('-');
+            var qua = parts[0];   
+            var year = parts[1];
+            var startDate = DateTime.Now;
+            var endDate = DateTime.Now;
+            var yearNumber = int.Parse(year);
+            if(int.Parse(qua) == 1)
             {
-                var count = item.Count();
-                var date = item.Key;
-                var day = date.Value.Day;
-                var month = date.Value.Month;
+                startDate = new DateTime(yearNumber, 1, 1);
+                endDate = new DateTime(yearNumber, 3, 31);
+            }
+            if (int.Parse(qua) == 2)
+            {
+                startDate = new DateTime(yearNumber, 4, 1);
+                endDate = new DateTime(yearNumber, 6, 30);
+            }
+            if (int.Parse(qua) == 3)
+            {
+                startDate = new DateTime(yearNumber, 7, 1);
+                endDate = new DateTime(yearNumber, 9, 30);
+            }
+            if (int.Parse(qua) == 4)
+            {
+                startDate = new DateTime(yearNumber, 10, 1);
+                endDate = new DateTime(yearNumber, 12, 31);
+            }
+            var startAnchor = startDate;
+            List<DashboardRegisterResponse> responses = new List<DashboardRegisterResponse>();
+          
+            while (startAnchor <= endDate)
+            {
+                var endAnchor = startAnchor.AddDays(7);
+                if(endAnchor.Date > endDate.Date)
+                {
+                    endAnchor = endDate;
+                }
+                var listStudentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.AddedTime.Value.Date >= startAnchor.Date && x.AddedTime.Value.Date <= endDate.Date);
+                if (courseId != null)
+                {
+                    var classIds = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId.ToString()),selector : x => x.Id);
+                    listStudentClass = listStudentClass.Where(x => classIds.Any(p => p == x.ClassId)).ToList();
+                }
                 var response = new DashboardRegisterResponse
                 {
-                    NumberOfRegisters = count,
-                    Date = day + "/" + month,
-                    DateIn = date.Value,
+                    NumberOfRegisters = listStudentClass.Count,
+                    Date = startAnchor.Date.Day + "/" + startAnchor.Date.Month + "-" + endAnchor.Date.Day + "/"+ endAnchor.Date.Month,
+                    StartDateIn = startAnchor,
                 };
+                startAnchor = endAnchor.AddDays(1);
                 responses.Add(response);
             }
-            var resArray = responses.OrderBy(x => x.DateIn).ToArray();
-            for (int i = 1; i < resArray.Length; i++)
-            {
-                var anchor = resArray[i-1].DateIn;
-                if ( i - 1 == 0)
-                {
-                    anchor = startDate.Value;
-                }
-                var begin = anchor.AddDays(1);
-                var nextDate = resArray[i].DateIn;
-                while(begin < nextDate)
-                {
-                    responses.Add(new DashboardRegisterResponse
-                    {
-                        Date = begin.Day + "/" + begin.Month,
-                        NumberOfRegisters = 0,
-                        DateIn = begin
-                    });
-                  begin =  begin.AddDays(1);   
-                }
-            }
-            var endx = resArray[resArray.Length-1].DateIn.AddDays(1);
-            while (endx <= endDate)
-            {
-                responses.Add(new DashboardRegisterResponse
-                {
-                    Date = endx.Day + "/" + endx.Month,
-                    NumberOfRegisters = 0,
-                    DateIn = endx
-                });
-               endx =  endx.AddDays(1);
-            }
-            return responses.OrderBy(x => x.DateIn).ToList();
+            return responses.OrderBy(x => x.StartDateIn).ToList();
         }
 
         public async Task<List<FavoriteCourseResponse>> GetFavoriteCourseResponse(DateTime? startDate, DateTime? endDate)

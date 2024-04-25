@@ -28,6 +28,7 @@
             public const string GetClassOfStudent = UsersEndpoint + "/getClassOfStudent";
             public const string GetScheduleOfStudent = UsersEndpoint + "/getScheduleOfStudent";
             public const string GetSessionOfStudent = UsersEndpoint + "/getSessionOfStudent";
+            public const string GetListSessionOfStudent = UsersEndpoint + "/getListSessionOfStudent";
         }
         public static class Authentication
         {

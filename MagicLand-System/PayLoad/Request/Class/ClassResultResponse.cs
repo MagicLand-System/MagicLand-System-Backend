@@ -1,4 +1,5 @@
-﻿using MagicLand_System.PayLoad.Response.Classes;
+﻿using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Classes;
 
 namespace MagicLand_System.PayLoad.Request.Class
 {

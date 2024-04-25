@@ -163,9 +163,9 @@ namespace MagicLand_System.Controllers
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.User.GetClassOfStudent)]
-        public async Task<IActionResult> GetClassOfStudent(string studentId, string? status, string? searchString)
+        public async Task<IActionResult> GetClassOfStudent(string studentId, string? status, string? searchString,DateTime? dateTime)
         {
-            var users = await _userService.GetClassOfStudent(studentId,status,searchString);
+            var users = await _userService.GetClassOfStudent(studentId,status,searchString,dateTime);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.User.GetScheduleOfStudent)]
@@ -178,6 +178,12 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetContentsOfSession(string sessionId)
         {
             var users = await _userService.GetStudentSession(sessionId);
+            return Ok(users);
+        }
+        [HttpGet(ApiEndpointConstant.User.GetListSessionOfStudent)]
+        public async Task<IActionResult> GetListContentsOfSession(string classId, string studentId, DateTime? date)
+        {
+            var users = await _userService.GetStudentSessionAsync(classId,studentId,date);
             return Ok(users);
         }
     }

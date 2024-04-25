@@ -810,7 +810,7 @@ namespace MagicLand_System.Services.Implements
             return responses;   
         }
 
-        public async Task<ClassResultResponse> GetClassOfStudent(string studentId,string? status,string? searchString)
+        public async Task<ClassResultResponse> GetClassOfStudent(string studentId,string? status,string? searchString,DateTime? date)
         {
             var classxx = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.StudentId.ToString().Equals(studentId),selector : x => x.ClassId);
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => classxx.Any(p => p == x.Id),include: x => x.Include(x => x.Schedules));
@@ -964,16 +964,25 @@ namespace MagicLand_System.Services.Implements
                     Status = course.Status
                 };
                 myClassResponse.CourseResponse = customCourseResponse;
+                myClassResponse.ClassScheduleResponses = await GetStudentSessionAsync(myClassResponse.ClassId.ToString(), studentId, date);
+                var canChange = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate : x => x.ClassId ==  myClassResponse.ClassId && x.StudentId.ToString().Equals(studentId));
+                myClassResponse.CanChangeClass = canChange.CanChangeClass;
                 result.Add(myClassResponse);
+            }
+            if (date != null)
+            {
+                var datex = date.Value.DayOfWeek.ToString();
+                result = result.Where(x => (x.StartDate.Date <= date.Value.Date && x.EndDate >= date.Value.Date)).ToList();
+                result = result.Where(x => x.Schedules.Select(x => x.DayOfWeek.ToLower()).Any(p => p.Equals(date.Value.DayOfWeek.ToString().ToLower()))).ToList();
             }
             var numberOfClasses = 0;
             if (status == null)
             {
-                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync()).Count;
+                numberOfClasses = result.Count;
             }
             else
             {
-                numberOfClasses = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status.ToLower().Equals(status.ToLower()))).Count;
+                numberOfClasses = result.Where(x => x.Status.ToLower().Equals(status.ToLower())).Count();
             }
             //
             if (result.Count == 0)
@@ -997,7 +1006,7 @@ namespace MagicLand_System.Services.Implements
                 return new ClassResultResponse
                 {
                     MyClassResponses = (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).OrderByDescending(x => x.CreatedDate).ToList()),
-                    NumberOfClasses = result.Count,
+                    NumberOfClasses = (result.Where(x => x.Status.ToLower().Equals(status.ToLower())).OrderByDescending(x => x.CreatedDate).ToList()).Count,
                 };
             }
             if (status == null)
@@ -1016,13 +1025,13 @@ namespace MagicLand_System.Services.Implements
                 return new ClassResultResponse
                 {
                     MyClassResponses = res.OrderByDescending(x => x.CreatedDate).ToList(),
-                    NumberOfClasses = result.Count,
+                    NumberOfClasses = res.Count,
                 };
             }
             return new ClassResultResponse
             {
                 MyClassResponses = (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).OrderByDescending(x => x.CreatedDate).ToList(),
-                NumberOfClasses = result.Count,
+                NumberOfClasses = (result.Where(x => ((x.ClassCode.ToLower().Contains(searchString.ToLower()) || x.CourseName.ToLower().Contains(searchString.ToLower())) && x.Status.ToLower().Equals(status.ToLower())))).Count(),
             };
 
         }
@@ -1114,12 +1123,12 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<StudentSessionResponse> GetStudentSession(string scheduleId)
         {
-            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(scheduleId));
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(scheduleId),include : x => x.Include(x => x.Slot));
             var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == schedule.ClassId);
             var studentId = (students.FirstOrDefault()).StudentId.ToString();
             var res = await GetScheduleOfStudentInDate(studentId, schedule.Date.Date);
             var response = res.Single(x => x.SessionId.ToString().Equals(scheduleId));
-            var session = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.Id == response.SessionIdInDate, include: x => x.Include(x => x.SessionDescriptions));
+            var session = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.Id == response.SessionIdInDate, include: x => x.Include(x => x.SessionDescriptions).Include(x => x.Topic));
             List< SessionContentReponse> sessionContentReponses = new List< SessionContentReponse>();
             foreach(var ss in session.SessionDescriptions)
             {
@@ -1136,8 +1145,84 @@ namespace MagicLand_System.Services.Implements
               CourseName = response.CourseName,
               ClassCode = response.ClassCode,
               Contents = sessionContentReponses,
+              TopicName = session.Topic.Name,
+              Index = session.NoSession,
+              Date = schedule.Date.Date,
+              StartTime = schedule.Slot.StartTime,
+              EndTime = schedule.Slot.EndTime,
             };
             return result;
+        }
+
+        public async Task<List<ClassScheduleResponse>> GetStudentSessionAsync(string classId, string studentId,DateTime? date)
+        {
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(classId),include : x => x.Include(x => x.Schedules).Include(x => x.Course));
+            var schedules = classx.Schedules.OrderBy(x => x.Date).ToArray();
+            var attendances = new List<Attendance>();
+            for (int i = 0; i < schedules.Length; i++) 
+            {
+                var att = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate : x => x.ScheduleId == schedules[i].Id && x.StudentId.ToString().Equals(studentId),include : x => x.Include(x => x.Schedule));
+                attendances.Add(att);
+            }
+            var attendancesArray = attendances.OrderBy(x => x.Schedule.Date).ToArray();
+            var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate : x => x.CourseId == classx.CourseId,selector : x => x.Id);
+            var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId == syllabusId);
+            var sessions = new List<Session>();
+            foreach(var topic in topics)
+            {
+                var sessionx = await _unitOfWork.GetRepository<Session>().GetListAsync(predicate: x => x.TopicId == topic.Id, include: x => x.Include(x => x.SessionDescriptions).Include(x => x.Topic));
+                sessions.AddRange(sessionx);
+            }
+            var sessionArray = sessions.OrderBy(x => x.NoSession).ToArray();
+            List<ClassScheduleResponse> classScheduleResponses = new List<ClassScheduleResponse>();
+            for (int i = 0; i < schedules.Length; i++)
+            {
+                var status = "";
+                if (attendances[i].IsPresent.HasValue)
+                {
+                    if (attendances[i].IsPresent.Value)
+                    {
+                        status = "Có mặt";
+                    }
+                    if (!attendances[i].IsPresent.Value)
+                    {
+                        status = "Vắng";
+                    }
+                }
+                if (attendances[i].IsPresent == null)
+                {
+                    status = "Chưa diễn ra";
+                }
+                List<SessionContentReponse> sessionContentReponses = new List<SessionContentReponse>();
+                foreach (var ss in sessionArray[i].SessionDescriptions)
+                {
+                    var content = ss.Content;
+                    var description = ss.Detail.Split("/r/n").ToList();
+                    sessionContentReponses.Add(new SessionContentReponse
+                    {
+                        Content = content,
+                        Details = description,
+                    });
+                }
+                var classSched = new ClassScheduleResponse
+                {
+                    Date = schedules[i].Date,
+                    Index = i + 1,
+                    Status = status,
+                    TopicContent = new TopicContent
+                    {
+                        TopicName = sessionArray[i].Topic.Name,
+                        TopicIndex = sessionArray[i].Topic.OrderNumber,
+                        Contents = sessionContentReponses,
+                    }
+                };
+                classScheduleResponses.Add(classSched);
+            }
+            if(date != null)
+            {
+                classScheduleResponses = classScheduleResponses.Where(r => r.Date.Date == date.Value.Date).ToList(); 
+            }
+            return classScheduleResponses;
         }
     }
 }
