@@ -1207,17 +1207,22 @@ namespace MagicLand_System.Services.Implements
                         Details = description,
                     });
                 }
+                var slot = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id == schedules[i].SlotId);
                 var classSched = new ClassScheduleResponse
                 {
+                    Id = schedules[i].Id,
                     Date = schedules[i].Date,
                     Index = i + 1,
                     Status = status,
+                    StartTime = slot.StartTime, 
+                    EndTime = slot.EndTime,
                     TopicContent = new TopicContent
                     {
                         TopicName = sessionArray[i].Topic.Name,
                         TopicIndex = sessionArray[i].Topic.OrderNumber,
                         Contents = sessionContentReponses,
                     }
+                    
                 };
                 classScheduleResponses.Add(classSched);
             }
