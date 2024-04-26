@@ -1244,7 +1244,7 @@ namespace MagicLand_System.Services.Implements
             {
                 resultList = (responses.Where(x => (x.ClassCode.Trim().ToLower().Contains(keyword.Trim().ToLower()) || x.Lecturer.FullName.ToLower().Trim().Contains(keyword.ToLower().Trim())))).ToList();
             }
-            if(resultList != null)
+            if (resultList != null)
             {
                 resultList = resultList.Where(x => x.Date > DateTime.Now).OrderBy(x => x.Date).ToList();
             }
@@ -2482,121 +2482,150 @@ namespace MagicLand_System.Services.Implements
 
             //try
             //{
-            //var deleteClasses = new List<Class>();
-            //var deleteSyllabuses = new List<Syllabus>();
-            //var deleteCourses = new List<Course>();
+                //var deleteClasses = new List<Class>();
+                //var deleteSyllabuses = new List<Syllabus>();
+                //var deleteCourses = new List<Course>();
 
-            //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
+                //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
 
-            //foreach (var syll in syllabuses)
-            //{
-            //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
-            //    if (course == null)
+                //foreach (var syll in syllabuses)
+                //{
+                //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
+                //    if (course == null)
+                //    {
+                //        deleteSyllabuses.Add(syll);
+                //        continue;
+                //    }
+                //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
+                //    if (classes == null && !classes.Any())
+                //    {
+                //        deleteCourses.Add(course);
+                //        deleteSyllabuses.Add(syll);
+                //        continue;
+                //    }
+                //    int classCount = 0;
+                //    foreach (var cls in classes)
+                //    {
+                //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
+                //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
+                //        {
+                //            classCount++;
+                //            deleteClasses.Add(cls);
+                //        }
+                //    }
+                //    if (classCount == classes.Count())
+                //    {
+                //        deleteCourses.Add(course);
+                //        deleteSyllabuses.Add(syll);
+                //    }
+                //}
+
+                //var temps = new List<TempItemPrice>();
+                //var course = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
+                //foreach (var cou in course)
+                //{
+                //    var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                //        selector: x => x.CoursePrices,
+                //        predicate: x => x.Id == cou.Id))!.ToArray();
+
+                //    foreach (var cls in cou.Classes)
+                //    {
+                //        double result = 0;
+
+                //        coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
+
+                //        result = coursePrices.First().Price;
+                //        for (int i = 1; i < coursePrices.Length; i++)
+                //        {
+                //            if (cls.AddedDate >= coursePrices[i].EffectiveDate)
+                //            {
+                //                result = coursePrices[i].Price;
+                //            }
+                //            else
+                //            {
+                //                break;
+                //            }
+                //        }
+
+                //        temps.Add(new TempItemPrice
+                //        {
+                //            Id = Guid.NewGuid(),
+                //            ClassId = cls.Id,
+                //            CourseId = default,
+                //            Price = result,
+                //        });
+                //    }
+
+                //    coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToArray();
+
+                //    var Couresult = coursePrices.Last().Price;
+
+                //    var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
+
+                //    if (currentValidPrice is not null)
+                //    {
+                //        Couresult = currentValidPrice.Value;
+                //    }
+
+                //    temps.Add(new TempItemPrice
+                //    {
+                //        Id = Guid.NewGuid(),
+                //        ClassId = default,
+                //        CourseId = cou.Id,
+                //        Price = Couresult,
+                //    });
+                //}
+            //    var newEva = new List<Evaluate>();
+            //    var oldEva = new List<Evaluate>();
+            //    var newAtten = new List<Attendance>();
+            //    var oldAtten = new List<Attendance>();
+
+            //    var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("70013593-7c58-423c-a87a-cef2a391ca02"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            //    foreach (var stu in cls.StudentClasses)
             //    {
-            //        deleteSyllabuses.Add(syll);
-            //        continue;
-            //    }
-            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
-            //    if (classes == null && !classes.Any())
-            //    {
-            //        deleteCourses.Add(course);
-            //        deleteSyllabuses.Add(syll);
-            //        continue;
-            //    }
-            //    int classCount = 0;
-            //    foreach (var cls in classes)
-            //    {
-            //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
-            //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
+            //        foreach (var sch in cls.Schedules)
             //        {
-            //            classCount++;
-            //            deleteClasses.Add(cls);
+            //            var oa = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
+            //            if (oa != null)
+            //            {
+
+            //                oldAtten.Add(oa);
+            //            }
+            //            var oe = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
+            //            if (oe != null)
+            //            {
+
+            //                oldEva.Add(oe);
+            //            }
+
+            //            newEva.Add(new Evaluate
+            //            {
+            //                Id = Guid.NewGuid(),
+            //                Status = null,
+            //                Note = null,
+            //                IsValid = true,
+            //                StudentId = stu.StudentId,
+            //                ScheduleId = sch.Id,
+            //            });
+
+            //            newAtten.Add(new Attendance
+            //            {
+            //                Id = Guid.NewGuid(),
+            //                IsPresent = null,
+            //                IsPublic = true,
+            //                IsValid = true,
+            //                Note = null,
+            //                StudentId = stu.StudentId,
+            //                ScheduleId = sch.Id,
+            //            });
             //        }
             //    }
-            //    if (classCount == classes.Count())
-            //    {
-            //        deleteCourses.Add(course);
-            //        deleteSyllabuses.Add(syll);
-            //    }
-            //}
 
-            //var temps = new List<TempItemPrice>();
-            //var course = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
-            //foreach (var cou in course)
-            //{
-            //    var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-            //        selector: x => x.CoursePrices,
-            //        predicate: x => x.Id == cou.Id))!.ToArray();
-
-            //    foreach (var cls in cou.Classes)
-            //    {
-            //        double result = 0;
-
-            //        coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
-
-            //        result = coursePrices.First().Price;
-            //        for (int i = 1; i < coursePrices.Length; i++)
-            //        {
-            //            if (cls.AddedDate >= coursePrices[i].EffectiveDate)
-            //            {
-            //                result = coursePrices[i].Price;
-            //            }
-            //            else
-            //            {
-            //                break;
-            //            }
-            //        }
-
-            //        temps.Add(new TempItemPrice
-            //        {
-            //            Id = Guid.NewGuid(),
-            //            ClassId = cls.Id,
-            //            CourseId = default,
-            //            Price = result,
-            //        });
-            //    }
-
-            //    coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToArray();
-
-            //    var Couresult = coursePrices.Last().Price;
-
-            //    var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
-
-            //    if (currentValidPrice is not null)
-            //    {
-            //        Couresult = currentValidPrice.Value;
-            //    }
-
-            //    temps.Add(new TempItemPrice
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        ClassId = default,
-            //        CourseId = cou.Id,
-            //        Price = Couresult,
-            //    });
-            //}
-            //var eva = new List<Evaluate>();
-            //var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("f1b36690-3ced-4136-8cc5-f56b72844d2a"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
-            //foreach (var stu in cls.StudentClasses)
-            //{
-            //    foreach (var sch in cls.Schedules)
-            //    {
-            //        eva.Add(new Evaluate
-            //        {
-            //            Id = Guid.NewGuid(),
-            //            Status = null,
-            //            Note = null,
-            //            IsValid = true,
-            //            StudentId = stu.StudentId,
-            //            ScheduleId = sch.Id,
-            //        });
-            //    }
-            //}
-
-            //await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(eva);
-            ////_unitOfWork.GetRepository<Course>().DeleteRangeAsync(deleteCourses);
-            ////_unitOfWork.GetRepository<Syllabus>().DeleteRangeAsync(deleteSyllabuses);
-            //_unitOfWork.Commit();
+            //    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newEva);
+            //    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newAtten);
+            //    _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldEva);
+            //    _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAtten);
+            //    _unitOfWork.Commit();
 
 
             //}
@@ -4012,12 +4041,13 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 suitableClass.Schedules = groupBy.ToList();
-                var schedules = await  _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate : x => x.Id == suitableClass.ClassId,include : x => x.Include(x => x.Schedules));
+                var schedules = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == suitableClass.ClassId, include: x => x.Include(x => x.Schedules));
                 var sc = schedules.Schedules.Where(x => x.Date.Date <= DateTime.Now.Date);
                 if (sc == null)
                 {
                     suitableClass.CurrentSession = 0;
-                } else
+                }
+                else
                 {
                     suitableClass.CurrentSession = sc.Count();
                 }
