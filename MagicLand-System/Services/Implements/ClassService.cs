@@ -364,6 +364,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                var scheduleCompleted = c.Schedules.Where(x => x.Date.Date <= DateTime.Now.Date);
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
                     ClassId = c.Id,
@@ -385,6 +386,7 @@ namespace MagicLand_System.Services.Implements
                     LecturerResponse = lecturerResponse,
                     RoomResponse = roomResponse,
                     CreatedDate = c.AddedDate.Value,
+                    CurrentSession = scheduleCompleted.Count(),
                 };
                 var syllabusCode = "undefined";
                 var syllabusName = "undefined";
