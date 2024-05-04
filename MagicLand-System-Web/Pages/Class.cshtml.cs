@@ -1,15 +1,12 @@
-﻿using Academic_Blog_App.Services.Helper;
-using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Request;
+﻿using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Users;
+using MagicLand_System_Web.Pages.Helper;
 using MagicLand_System_Web.Pages.Message;
 using MagicLand_System_Web.Pages.Message.SubMessage;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -17,20 +14,11 @@ namespace MagicLand_System_Web.Pages
 {
     public class ClassModel : PageModel
     {
-        private readonly ILogger<SyllabusModel> _logger;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly HttpClient _httpClient;
-        private string baseUrl;
+        private readonly ApiHelper _apiHelper;
 
-        public ClassModel(ILogger<SyllabusModel> logger, IHttpContextAccessor httpContextAccessor)
+        public ClassModel(ApiHelper apiHelper)
         {
-            _httpClient = new HttpClient();
-            var contentType = new MediaTypeWithQualityHeaderValue("application/json");
-            _httpClient.DefaultRequestHeaders.Accept.Add(contentType);
-            baseUrl = "http://localhost:5097/api/v1";
-            //baseUrl = "https://magiclandapiv2.somee.com/api/v1";
-            _httpContextAccessor = httpContextAccessor;
-            _logger = logger;
+            _apiHelper = apiHelper;
         }
 
         [BindProperty]
@@ -41,7 +29,7 @@ namespace MagicLand_System_Web.Pages
         public void OnGet()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<ClassMessage>>(_httpContextAccessor.HttpContext!.Session, "DataClass");
+            var data = SessionHelper.GetObjectFromJson<List<ClassMessage>>(HttpContext!.Session, "DataClass");
 
             if (data != null && data.Count > 0)
             {
@@ -60,8 +48,8 @@ namespace MagicLand_System_Web.Pages
 
             Random random = new Random();
 
-            string token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            string token = SessionHelper.GetObjectFromJson<string>(HttpContext!.Session, "Token");
+            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             for (int order = 0; order < inputField; order++)
             {
@@ -117,21 +105,21 @@ namespace MagicLand_System_Web.Pages
             }
 
             var jsonContent = new StringContent(JsonSerializer.Serialize(createClassRequestData), Encoding.UTF8, "application/json");
-            var insertResponse = await _httpClient.PostAsync(baseUrl + "/classes/add", jsonContent);
+            //var insertResponse = await _httpClient.PostAsync(baseUrl + "/classes/add", jsonContent);
 
-            int statusCode = (int)insertResponse.StatusCode;
-            string responseMessage = await insertResponse.Content.ReadAsStringAsync();
+            //int statusCode = (int)insertResponse.StatusCode;
+            //string responseMessage = await insertResponse.Content.ReadAsStringAsync();
 
-            ClassMessages.Add(new ClassMessage
-            {
-                ClassCode = createClassRequestData.ClassCode,
-                CourseBeLong = course.CourseDetail!.CourseName!,
-                StartDate = startDate.ToString("MM/dd/yyyy"),
-                LecturerBeLong = lecturer.FullName!,
-                Schedules = schedules.OrderBy(sc => sc.Order).ToList(),
-                Status = statusCode.ToString(),
-                Note = responseMessage,
-            });
+            //ClassMessages.Add(new ClassMessage
+            //{
+            //    ClassCode = createClassRequestData.ClassCode,
+            //    CourseBeLong = course.CourseDetail!.CourseName!,
+            //    StartDate = startDate.ToString("MM/dd/yyyy"),
+            //    LecturerBeLong = lecturer.FullName!,
+            //    Schedules = schedules.OrderBy(sc => sc.Order).ToList(),
+            //    Status = statusCode.ToString(),
+            //    Note = responseMessage,
+            //});
         }
 
         private async Task<LecturerResponse> GetLecturer(
@@ -168,15 +156,16 @@ namespace MagicLand_System_Web.Pages
             };
 
             var filterLecturerContent = new StringContent(JsonSerializer.Serialize(filterLecturerRequestData), Encoding.UTF8, "application/json");
-            var lecturereResponses = await _httpClient.PostAsync(baseUrl + "/users/getLecturer", filterLecturerContent);
-            var lecturer = new LecturerResponse();
-            if (lecturereResponses.IsSuccessStatusCode)
-            {
-                string content = await lecturereResponses.Content.ReadAsStringAsync();
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LecturerResponse>>(content);
-                lecturer = data![random.Next(0, data.Count)];
-            }
-            return lecturer;
+            //var lecturereResponses = await _httpClient.PostAsync(baseUrl + "/users/getLecturer", filterLecturerContent);
+            //var lecturer = new LecturerResponse();
+            //if (lecturereResponses.IsSuccessStatusCode)
+            //{
+            //    string content = await lecturereResponses.Content.ReadAsStringAsync();
+            //    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LecturerResponse>>(content);
+            //    lecturer = data![random.Next(0, data.Count)];
+            //}
+            //return lecturer;
+            return default;
         }
 
         private static void InitData(out List<(string, string)> roomOnline, out List<(string, string)> roomOffline, out List<(string, string)> slots, out List<(string, int)> dayOfWeeks)
@@ -216,13 +205,13 @@ namespace MagicLand_System_Web.Pages
         {
             var courses = new List<CourseResExtraInfor>();
 
-            var courseApiResponse = await _httpClient.GetAsync(baseUrl + "/courses");
+            //var courseApiResponse = await _httpClient.GetAsync(baseUrl + "/courses");
 
-            if (courseApiResponse.IsSuccessStatusCode)
-            {
-                string content = await courseApiResponse.Content.ReadAsStringAsync();
-                courses = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CourseResExtraInfor>>(content);
-            }
+            //if (courseApiResponse.IsSuccessStatusCode)
+            //{
+            //    string content = await courseApiResponse.Content.ReadAsStringAsync();
+            //    courses = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CourseResExtraInfor>>(content);
+            //}
 
             return courses;
         }

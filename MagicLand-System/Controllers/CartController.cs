@@ -44,7 +44,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.CartEnpoint.AddCourseFavoriteList)]
+        [HttpPost(ApiEndpointConstant.CartEndpoint.AddCourseFavoriteList)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
         [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
@@ -95,7 +95,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.CartEnpoint.ModifyCart)]
+        [HttpPost(ApiEndpointConstant.CartEndpoint.ModifyCart)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
@@ -165,7 +165,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CartEnpoint.GetCart)]
+        [HttpGet(ApiEndpointConstant.CartEndpoint.GetCart)]
         [ProducesResponseType(typeof(WishListResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetCart()
@@ -182,7 +182,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CartEnpoint.GetFavorite)]
+        [HttpGet(ApiEndpointConstant.CartEndpoint.GetFavorite)]
         [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> GetFavorite()
@@ -208,7 +208,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Invalid role</response>
         /// <response code="500">Unhandel database error</response>
         #endregion
-        [HttpDelete(ApiEndpointConstant.CartEnpoint.DeleteCartItem)]
+        [HttpDelete(ApiEndpointConstant.CartEndpoint.DeleteCartItem)]
         [ProducesResponseType(typeof(String), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> DeleteCartItem([FromQuery] List<Guid> cartItemIdList)
@@ -228,7 +228,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CartEnpoint.GetAll)]
+        [HttpGet(ApiEndpointConstant.CartEndpoint.GetAll)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
         [ProducesResponseType(typeof(FavoriteResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]

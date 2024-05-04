@@ -27,7 +27,7 @@ namespace MagicLand_System.Controllers
         /// <response code="200">Trả Về Danh Sách Khóa Học</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAll)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetAll)]
         [AllowAnonymous]
         public async Task<IActionResult> GetCourses()
         {
@@ -42,7 +42,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllValid)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetAllValid)]
         [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "PARENT, STUDENT")]
@@ -70,7 +70,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.SearchCourse)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.SearchCourse)]
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourse([FromQuery] string keyWord)
         {
@@ -96,7 +96,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.CourseById)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.CourseById)]
         [AllowAnonymous]
         public async Task<IActionResult> GetCoureById(Guid id)
         {
@@ -135,7 +135,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.FilterCourse)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.FilterCourse)]
         [AllowAnonymous]
         public async Task<IActionResult> FilterCourse(
             [FromQuery] string subject,
@@ -159,7 +159,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCurrentStudentCourses)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetCurrentStudentCourses)]
         [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "STUDENT")]
@@ -169,61 +169,61 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseCategory)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetCourseCategory)]
         public async Task<IActionResult> GetCourseCategory()
         {
             var categories = await _courseService.GetCourseCategories();
             return Ok(categories);
         }
-        [HttpPost(ApiEndpointConstant.CourseEnpoint.AddCourse)]
+        [HttpPost(ApiEndpointConstant.CourseEndpoint.AddCourse)]
         public async Task<IActionResult> InsertCourseInformation([FromBody] CreateCourseRequest request)
         {
             var isSuccess = await _courseService.AddCourseInformation(request);
             return Ok(isSuccess);
         }
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseByStaff)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetCourseByStaff)]
         public async Task<IActionResult> GetCourseByStaff(string? id)
         {
             var isSuccess = await _courseService.GetStaffCourseByCourseId(id);
             return Ok(isSuccess);
         }
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCoursePrice)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetCoursePrice)]
         public async Task<IActionResult> GetCoursePrice(string? courseId)
         {
             var isSuccess = await _courseService.GetCoursePrices(courseId);
             return Ok(isSuccess);
         }
-        [HttpPost(ApiEndpointConstant.CourseEnpoint.AddPrice)]
+        [HttpPost(ApiEndpointConstant.CourseEndpoint.AddPrice)]
         public async Task<IActionResult> CreateNewPrice(CoursePriceRequest request)
         {
             var isSuccess = await _courseService.GenerateCoursePrice(request);
             return Ok(isSuccess);
         }
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseStaff)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetCourseStaff)]
         public async Task<IActionResult> GetCourseStaff([FromQuery] List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge)
         {
             var isSuccess = await _courseService.GetCourseResponse(categoryIds, searchString, minAge, MaxAge);
             return Ok(isSuccess);
         }
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetCourseClassStaff)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetCourseClassStaff)]
         public async Task<IActionResult> GetCourseClassStaff(string courseId, [FromQuery] List<string> dateOfWeeks, string? method, [FromQuery] List<string>? slotId)
         {
             var isSuccess = await _courseService.GetClassesOfCourse(courseId, dateOfWeeks, method, slotId);
             return Ok(isSuccess);
         }
-        [HttpPut(ApiEndpointConstant.CourseEnpoint.UpdateCourse)]
+        [HttpPut(ApiEndpointConstant.CourseEndpoint.UpdateCourse)]
         public async Task<IActionResult> UpdateCourse([FromRoute] string id, [FromBody] UpdateCourseRequest request)
         {
             var isSucc = await _courseService.UpdateCourse(id, request);
             return Ok(isSucc);
         }
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllStaff)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetAllStaff)]
         public async Task<IActionResult> GetStaffCourse()
         {
             var isSucc = await _courseService.GetCourseByStaff();
             return Ok(isSucc);
         }
-        [HttpGet(ApiEndpointConstant.CourseEnpoint.GetAllStaffV2)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetAllStaffV2)]
         public async Task<IActionResult> GetStaffCourseV2(string keyword)
         {
             var isSucc = await _courseService.GetCourseSearch(keyword);

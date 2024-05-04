@@ -20,7 +20,7 @@ namespace MagicLand_System.Controllers
             _syllabusService = syllabusService;
         }
 
-        [HttpPost(ApiEndpointConstant.SyllabusEndPoint.AddSyllabus)]
+        [HttpPost(ApiEndpointConstant.SyllabusEndpoint.AddSyllabus)]
         public async Task<IActionResult> InsertSyllabus([FromBody] OverallSyllabusRequest request)
         {
             var isSuccess = await _syllabusService.AddSyllabus(request);
@@ -51,7 +51,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.CheckingSyllabusInfor)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.CheckingSyllabusInfor)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -85,7 +85,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadByCourse)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.LoadByCourse)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -113,7 +113,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.LoadSyllabus)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -132,7 +132,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.LoadSyllabuses)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.LoadSyllabuses)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize]
@@ -163,7 +163,7 @@ namespace MagicLand_System.Controllers
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.FilterSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.FilterSyllabus)]
         [ProducesResponseType(typeof(SyllabusResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize]
@@ -174,13 +174,13 @@ namespace MagicLand_System.Controllers
             var syllabuses = await _syllabusService.FilterSyllabusAsync(keyWords, date, score);
             return Ok(syllabuses);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.GeneralSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.GeneralSyllabus)]
         public async Task<IActionResult> GetAll(string? keyword)
         {
             var course = await _syllabusService.GetAllSyllabus(keyword);
             return Ok(course);
         }
-        [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateSyllabus)]
+        [HttpPut(ApiEndpointConstant.SyllabusEndpoint.UpdateSyllabus)]
         public async Task<IActionResult> UpdateSyll([FromRoute] string id, OverallSyllabusRequest request)
         {
             var isSuccess = await _syllabusService.UpdateSyllabus(request, id);
@@ -191,19 +191,19 @@ namespace MagicLand_System.Controllers
             }
             return Ok(message);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.StaffSyl)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.StaffSyl)]
         public async Task<IActionResult> GetStaffSyllabus([FromRoute] string id)
         {
             var result = await _syllabusService.GetStaffSyllabusResponse(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.AvailableSyl)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.AvailableSyl)]
         public async Task<IActionResult> GetAvailableSyllabus(string? keyword = null)
         {
             var result = await _syllabusService.GetStaffSyllabusCanInsert(keyword);
             return Ok(result);
         }
-        [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateOverall)]
+        [HttpPut(ApiEndpointConstant.SyllabusEndpoint.UpdateOverall)]
         public async Task<IActionResult> UpdateOverall([FromRoute] string id, UpdateOverallSyllabus request)
         {
             var result = await _syllabusService.UpdateOverallSyllabus(id, request);
@@ -213,7 +213,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok("Update Success");
         }
-        [HttpPut(ApiEndpointConstant.SyllabusEndPoint.UpdateTopic)]
+        [HttpPut(ApiEndpointConstant.SyllabusEndpoint.UpdateTopic)]
         public async Task<IActionResult> UpdateTopic([FromRoute] string topicId, UpdateTopicRequest request)
         {
             var result = await _syllabusService.UpdateTopic(topicId, request);
@@ -233,37 +233,37 @@ namespace MagicLand_System.Controllers
         //    }
         //    return Ok("Update Success");
         //}
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.GenralInfromation)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.GenralInfromation)]
         public async Task<IActionResult> GetStaffGeneralSyllabus(string id)
         {
             var result = await _syllabusService.GetGeneralSyllabusResponse(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.MaterialInfor)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.MaterialInfor)]
         public async Task<IActionResult> GetStaffMaterialSyllabus(string id)
         {
             var result = await _syllabusService.GetMaterialResponse(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.ExamSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.ExamSyllabus)]
         public async Task<IActionResult> GetStaffExamSyllabus(string id)
         {
             var result = await _syllabusService.GetStaffExamSyllabusResponses(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.SessionSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.SessionSyllabus)]
         public async Task<IActionResult> GetStaffSessionSyllabus(string id)
         {
             var result = await _syllabusService.GetAllSessionResponses(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.QuestionSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.QuestionSyllabus)]
         public async Task<IActionResult> GetStaffQuestionSyllabus(string id)
         {
             var result = await _syllabusService.GetStaffQuestionPackageResponses(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.SyllabusEndPoint.StaffFilterSyllabus)]
+        [HttpGet(ApiEndpointConstant.SyllabusEndpoint.StaffFilterSyllabus)]
         public async Task<IActionResult> FilterStaffSyllabus([FromQuery] List<string>? keyWords,
           [FromQuery] DateTime? date,
           [FromQuery] double? score)

@@ -18,13 +18,13 @@ namespace MagicLand_System.Controllers
         {
             _userService = userService;
         }
-        [HttpGet(ApiEndpointConstant.User.UsersEndpoint)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.RootEndpoint)]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _userService.GetUsers();
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.UserEndPointExist)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.CheckExist)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
         public async Task<IActionResult> CheckUserExist([FromQuery] string phone)
@@ -41,7 +41,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = $"Tồn tại user có số điện thoại {phone}", Role = isExist.Role });
         }
-        [HttpGet(ApiEndpointConstant.User.UserEndPointGetCurrentUser)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetCurrentUser)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
         [Authorize]
@@ -60,7 +60,7 @@ namespace MagicLand_System.Controllers
 
             return Ok(user);
         }
-        [HttpPost(ApiEndpointConstant.User.UserEndPointRegister)]
+        [HttpPost(ApiEndpointConstant.UserEndpoint.Register)]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> Register(RegisterRequest request)
@@ -81,7 +81,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(new { Message = "Created Successfully" });
         }
-        [HttpPost(ApiEndpointConstant.User.UserEndPointGetLecturer)]
+        [HttpPost(ApiEndpointConstant.UserEndpoint.GetLecturer)]
         [ProducesResponseType(typeof(LecturerResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundObjectResult))]
         public async Task<IActionResult> GetLecturers(FilterLecturerRequest? request)
@@ -122,7 +122,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.User.UpdateUser)]
+        [HttpPut(ApiEndpointConstant.UserEndpoint.UpdateUser)]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "PARENT")]
@@ -132,55 +132,55 @@ namespace MagicLand_System.Controllers
 
             return Ok(response);
         }
-        [HttpGet(ApiEndpointConstant.User.GetByAdmin)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetByAdmin)]
         public async Task<IActionResult> GetByAdmin(DateTime? startDate , DateTime? endDate , string? searchString, string? slotId)
         {
             var result = await _userService.GetAdminLecturerResponses(startDate, endDate, searchString,slotId);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.User.GetByPhone)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetByPhone)]
         public async Task<IActionResult> GetUserFromPhone(string phone)
         {
             var users = await _userService.GetUserFromPhone(phone);
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetStudent)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetStudent)]
         public async Task<IActionResult> GetStudents(string classId,string phone)
         {
             var users = await _userService.GetStudents(classId,phone);
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetFromName)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetFromName)]
         public async Task<IActionResult> GetUserFromName(string name)
         {
             var users = await _userService.GetUserFromName(name);   
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetStudentInfor)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetStudentInfor)]
         public async Task<IActionResult> GetStudentInfor(string? name, DateTime? birthdate, string? id)
         {
             var users = await _userService.GetFromNameAndBirthDate(name,birthdate,id);
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetClassOfStudent)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetClassOfStudent)]
         public async Task<IActionResult> GetClassOfStudent(string studentId, string? status, string? searchString,DateTime? dateTime)
         {
             var users = await _userService.GetClassOfStudent(studentId,status,searchString,dateTime);
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetScheduleOfStudent)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetScheduleOfStudent)]
         public async Task<IActionResult> GetScheduleOfStudent(string studentId,DateTime date)
         {
             var users = await _userService.GetScheduleOfStudentInDate(studentId,date);
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetSessionOfStudent)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetSessionOfStudent)]
         public async Task<IActionResult> GetContentsOfSession(string sessionId)
         {
             var users = await _userService.GetStudentSession(sessionId);
             return Ok(users);
         }
-        [HttpGet(ApiEndpointConstant.User.GetListSessionOfStudent)]
+        [HttpGet(ApiEndpointConstant.UserEndpoint.GetListSessionOfStudent)]
         public async Task<IActionResult> GetListContentsOfSession(string classId, string studentId, DateTime? date)
         {
             var users = await _userService.GetStudentSessionAsync(classId,studentId,date);

@@ -57,7 +57,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.User.CheckoutClass)]
+        [HttpPost(ApiEndpointConstant.UserEndpoint.CheckoutClass)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "PARENT")]
@@ -126,7 +126,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.User.CheckOutClassByVnpay)]
+        [HttpPost(ApiEndpointConstant.UserEndpoint.CheckOutClassByVnpay)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "PARENT")]
@@ -202,7 +202,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.CartEnpoint.CheckOutCartItemByVnpay)]
+        [HttpPost(ApiEndpointConstant.CartEndpoint.CheckOutCartItemByVnpay)]
         [ProducesResponseType(typeof(WishListResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> CheckOutCartItemByVnpay([FromBody] List<Guid> cartItemIdList)
@@ -281,7 +281,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.CartEnpoint.CheckOutCartItem)]
+        [HttpPost(ApiEndpointConstant.CartEndpoint.CheckOutCartItem)]
         [ProducesResponseType(typeof(WishListResponse), StatusCodes.Status200OK)]
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> CheckOutCartItem([FromBody] List<Guid> cartItemIdList)

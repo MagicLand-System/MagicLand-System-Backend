@@ -15,7 +15,7 @@ namespace MagicLand_System.Controllers
         {
             _slotService = slotService;
         }
-        [HttpGet(ApiEndpointConstant.SlotEnpoint.GetAll)]
+        [HttpGet(ApiEndpointConstant.SlotEndpoint.GetAll)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
         public async Task<IActionResult> GetSlots()

@@ -3,6 +3,7 @@ using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.Reflection.Metadata;
 
 namespace MagicLand_System.Domain
 {
@@ -135,7 +136,8 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Course");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+                //entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Syllabus>(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Syllabus).WithOne(e => e.Course).HasForeignKey<Course>(e => e.SyllabusId).IsRequired().OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<PersonalWallet>(entity =>
             {
@@ -200,6 +202,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Syllabus");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(entity => entity.SyllabusCategory).WithMany(e => e.Syllabuses).HasForeignKey(e => e.SyllabusCategoryId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(entity => entity.Course).WithOne(e => e.Syllabus).HasForeignKey<Course>(e => e.SyllabusId).IsRequired(false);
             });
             modelBuilder.Entity<SyllabusPrerequisite>(entity =>
             {

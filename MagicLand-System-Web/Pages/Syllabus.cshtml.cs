@@ -1,8 +1,12 @@
-﻿using Academic_Blog_App.Services.Helper;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System_Web.Pages.DataContants;
+using MagicLand_System_Web.Pages.Enums;
+using MagicLand_System_Web.Pages.Helper;
 using MagicLand_System_Web.Pages.Message;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http.Headers;
@@ -13,21 +17,11 @@ namespace MagicLand_System_Web.Pages
 {
     public class SyllabusModel : PageModel
     {
-        private readonly ILogger<SyllabusModel> _logger;
+        private readonly ApiHelper _apiHelper;
 
-        private readonly HttpClient _httpClient;
-        private string baseUrl;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        public SyllabusModel(ILogger<SyllabusModel> logger, IHttpContextAccessor httpContextAccessor)
+        public SyllabusModel(ApiHelper apiHelper)
         {
-            _httpClient = new HttpClient();
-            var contentType = new MediaTypeWithQualityHeaderValue("application/json");
-            _httpClient.DefaultRequestHeaders.Accept.Add(contentType);
-            //baseUrl = "https://magiclandapiv2.somee.com/api/v1";
-            //baseUrl = "http://localhost:5097/api/v1";
-            baseUrl = "http://localhost:5097/api/v1";
-            _httpContextAccessor = httpContextAccessor;
-            _logger = logger;
+            _apiHelper = apiHelper;
         }
 
         [BindProperty]
@@ -39,8 +33,8 @@ namespace MagicLand_System_Web.Pages
         public async Task<IActionResult> OnGetAsync()
         {
             IsLoading = false;
-            var token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
-            var data = SessionHelper.GetObjectFromJson<List<SyllabusMessage>>(_httpContextAccessor.HttpContext!.Session, "DataSyllabus");
+            var token = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "Token");
+            var data = SessionHelper.GetObjectFromJson<List<SyllabusMessage>>(HttpContext.Session, "DataSyllabus");
 
             if (data != null && data.Count > 0)
             {
@@ -52,28 +46,19 @@ namespace MagicLand_System_Web.Pages
                 return Page();
             }
 
-            
-            var loginContent = new StringContent(JsonSerializer.Serialize(new LoginRequest { Phone = "+84971822093" }), Encoding.UTF8, "application/json");
-            
-            //var userApiResponse = await _httpClient.PostAsync(baseUrl + "/auth", loginContent);
+            var objectRequest = new LoginRequest
+            {
+                Phone = "+84971822093",
+            };
 
-            //var userContent = await userApiResponse.Content.ReadAsStringAsync();
-            //var user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginResponse>(userContent);
+            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
 
-
-            var loginRequestMessage = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/auth");
-
-
-            loginRequestMessage.Headers.Add("ngrok-skip-browser-warning", "true");
-
-            loginRequestMessage.Content = loginContent;
-
-            var userApiResponse = await _httpClient.SendAsync(loginRequestMessage);
-            var userContent = await userApiResponse.Content.ReadAsStringAsync();
-            var user = Newtonsoft.Json.JsonConvert.DeserializeObject<LoginResponse>(userContent);
-
-
-            SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+            if (result.IsSuccess)
+            {
+                var user = result.Data;
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                return Page();
+            }
 
             return Page();
         }
@@ -86,29 +71,33 @@ namespace MagicLand_System_Web.Pages
                 return Page();
             }
 
-            var subjects = new List<(string, string)>
-            {
-                ("Nhạc", "NA"),("Ngôn Ngữ", "NN"), ("Toán", "TTD"), ("Nhảy", "NB"), ("Hát", "H"), ("Vật Lý", "VL"), ("Lập Trình", "LT"), ("Hội Họa", "HH")
-            };
+            //var subjects = new List<(string, string)>
+            //{
+            //    ("Nhạc", "NA"),("Ngôn Ngữ", "NN"), ("Toán", "TTD"), ("Nhảy", "NB"), ("Hát", "H"), ("Vật Lý", "VL"), ("Lập Trình", "LT"), ("Hội Họa", "HH")
+            //};
+            var subjects = SyllabusData.Subjects;
+
             Random random = new Random();
 
             for (int i = 0; i < inputField; i++)
             {
-                int index = random.Next(0, 1000), indexSubject = random.Next(0, subjects.Count());
+                int index = random.Next(0, 1000), indexSubject = random.Next(0, subjects.Count);
 
-                var requestData = new OverallSyllabusRequest
+                var subject = subjects[indexSubject];
+
+                var objectRequest = new OverallSyllabusRequest
                 {
-                    Description = "This is description for syllabus no " + index,
+                    Description = SyllabusData.GetSyllabusInfor(subject.Item2, TypeDataEnum.Description),
                     MinAvgMarkToPass = random.Next(4, 5),
-                    SyllabusName = subjects[indexSubject].Item1 + "-" + index,
+                    SyllabusName = SyllabusData.GetSyllabusInfor(subject.Item2, TypeDataEnum.SyllabusName) + "-" + index,
                     ScoringScale = 10,
                     StudentTasks = "Hoàn thành các khóa học, thực hiện đầy đủ các bài tập và làm bài kiểm tra.",
-                    SubjectCode = subjects[indexSubject].Item2 + index + "-",
+                    SubjectCode = SyllabusData.GetSyllabusInfor(subject.Item2, TypeDataEnum.SyllabusCode) + "-" + index,
                     SyllabusLink = "https://firebasestorage.googleapis.com/v0/b/magic-2e5fc.appspot.com/o/syllabuses%2FTo%C3%A1n%20t%C6%B0%20duy%20cho%20b%C3%A9%2F28%2F2%2F...2b1dd733",
                     TimePerSession = index % 2 == 0 ? 60 : 90,
                     NumOfSessions = 20,
                     EffectiveDate = DateTime.Now.ToString(),
-                    Type = subjects[indexSubject].Item1,
+                    Type = subject.Item1,
                     MaterialRequests = GenerateMaterial(),
                     SyllabusRequests = GenerateSyllabus(),
                     ExamSyllabusRequests = GenerateExams(),
@@ -137,29 +126,17 @@ namespace MagicLand_System_Web.Pages
                 //});
                 //SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", SyllabusMessages);
 
-
-                string token = SessionHelper.GetObjectFromJson<string>(_httpContextAccessor.HttpContext!.Session, "Token");
-
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                _httpClient.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
-                var jsonContent = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
-
-                var insertResponse = await _httpClient.PostAsync(baseUrl + "/Syllabus/insertSyllabus", jsonContent);
-
-
-                int statusCode = (int)insertResponse.StatusCode;
-                string responseMessage = await insertResponse.Content.ReadAsStringAsync();
+                var result = await _apiHelper.FetchApiAsync<string>(ApiEndpointConstant.SyllabusEndpoint.AddSyllabus, MethodEnum.POST, objectRequest);
 
                 IsLoading = true;
 
-
                 SyllabusMessages.Add(new SyllabusMessage
                 {
-                    SyllabusName = requestData.SyllabusName,
-                    Status = statusCode.ToString(),
-                    Subject = requestData.Type,
-                    SyllabusCode = requestData.SubjectCode,
-                    Note = responseMessage,
+                    SyllabusName = objectRequest.SyllabusName,
+                    Status = result.StatusCode,
+                    Subject = objectRequest.Type,
+                    SyllabusCode = objectRequest.SubjectCode,
+                    Note = result.Message,
                 });
 
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "DataSyllabus", SyllabusMessages);
@@ -199,11 +176,11 @@ namespace MagicLand_System_Web.Pages
                          {
                              new SessionContentRequest
                              {
-                                 Content = "This is content for session no " + order,
+                                 Content = "Đây Là Chủ Đề Cho Buổi Học Thứ Tự " + order,
                                  SessionContentDetails = new List<string>
                                  {
-                                     "This is first session detail for session no " + order,
-                                     "This is second session detail for session no " + order,
+                                     "Đây Là Mô Tả Chi Tiết Đầu Tiên Cho Buổi Học Thứ Tự " + order,
+                                      "Đây Là Mô Tả Chi Tiết Thứ Hai Cho Buổi Học Thứ Tự " + order,
                                  }
                              }
                          }
@@ -213,7 +190,7 @@ namespace MagicLand_System_Web.Pages
                 syllabusRequest.Add(new SyllabusRequest
                 {
                     Index = i + 1,
-                    TopicName = "This is name of topic no " + (i + 1),
+                    TopicName = "Đây Là Tên Của Chủ Đề Có Thứ Tự " + (i + 1),
                     SessionRequests = sessions,
                 });
             }
@@ -248,7 +225,7 @@ namespace MagicLand_System_Web.Pages
 
                     question.Add(new QuestionRequest
                     {
-                        Description = "This is description for quesiton no " + (j + 1),
+                        Description = "Đây Là Mô Tả Câu Hỏi Có Thứ Tự " + (j + 1),
                         Img = "img.png",
                         MutipleChoiceAnswerRequests = mutiple,
                         FlashCardRequests = flashCard,
@@ -260,7 +237,7 @@ namespace MagicLand_System_Web.Pages
                     ContentName = i == 0 ? "Luyện Tập" : i == 1 ? "Luyện Tập" : "Kiểm Tra Cuối Khóa",
                     NoOfSession = i == 0 ? 6 : i == 1 ? 15 : 20,
                     Type = i == 0 ? "multiple-choice" : i == 1 ? "flashcard" : "flashcard",
-                    Title = "This is title for question package no " + (i + 1),
+                    Title = "Đây Là Tiêu Đề Cho Gói Câu Hỏi Thứ Tự " + (i + 1),
                     Score = 10,
                     QuestionRequests = question,
                 });
@@ -275,8 +252,8 @@ namespace MagicLand_System_Web.Pages
             {
                 flashCard.Add(new FlashCardRequest
                 {
-                    RightSideDescription = "This is first card description no " + (k + 1),
-                    LeftSideDescription = "This is second card description no " + (k + 1),
+                    RightSideDescription = "Đây Là Chi Tiết Cho Thẻ Đầu Tiên Thuộc Thứ Tự " + (k + 1),
+                    LeftSideDescription = "Đây Là Chi Tiết Cho Thẻ Thứ Hai Thuộc Thứ Tự " + (k + 1),
                     Score = 1,
                 });
 
@@ -290,7 +267,7 @@ namespace MagicLand_System_Web.Pages
             {
                 mutiple.Add(new MutipleChoiceAnswerRequest
                 {
-                    Description = "This is description for asnwer " + (k + 1),
+                    Description = "Đây Là Mô Tả Câu Trả Lời Có Thứ Tự" + (k + 1),
                     Img = "https://drive.google.com/thumbnail?id=1P7IvweybpPEqSSmW1146O1Hn_YJAWZ6Q",
                     Score = k == answerSucces ? 1 : 0,
                 });

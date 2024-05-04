@@ -18,10 +18,10 @@ namespace MagicLand_System.Domain.Models
 
 
         [ForeignKey("Syllabus")]
-        public Guid? SyllabusId { get; set; }
+        public Guid SyllabusId { get; set; }
         public Syllabus? Syllabus { get; set; }
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<SubDescriptionTitle> SubDescriptionTitles { get; set; } = new List<SubDescriptionTitle>();
-        public ICollection<CoursePrice>? CoursePrices { get; set; }   
+        public ICollection<CoursePrice>? CoursePrices { get; set; }
     }
 }

@@ -20,21 +20,21 @@ namespace MagicLand_System.Controllers
             _walletTransactionService = walletTransactionService;
             _personalWalletService = personalWalletService;
         }
-        [HttpGet(ApiEndpointConstant.WalletTransactionEndPoint.GetAll)]
+        [HttpGet(ApiEndpointConstant.WalletTransactionEndpoint.GetAll)]
         [AllowAnonymous]
         public async Task<IActionResult> GetAll(string? phone, DateTime? startDate, DateTime? endDate, string? transactionCode)
         {
             var result = await _walletTransactionService.GetWalletTransactions(phone, startDate, endDate, transactionCode);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.WalletTransactionEndPoint.TransactionById)]
+        [HttpGet(ApiEndpointConstant.WalletTransactionEndpoint.TransactionById)]
         [AllowAnonymous]
         public async Task<IActionResult> GetDetail(string id)
         {
             var result = await _walletTransactionService.GetWalletTransaction(id);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.WalletTransactionEndPoint.PersonalWallet)]
+        [HttpGet(ApiEndpointConstant.WalletTransactionEndpoint.PersonalWallet)]
         [Authorize]
         public async Task<IActionResult> GetWallet()
         {
@@ -59,7 +59,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.WalletTransactionEndPoint.GetBillTransactionById)]
+        [HttpPost(ApiEndpointConstant.WalletTransactionEndpoint.GetBillTransactionById)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [AllowAnonymous]
@@ -89,7 +89,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.WalletTransactionEndPoint.GetBillTransactionByTxnRefCode)]
+        [HttpPost(ApiEndpointConstant.WalletTransactionEndpoint.GetBillTransactionByTxnRefCode)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [AllowAnonymous]
@@ -113,7 +113,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.WalletTransactionEndPoint.GetRevenueTransactionByTime)]
+        [HttpGet(ApiEndpointConstant.WalletTransactionEndpoint.GetRevenueTransactionByTime)]
         [ProducesResponseType(typeof(RevenueResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [AllowAnonymous]
@@ -122,7 +122,7 @@ namespace MagicLand_System.Controllers
             var response = await _walletTransactionService.GetRevenueTransactionByTimeAsync(time);
             return Ok(response);
         }
-        [HttpPost(ApiEndpointConstant.WalletTransactionEndPoint.CheckoutByStaff)]
+        [HttpPost(ApiEndpointConstant.WalletTransactionEndpoint.CheckoutByStaff)]
         [ProducesResponseType(typeof(BillPaymentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [AllowAnonymous]

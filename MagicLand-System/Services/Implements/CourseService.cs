@@ -16,6 +16,7 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System.Globalization;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
@@ -110,7 +111,7 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
 
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == course.Id,
+                predicate: x => x.Course!.Id == course.Id,
                 include: x => x.Include(x => x.SyllabusPrerequisites).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
             }
 
@@ -134,17 +135,23 @@ namespace MagicLand_System.Services.Implements
                 courses = courses.Where(c => c.Classes.Any() && c.Classes.Any(c => c.Status == ClassStatusEnum.UPCOMING.ToString())).ToList();
             }
 
-            var currentRole = GetRoleFromJwt();
-            var currentUser = await GetUserFromJwt();
+            var userId = Guid.Empty;
+            if (IsAuthorized())
+            {
+                var currentRole = GetRoleFromJwt();
+                var currentUser = await GetUserFromJwt();
 
-            courses = await FilterCompletedCourses(courses, currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : currentUser.StudentIdAccount!.Value);
+                userId = currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : currentUser.StudentIdAccount!.Value;
+
+                courses = await FilterCompletedCourses(courses, userId);
+            }
 
             var coursePrerequisites = await GetCoursePrerequesites(courses);
             var coureSubsequents = await GetCoureSubsequents(courses);
 
             var responses = GenerateCoursesResponse(courses, coursePrerequisites, coureSubsequents);
 
-            await SettingLastResponse(isValid, currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : null, responses);
+            await SettingLastResponse(isValid, userId != default ? userId : null, responses);
 
             return responses;
             //return courses.Select(c => CourseCustomMapper
@@ -317,7 +324,7 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!).Include(x => x.StudentClasses));
 
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == course.Id,
+                predicate: x => x.Course!.Id == course.Id,
                 include: x => x.Include(x => x.SyllabusPrerequisites).Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
 
                 var courses = new List<Course>
@@ -399,7 +406,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var course in courses)
             {
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == course.Id,
+                predicate: x => x.Course!.Id == course.Id,
                 include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)).Include(x => x.SyllabusPrerequisites)!);
 
 
@@ -527,7 +534,7 @@ namespace MagicLand_System.Services.Implements
                 course.NumberOfSession = sessions.Count;
                 //course.SubjectName = syll.SubjectCode;
                 course.SubjectName = syll.SyllabusCategory.Name;
-                syll.CourseId = course.Id;
+                //syll.CourseId = course.Id;
                 await _unitOfWork.GetRepository<Course>().InsertAsync(course);
                 await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
                 await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
@@ -670,102 +677,95 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StaffCourseResponse>> GetCourseResponse(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge)
         {
-            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
-            List<Course> courseList = new List<Course>();
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                predicate: x => x.Classes.Any(cls => cls.Status == ClassStatusEnum.UPCOMING.ToString()),
+                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sd => sd.SubDescriptionContents).Include(x => x.Classes));
+
+            if (courses == null || !courses.Any())
+            {
+                throw new BadHttpRequestException("Không tìm thấy khóa thích hợp", StatusCodes.Status400BadRequest);
+            }
+
+            var result = new List<StaffCourseResponse>();
+            await GetCourseStaffResult(courses, result);
+
+            result = GetFinalCourseStaffResult(categoryIds, searchString, minAge, MaxAge, result);
+
+            return result;
+        }
+
+        private async Task GetCourseStaffResult(ICollection<Course> courses, List<StaffCourseResponse> result)
+        {
             foreach (var course in courses)
             {
-                var classList = course.Classes.ToList();
-                var isExist = classList.Any(x => x.Status.Equals("UPCOMING"));
-                if (isExist)
-                {
-                    courseList.Add(course);
-                }
-            }
-            List<StaffCourseResponse> result = new List<StaffCourseResponse>();
-            foreach (var course in courseList)
-            {
-                var courseFound = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(course.Id.ToString()), include: x => x.Include(x => x.SubDescriptionTitles).Include(x => x.Classes));
-                if (courseFound == null)
-                {
-                    throw new BadHttpRequestException("Không tìm thấy khóa thích hợp", StatusCodes.Status400BadRequest);
-                }
-                var courseSyllabus = courseFound.SyllabusId;
-                var subjectname = "undefined";
-                string categoryId = "";
-                if (courseSyllabus != null)
-                {
-                    subjectname = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Name;
-                    categoryId = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseSyllabus.ToString()), include: x => x.Include(x => x.SyllabusCategory))).SyllabusCategory.Id.ToString();
-                }
-                var titles = courseFound.SubDescriptionTitles;
-                List<SubDescriptionTitleResponse> desResponse = new List<SubDescriptionTitleResponse>();
+                var subject = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    selector: x => x.SyllabusCategory!,
+                    predicate: x => x.Id == course.SyllabusId);
+
+                var titles = course.SubDescriptionTitles;
+                var sdtr = new List<SubDescriptionTitleResponse>();
                 foreach (var title in titles)
                 {
-                    List<SubDescriptionContentResponse> req = new List<SubDescriptionContentResponse>();
-                    var content = new SubDescriptionTitleResponse
+                    var sdcr = new List<SubDescriptionContentResponse>();
+                    foreach (var content in title.SubDescriptionContents)
                     {
-                        Title = title.Title,
-                    };
-                    var sc = (await _unitOfWork.GetRepository<SubDescriptionContent>().GetListAsync(predicate: x => x.SubDescriptionTitleId.ToString().Equals(title.Id.ToString()))).ToList();
-                    foreach (var s in sc)
-                    {
-                        req.Add(new SubDescriptionContentResponse
+                        sdcr.Add(new SubDescriptionContentResponse
                         {
-                            Content = s.Content,
-                            Description = s.Description,
+                            Content = content.Content,
+                            Description = content.Description,
                         });
                     }
-                    content.Contents = req;
-                    desResponse.Add(content);
+
+                    sdtr.Add(new SubDescriptionTitleResponse
+                    {
+                        Title = title.Title,
+                        Contents = sdcr,
+                    });
 
                 }
-                var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(course.Id.ToString()));
-                //var priceArray = priceList.OrderByDescending(x => x.EffectiveDate).ToArray();
-                int ongoing = 0;
-                var count = (await _unitOfWork.GetRepository<Class>()
-                        .GetListAsync(predicate: x => (x.CourseId.ToString().Equals(courseFound.Id.ToString())) && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals("UPCOMING"))));
-                if (count == null)
-                {
-                    ongoing = 0;
-                }
-                else
-                {
-                    ongoing = count.Count();
-                }
+                //var priceList = await _unitOfWork.GetRepository<CoursePrice>().GetListAsync(predicate: x => x.CourseId == course.Id);
+
+                var ongoing = (await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id && (x.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString()) || x.Status.Equals(ClassStatusEnum.UPCOMING.ToString())))).Count;
+
                 var classList = course.Classes.ToList();
                 if (classList == null || classList.Count == 0)
                 {
                     continue;
                 }
-                var earliestDate = (course.Classes.Where(x => x.Status.Equals("UPCOMING") && x.StartDate >= DateTime.Now).OrderBy(x => x.StartDate).ToArray())[0].StartDate;
-                StaffCourseResponse staffCourseResponse = new StaffCourseResponse
+
+                var earliestDate = course.Classes.Where(x => x.Status!.Equals(ClassStatusEnum.UPCOMING.ToString()) && x.StartDate >= DateTime.Now).OrderBy(x => x.StartDate);
+
+                var staffCourseResponse = new StaffCourseResponse
                 {
-                    AddedDate = courseFound.AddedDate,
-                    Id = courseFound.Id,
-                    Image = courseFound.Image,
-                    MainDescription = courseFound.MainDescription,
-                    MaxYearOldsStudent = courseFound.MaxYearOldsStudent,
-                    MinYearOldsStudent = courseFound.MinYearOldsStudent,
-                    Name = courseFound.Name,
-                    NumberOfSession = courseFound.NumberOfSession,
+                    AddedDate = course.AddedDate,
+                    Id = course.Id,
+                    Image = course.Image,
+                    MainDescription = course.MainDescription,
+                    MaxYearOldsStudent = course.MaxYearOldsStudent,
+                    MinYearOldsStudent = course.MinYearOldsStudent,
+                    Name = course.Name,
+                    NumberOfSession = course.NumberOfSession,
                     Price = await GetDynamicPrice(course.Id, false),
-                    Status = courseFound.Status,
-                    SubjectName = subjectname,
-                    SyllabusId = courseFound.SyllabusId,
-                    UpdateDate = courseFound.UpdateDate,
-                    SubDescriptionTitles = desResponse,
+                    Status = course.Status,
+                    SubjectName = subject.Name,
+                    SyllabusId = course.SyllabusId,
+                    UpdateDate = course.UpdateDate,
+                    SubDescriptionTitles = sdtr,
                     NumberOfClassOnGoing = ongoing,
-                    EarliestClassTime = earliestDate,
-                    CategoryId = categoryId,
+                    EarliestClassTime = earliestDate.Any() ? earliestDate.First().StartDate : course.Classes.OrderBy(x => x.StartDate).First().StartDate,
+                    CategoryId = subject.Id.ToString(),
                 };
+
                 result.Add(staffCourseResponse);
             }
+        }
+
+        private List<StaffCourseResponse> GetFinalCourseStaffResult(List<string>? categoryIds, string? searchString, int? minAge, int? MaxAge, List<StaffCourseResponse> result)
+        {
             if (result.Count > 0)
             {
-                List<StaffCourseResponse> result1 = new List<StaffCourseResponse>();
-                List<StaffCourseResponse> result2 = new List<StaffCourseResponse>();
-                List<StaffCourseResponse> result3 = new List<StaffCourseResponse>();
-                List<StaffCourseResponse> result4 = new List<StaffCourseResponse>();
+                List<StaffCourseResponse> result1 = new List<StaffCourseResponse>(), result2 = new List<StaffCourseResponse>(), result3 = new List<StaffCourseResponse>(), result4 = new List<StaffCourseResponse>();
+
                 if (categoryIds != null && categoryIds.Count > 0)
                 {
                     result1 = result.Where(x => categoryIds.Contains(x.CategoryId.ToString())).ToList();
@@ -788,6 +788,7 @@ namespace MagicLand_System.Services.Implements
                     result = resultT.ToList();
                 }
             }
+
             return result;
         }
 
@@ -1156,7 +1157,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var course in courses)
             {
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == course.Id,
+                predicate: x => x.Course!.Id == course.Id,
                 include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(s => s.NoSession)).Include(x => x.SyllabusPrerequisites)!);
 
 

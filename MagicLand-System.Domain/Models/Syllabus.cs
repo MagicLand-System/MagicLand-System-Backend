@@ -15,8 +15,6 @@ namespace MagicLand_System.Domain.Models
         public DateTime? EffectiveDate { get; set; } = default;
         public string? StudentTasks { get; set; }
         public double ScoringScale {  get; set; } 
-        public Guid? CourseId { get; set; } = null;
-        public Course? Course { get; set; }
         public int TimePerSession { get; set; }  
         public double MinAvgMarkToPass { get; set; }
         public string? Description { get; set; } 
@@ -24,7 +22,8 @@ namespace MagicLand_System.Domain.Models
         public string? SubjectCode { get; set; }
         public int? NumOfSessions {  get; set; }
 
-        [ForeignKey("SyllabusCategory")]
+        public Course? Course { get; set; }
+
         public Guid SyllabusCategoryId { get; set; }
         public SyllabusCategory? SyllabusCategory { get; set; }
 

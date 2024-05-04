@@ -2110,7 +2110,7 @@ namespace MagicLand_System.Services.Implements
                 var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == myRequest.LecturerId);
                 var room = await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == myRequest.RoomId);
                 var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == myRequest.CourseId);
-                var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == courseName.Id);
+                var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == courseName.SyllabusId);
                 var lecturerResponse = new LecturerResponse
                 {
                     AvatarImage = lecturer.AvatarImage,
@@ -2161,7 +2161,10 @@ namespace MagicLand_System.Services.Implements
         }
         private async Task<CreateClassesRequest> FromCToC(CreateClassResponse request)
         {
-            var courseCode = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == request.CourseId, selector: x => x.SubjectCode);
+            var courseCode = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                selector: x => x.Syllabus!.SubjectCode,
+                predicate: x => x.Id == request.CourseId);
+
             List<ScheduleRequestV2> requestV2s = new List<ScheduleRequestV2>();
             var schedules = request.ScheduleRequests;
             foreach (var sch in schedules)
@@ -2482,99 +2485,99 @@ namespace MagicLand_System.Services.Implements
 
             //try
             //{
-                //var deleteClasses = new List<Class>();
-                //var deleteSyllabuses = new List<Syllabus>();
-                //var deleteCourses = new List<Course>();
+            //var deleteClasses = new List<Class>();
+            //var deleteSyllabuses = new List<Syllabus>();
+            //var deleteCourses = new List<Course>();
 
-                //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
+            //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
 
-                //foreach (var syll in syllabuses)
-                //{
-                //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
-                //    if (course == null)
-                //    {
-                //        deleteSyllabuses.Add(syll);
-                //        continue;
-                //    }
-                //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
-                //    if (classes == null && !classes.Any())
-                //    {
-                //        deleteCourses.Add(course);
-                //        deleteSyllabuses.Add(syll);
-                //        continue;
-                //    }
-                //    int classCount = 0;
-                //    foreach (var cls in classes)
-                //    {
-                //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
-                //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
-                //        {
-                //            classCount++;
-                //            deleteClasses.Add(cls);
-                //        }
-                //    }
-                //    if (classCount == classes.Count())
-                //    {
-                //        deleteCourses.Add(course);
-                //        deleteSyllabuses.Add(syll);
-                //    }
-                //}
+            //foreach (var syll in syllabuses)
+            //{
+            //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
+            //    if (course == null)
+            //    {
+            //        deleteSyllabuses.Add(syll);
+            //        continue;
+            //    }
+            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
+            //    if (classes == null && !classes.Any())
+            //    {
+            //        deleteCourses.Add(course);
+            //        deleteSyllabuses.Add(syll);
+            //        continue;
+            //    }
+            //    int classCount = 0;
+            //    foreach (var cls in classes)
+            //    {
+            //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
+            //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
+            //        {
+            //            classCount++;
+            //            deleteClasses.Add(cls);
+            //        }
+            //    }
+            //    if (classCount == classes.Count())
+            //    {
+            //        deleteCourses.Add(course);
+            //        deleteSyllabuses.Add(syll);
+            //    }
+            //}
 
-                //var temps = new List<TempItemPrice>();
-                //var course = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
-                //foreach (var cou in course)
-                //{
-                //    var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-                //        selector: x => x.CoursePrices,
-                //        predicate: x => x.Id == cou.Id))!.ToArray();
+            //var temps = new List<TempItemPrice>();
+            //var course = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
+            //foreach (var cou in course)
+            //{
+            //    var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+            //        selector: x => x.CoursePrices,
+            //        predicate: x => x.Id == cou.Id))!.ToArray();
 
-                //    foreach (var cls in cou.Classes)
-                //    {
-                //        double result = 0;
+            //    foreach (var cls in cou.Classes)
+            //    {
+            //        double result = 0;
 
-                //        coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
+            //        coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
 
-                //        result = coursePrices.First().Price;
-                //        for (int i = 1; i < coursePrices.Length; i++)
-                //        {
-                //            if (cls.AddedDate >= coursePrices[i].EffectiveDate)
-                //            {
-                //                result = coursePrices[i].Price;
-                //            }
-                //            else
-                //            {
-                //                break;
-                //            }
-                //        }
+            //        result = coursePrices.First().Price;
+            //        for (int i = 1; i < coursePrices.Length; i++)
+            //        {
+            //            if (cls.AddedDate >= coursePrices[i].EffectiveDate)
+            //            {
+            //                result = coursePrices[i].Price;
+            //            }
+            //            else
+            //            {
+            //                break;
+            //            }
+            //        }
 
-                //        temps.Add(new TempItemPrice
-                //        {
-                //            Id = Guid.NewGuid(),
-                //            ClassId = cls.Id,
-                //            CourseId = default,
-                //            Price = result,
-                //        });
-                //    }
+            //        temps.Add(new TempItemPrice
+            //        {
+            //            Id = Guid.NewGuid(),
+            //            ClassId = cls.Id,
+            //            CourseId = default,
+            //            Price = result,
+            //        });
+            //    }
 
-                //    coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToArray();
+            //    coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToArray();
 
-                //    var Couresult = coursePrices.Last().Price;
+            //    var Couresult = coursePrices.Last().Price;
 
-                //    var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
+            //    var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
 
-                //    if (currentValidPrice is not null)
-                //    {
-                //        Couresult = currentValidPrice.Value;
-                //    }
+            //    if (currentValidPrice is not null)
+            //    {
+            //        Couresult = currentValidPrice.Value;
+            //    }
 
-                //    temps.Add(new TempItemPrice
-                //    {
-                //        Id = Guid.NewGuid(),
-                //        ClassId = default,
-                //        CourseId = cou.Id,
-                //        Price = Couresult,
-                //    });
-                //}
+            //    temps.Add(new TempItemPrice
+            //    {
+            //        Id = Guid.NewGuid(),
+            //        ClassId = default,
+            //        CourseId = cou.Id,
+            //        Price = Couresult,
+            //    });
+            //}
             //    var newEva = new List<Evaluate>();
             //    var oldEva = new List<Evaluate>();
             //    var newAtten = new List<Attendance>();
@@ -2707,7 +2710,7 @@ namespace MagicLand_System.Services.Implements
                     predicate: x => x.Id == cls.CourseId);
 
                 var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                    predicate: x => x.CourseId == cls.CourseId,
+                    predicate: x => x.Id == course.SyllabusId,
                     include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(tp => tp.NoSession))
                    .ThenInclude(ses => ses.SessionDescriptions!.OrderBy(ses => ses.Order)));
 
@@ -3367,7 +3370,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 var syllabusRequired = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(
-                    predicate: x => x.CourseId == cls.CourseId,
+                    predicate: x => x.Id == cls.Course.SyllabusId,
                     include: x => x.Include(x => x.SyllabusPrerequisites)!)).SelectMany(x => x.SyllabusPrerequisites!.Select(sp => sp.PrerequisiteSyllabusId));
 
                 if (syllabusRequired != null)
@@ -3424,7 +3427,7 @@ namespace MagicLand_System.Services.Implements
 
             var topic = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 selector: x => x.Topics!.SingleOrDefault(tp => tp.OrderNumber == topicOrder),
-                predicate: x => x.CourseId == cls.CourseId,
+                predicate: x => x.Course!.Id == cls.CourseId,
                 include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))
                .ThenInclude(ses => ses.SessionDescriptions!.OrderBy(sd => sd.Order)));
 
@@ -3511,12 +3514,15 @@ namespace MagicLand_System.Services.Implements
                 ExamName = "Bài " + quiz.ContentName.ToLower() + extenstionName,
                 ExamPart = part,
                 QuizName = quiz.Score == 0 ? "Làm Tại Lớp" : quiz.Title!,
-                QuizDuration = isNonRequireTime ? null : duration,
+                //QuizDuration = isNonRequireTime ? null : duration,
+                QuizDuration = duration,
                 Attempts = isNonRequireTime ? null : attempt,
-                QuizStartTime = isNonRequireTime ? null : startTime,
+                //QuizStartTime = isNonRequireTime ? null : startTime,
+                QuizStartTime = startTime,
                 //QuizStartTime = isNonRequireTime ? startTime.Date.Add(new TimeSpan(6, 0, 0)) : startTime,
                 //QuizEndTime = isNonRequireTime ? endTime.Date.Add(new TimeSpan(6, 0, 0)) : endTime,
-                QuizEndTime = isNonRequireTime ? null : endTime,
+                //QuizEndTime = isNonRequireTime ? null : endTime,
+                QuizEndTime = endTime,
             };
         }
 
@@ -3935,8 +3941,8 @@ namespace MagicLand_System.Services.Implements
                     Name = student.FullName,
                     ParentPhoneNumber = student.User.Phone,
                 };
-                var courseId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.CourseId);
-                var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == courseId, selector: x => x.Id);
+                var syllabusId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.Course!.SyllabusId);
+                //var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == syllabusId, selector: x => x.Id);
                 var examSyll = await _unitOfWork.GetRepository<ExamSyllabus>().GetListAsync(predicate: x => x.SyllabusId == syllabusId);
 
             }

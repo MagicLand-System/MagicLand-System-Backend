@@ -771,7 +771,7 @@ namespace MagicLand_System.Services.Implements
 
             if (isCourseId)
             {
-                syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == id,
+                syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Course!.Id == id,
                 include: x => x.Include(x => x.Materials)
                .Include(x => x.SyllabusCategory)
                .Include(x => x.ExamSyllabuses!));
@@ -832,26 +832,26 @@ namespace MagicLand_System.Services.Implements
             }
 
             string role = GetRoleFromJwt();
-            if(role == null)
+            if (role == null)
             {
                 return syllabuses.ToList();
             }
             if (role.ToLower() == RoleEnum.LECTURER.ToString().ToLower())
             {
                 var coursesOfLecturer = await _unitOfWork.GetRepository<Course>().GetListAsync(
-                    selector: x => x.Id,
+                    selector: x => x.SyllabusId,
                     predicate: x => x.Classes.Any(cls => cls.LecturerId == GetUserIdFromJwt()));
 
-                syllabuses = syllabuses.Where(syll => coursesOfLecturer.Any(id => id == syll.CourseId)).ToList();
+                syllabuses = syllabuses.Where(syll => coursesOfLecturer.Any(id => id == syll.Id)).ToList();
             }
 
             if (role.ToLower() == RoleEnum.STUDENT.ToString().ToLower())
             {
                 var coursesOfStudent = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                    selector: x => x.CourseId,
+                    selector: x => x.Course.SyllabusId,
                     predicate: x => x.StudentClasses.Any(sc => sc.StudentId == GetUserIdFromJwt()));
 
-                syllabuses = syllabuses.Where(syll => coursesOfStudent.Any(id => id == syll.CourseId)).ToList();
+                syllabuses = syllabuses.Where(syll => coursesOfStudent.Any(id => id == syll.Id)).ToList();
             }
 
             return syllabuses.ToList();
@@ -978,7 +978,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-             predicate: x => x.CourseId == cls.CourseId,
+             predicate: x => x.Course!.Id == cls.CourseId,
              include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
 
             cls.Course!.Syllabus = syllabus;
@@ -1072,12 +1072,18 @@ namespace MagicLand_System.Services.Implements
             examResponse.Date = date;
 
             examResponse.AttemptAlloweds = isNonRequireTime ? null : attempt;
-            examResponse.ExamStartTime = isNonRequireTime ? null : startTime;
-            examResponse.ExamEndTime = isNonRequireTime ? null : endTime;
+            //examResponse.ExamStartTime = isNonRequireTime ? null : startTime;
+            //examResponse.ExamEndTime = isNonRequireTime ? null : endTime;
+            examResponse.ExamStartTime = startTime;
+            examResponse.ExamEndTime = endTime;
+
+
 
             //examResponse.ExamStartTime = isNonRequireTime ? startTime.Date.Add(new TimeSpan(6, 0, 0)) : startTime;
             //examResponse.ExamEndTime = isNonRequireTime ? endTime.Date.Add(new TimeSpan(23, 59, 0)) : endTime;
-            examResponse.Duration = isNonRequireTime ? null : duration;
+
+            //examResponse.Duration = isNonRequireTime ? null : duration;
+            examResponse.Duration = duration;
 
             examsResponse.Add(examResponse);
         }
@@ -1110,7 +1116,7 @@ namespace MagicLand_System.Services.Implements
                 cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == cls.CourseId);
 
                 cls.Course!.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == cls.CourseId,
+                predicate: x => x.Course!.Id == cls.CourseId,
                 include: x => x.Include(syll => syll!.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession))!.Include(syll => syll!.ExamSyllabuses!));
 
                 foreach (var session in cls.Course!.Syllabus!.Topics!.SelectMany(tp => tp.Sessions!).ToList())
@@ -1290,7 +1296,7 @@ namespace MagicLand_System.Services.Implements
         private async Task ValidateDayDoingExam(Guid examId, Class cls, QuestionPackage quiz)
         {
             var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == cls.CourseId,
+                predicate: x => x.Course!.Id == cls.CourseId,
                 selector: x => x.Topics!.SelectMany(tp => tp.Sessions!));
 
             if (!sessions.Any(ses => ses.Id == quiz.SessionId))
@@ -1298,12 +1304,12 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Thuộc Lớp Đang Truy Suất", StatusCodes.Status400BadRequest);
             }
 
-            //var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
+            var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
 
-            //if (dayDoingExam.Date > GetCurrentTime().Date)
-            //{
-            //    throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
-            //}
+            if (dayDoingExam.Date > GetCurrentTime().Date)
+            {
+                throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
+            }
         }
 
         private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)
@@ -1405,7 +1411,7 @@ namespace MagicLand_System.Services.Implements
                 var subjectCode = "undefined";
                 var syllabusName = "undefined";
 
-                var sylCourse = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == syl.CourseId);
+                var sylCourse = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syl.Id);
                 if (sylCourse != null)
                 {
                     name = sylCourse.Name;
@@ -1443,8 +1449,11 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> UpdateSyllabus(OverallSyllabusRequest request, string id)
         {
-            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
-            if (syllabus.CourseId == null)
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                include: x => x.Include(x => x.Course!),
+                predicate: x => x.Id.ToString().Equals(id));
+
+            if (syllabus.Course == null)
             {
                 await UpdateGeneralSyllabus(syllabus.Id, request);
                 await UpdateMaterial(request, syllabus.Id);
@@ -1735,7 +1744,10 @@ namespace MagicLand_System.Services.Implements
         }
         public async Task<StaffSyllabusResponse> GetStaffSyllabusResponse(string id)
         {
-            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id));
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.Id.ToString().Equals(id),
+                include: x => x.Include(x => x.Course)!);
+
             if (syllabus == null)
             {
                 return new StaffSyllabusResponse();
@@ -1774,8 +1786,8 @@ namespace MagicLand_System.Services.Implements
             {
                 syllRes.PreRequisite = strings;
             }
-            var courseId = syllabus.CourseId;
-            if (courseId == null)
+            var courseId = syllabus.Course != null ? syllabus.Course.Id : default;
+            if (courseId == default)
             {
                 syllRes.LinkedCourse = null;
             }
@@ -1785,7 +1797,7 @@ namespace MagicLand_System.Services.Implements
                 var courseName = course.Name;
                 syllRes.LinkedCourse = new PayLoad.Response.Courses.LinkedCourse
                 {
-                    CourseId = courseId.Value,
+                    CourseId = courseId,
                     CourseName = courseName
                 };
             }
@@ -2174,8 +2186,8 @@ namespace MagicLand_System.Services.Implements
             {
                 syllRes.PreRequisite = strings;
             }
-            var courseId = syllabus.CourseId;
-            if (courseId == null)
+            var courseId = syllabus.Course != null ? syllabus.Course.Id : default;
+            if (courseId == default)
             {
                 syllRes.LinkedCourse = null;
             }
@@ -2185,7 +2197,7 @@ namespace MagicLand_System.Services.Implements
                 var courseName = course.Name;
                 syllRes.LinkedCourse = new PayLoad.Response.Courses.LinkedCourse
                 {
-                    CourseId = courseId.Value,
+                    CourseId = courseId,
                     CourseName = courseName
                 };
             }

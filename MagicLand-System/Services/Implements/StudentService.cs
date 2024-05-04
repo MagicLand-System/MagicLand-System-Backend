@@ -724,7 +724,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var sessionIds = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                predicate: x => x.CourseId == cls.CourseId,
+                predicate: x => x.Course!.Id == cls.CourseId,
                 selector: x => x.Topics!.SelectMany(tp => tp.Sessions!.Select(ses => ses.Id)))).ToList();
 
             if (sessionIds == null || sessionIds.Count == 0)
@@ -946,7 +946,7 @@ namespace MagicLand_System.Services.Implements
 
                 var topics = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                     selector: x => x.Topics,
-                    predicate: x => x.CourseId == cls.CourseId,
+                    predicate: x => x.Course!.Id == cls.CourseId,
                     include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
 
                 var identifySession = new List<(int, Guid, Guid)>();
@@ -961,11 +961,16 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                for (int i = 0; i < cls.Schedules.Count(); i++)
+                var schedules = cls.Schedules.ToList();
+                for (int i = 0; i < schedules.Count; i++)
                 {
-                    var schedule = cls.Schedules.ToList()[i];
-                    var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
-                    var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId);
+                    var schedule = schedules[i];
+                    var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId.ToLower());
+                    var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId.ToLower());
+                    if (evaluate == null)
+                    {
+                        var a = "";
+                    }
 
                     var studentSchedule = new StudentScheduleResponse
                     {
@@ -989,10 +994,10 @@ namespace MagicLand_System.Services.Implements
                         AttendanceStatus = attendance != null ? attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
                         Note = attendance != null ? attendance.Note : null,
                         LecturerName = lecturerName,
-                        EvaluateLevel = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3,
-                        EvaluateDescription = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
-                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt",
-                        EvaluateNote = evaluate.Note,
+                        EvaluateLevel = evaluate != null ? evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3 : 0,
+                        EvaluateDescription = evaluate != null ? evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
+                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt" : "",
+                        EvaluateNote = evaluate != null ? evaluate.Note : "",
                     };
 
                     listStudentSchedule.Add(studentSchedule);
@@ -1023,7 +1028,7 @@ namespace MagicLand_System.Services.Implements
 
             var sessions = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 selector: x => x.Topics!.SelectMany(x => x.Sessions!),
-                predicate: x => x.CourseId == cls.CourseId)).OrderBy(x => x.NoSession).ToList();
+                predicate: x => x.Course!.Id == cls.CourseId)).OrderBy(x => x.NoSession).ToList();
 
             foreach (var session in sessions)
             {

@@ -207,7 +207,7 @@ namespace MagicLand_System.Services.Implements
 
             return messageList;
         }
-        private async Task<List<string>> PurchaseByStaff(List<CheckoutRequest> requests,PersonalWallet personalWallet, User currentPayer, double discountEachItem)
+        private async Task<List<string>> PurchaseByStaff(List<CheckoutRequest> requests, PersonalWallet personalWallet, User currentPayer, double discountEachItem)
         {
             var messageList = new List<string>();
 
@@ -549,7 +549,7 @@ namespace MagicLand_System.Services.Implements
         {
             var currentSyllabusPrequisite = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 selector: x => x.SyllabusPrerequisites,
-                predicate: x => x.CourseId == cls.CourseId);
+                predicate: x => x.Course.Id == cls.CourseId);
 
             if (currentSyllabusPrequisite is null)
             {
@@ -1134,7 +1134,7 @@ namespace MagicLand_System.Services.Implements
             //var checkphone = "+84" + request.StaffUserCheckout.Phone.Trim().Substring(1);
             var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone.Equals(request.StaffUserCheckout.Phone.Trim()));
             Guid id = Guid.Empty;
-            if (user == null) 
+            if (user == null)
             {
                 var role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()), selector: x => x.Id);
                 User userx = new User
@@ -1175,14 +1175,15 @@ namespace MagicLand_System.Services.Implements
                 var isSuccess = await _unitOfWork.CommitAsync() > 0;
                 id = userx.Id;
 
-            } else
+            }
+            else
             {
                 id = user.Id;
             }
             var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet!));
 
             if (request.CreateStudentRequest != null && request.CreateStudentRequest.Count > 0)
-            { 
+            {
                 foreach (var studentRequest in request.CreateStudentRequest)
                 {
                     Guid studentId = Guid.NewGuid();

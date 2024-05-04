@@ -49,7 +49,7 @@ namespace MagicLand_System.Services
 
         protected DateTime GetCurrentTime()
         {
-            return DateTime.UtcNow;
+            return DateTime.Now;
         }
 
         protected async Task<double> GetDynamicPrice(Guid id, bool isClass)
@@ -78,6 +78,18 @@ namespace MagicLand_System.Services
             }
 
             return (coursePrices.OrderByDescending(x => x.EndDate).ToArray())[0].Price;
+        }
+
+        protected bool IsAuthorized()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+
+
+            if (!httpContext.User.Identity.IsAuthenticated)
+            {
+                return false;
+            }
+            return true;
         }
     }
 

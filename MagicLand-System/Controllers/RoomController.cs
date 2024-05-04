@@ -16,19 +16,19 @@ namespace MagicLand_System.Controllers
         {
             _roomService = roomService;
         }
-        [HttpPost(ApiEndpointConstant.RoomEnpoint.GetAll)]
+        [HttpPost(ApiEndpointConstant.RoomEndpoint.GetAll)]
         public async Task<IActionResult> GetAll(FilterRoomRequest? filterRoomRequest)
         {
             var result = await _roomService.GetRoomList(filterRoomRequest);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.RoomEnpoint.RoomByAdmin)]
+        [HttpGet(ApiEndpointConstant.RoomEndpoint.RoomByAdmin)]
         public async Task<IActionResult> GetByAdmin(DateTime? startDate , DateTime? endDate, string? searchString,string? slotId)
         {
             var result = await _roomService.GetAdminRoom(startDate,endDate,searchString,slotId);
             return Ok(result);
         }
-        [HttpGet(ApiEndpointConstant.RoomEnpoint.RoomByAdminV2)]
+        [HttpGet(ApiEndpointConstant.RoomEndpoint.RoomByAdminV2)]
         public async Task<IActionResult> GetByAdminV2(DateTime date,string? searchString)
         {
             var result = await _roomService.GetAdminRoomV2(date,searchString);

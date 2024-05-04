@@ -9,32 +9,32 @@
         public const string ApiVersion = "/v1";
         public const string ApiEndpoint = RootEndPoint + ApiVersion;
         
-        public static class User
+        public static class UserEndpoint
         {
-            public const string UsersEndpoint = ApiEndpoint + "/users";
-            public const string UserEndpoint = UsersEndpoint + "/{id}";
-            public const string UserEndPointExist = UsersEndpoint + "checkExist";
-            public const string UserEndPointGetCurrentUser = UsersEndpoint + "/getcurrentuser";
-            public const string UserEndPointRegister = UsersEndpoint + "/register";
-            public const string CheckoutClass = UsersEndpoint + "/checkout";
-            public const string CheckOutClassByVnpay = UsersEndpoint + "/vnpay/checkout";
-            public const string UserEndPointGetLecturer = UsersEndpoint + "/getLecturer";
-            public const string UpdateUser = UsersEndpoint + "/update";
-            public const string GetByAdmin = UsersEndpoint + "/getByAdmin";
-            public const string GetByPhone = UsersEndpoint + "/getByPhone";
-            public const string GetStudent = UsersEndpoint + "/getStudent";
-            public const string GetFromName = UsersEndpoint + "/getFromName";
-            public const string GetStudentInfor = UsersEndpoint + "/getStudentInfor";
-            public const string GetClassOfStudent = UsersEndpoint + "/getClassOfStudent";
-            public const string GetScheduleOfStudent = UsersEndpoint + "/getScheduleOfStudent";
-            public const string GetSessionOfStudent = UsersEndpoint + "/getSessionOfStudent";
-            public const string GetListSessionOfStudent = UsersEndpoint + "/getListSessionOfStudent";
+            public const string RootEndpoint = ApiEndpoint + "/users";
+            public const string GetUserById = RootEndpoint + "/{id}";
+            public const string CheckExist = RootEndpoint + "checkExist";
+            public const string GetCurrentUser = RootEndpoint + "/getcurrentuser";
+            public const string Register = RootEndpoint + "/register";
+            public const string CheckoutClass = RootEndpoint + "/checkout";
+            public const string CheckOutClassByVnpay = RootEndpoint + "/vnpay/checkout";
+            public const string GetLecturer = RootEndpoint + "/getLecturer";
+            public const string UpdateUser = RootEndpoint + "/update";
+            public const string GetByAdmin = RootEndpoint + "/getByAdmin";
+            public const string GetByPhone = RootEndpoint + "/getByPhone";
+            public const string GetStudent = RootEndpoint + "/getStudent";
+            public const string GetFromName = RootEndpoint + "/getFromName";
+            public const string GetStudentInfor = RootEndpoint + "/getStudentInfor";
+            public const string GetClassOfStudent = RootEndpoint + "/getClassOfStudent";
+            public const string GetScheduleOfStudent = RootEndpoint + "/getScheduleOfStudent";
+            public const string GetSessionOfStudent = RootEndpoint + "/getSessionOfStudent";
+            public const string GetListSessionOfStudent = RootEndpoint + "/getListSessionOfStudent";
         }
-        public static class Authentication
+        public static class AuthenticationEndpoint
         {
-            public const string AuthenticationEndpoint = ApiEndpoint + "/auth";
-            public const string Login = AuthenticationEndpoint + "/login";
-            public const string AuthenticationEndpointRefreshToken = ApiEndpoint + "/auth/refreshtoken";
+            public const string Authentication = ApiEndpoint + "/auth";
+            public const string Login = Authentication + "/login";
+            public const string RefreshToken = ApiEndpoint + "/auth/refreshtoken";
 
         }
         public static class ClassEnpoint
@@ -78,19 +78,19 @@
             public const string GetCurrent = GetAll + "/currentUser";
         }
 
-        public static class CartEnpoint
+        public static class CartEndpoint
         {
-            public const string Origin = ApiEndpoint + "/cart";
-            public const string ModifyCart = Origin + "/modify";
-            public const string AddCourseFavoriteList = Origin + "/favorite/add";
-            public const string GetCart = Origin + "/view";
-            public const string GetFavorite = Origin + "/favorite/view";
-            public const string DeleteCartItem = Origin + "/item/delete";
-            public const string CheckOutCartItem = Origin + "/item/checkout";
-            public const string GetAll = Origin + "/items/all";
-            public const string CheckOutCartItemByVnpay = Origin + "/vnpay/item/checkout";
+            public const string RootEndpoint = ApiEndpoint + "/cart";
+            public const string ModifyCart = RootEndpoint + "/modify";
+            public const string AddCourseFavoriteList = RootEndpoint + "/favorite/add";
+            public const string GetCart = RootEndpoint + "/view";
+            public const string GetFavorite = RootEndpoint + "/favorite/view";
+            public const string DeleteCartItem = RootEndpoint + "/item/delete";
+            public const string CheckOutCartItem = RootEndpoint + "/item/checkout";
+            public const string GetAll = RootEndpoint + "/items/all";
+            public const string CheckOutCartItemByVnpay = RootEndpoint + "/vnpay/item/checkout";
         }
-        public static class CourseEnpoint
+        public static class CourseEndpoint
         {
             public const string GetAll = ApiEndpoint + "/courses";
             public const string GetAllValid = ApiEndpoint + "/courses/validRegister";
@@ -111,33 +111,33 @@
         }
         public static class StudentEndpoint
         {
-            public const string StudentsEndpoint = ApiEndpoint + "/students";
+            public const string GetAll = ApiEndpoint + "/students";
             public const string FindValidDayReLearning = ApiEndpoint + "/student/dayOff/findClass";
             public const string GetStudentLearningProgress = ApiEndpoint + "/student/learning/progress";
-            public const string StudentEndpointGet = StudentsEndpoint + "/{id}";
-            public const string StudentEnpointCreate = StudentsEndpoint + "/add";
-            public const string StudentEndpointGetClass = StudentsEndpoint + "/getclass";
-            public const string StudentGetSchedule = StudentsEndpoint + "/getschedule";
-            public const string GetStudentAccount = StudentsEndpoint + "/getAccount";
-            public const string StudentGetCurrentChildren = StudentsEndpoint + "/currentuser";
-            public const string UpdateStudent = StudentsEndpoint + "/update";
-            public const string DeleteStudent = StudentsEndpoint + "/{id}/delete";
-            public const string GetStudentCourseRegistered = StudentsEndpoint + "/{id}/getcourses";
-            public const string GetStatisticRegisterStudent= StudentsEndpoint + "/register/statistic";
+            public const string StudentEndpointGet = GetAll + "/{id}";
+            public const string StudentEnpointCreate = GetAll + "/add";
+            public const string StudentEndpointGetClass = GetAll + "/getclass";
+            public const string StudentGetSchedule = GetAll + "/getschedule";
+            public const string GetStudentAccount = GetAll + "/getAccount";
+            public const string StudentGetCurrentChildren = GetAll + "/currentuser";
+            public const string UpdateStudent = GetAll + "/update";
+            public const string DeleteStudent = GetAll + "/{id}/delete";
+            public const string GetStudentCourseRegistered = GetAll + "/{id}/getcourses";
+            public const string GetStatisticRegisterStudent= GetAll + "/register/statistic";
         }
-        public static class RoomEnpoint
+        public static class RoomEndpoint
         {
             public const string GetAll = ApiEndpoint + "/rooms";
             public const string RoomById = GetAll + "/{id}";
             public const string RoomByAdmin = GetAll + "/admin/get";
             public const string RoomByAdminV2 = GetAll + "/v2/admin/get";
         }
-        public static class SlotEnpoint
+        public static class SlotEndpoint
         {
             public const string GetAll = ApiEndpoint + "/slots";
             public const string SlotById = GetAll + "/{id}";
         }
-        public static class WalletTransactionEndPoint
+        public static class WalletTransactionEndpoint
         {
             public const string GetAll = ApiEndpoint + "/walletTransactions";
             public const string TransactionById = GetAll + "/{id}";
@@ -147,74 +147,74 @@
             public const string GetRevenueTransactionByTime = GetAll + "/bills/revenue";
             public const string CheckoutByStaff = GetAll + "/staff/checkout";
         }
-        public static class SyllabusEndPoint
+        public static class SyllabusEndpoint
         {
-            public const string EndPointBase = ApiEndpoint + "/Syllabus";
+            public const string GetAll = ApiEndpoint + "/Syllabus";
             public const string CheckingSyllabusInfor = ApiEndpoint + "/Syllabus/infor/checking";
-            public const string LoadByCourse = EndPointBase + "/getByCourse";
-            public const string AddSyllabus = EndPointBase + "/insertSyllabus";
-            public const string LoadSyllabus = EndPointBase + "/getById";
-            public const string LoadSyllabuses = EndPointBase + "/getAll";
-            public const string FilterSyllabus = EndPointBase + "/filter";
-            public const string GeneralSyllabus = EndPointBase + "/general";
-            public const string UpdateSyllabus = EndPointBase + "/{id}/update";
-            public const string StaffSyl = EndPointBase + "/{id}/staff/get";
-            public const string AvailableSyl = EndPointBase + "/available";
-            public const string UpdateOverall = EndPointBase + "/{id}/updateOverall";
-            public const string UpdateTopic = EndPointBase + "/{topicId}/updateTopic";
-            public const string UpdateSession = EndPointBase + "/{descriptionId}/updateSession";
-            public const string GenralInfromation = EndPointBase + "/staff/getGeneralInformation";
-            public const string MaterialInfor = EndPointBase + "/staff/getMaterial";
-            public const string ExamSyllabus = EndPointBase + "/staff/getExamSyllabus";
-            public const string SessionSyllabus = EndPointBase + "/staff/getSessionSyllabus";
-            public const string QuestionSyllabus = EndPointBase + "/staff/getQuestionSyllabus";
-            public const string StaffFilterSyllabus = EndPointBase + "/staff/filter";
+            public const string LoadByCourse = GetAll + "/getByCourse";
+            public const string AddSyllabus = GetAll + "/insertSyllabus";
+            public const string LoadSyllabus = GetAll + "/getById";
+            public const string LoadSyllabuses = GetAll + "/getAll";
+            public const string FilterSyllabus = GetAll + "/filter";
+            public const string GeneralSyllabus = GetAll + "/general";
+            public const string UpdateSyllabus = GetAll + "/{id}/update";
+            public const string StaffSyl = GetAll + "/{id}/staff/get";
+            public const string AvailableSyl = GetAll + "/available";
+            public const string UpdateOverall = GetAll + "/{id}/updateOverall";
+            public const string UpdateTopic = GetAll + "/{topicId}/updateTopic";
+            public const string UpdateSession = GetAll + "/{descriptionId}/updateSession";
+            public const string GenralInfromation = GetAll + "/staff/getGeneralInformation";
+            public const string MaterialInfor = GetAll + "/staff/getMaterial";
+            public const string ExamSyllabus = GetAll + "/staff/getExamSyllabus";
+            public const string SessionSyllabus = GetAll + "/staff/getSessionSyllabus";
+            public const string QuestionSyllabus = GetAll + "/staff/getQuestionSyllabus";
+            public const string StaffFilterSyllabus = GetAll + "/staff/filter";
 
         }
-        public static class LectureEndPoint
+        public static class LectureEndpoint
         {
-            public const string EndPointBase = ApiEndpoint + "/lectures";
-            public const string TakeStudentAttendance = EndPointBase + "/students/takeAttendance";
-            public const string EvaluateStudent = EndPointBase + "/students/evaluate";
-            public const string GetStudentEvaluates = EndPointBase + "/students/get/evaluates";
-            public const string GetStudentQuizFullyInfor = EndPointBase + "/students/get/quiz/fullyInfor";
-            public const string SettingQuizTime = EndPointBase + "/exam/quiz/setting";
-            public const string GetStudentAttendance = EndPointBase + "/student/attendance";
-            public const string GetStudentAttendanceOfAllClass = EndPointBase + "/student/classes/attendance";
-            public const string GetCurrentClassesSchedule = EndPointBase + "/current/classes";
-            public const string GetClassesAttendanceWithDate = EndPointBase + "/class/date/attendances";
-            public const string GetLectureSchedule = EndPointBase + "/schedules";
+            public const string GetAll = ApiEndpoint + "/lectures";
+            public const string TakeStudentAttendance = GetAll + "/students/takeAttendance";
+            public const string EvaluateStudent = GetAll + "/students/evaluate";
+            public const string GetStudentEvaluates = GetAll + "/students/get/evaluates";
+            public const string GetStudentQuizFullyInfor = GetAll + "/students/get/quiz/fullyInfor";
+            public const string SettingQuizTime = GetAll + "/exam/quiz/setting";
+            public const string GetStudentAttendance = GetAll + "/student/attendance";
+            public const string GetStudentAttendanceOfAllClass = GetAll + "/student/classes/attendance";
+            public const string GetCurrentClassesSchedule = GetAll + "/current/classes";
+            public const string GetClassesAttendanceWithDate = GetAll + "/class/date/attendances";
+            public const string GetLectureSchedule = GetAll + "/schedules";
         }
 
-        public static class AttendanceEndPoint
+        public static class AttendanceEndpoint
         {
-            public const string EndPointBase = ApiEndpoint + "/attendance";
-            public const string GetAttendanceOfClass = EndPointBase + "/class/{id}";
-            public const string GetAttendanceOfClasses = EndPointBase + "/classes";
-            public const string GetAttendanceOfStudent = EndPointBase + "/student/{id}";
-            public const string LoadAttandance = EndPointBase + "/staff/load";
-            public const string TakeAttandance = EndPointBase + "/staff/takeAttandance";
+            public const string RootEndpoint = ApiEndpoint + "/attendance";
+            public const string GetAttendanceOfClass = RootEndpoint + "/class/{id}";
+            public const string GetAttendanceOfClasses = RootEndpoint + "/classes";
+            public const string GetAttendanceOfStudent = RootEndpoint + "/student/{id}";
+            public const string LoadAttandance = RootEndpoint + "/staff/load";
+            public const string TakeAttandance = RootEndpoint + "/staff/takeAttandance";
         }
 
-        public static class WalletEndPoint
+        public static class WalletEndpoint
         {
-            public const string EndPointBase = ApiEndpoint + "/wallet";
-            public const string TopUpWallet = EndPointBase + "/topup";
+            public const string RootEndpoint = ApiEndpoint + "/wallet";
+            public const string TopUpWallet = RootEndpoint + "/topup";
         }
 
-        public static class NotificationEndPoint
+        public static class NotificationEndpoint
         {
-            public const string EndPointBase = ApiEndpoint + "/notification";
-            public const string GetNotifications = EndPointBase + "/user";
-            public const string GetStaffNotifications = EndPointBase + "/staff";
-            public const string UpdateNotification = EndPointBase + "/update";
-            public const string DeleteNotification = EndPointBase + "/{id}/delete";
-            public const string DirectPushNotification = EndPointBase + "/direct/pushNotification";
+            public const string RootEndpoint = ApiEndpoint + "/notification";
+            public const string GetNotifications = RootEndpoint + "/user";
+            public const string GetStaffNotifications = RootEndpoint + "/staff";
+            public const string UpdateNotification = RootEndpoint + "/update";
+            public const string DeleteNotification = RootEndpoint + "/{id}/delete";
+            public const string DirectPushNotification = RootEndpoint + "/direct/pushNotification";
         }
 
-        public static class QuizEndPoint
+        public static class QuizEndoint
         {
-            public const string EndPointBase = ApiEndpoint + "/exams/quizzes";
+            public const string GetAll = ApiEndpoint + "/exams/quizzes";
             public const string GetCurrentStudentQuizDone = ApiEndpoint + "/exams/quiz/current/done";
             public const string GetCurrentStudentQuizWork = ApiEndpoint + "/exams/quiz/current/work";
             public const string GetFinalResult = ApiEndpoint + "/exams/quiz/finalResult";

@@ -40,7 +40,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.WalletEndPoint.TopUpWallet)]
+        [HttpPost(ApiEndpointConstant.WalletEndpoint.TopUpWallet)]
         [ProducesResponseType(typeof(GatewayResponseTransactionId), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "PARENT")]

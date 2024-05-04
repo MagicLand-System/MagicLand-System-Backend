@@ -54,7 +54,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.LectureEndPoint.TakeStudentAttendance)]
+        [HttpPut(ApiEndpointConstant.LectureEndpoint.TakeStudentAttendance)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -83,7 +83,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentEvaluates)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetStudentEvaluates)]
         [ProducesResponseType(typeof(EvaluateResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -116,7 +116,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentQuizFullyInfor)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetStudentQuizFullyInfor)]
         [ProducesResponseType(typeof(QuizResultWithStudentWork), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -151,7 +151,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.LectureEndPoint.EvaluateStudent)]
+        [HttpPut(ApiEndpointConstant.LectureEndpoint.EvaluateStudent)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -177,7 +177,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentAttendance)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetStudentAttendance)]
         [ProducesResponseType(typeof(AttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -195,7 +195,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetStudentAttendanceOfAllClass)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetStudentAttendanceOfAllClass)]
         [ProducesResponseType(typeof(AttendanceWithClassResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
@@ -214,13 +214,18 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetCurrentClassesSchedule)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetCurrentClassesSchedule)]
         [ProducesResponseType(typeof(ClassWithSlotOutSideResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
         public async Task<IActionResult> GetCurrentLetureClassesSchedule()
         {
             var responses = await _classService.GetCurrentLectureClassesScheduleAsync();
+            if (!responses.Any())
+            {
+                return NotFound();
+            }
+
             return Ok(responses);
         }
 
@@ -242,7 +247,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetClassesAttendanceWithDate)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetClassesAttendanceWithDate)]
         [ProducesResponseType(typeof(ScheduleWithAttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
@@ -263,7 +268,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.LectureEndPoint.GetLectureSchedule)]
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetLectureSchedule)]
         [ProducesResponseType(typeof(LectureScheduleResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]

@@ -1063,7 +1063,7 @@ namespace MagicLand_System.Services.Implements
 
                 var topics = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                     selector: x => x.Topics,
-                    predicate: x => x.CourseId == cls.CourseId,
+                    predicate: x => x.Course.Id == cls.CourseId,
                     include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
 
                 var identifySession = new List<(int, Guid, Guid)>();
@@ -1168,7 +1168,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             //var attendancesArray = attendances.OrderBy(x => x.Schedule.Date).ToArray();
-            var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.CourseId == classx.CourseId, selector: x => x.Id);
+            var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Course.Id == classx.CourseId, selector: x => x.Id);
             var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId == syllabusId);
             var sessions = new List<Session>();
             foreach (var topic in topics)
@@ -1214,7 +1214,7 @@ namespace MagicLand_System.Services.Implements
                     Date = schedules[i].Date,
                     Index = i + 1,
                     Status = status,
-                    StartTime = slot.StartTime, 
+                    StartTime = slot.StartTime,
                     EndTime = slot.EndTime,
                     TopicContent = new TopicContent
                     {
@@ -1222,7 +1222,7 @@ namespace MagicLand_System.Services.Implements
                         TopicIndex = sessionArray[i].Topic.OrderNumber,
                         Contents = sessionContentReponses,
                     }
-                    
+
                 };
                 classScheduleResponses.Add(classSched);
             }

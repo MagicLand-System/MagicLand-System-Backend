@@ -27,7 +27,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.NotificationEndPoint.GetNotifications)]
+        [HttpGet(ApiEndpointConstant.NotificationEndpoint.GetNotifications)]
         [ProducesResponseType(typeof(NotificationResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "PARENT")]
@@ -46,7 +46,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.NotificationEndPoint.GetStaffNotifications)]
+        [HttpGet(ApiEndpointConstant.NotificationEndpoint.GetStaffNotifications)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "STAFF")]
@@ -64,7 +64,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.NotificationEndPoint.UpdateNotification)]
+        [HttpPut(ApiEndpointConstant.NotificationEndpoint.UpdateNotification)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -92,7 +92,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpDelete(ApiEndpointConstant.NotificationEndPoint.DeleteNotification)]
+        [HttpDelete(ApiEndpointConstant.NotificationEndpoint.DeleteNotification)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
