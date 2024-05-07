@@ -37,7 +37,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetAll)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetAll)]
         [ProducesResponseType(typeof(ExamWithQuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -64,7 +64,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetQuizOverallByCourseId)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetQuizOverallByCourseId)]
         [ProducesResponseType(typeof(ExamWithQuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -118,7 +118,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetExamOffClassByClassId)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetExamOffClassByClassId)]
         [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [AllowAnonymous]
@@ -174,7 +174,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetExamOffCurrentStudentByTime)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetExamOffCurrentStudentByTime)]
         [ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
@@ -211,7 +211,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetQuizOffExamByExamId)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetQuizOffExamByExamId)]
         [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
@@ -250,7 +250,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.QuizEndoint.GradeQuizOffLine)]
+        [HttpPost(ApiEndpointConstant.QuizEndpoint.GradeQuizOffLine)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "LECTURER")]
@@ -288,7 +288,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.QuizEndoint.EvaluateQuizOnLine)]
+        [HttpPost(ApiEndpointConstant.QuizEndpoint.EvaluateQuizOnLine)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "LECTURER")]
@@ -324,7 +324,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.QuizEndoint.GradeQuizMC)]
+        [HttpPost(ApiEndpointConstant.QuizEndpoint.GradeQuizMC)]
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
@@ -399,7 +399,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPost(ApiEndpointConstant.QuizEndoint.GradeQuizFC)]
+        [HttpPost(ApiEndpointConstant.QuizEndpoint.GradeQuizFC)]
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
@@ -502,7 +502,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetCurrentStudentQuizDone)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetCurrentStudentQuizDone)]
         [ProducesResponseType(typeof(QuizResultExtraInforResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
@@ -530,7 +530,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetCurrentStudentQuizWork)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetCurrentStudentQuizWork)]
         [ProducesResponseType(typeof(StudentWorkResult), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
@@ -550,7 +550,7 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetFinalResult)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetFinalResult)]
         [ProducesResponseType(typeof(FinalResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize]
@@ -626,13 +626,13 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
 
-        [HttpGet(ApiEndpointConstant.QuizEndoint.GetQuizForStaff)]
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetQuizForStaff)]
         public async Task<IActionResult> GetQuizForStaff([FromRoute] string id)
         {
             var result = await _syllabusService.GetStaffQuestions(id);
             return Ok(result);
         }
-        [HttpPut(ApiEndpointConstant.QuizEndoint.UpdateQuizForStaff)]
+        [HttpPut(ApiEndpointConstant.QuizEndpoint.UpdateQuizForStaff)]
         public async Task<IActionResult> UpdateQuizForStaff([FromRoute] string questionpackageId, UpdateQuestionPackageRequest request)
         {
             var result = await _syllabusService.UpdateQuiz(questionpackageId, request);

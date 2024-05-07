@@ -216,7 +216,7 @@
             public const string DirectPushNotification = RootEndpoint + "/direct/pushNotification";
         }
 
-        public static class QuizEndoint
+        public static class QuizEndpoint
         {
             public const string GetAll = ApiEndpoint + "/exams/quizzes";
             public const string GetCurrentStudentQuizDone = ApiEndpoint + "/exams/quiz/current/done";
