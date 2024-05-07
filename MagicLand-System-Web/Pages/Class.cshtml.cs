@@ -1,7 +1,11 @@
-﻿using MagicLand_System.PayLoad.Request;
+﻿using MagicLand_System.Constants;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 using MagicLand_System.PayLoad.Response.Users;
+using MagicLand_System_Web.Pages.DataContants;
+using MagicLand_System_Web.Pages.Enums;
 using MagicLand_System_Web.Pages.Helper;
 using MagicLand_System_Web.Pages.Message;
 using MagicLand_System_Web.Pages.Message.SubMessage;
@@ -9,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MagicLand_System_Web.Pages
 {
@@ -26,36 +31,105 @@ namespace MagicLand_System_Web.Pages
 
         [BindProperty]
         public List<ClassMessage> ClassMessages { get; set; } = new List<ClassMessage>();
-        public void OnGet()
+        [BindProperty]
+        public List<CourseWithScheduleShorten> Courses { get; set; } = new List<CourseWithScheduleShorten>();
+
+
+        public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
             var data = SessionHelper.GetObjectFromJson<List<ClassMessage>>(HttpContext!.Session, "DataClass");
+            var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
 
             if (data != null && data.Count > 0)
             {
                 ClassMessages = data;
             }
+
+            if (courses != null && courses.Count > 0)
+            {
+                Courses = courses;
+            }
+            else
+            {
+                var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+
+                if (result.IsSuccess)
+                {
+                    if (result.Data == null)
+                    {
+                        SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", Courses);
+                    }
+                    else
+                    {
+                        Courses = result.Data;
+                        SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data!);
+                    }
+
+                    return Page();
+                }
+
+            }
+            return Page();
         }
-        public async Task<IActionResult> OnPostAsync(int inputField)
+        public async Task<IActionResult> OnPostAsync(int inputField, string listCourseId, string submitButton)
         {
+            if (submitButton == "Refresh")
+            {
+                ClassMessages.Clear();
+
+                var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+
+                if (result.IsSuccess)
+                {
+                    Courses = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data);
+                    IsLoading = true;
+                    return Page();
+                }
+            }
+
             if (inputField == 0 || inputField < 0 || inputField >= 100)
             {
                 ViewData["Message"] = "Số Lượng không Hợp Lệ";
+                var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+
+                if (result.IsSuccess)
+                {
+                    Courses = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data);
+                    IsLoading = true;
+                    return Page();
+                }
                 return Page();
             }
             ViewData["Message"] = "";
-            var courses = await FetchCourses();
 
+            var courseIdParses = new List<Guid>();
+            if (!string.IsNullOrEmpty(listCourseId))
+            {
+                string pattern = @"\|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\|";
+                MatchCollection matches = Regex.Matches(listCourseId, pattern);
+
+                foreach (Match match in matches)
+                {
+                    courseIdParses.Add(Guid.Parse(match.Groups[1].Value));
+                }
+            }
+
+            var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
+            if (courseIdParses.Any())
+            {
+                courses = courseIdParses.Select(id => courses.Single(c => c.CourseId == id)).ToList();
+            }
             Random random = new Random();
 
-            string token = SessionHelper.GetObjectFromJson<string>(HttpContext!.Session, "Token");
-            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            for (int order = 0; order < inputField; order++)
+            foreach (var course in courses)
             {
-                int courseIndex = random.Next(0, courses!.Count);
-
-                await RenderProgress(courses!.ToList()[courseIndex], order, courseIndex, random);
+                for (int order = 0; order < inputField; order++)
+                {
+                    await RenderProgress(course, order, random);
+                }
             }
 
             SessionHelper.SetObjectAsJson(HttpContext.Session, "DataClass", ClassMessages);
@@ -64,39 +138,39 @@ namespace MagicLand_System_Web.Pages
             return Page();
         }
 
-        private async Task RenderProgress(CourseResExtraInfor course, int order, int courseIndex, Random random)
+        private async Task RenderProgress(CourseWithScheduleShorten course, int order, Random random)
         {
             var scheduleRequests = new List<ScheduleRequest>();
-            var schedules = new List<ClassSubMessage>();
-            var startDate = DateTime.UtcNow.AddDays(random.Next(1, 4));
+            var scheduleMessages = new List<ClassSubMessage>();
+            var startDate = DateTime.Now.AddDays(random.Next(1, 4));
 
-            InitData(out List<(string, string)> roomOnline, out List<(string, string)> roomOffline, out List<(string, string)> slots, out List<(string, int)> dayOfWeeks);
+            var lecturer = await GetLecturer(course, random, scheduleRequests, scheduleMessages, startDate);
 
-            var lecturer = await GetLecturer(course, random, scheduleRequests, schedules, startDate, slots, dayOfWeeks);
+            var room = random.Next(2, 4) % 2 == 0 ? ClassData.RoomOfflines[random.Next(0, ClassData.RoomOfflines.Count)] : ClassData.RoomOnlines[random.Next(0, ClassData.RoomOnlines.Count)];
 
-            var room = courseIndex % 2 == 0 ? roomOffline[random.Next(0, roomOffline.Count)] : roomOnline[random.Next(0, roomOnline.Count)];
-            var createClassRequestData = new CreateClassRequest
+            var objectRequest = new CreateClassRequest
             {
                 ClassCode = course.CourseDetail!.SubjectCode + "-" + order,
                 CourseId = course.CourseId,
                 StartDate = startDate,
-                LeastNumberStudent = random.Next(3, 8),
+                LeastNumberStudent = random.Next(1, 6),
                 LimitNumberStudent = random.Next(25, 31),
                 LecturerId = lecturer.LectureId,
-                Method = courseIndex % 2 == 0 ? "OFFLINE" : "ONLINE",
+                Method = random.Next(2, 4) % 2 == 0 ? "OFFLINE" : "ONLINE",
                 ScheduleRequests = scheduleRequests,
                 RoomId = Guid.Parse(room.Item2),
             };
+
 
             if (lecturer.LectureId == default)
             {
                 ClassMessages.Add(new ClassMessage
                 {
-                    ClassCode = createClassRequestData.ClassCode,
+                    ClassCode = objectRequest.ClassCode,
                     CourseBeLong = course.CourseDetail!.CourseName!,
                     StartDate = startDate.ToString("MM/dd/yyyy"),
                     LecturerBeLong = "Không",
-                    Schedules = schedules.OrderBy(sc => sc.Order).ToList(),
+                    Schedules = scheduleMessages.OrderBy(sc => sc.Order).ToList(),
                     Status = "400",
                     Note = "Không Có Giáo Viên Phù Hợp",
                 });
@@ -104,34 +178,31 @@ namespace MagicLand_System_Web.Pages
                 return;
             }
 
-            var jsonContent = new StringContent(JsonSerializer.Serialize(createClassRequestData), Encoding.UTF8, "application/json");
-            //var insertResponse = await _httpClient.PostAsync(baseUrl + "/classes/add", jsonContent);
+            var result = await _apiHelper.FetchApiAsync<List<LecturerResponse>>(ApiEndpointConstant.UserEndpoint.GetLecturer, MethodEnum.POST, objectRequest);
 
-            //int statusCode = (int)insertResponse.StatusCode;
-            //string responseMessage = await insertResponse.Content.ReadAsStringAsync();
+            ClassMessages.Add(new ClassMessage
+            {
+                ClassCode = objectRequest.ClassCode,
+                CourseBeLong = course.CourseDetail!.CourseName!,
+                StartDate = startDate.ToString("MM/dd/yyyy"),
+                LecturerBeLong = lecturer.FullName!,
+                Schedules = scheduleMessages.OrderBy(sc => sc.Order).ToList(),
+                Status = result.StatusCode,
+                Note = result.Message,
+            });
 
-            //ClassMessages.Add(new ClassMessage
-            //{
-            //    ClassCode = createClassRequestData.ClassCode,
-            //    CourseBeLong = course.CourseDetail!.CourseName!,
-            //    StartDate = startDate.ToString("MM/dd/yyyy"),
-            //    LecturerBeLong = lecturer.FullName!,
-            //    Schedules = schedules.OrderBy(sc => sc.Order).ToList(),
-            //    Status = statusCode.ToString(),
-            //    Note = responseMessage,
-            //});
+
         }
 
-        private async Task<LecturerResponse> GetLecturer(
-            CourseResExtraInfor course, Random random, List<ScheduleRequest> scheduleRequests, List<ClassSubMessage> schedules,
-            DateTime startDate, List<(string, string)> slots, List<(string, int)> dayOfWeeks)
+        private async Task<LecturerResponse> GetLecturer(CourseWithScheduleShorten course, Random random, List<ScheduleRequest> scheduleRequests,
+            List<ClassSubMessage> scheduleMessages, DateTime startDate)
         {
             int numberSchedule = random.Next(1, 4);
 
             for (int i = 0; i < numberSchedule; i++)
             {
-                var slot = slots[random.Next(0, slots.Count)];
-                var dayOfWeek = dayOfWeeks[random.Next(0, dayOfWeeks.Count)];
+                var slot = ClassData.Slots[random.Next(0, ClassData.Slots.Count)];
+                var dayOfWeek = ClassData.DayOfWeeks[random.Next(0, ClassData.DayOfWeeks.Count)];
 
                 scheduleRequests.Add(new ScheduleRequest
                 {
@@ -139,7 +210,7 @@ namespace MagicLand_System_Web.Pages
                     SlotId = Guid.Parse(slot.Item1),
                 });
 
-                schedules.Add(new ClassSubMessage
+                scheduleMessages.Add(new ClassSubMessage
                 {
                     DayOfWeek = dayOfWeek.Item1,
                     Slot = slot.Item2,
@@ -148,72 +219,20 @@ namespace MagicLand_System_Web.Pages
 
             }
 
-            var filterLecturerRequestData = new FilterLecturerRequest
+            var objectRequest = new FilterLecturerRequest
             {
                 StartDate = startDate,
                 Schedules = scheduleRequests,
                 CourseId = course.CourseId.ToString(),
             };
 
-            var filterLecturerContent = new StringContent(JsonSerializer.Serialize(filterLecturerRequestData), Encoding.UTF8, "application/json");
-            //var lecturereResponses = await _httpClient.PostAsync(baseUrl + "/users/getLecturer", filterLecturerContent);
-            //var lecturer = new LecturerResponse();
-            //if (lecturereResponses.IsSuccessStatusCode)
-            //{
-            //    string content = await lecturereResponses.Content.ReadAsStringAsync();
-            //    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LecturerResponse>>(content);
-            //    lecturer = data![random.Next(0, data.Count)];
-            //}
-            //return lecturer;
-            return default;
+            var result = await _apiHelper.FetchApiAsync<List<LecturerResponse>>(ApiEndpointConstant.UserEndpoint.GetLecturer, MethodEnum.POST, objectRequest);
+            if (!result.IsSuccess)
+            {
+                return new LecturerResponse();
+            }
+            return result.Data[random.Next(0, result.Data.Count)];
         }
 
-        private static void InitData(out List<(string, string)> roomOnline, out List<(string, string)> roomOffline, out List<(string, string)> slots, out List<(string, int)> dayOfWeeks)
-        {
-            roomOnline = new List<(string, string)>
-            {
-                ("GoogleMeet1", "21c2d354-1de5-4b67-950d-326ac832b4eb"),
-                ("GoogleMeet2", "472d7b7a-22ce-4fcb-a436-3ea03fd29d78"),
-                ("GoogleMeet3", "e1482984-8995-4fcc-8d5b-6014762814e8"),
-            };
-            roomOffline = new List<(string, string)>
-            {
-                ("LB1", "40514ccc-b66b-4093-af5f-0445210f9deb"),
-                ("105", "db0c0da6-1a17-45a1-aeb6-091db19241fa"),
-                ("104", "e6fc0f12-b135-4df4-bfe8-0ade3dcd2f1a"),
-                ("210", "c2d5f218-2793-444c-a2d1-18fc81484c4f"),
-                ("207", "c0434c38-eb33-4eae-98ff-2d5afc491330"),
-                ("102", "f388a94d-d808-40bc-8fa8-ecebf64de0a4"),
-                ("103", "cfddfd4d-f80b-4236-921c-599d812f1150"),
-                ("101", "99f6f043-3fee-435f-a8ae-1f55f13b3256"),
-                ("204", "be0c6afa-e24f-4132-aaa7-bb6408cab5a9"),
-                ("LB2", "ea5b5f78-0223-4d7c-8950-4c7beb389e94")
-            };
-            slots = new List<(string, string)>
-            {
-            ("417997AC-AFD7-4363-BFE5-6CDD56D4713A", "7:00 - 9:00"),
-            ("301EFD4A-618E-4495-8E7E-DAA223D3945E", "9:15 - 11:15"),
-            ("6AB50A00-08BA-483C-BF5D-0D55B05A2CCC", "12:00 - 14:00"),
-            ("2291E53B-094B-493E-8132-C6494D2B18A8", "14:15 - 16:30"),
-            ("688FE18C-5DB1-40AA-A7F3-F47CCD9FD395", "16:30 - 18:30"),
-            ("418704FB-FAC8-4119-8795-C8FE5D348753", "19:00 - 21:00")
-            };
-            dayOfWeeks = new List<(string, int)> { ("monday", 1), ("tuesday", 2), ("wednesday", 3), ("thursday", 4), ("friday", 5), ("saturday", 6), ("sunday", 7) };
-        }
-
-        private async Task<List<CourseResExtraInfor>?> FetchCourses()
-        {
-            var courses = new List<CourseResExtraInfor>();
-
-            //var courseApiResponse = await _httpClient.GetAsync(baseUrl + "/courses");
-
-            //if (courseApiResponse.IsSuccessStatusCode)
-            //{
-            //    string content = await courseApiResponse.Content.ReadAsStringAsync();
-            //    courses = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CourseResExtraInfor>>(content);
-            //}
-
-            return courses;
-        }
     }
 }

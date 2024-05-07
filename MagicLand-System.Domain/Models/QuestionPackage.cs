@@ -15,8 +15,8 @@ namespace MagicLand_System.Domain.Models
 
 
         [ForeignKey("Session")]
-        public Guid? SessionId { get; set; }
-        public Session? Session { get; set; } = default;
+        public Guid SessionId { get; set; }
+        public Session? Session { get; set; }
 
         public List<Question>? Questions { get; set; }
     }

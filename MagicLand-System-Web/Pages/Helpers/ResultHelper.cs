@@ -15,9 +15,9 @@
             StatusCode = statusCode;
         }
 
-        public static ResultHelper<T> Response(T? data, string message, string statusCode)
+        public static ResultHelper<T> Response(T? data, string message, string statusCode, bool isSuccess)
         {
-            return new ResultHelper<T>(true, data, message, statusCode);
+            return new ResultHelper<T>(isSuccess, data, message, statusCode);
         }
 
         public static ResultHelper<T> DefaultResponse()

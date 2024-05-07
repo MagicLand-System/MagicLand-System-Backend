@@ -140,10 +140,12 @@ namespace MagicLand_System.Services.Implements
             {
                 var currentRole = GetRoleFromJwt();
                 var currentUser = await GetUserFromJwt();
+                if (currentRole != RoleEnum.DEVELOPER.ToString())
+                {
+                    userId = currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : currentUser.StudentIdAccount!.Value;
 
-                userId = currentRole == RoleEnum.PARENT.ToString() ? currentUser.Id : currentUser.StudentIdAccount!.Value;
-
-                courses = await FilterCompletedCourses(courses, userId);
+                    courses = await FilterCompletedCourses(courses, userId);
+                }
             }
 
             var coursePrerequisites = await GetCoursePrerequesites(courses);

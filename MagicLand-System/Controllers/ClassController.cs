@@ -393,7 +393,7 @@ namespace MagicLand_System.Controllers
         }
 
         [HttpPost(ApiEndpointConstant.ClassEnpoint.AddClass)]
-        [CustomAuthorize(Enums.RoleEnum.STAFF)]
+        [CustomAuthorize(Enums.RoleEnum.STAFF, RoleEnum.DEVELOPER)]
         public async Task<IActionResult> AddClass([FromBody] CreateClassRequest request)
         {
             var isSuccess = await _classService.CreateNewClass(request);

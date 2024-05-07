@@ -1,7 +1,9 @@
 ﻿using MagicLand_System_Web.Pages.Enums;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MagicLand_System_Web.Pages.Helper
 {
@@ -39,13 +41,19 @@ namespace MagicLand_System_Web.Pages.Helper
             int statusCode = (int)response.StatusCode;
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            if (string.IsNullOrEmpty(responseContent))
+            if (responseContent == null)
             {
                 return ResultHelper<T>.DefaultResponse();
             }
 
-            return ResultHelper<T>.Response(response.IsSuccessStatusCode ? JsonSerializer.Deserialize<T>(responseContent, options)! : default,
-                   response!.IsSuccessStatusCode ? "Thành Công" : responseContent, statusCode.ToString());
+            if (statusCode != 200)
+            {
+                responseContent = Regex.Unescape(responseContent);
+
+            }
+
+            return ResultHelper<T>.Response(response.IsSuccessStatusCode ? JsonSerializer.Deserialize<T>(responseContent!, options)! : default,
+                   response!.IsSuccessStatusCode ? "Thành Công" : responseContent!, statusCode.ToString(), statusCode == 200 ? true : false);
 
         }
 

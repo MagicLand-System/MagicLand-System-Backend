@@ -47,15 +47,15 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpPut(ApiEndpointConstant.LectureEndpoint.TakeStudentAttendance)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
-        [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> TakeStudentAttendance([FromBody] AttendanceRequest request, [FromQuery] SlotEnum slot)
-        {
-            var response = await _studentService.TakeStudentAttendanceAsync(request, slot);
+        //[HttpPut(ApiEndpointConstant.LectureEndpoint.TakeStudentAttendance)]
+        //[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        //[ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        //[Authorize(Roles = "LECTURER")]
+        //public async Task<IActionResult> TakeStudentAttendance([FromBody] AttendanceRequest request, [FromQuery] SlotEnum slot)
+        //{
+        //    var response = await _studentService.TakeStudentAttendanceAsync(request, slot);
 
-            return Ok(response);
-        }
+        //    return Ok(response);
+        //}
     }
 }

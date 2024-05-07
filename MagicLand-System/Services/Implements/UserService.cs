@@ -173,7 +173,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<User>> GetUsers()
         {
-            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Id == x.Id);
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Role)!);
             return users.ToList();
         }
 

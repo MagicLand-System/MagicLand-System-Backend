@@ -221,13 +221,13 @@ namespace MagicLand_System.Domain
                 entity.ToTable("Session");
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(e => e.Topic).WithMany(e => e.Sessions).HasForeignKey(e => e.TopicId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.QuestionPackage).WithOne(e => e.Session).HasForeignKey<QuestionPackage>(e => e.SessionId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.QuestionPackage).WithOne(e => e.Session).HasForeignKey<QuestionPackage>(e => e.SessionId).IsRequired(false);
             });
             modelBuilder.Entity<QuestionPackage>(entity =>
             {
                 entity.ToTable("QuestionPackage");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<Session>(e => e.QuestionPackageId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Session).WithOne(e => e.QuestionPackage).HasForeignKey<QuestionPackage>(e => e.SessionId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<Attendance>(entity =>
             {

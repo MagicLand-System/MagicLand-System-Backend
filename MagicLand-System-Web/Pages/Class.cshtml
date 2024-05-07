@@ -29,9 +29,11 @@
 
         <div class="form-group" onsubmit="return setLoader()">
             <form method="post">
-                <label for="inputField">Nhập Số Lương: </label>
+                <label for="inputField">Nhập Số Lớp Học: </label>
                 <input type="text" id="inputField" name="inputField" />
+                <input type="hidden" id="input-value" name="listCourseId" value="" />
                 <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Khóa Học</button>
             </form>
         </div>
 
@@ -152,6 +154,62 @@
                     </tbody>
                 </table>
             }
+            else if (Model.Courses != null)
+            {
+                if (Model.Courses.Count == 0)
+                {
+                    <h6>Hiện Chưa Có Khóa Học Nào Trong Hệ Thống</h6>
+                }
+                else
+                {
+                    <table class="table">
+                        <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                            <tr>
+                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Khóa Hoặc Tất Cả Các Khóa</th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    Thứ Tự
+                                </th>
+                                <th>
+                                    Tên Khóa Học
+                                </th>
+                                <th>
+                                    Độ Tuổi Phù Hợp
+                                </th>
+                                <th>
+                                    Môn Dạy
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            @{
+                                int index = 0;
+                            }
+                            @foreach (var item in Model.Courses)
+                            {
+                                {
+                                    index++;
+                                }
+                                <tr id="row-@index" onclick="rowClicked('@item.CourseId', '@index')">
+                                    <td>
+                                        @index
+                                    </td>
+                                    <td>
+                                        @item.CourseDetail!.CourseName
+                                    </td>
+                                    <td>
+                                        @item.CourseDetail.MinAgeStudent - @item.CourseDetail.MaxAgeStudent
+                                    </td>
+                                    <td>
+                                        @item.CourseDetail.Subject
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
         </div>
     </div>
 </section>
@@ -173,5 +231,29 @@
             buttonSubmit.style.opacity = "1";
             buttonSubmit.disabled = false;
         }
+    }
+
+    function rowClicked(courseId, rowIndex) {
+        //var tbody = document.getElementById("table-body");
+        //var rows = tbody.querySelectorAll("tr");
+        //rows.forEach(function (row) {
+        //    row.style.backgroundColor = "transparent";
+        //});
+
+        var rowSelect = document.getElementById('row-' + rowIndex);
+
+        var computedStyle = window.getComputedStyle(rowSelect);
+        var rowSelectColor = computedStyle.getPropertyValue("background-color");
+
+        console.log(rowSelectColor);
+
+        if (rowSelectColor === "rgb(173, 216, 230)") {
+            document.getElementById('input-value').value = '';
+            rowSelect.style.backgroundColor = "transparent";
+        } else {
+            document.getElementById('input-value').value += "|" + courseId + "|";
+            rowSelect.style.backgroundColor = "lightblue";
+        }
+
     }
 </script>

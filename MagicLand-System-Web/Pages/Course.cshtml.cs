@@ -1,4 +1,11 @@
-﻿using MagicLand_System_Web.Pages.Helper;
+﻿using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
+using MagicLand_System_Web.Pages.DataContants;
+using MagicLand_System_Web.Pages.Enums;
+using MagicLand_System_Web.Pages.Helper;
 using MagicLand_System_Web.Pages.Message;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -19,114 +26,134 @@ namespace MagicLand_System_Web.Pages
 
         [BindProperty]
         public List<CourseMessage> CourseMessages { get; set; } = new List<CourseMessage>();
-
-        public void OnGet()
+        [BindProperty]
+        public List<SyllabusResponseV2> ValidSyllabus { get; set; } = new List<SyllabusResponseV2>();
+        public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
             var data = SessionHelper.GetObjectFromJson<List<CourseMessage>>(HttpContext!.Session, "DataCourse");
+            var validSyllabus = SessionHelper.GetObjectFromJson<List<SyllabusResponseV2>>(HttpContext!.Session, "ValidSyllabus");
+
 
             if (data != null && data.Count > 0)
             {
                 CourseMessages = data;
             }
+
+            if (validSyllabus != null && validSyllabus.Count > 0)
+            {
+                ValidSyllabus = validSyllabus;
+            }
+            else
+            {
+                var result = await _apiHelper.FetchApiAsync<List<SyllabusResponseV2>>(ApiEndpointConstant.SyllabusEndpoint.AvailableSyl, MethodEnum.GET, null);
+
+                if (result.IsSuccess)
+                {
+                    if (result.Data == null)
+                    {
+                        SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", ValidSyllabus);
+                    }
+                    else
+                    {
+                        ValidSyllabus = result.Data;
+                        SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", result.Data!);
+                    }
+
+                    return Page();
+                }
+
+            }
+
+            return Page();
         }
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(string submitButton)
         {
-            //for (int i = 0; i < 20; i++)
-            //{
-            //    CourseMessages.Add(new CourseMessage
-            //    {
-            //        CourseName = "a" + i,
-            //        CoursePrice = 20000 + i,
-            //        AgeRange = "4-10" + i,
-            //        Status = "200" + i,
-            //        Note = "note" + i,
-            //        SyllabusBelong = "sy" + i,
-            //    });
-            //}
-            //SessionHelper.SetObjectAsJson(HttpContext.Session, "DataCourse", CourseMessages);
-            //IsLoading = true;
-            //Thread.Sleep(50000);
+            if (submitButton == "Refresh")
+            {
+                CourseMessages.Clear();
 
-            //return Page();
+                var result = await _apiHelper.FetchApiAsync<List<SyllabusResponseV2>>(ApiEndpointConstant.SyllabusEndpoint.AvailableSyl, MethodEnum.GET, null);
 
+                if (result.IsSuccess)
+                {
+                    ValidSyllabus = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", result.Data);
+                    IsLoading = true;
+                    return Page();
+                }
+            }
 
-            //var syllabusResponses = await _httpClient.GetAsync(baseUrl + "/Syllabus/general");
-            //var syllabuses = new List<SyllabusResponseV2>();
-            //if (syllabusResponses.IsSuccessStatusCode)
-            //{
-            //    string content = await syllabusResponses.Content.ReadAsStringAsync();
-            //    syllabuses = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SyllabusResponseV2>>(content);
-            //}
+            var validSyllabus = SessionHelper.GetObjectFromJson<List<SyllabusResponseV2>>(HttpContext!.Session, "ValidSyllabus");
+            if (validSyllabus == null || validSyllabus.Count == 0)
+            {
+                return Page();
+            }
 
-            //if (syllabuses == null || syllabuses.Count == 0)
-            //{
-            //    ViewData["Message"] = "Các Giáo Trình Đều Đã Có Khóa Học";
-            //    return Page();
-            //}
-            //Random random = new Random();
+            Random random = new Random();
+            var storedIndex = new List<int>();
+            var numberSubDescription = random.Next(3, 6);
+            var numberSubDesctiptionContent = random.Next(2, 4);
 
-            //string token = SessionHelper.GetObjectFromJson<string>(HttpContext!.Session, "Token");
-            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            for (int order = 0; order < validSyllabus.Count; order++)
+            {
+                var subDescription = new List<SubDescriptionRequest>();
 
-            //for (int order = 0; order < syllabuses!.Count; order++)
-            //{
-            //    var subDescription = new List<SubDescriptionRequest>();
-            //    var numberSubDescription = random.Next(3, 6);
+                for (int i = 0; i < numberSubDescription; i++)
+                {
+                    var title = CourseData.TitleSubDescriptions[random.Next(0, CourseData.TitleSubDescriptions.Count)];
+                    var subDescriptionContent = new List<SubDescriptionContentRequest>();
 
-            //    for (int i = 0; i < numberSubDescription; i++)
-            //    {
-            //        var numberSubDesctiptionContent = random.Next(2, 4);
-            //        var subDescriptionContent = new List<SubDescriptionContentRequest>();
+                    storedIndex.Clear();
 
-            //        for (int j = 0; j < numberSubDesctiptionContent; j++)
-            //        {
-            //            subDescriptionContent.Add(new SubDescriptionContentRequest
-            //            {
-            //                Content = "This is content for sub description of course " + (order + 1) + " no " + (j + 1),
-            //                Description = "This is description for content of a course " + (order + 1) + " no " + (j + 1),
-            //            });
-            //        }
+                    for (int j = 0; j < numberSubDesctiptionContent; j++)
+                    {
+                        var subContent = CourseData.GetSubDescription(title.Item2, random, storedIndex);
+                        storedIndex.Add(subContent.Item2);
 
-            //        subDescription.Add(new SubDescriptionRequest
-            //        {
-            //            Title = "This is title for sub description of course " + (order + 1) + " no " + (i + 1),
-            //            SubDescriptionContentRequests = subDescriptionContent,
-            //        });
-            //    }
+                        subDescriptionContent.Add(new SubDescriptionContentRequest
+                        {
+                            Content = subContent.Item1.Item1,
+                            Description = subContent.Item1.Item2,
+                        });
+                    }
 
-            //    var courseRequest = new CreateCourseRequest
-            //    {
-            //        CourseName = syllabuses[order].SyllabusName + "_" + (order + 1),
-            //        Price = random.Next(200000, 700000),
-            //        MinAge = random.Next(4, 7),
-            //        MaxAge = random.Next(7, 11),
-            //        MainDescription = "This is main description for course " + (order + 1),
-            //        Img = "https://firebasestorage.googleapis.com/v0/b/magic-2e5fc.appspot.com/o/courses%2FTo%C3%A1n%2Ftoan.jpg0c7a07be-eb5a-4da3-8af0-378b29f8a347?alt=media&token=33ae453d-eb1f-4024-9740-9d156b9138e2",
-            //        SyllabusId = syllabuses[order].Id.ToString(),
-            //        SubDescriptions = subDescription,
-            //    };
+                    subDescription.Add(new SubDescriptionRequest
+                    {
+                        Title = title.Item1,
+                        SubDescriptionContentRequests = subDescriptionContent,
+                    });
+                }
 
-            //    var courseContent = new StringContent(JsonSerializer.Serialize(courseRequest), Encoding.UTF8, "application/json");
-            //    var insertResponse = await _httpClient.PostAsync(baseUrl + "/courses/add", courseContent);
+                var priceValue = random.Next(20, 71) + "0000";
+                var objectRequest = new CreateCourseRequest
+                {
+                    CourseName = validSyllabus[order].SyllabusName + "_" + (order + 1),
+                    Price = int.Parse(priceValue),
+                    MinAge = random.Next(4, 7),
+                    MaxAge = random.Next(7, 11),
+                    MainDescription = CourseData.MainDescriptions[random.Next(0, CourseData.MainDescriptions.Count)],
+                    Img = "https://firebasestorage.googleapis.com/v0/b/magic-2e5fc.appspot.com/o/courses%2FTo%C3%A1n%2Ftoan.jpg0c7a07be-eb5a-4da3-8af0-378b29f8a347?alt=media&token=33ae453d-eb1f-4024-9740-9d156b9138e2",
+                    SyllabusId = validSyllabus[order].Id.ToString(),
+                    SubDescriptions = subDescription,
+                };
 
-            //    int statusCode = (int)insertResponse.StatusCode;
-            //    string responseMessage = await insertResponse.Content.ReadAsStringAsync();
+                var result = await _apiHelper.FetchApiAsync<bool>(ApiEndpointConstant.CourseEndpoint.AddCourse, MethodEnum.POST, objectRequest);
 
-            //    CourseMessages.Add(new CourseMessage
-            //    {
-            //        CourseName = courseRequest.CourseName,
-            //        CoursePrice = courseRequest.Price,
-            //        SyllabusBelong = syllabuses[order].SyllabusName,
-            //        AgeRange = courseRequest.MinAge + " - " + courseRequest.MaxAge,
-            //        Status = statusCode.ToString(),
-            //        Note = responseMessage,
-            //    });
-            //}
+                CourseMessages.Add(new CourseMessage
+                {
+                    CourseName = objectRequest.CourseName,
+                    CoursePrice = objectRequest.Price,
+                    SyllabusBelong = validSyllabus[order].SyllabusName,
+                    AgeRange = objectRequest.MinAge + " - " + objectRequest.MaxAge,
+                    Status = result.StatusCode,
+                    Note = result.Message,
+                });
+            }
 
-            //SessionHelper.SetObjectAsJson(HttpContext.Session, "DataCourse", CourseMessages);
-            //IsLoading = true;
-
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataCourse", CourseMessages);
+            IsLoading = true;
+            HttpContext.Session.Remove("ValidSyllabus");
             return Page();
         }
     }

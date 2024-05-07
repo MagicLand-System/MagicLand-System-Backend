@@ -1,46 +1,41 @@
 ﻿@page
-@model CourseModel
+@model MagicLand_System_Web.Pages.StudentModel
 @{
-    ViewData["Title"] = "Syllabus";
+    ViewData["Title"] = "Student";
     var Message = ViewData["Message"]?.ToString();
     <link rel="stylesheet" href="~/css/cutom.css" />
 }
-
 <style>
     table, th, td {
         border: 1px solid black;
     }
 
-    #course {
+    #class {
         background-color: lightblue;
     }
 
-        #course .nav-link {
+        #class .nav-link {
             color: blue !important;
         }
 
-        #course i.fa {
+        #class i.fa {
             color: blue;
         }
 </style>
 
 <section class="body-class">
     <div class="text-center">
-        <p class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Khóa Học Cho Các Giáo Trình Đang Trống Khóa Học</b></p>
+        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Học Sinh Thuộc Ngẫu Nhiên Phụ Huynh</b></h6>
 
         <div class="form-group" onsubmit="return setLoader()">
             <form method="post">
-                <button id="button-submit" name="submitButton" type="submit" style="background-color: white; color: black; margin-left: 35px; width: 135px;" value="Progress">Xử Lý</button>
-                <button id="button-refresh" name="submitButton" type="submit" style="background-color: white; color: black; margin-left: 35px; width: 135px;" value="Refresh">Kiểm Tra Lại</button>
+                <label for="inputField">Nhập Số Học Sinh: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <input type="hidden" id="input-value" name="listId" value="" />
+                <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Người Dùng</button>
             </form>
         </div>
-
-
-        <div class="form-group" onsubmit="return setLoader()">
-            <form method="post">
-            </form>
-        </div>
-
 
         @if (!string.IsNullOrEmpty(Message))
         {
@@ -58,11 +53,10 @@
 
         <div class="form-loader" id="loaderContainer" style="text-align: center; display:none;">
             <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
-            <div id="progressMessage" style="margin-left: 29%;">Now Progressing</div>
+            <div style="margin-left: 29%;">Now Progressing...</div>
         </div>
-
-        <div class="table-container" style="overflow-y: auto; height: 383px; width: 73%; margin-top: 22px; position: relative}">
-            @if (Model.CourseMessages != null && Model.CourseMessages.Count() > 0)
+        <div class="table-container" style="overflow-y: auto; height: 368px; width: 73%; margin-top: 22px; position: relative}">
+            @if (Model.StudentMessages != null && Model.StudentMessages.Count() > 0)
             {
                 <table class="table">
                     <thead style="position: sticky; top: -1px; background-color: gainsboro;">
@@ -71,21 +65,21 @@
                                 Thứ Tự
                             </th>
                             <th>
-                                Tên Khóa Học
+                                Tên
                             </th>
                             <th>
-                                Thuộc Giáo Trình
-                            </th>
-                            <th>
-                                Giá Mặc Định
+                                Thuộc Phụ Huynh
                             </th>
                             <th>
                                 Độ Tuổi
                             </th>
-                            <th>
+                            <th style="width: 120px">
+                                Giới Tính
+                            </th>
+                            <th style="width: 100px">
                                 Trạng Thái
                             </th>
-                            <th style="width: 170px">
+                            <th style="width: 100px">
                                 Ghi Chú
                             </th>
                         </tr>
@@ -94,7 +88,7 @@
                         @{
                             int index = 0;
                         }
-                        @foreach (var item in Model.CourseMessages)
+                        @foreach (var item in Model.StudentMessages)
                         {
                             {
                                 index++;
@@ -104,16 +98,16 @@
                                     @index
                                 </td>
                                 <td>
-                                    @item.CourseName
+                                    @item.StudentName
                                 </td>
                                 <td>
-                                    @item.SyllabusBelong
+                                    @item.ParentBelong
                                 </td>
                                 <td>
-                                    @item.CoursePrice
+                                    @item.Age
                                 </td>
                                 <td>
-                                    @item.AgeRange
+                                    @item.Gender
                                 </td>
                                 <td>
                                     @item.Status
@@ -121,67 +115,66 @@
                                 <td>
                                     @item.Note
                                 </td>
-
                             </tr>
                         }
                     </tbody>
                 </table>
             }
-            else if (Model.ValidSyllabus != null)
+            else if (Model.Parents != null)
             {
-                if (Model.ValidSyllabus.Count == 0)
+                if (Model.Parents.Count == 0)
                 {
-                    <h6>Các Giáo Trình Đã Được Phân Bố Khóa Dạy</h6>
+                    <h6>Không Tìm Thấy Người Dùng Nào</h6>
                 }
                 else
                 {
                     <table class="table">
                         <thead style="position: sticky; top: -1px; background-color: gainsboro;">
                             <tr>
-                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Các Giáo Trình Chưa Có Khóa Dạy</th>
+                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Phụ Huynh Hoặc Tất Cả Phụ Huynh</th>
                             </tr>
                             <tr>
                                 <th>
                                     Thứ Tự
                                 </th>
                                 <th>
-                                    Tên Giáo Trình
+                                    Tên
                                 </th>
                                 <th>
-                                    Thời Gian Hiệu Lực
+                                    Số Điện Thoại
                                 </th>
                                 <th>
-                                    Khóa Đang Dạy
+                                    Email
                                 </th>
                                 <th>
-                                    Mã Giáo Trình
+                                    Địa Chỉ
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="table-body">
                             @{
                                 int index = 0;
                             }
-                            @foreach (var item in Model.ValidSyllabus)
+                            @foreach (var item in Model.Parents)
                             {
                                 {
                                     index++;
                                 }
-                                <tr>
+                                <tr id="row-@index" onclick="rowClicked('@item.Id', '@index')">
                                     <td>
                                         @index
                                     </td>
                                     <td>
-                                        @item.SyllabusName
+                                        @item.FullName
                                     </td>
                                     <td>
-                                        @item.EffectiveDate
+                                        @item.Phone
                                     </td>
                                     <td>
-                                        Trống
+                                        @item.Email
                                     </td>
                                     <td>
-                                        @item.SubjectCode
+                                        @item.Address
                                     </td>
                                 </tr>
                             }
@@ -197,14 +190,10 @@
     function setLoader() {
         var loaderContainer = document.getElementById("loaderContainer");
         var buttonSubmit = document.getElementById("button-submit");
-        var buttonRefresh = document.getElementById("button-refresh");
-
         if (loaderContainer.style.display === "none") {
             loaderContainer.style.display = "block";
             buttonSubmit.style.opacity = "0.5";
             buttonSubmit.disabled = true;
-
-
             return true;
         } else {
             loaderContainer.style.display = "none";
@@ -213,9 +202,31 @@
         if (@Model.IsLoading) {
             buttonSubmit.style.opacity = "1";
             buttonSubmit.disabled = false;
-
         }
     }
 
+    function rowClicked(id, rowIndex) {
+        //var tbody = document.getElementById("table-body");
+        //var rows = tbody.querySelectorAll("tr");
+        //rows.forEach(function (row) {
+        //    row.style.backgroundColor = "transparent";
+        //});
 
+        var rowSelect = document.getElementById('row-' + rowIndex);
+
+        var computedStyle = window.getComputedStyle(rowSelect);
+        var rowSelectColor = computedStyle.getPropertyValue("background-color");
+
+        console.log(rowSelectColor);
+
+        if (rowSelectColor === "rgb(173, 216, 230)") {
+            document.getElementById('input-value').value = '';
+            rowSelect.style.backgroundColor = "transparent";
+        } else {
+            document.getElementById('input-value').value += "|" + id + "|";
+            rowSelect.style.backgroundColor = "lightblue";
+        }
+
+    }
 </script>
+

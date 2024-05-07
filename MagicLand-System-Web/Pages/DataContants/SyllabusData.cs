@@ -13,9 +13,15 @@ namespace MagicLand_System_Web.Pages.DataContants
         public static readonly List<string> MusicDescription, LanguageDescription, MathDescription, DanceDescription,
                                             SingDescription, PhysicsDescription, ProgramerDescription, ArtDescription;
 
-        
+        public static readonly List<(string, string)> QuizType;
+
         static SyllabusData()
         {
+            QuizType = new List<(string, string)>
+            {
+                ("Trắc nghiệm", "MUL"),  ("Ghép thẻ","FLA")
+            };
+
             Subjects = new List<(string, string)>
             {
                 ("Nhạc", "Music"), ("Ngôn Ngữ", "Language"), ("Toán", "Math"), ("Nhảy", "Dance"),
@@ -135,98 +141,58 @@ namespace MagicLand_System_Web.Pages.DataContants
             };
         }
 
-        public static string GetSyllabusInfor(string subjectCode, TypeDataEnum type)
+        public static string GetSyllabusDescription(string subjectCode)
         {
             Random random = new Random();
 
             switch (subjectCode.Trim())
             {
                 case "Music":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return MusicDescription[random.Next(0, MusicDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return MusicSubjectNameData[random.Next(0, MusicSubjectNameData.Count)].Item2;
-                    }
-                    return MusicSubjectNameData[random.Next(0, MusicSubjectNameData.Count)].Item1;
+                    return MusicDescription[random.Next(0, MusicDescription.Count)];
                 case "Language":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return LanguageDescription[random.Next(0, LanguageDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return LanguageSubjectNameData[random.Next(0, LanguageSubjectNameData.Count)].Item2;
-                    }
-                    return LanguageSubjectNameData[random.Next(0, LanguageSubjectNameData.Count)].Item1;
+                    return LanguageDescription[random.Next(0, LanguageDescription.Count)];
                 case "Math":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return MathDescription[random.Next(0, MathDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return MathSubjectNameData[random.Next(0, MathSubjectNameData.Count)].Item2;
-                    }
-                    return MathSubjectNameData[random.Next(0, MathSubjectNameData.Count)].Item1;
+                    return MathDescription[random.Next(0, MathDescription.Count)];
                 case "Dance":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return DanceDescription[random.Next(0, DanceDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return DanceSubjectNameData[random.Next(0, DanceSubjectNameData.Count)].Item2;
-                    }
-                    return DanceSubjectNameData[random.Next(0, DanceSubjectNameData.Count)].Item1;
+                    return DanceDescription[random.Next(0, DanceDescription.Count)];
                 case "Sing":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return SingDescription[random.Next(0, SingDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return SingSubjectNameData[random.Next(0, SingSubjectNameData.Count)].Item2;
-                    }
-                    return SingSubjectNameData[random.Next(0, SingSubjectNameData.Count)].Item1;
+                    return SingDescription[random.Next(0, SingDescription.Count)];
                 case "Physics":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return PhysicsDescription[random.Next(0, PhysicsDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return PhysicsSubjectNameData[random.Next(0, PhysicsSubjectNameData.Count)].Item2;
-                    }
-                    return PhysicsSubjectNameData[random.Next(0, PhysicsSubjectNameData.Count)].Item1;
+                    return PhysicsDescription[random.Next(0, PhysicsDescription.Count)];
                 case "Programer":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return ProgramerDescription[random.Next(0, ProgramerDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return ProgramerSubjectNameData[random.Next(0, ProgramerSubjectNameData.Count)].Item2;
-                    }
-                    return ProgramerSubjectNameData[random.Next(0, ProgramerSubjectNameData.Count)].Item1;
+                    return ProgramerDescription[random.Next(0, ProgramerDescription.Count)];
                 case "Art":
-                    if (type == TypeDataEnum.Description)
-                    {
-                        return ArtDescription[random.Next(0, ArtDescription.Count)];
-                    }
-                    if (type == TypeDataEnum.SyllabusCode)
-                    {
-                        return ArtSubjectNameData[random.Next(0, ArtSubjectNameData.Count)].Item2;
-                    }
-                    return ArtSubjectNameData[random.Next(0, ArtSubjectNameData.Count)].Item1;
+                    return ArtDescription[random.Next(0, ArtDescription.Count)];
             }
 
             return string.Empty;
         }
 
+        public static (string, string) GetSyllabusName(string subjectCode)
+        {
+            Random random = new Random();
 
+            switch (subjectCode.Trim())
+            {
+                case "Music":
+                    return MusicSubjectNameData[random.Next(0, MusicSubjectNameData.Count)];
+                case "Language":
+                    return LanguageSubjectNameData[random.Next(0, LanguageSubjectNameData.Count)];
+                case "Math":
+                    return MathSubjectNameData[random.Next(0, MathSubjectNameData.Count)];
+                case "Dance":
+                    return DanceSubjectNameData[random.Next(0, DanceSubjectNameData.Count)];
+                case "Sing":
+                    return SingSubjectNameData[random.Next(0, SingSubjectNameData.Count)];
+                case "Physics":
+                    return PhysicsSubjectNameData[random.Next(0, PhysicsSubjectNameData.Count)];
+                case "Programer":
+                    return ProgramerSubjectNameData[random.Next(0, ProgramerSubjectNameData.Count)];
+                case "Art":
+                    return ArtSubjectNameData[random.Next(0, ArtSubjectNameData.Count)];
+            }
 
+            return (string.Empty, string.Empty);
+        }
     }
 }

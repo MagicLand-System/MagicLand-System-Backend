@@ -504,12 +504,12 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
             }
 
-            //var timeSpend = doingTime.Hour * 60 + doingTime.Minute;
+            var timeSpend = doingTime.Hour * 60 + doingTime.Minute;
 
-            //if (timeSpend <= 0 || timeSpend > 30)
-            //{
-            //    throw new BadHttpRequestException($"Tổng Thời Gian Làm Không Hợp Lệ Vui Lòng Kiểm Tra Lại Yêu Cầu , [1-30] Phút", StatusCodes.Status400BadRequest);
-            //}
+            if (timeSpend <= 0 || timeSpend > 30)
+            {
+                throw new BadHttpRequestException($"Tổng Thời Gian Làm Không Hợp Lệ Vui Lòng Kiểm Tra Lại Yêu Cầu , [1-30] Phút", StatusCodes.Status400BadRequest);
+            }
         }
 
         private async Task<Class> ValidateGradeQuizClass(Guid classId, Guid? currentStudentId)
