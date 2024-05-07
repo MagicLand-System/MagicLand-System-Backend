@@ -570,5 +570,21 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.GetLecturerResponseForUpdateSession(classId,slotId,date);
             return Ok(isSuccess);
         }
+        [HttpPut(ApiEndpointConstant.ClassEnpoint.SetNotCanMakeUp)]
+        public async Task<IActionResult> SetNotCanMakeUp(string scheduleId,string studentId)
+        {
+            var isSuccess = await _classService.SetNotCanMakeUp(scheduleId, studentId);
+            if(!isSuccess) 
+            {
+                return Ok("Không thể cập nhật trạng thái");
+            }
+            return Ok("Cập nhật trạng thái thành công");
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetListCanNotMakeUp)]
+        public async Task<IActionResult> GetListCanNotMakeRes()
+        {
+            var isSuccess = await _classService.GetCanNotMakeUpResponses();
+            return Ok(isSuccess);
+        }
     }
 }

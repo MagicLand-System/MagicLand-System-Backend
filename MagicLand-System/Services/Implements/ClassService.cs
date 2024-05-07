@@ -1093,6 +1093,7 @@ namespace MagicLand_System.Services.Implements
             var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId)));
             if (attendance == null) { return false; }
             attendance.ScheduleId = Guid.Parse(request.ScheduleId);
+            attendance.Note = string.Empty;
             _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
             var isSuccess = await _unitOfWork.CommitAsync() > 0;
             return isSuccess;
@@ -4096,6 +4097,83 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
             }
+        }
+
+        public async Task<bool> SetNotCanMakeUp(string scheduleId, string studentId)
+        {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId));
+            if(schedule.Date.Date < DateTime.Now.Date)
+            {
+                throw new BadHttpRequestException("Lịch học bạn đưa ra đã nằm ở trong quá khứ", StatusCodes.Status400BadRequest);
+            }
+            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate : x => x.ScheduleId.ToString().Equals(scheduleId) && x.StudentId.ToString().Equals(studentId));
+            if(attendance == null)
+            {
+                throw new BadHttpRequestException("Không tìm ra kết quả", StatusCodes.Status400BadRequest);
+            }
+            attendance.Note = "CanNotMakeUp";
+            _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
+            bool isSuc = await _unitOfWork.CommitAsync() > 0;
+            return isSuc;
+        }
+
+        public async Task<List<CanNotMakeUpResponse>> GetCanNotMakeUpResponses()
+        {
+            var listFound = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.Note.Equals("CanNotMakeUp"));
+            if(listFound == null)
+            {
+                return new List<CanNotMakeUpResponse>();
+            }
+            List<CanNotMakeUpResponse> canNotMakeUpResponses = new List<CanNotMakeUpResponse>();
+            foreach(var found in listFound)
+            {
+                var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id == found.ScheduleId);
+                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == schedule.ClassId);
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == classx.CourseId);
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == found.StudentId);
+                var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == student.ParentId);
+                var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id);
+                var studentRes = new StudentResponse
+                {
+                    Age = (DateTime.Now.Year - student.DateOfBirth.Year),
+                    FullName = student.FullName,
+                    StudentId = student.Id,
+                    AvatarImage = student.AvatarImage,
+                    Email = student.Email,
+                    DateOfBirth = student.DateOfBirth,
+                    Gender = student.Gender,
+                };
+                var parentRes = new UserResponse
+                {
+                    Email = parent.Email,
+                    AvatarImage = parent.AvatarImage,
+                    Address = parent.Address,
+                    Gender = parent.Gender,
+                    DateOfBirth = parent.DateOfBirth.Value,
+                    FullName = parent.FullName,
+                    Id = parent.Id,
+                    Phone = parent.Phone,
+                };
+                var lastSc = listSc.OrderByDescending(x => x.Date).First();
+                var status = "";
+                if(lastSc.Date.Date >= DateTime.Now.Date)
+                {
+                    status = "Đang chờ xếp";
+                } else
+                {
+                    status = "Hết hạn";
+                }
+                var newresponse = new CanNotMakeUpResponse
+                {
+                    ClassCode = classx.ClassCode,
+                    CourseName = course.Name,
+                    ParentResponse = parentRes,
+                    Status = status,
+                    StudentResponse = studentRes,
+                };
+                canNotMakeUpResponses.Add(newresponse);
+            }
+            return canNotMakeUpResponses;
         }
 
         #endregion

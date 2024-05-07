@@ -54,5 +54,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<StudentGradeResponse>> GetStudentGradeResponses(string classId);
         Task<List<ClassWithDailyScheduleRes>> GetClassWithDailyScheduleRes(string classId,string studentId);
         Task<ChangeClassResponse> ChangeStaffStudentClassAsync(string fromClassId, string toClassId, string studentId);
+        Task<bool> SetNotCanMakeUp(string scheduleId, string studentId);
+        Task<List<CanNotMakeUpResponse>> GetCanNotMakeUpResponses();
     }
 }
