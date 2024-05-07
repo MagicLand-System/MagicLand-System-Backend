@@ -586,5 +586,21 @@ namespace MagicLand_System.Controllers
             var isSuccess = await _classService.GetCanNotMakeUpResponses();
             return Ok(isSuccess);
         }
+        [HttpPut(ApiEndpointConstant.ClassEnpoint.SaveCourse)]
+        public async Task<IActionResult> SaveCourse(string classId, string studentId)
+        {
+            var isSuccess = await _classService.SaveCourse(classId,studentId);
+            if (!isSuccess)
+            {
+                return Ok("Không thể bảo lưu");
+            }
+            return Ok("Bảo lưu thành công");
+        }
+        [HttpGet(ApiEndpointConstant.ClassEnpoint.GetListSavedCourse)]
+        public async Task<IActionResult> GetSavedCourse(string? name, DateTime? dateOfBirth)
+        {
+            var isSuccess = await _classService.GetSaveCourseResponse(name,dateOfBirth);
+            return Ok(isSuccess);
+        }
     }
 }

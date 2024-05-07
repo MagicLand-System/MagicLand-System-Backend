@@ -4176,6 +4176,86 @@ namespace MagicLand_System.Services.Implements
             return canNotMakeUpResponses;
         }
 
+        public async Task<bool> SaveCourse(string classId, string studentId)
+        {
+            var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate : x => x.StudentId.ToString().Equals(studentId) && x.ClassId.ToString().Equals(classId));
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == studentClass.ClassId);
+            if(!(classx.Status.Equals(ClassStatusEnum.UPCOMING.ToString()) || classx.Status.Equals(ClassStatusEnum.CANCELED.ToString()))){
+                throw new BadHttpRequestException("Lớp đã bắt đầu không thể bảo lưu", StatusCodes.Status400BadRequest);
+            }
+            studentClass.Status = "Saved";
+            studentClass.SavedTime = DateTime.Now;
+            _unitOfWork.GetRepository<StudentClass>().UpdateAsync(studentClass);
+            var isSuc = await _unitOfWork.CommitAsync() > 0;
+            return isSuc;
+        }
+
+        public async Task<List<SaveCourseResponse>> GetSaveCourseResponse (string? name, DateTime? dateOfBirth)
+        {
+            var listFound = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.Status.Equals("Saved"));
+            if (listFound == null)
+            {
+                return new List<SaveCourseResponse>();
+            }
+            List<SaveCourseResponse> canNotMakeUpResponses = new List<SaveCourseResponse>();
+            foreach (var found in listFound)
+            {
+                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == found.ClassId);
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == classx.CourseId);
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == found.StudentId);
+                var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == student.ParentId);
+                var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id);
+                var studentRes = new StudentResponse
+                {
+                    Age = (DateTime.Now.Year - student.DateOfBirth.Year),
+                    FullName = student.FullName,
+                    StudentId = student.Id,
+                    AvatarImage = student.AvatarImage,
+                    Email = student.Email,
+                    DateOfBirth = student.DateOfBirth,
+                    Gender = student.Gender,
+                };
+                var parentRes = new UserResponse
+                {
+                    Email = parent.Email,
+                    AvatarImage = parent.AvatarImage,
+                    Address = parent.Address,
+                    Gender = parent.Gender,
+                    DateOfBirth = parent.DateOfBirth.Value,
+                    FullName = parent.FullName,
+                    Id = parent.Id,
+                    Phone = parent.Phone,
+                };
+                var lastSc = listSc.OrderByDescending(x => x.Date).First();
+                var status = "";
+                var newresponse = new SaveCourseResponse
+                {
+                    CourseName = course.Name,
+                    SavedTime = found.SavedTime,
+                    ParentResponse = parentRes,
+                    Status = "Bảo lưu",
+                    StudentResponse = studentRes,
+                    Id = found.Id,
+                };
+                canNotMakeUpResponses.Add(newresponse);
+            }
+            var canNotMakeUpResponse1 = new List<SaveCourseResponse>();
+            var canNotMakeUpResponse2 = new List<SaveCourseResponse>();
+            if(name != null)
+            {
+                 canNotMakeUpResponse1= canNotMakeUpResponses.Where(x => x.StudentResponse.FullName.ToLower().Trim().Contains(name.ToLower().Trim())).ToList();
+            }
+            if(dateOfBirth != null)
+            {
+                canNotMakeUpResponse2 = canNotMakeUpResponses.Where(x => x.StudentResponse.DateOfBirth.Date == dateOfBirth.Value.Date).ToList();
+            }
+            if(name != null ||  dateOfBirth != null)
+            {
+                canNotMakeUpResponses = canNotMakeUpResponse1.UnionBy(canNotMakeUpResponse2, x => x.Id).ToList();
+            }
+            return canNotMakeUpResponses;
+        }
+
         #endregion
     }
 }
