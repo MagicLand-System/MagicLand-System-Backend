@@ -10,7 +10,8 @@ namespace MagicLand_System.Domain.Models
         public Student? Student { get; set; }
         public bool CanChangeClass { get; set; } = true;
         public DateTime? AddedTime { get; set; }
-
+        public DateTime? SavedTime { get; set; } = null;
+        public string Status { get; set; } = string.Empty;    
         [ForeignKey("Class")]
         public Guid ClassId { get; set; }
         public Class? Class { get; set; }

@@ -71,6 +71,10 @@
             public const string LecturerForUpdateClass = GetAll + "/getLecturerForUpdate";
             public const string LecturerForUpdateSession = GetAll + "/getLecturerForUpdateSession";
             public const string RoomForUpdateSession = GetAll + "/getRoomForUpdateSession";
+            public const string SetNotCanMakeUp = GetAll + "/{scheduleId}/{studentId}/setStatusNotCanMakeUp";
+            public const string GetListCanNotMakeUp = GetAll + "/getListCanNotMakeUp";
+            public const string SaveCourse = GetAll + "/{classId}/{studentId}/SaveCouse";
+            public const string GetListSavedCourse = GetAll + "/getListSavedCourse";
         }
         public static class PromotionEnpoint
         {

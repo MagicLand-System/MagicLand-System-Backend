@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240507092131_UpdateDB")]
+    partial class UpdateDB
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,16 +194,13 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("SubjectName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("SyllabusId")
+                    b.Property<Guid?>("SyllabusId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SyllabusId")
-                        .IsUnique();
 
                     b.ToTable("Course", (string)null);
                 });
@@ -659,16 +659,13 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("SessionId")
+                    b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SessionId")
-                        .IsUnique();
 
                     b.ToTable("QuestionPackage", (string)null);
                 });
@@ -768,10 +765,17 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int>("NoSession")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("QuestionPackageId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("TopicId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("QuestionPackageId")
+                        .IsUnique()
+                        .HasFilter("[QuestionPackageId] IS NOT NULL");
 
                     b.HasIndex("TopicId");
 
@@ -984,6 +988,9 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -1021,6 +1028,10 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId")
+                        .IsUnique()
+                        .HasFilter("[CourseId] IS NOT NULL");
 
                     b.HasIndex("SyllabusCategoryId");
 
@@ -1448,16 +1459,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("Lecture");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.Course", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.Syllabus", "Syllabus")
-                        .WithOne("Course")
-                        .HasForeignKey("MagicLand_System.Domain.Models.Course", "SyllabusId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Syllabus");
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.CoursePrice", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
@@ -1593,16 +1594,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("QuestionPackage");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.QuestionPackage", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.Session", "Session")
-                        .WithOne("QuestionPackage")
-                        .HasForeignKey("MagicLand_System.Domain.Models.QuestionPackage", "SessionId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Session");
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.Schedule", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.Class", "Class")
@@ -1632,11 +1623,18 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
                 {
+                    b.HasOne("MagicLand_System.Domain.Models.QuestionPackage", "QuestionPackage")
+                        .WithOne("Session")
+                        .HasForeignKey("MagicLand_System.Domain.Models.Session", "QuestionPackageId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("MagicLand_System.Domain.Models.Topic", "Topic")
                         .WithMany("Sessions")
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("QuestionPackage");
 
                     b.Navigation("Topic");
                 });
@@ -1727,11 +1725,18 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Syllabus", b =>
                 {
+                    b.HasOne("MagicLand_System.Domain.Models.Course", "Course")
+                        .WithOne("Syllabus")
+                        .HasForeignKey("MagicLand_System.Domain.Models.Syllabus", "CourseId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("MagicLand_System.Domain.Models.SyllabusCategory", "SyllabusCategory")
                         .WithMany("Syllabuses")
                         .HasForeignKey("SyllabusCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Course");
 
                     b.Navigation("SyllabusCategory");
                 });
@@ -1890,6 +1895,8 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("CoursePrices");
 
                     b.Navigation("SubDescriptionTitles");
+
+                    b.Navigation("Syllabus");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.ExamQuestion", b =>
@@ -1934,6 +1941,8 @@ namespace MagicLand_System.Domain.Migrations
             modelBuilder.Entity("MagicLand_System.Domain.Models.QuestionPackage", b =>
                 {
                     b.Navigation("Questions");
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Role", b =>
@@ -1955,8 +1964,6 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Session", b =>
                 {
-                    b.Navigation("QuestionPackage");
-
                     b.Navigation("SessionDescriptions");
                 });
 
@@ -1986,8 +1993,6 @@ namespace MagicLand_System.Domain.Migrations
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.Syllabus", b =>
                 {
-                    b.Navigation("Course");
-
                     b.Navigation("ExamSyllabuses");
 
                     b.Navigation("Materials");
