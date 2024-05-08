@@ -198,6 +198,8 @@
             public const string GetAttendanceOfStudent = RootEndpoint + "/student/{id}";
             public const string LoadAttandance = RootEndpoint + "/staff/load";
             public const string TakeAttandance = RootEndpoint + "/staff/takeAttandance";
+            public const string TakeAttandanceV2 = RootEndpoint + "/staff/takeAttandance1";
+
         }
 
         public static class WalletEndpoint
