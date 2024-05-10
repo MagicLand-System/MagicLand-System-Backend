@@ -43,7 +43,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetQuizzes()
         {
-            var responses = await _syllabusService.LoadQuizzesAsync();
+            var responses = await _quizService.LoadQuizzesAsync();
 
             return Ok(responses);
         }
@@ -70,7 +70,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetQuizByCourseId([FromQuery] Guid id)
         {
-            var responses = await _syllabusService.LoadQuizzesByCourseIdAsync(id);
+            var responses = await _quizService.LoadQuizzesByCourseIdAsync(id);
 
             return Ok(responses);
         }
@@ -124,7 +124,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid id, [FromQuery] Guid? studentId)
         {
-            var responses = await _syllabusService.LoadExamOfClassByClassIdAsync(id, studentId);
+            var responses = await _quizService.LoadExamOfClassByClassIdAsync(id, studentId);
 
             return Ok(responses);
         }
@@ -186,7 +186,7 @@ namespace MagicLand_System.Controllers
                 return BadRequest("Số Ngày Không Hợp Lệ");
             }
 
-            var responses = await _syllabusService.LoadExamOfCurrentStudentAsync(numberOfDay);
+            var responses = await _quizService.LoadExamOfCurrentStudentAsync(numberOfDay);
 
             return Ok(responses);
         }
@@ -217,7 +217,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "STUDENT")]
         public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] Guid classId, [FromQuery] int? examPart)
         {
-            var responses = await _syllabusService.LoadQuizOfExamByExamIdAsync(id, classId, examPart);
+            var responses = await _quizService.LoadQuizOfExamByExamIdAsync(id, classId, examPart);
             if (responses == default)
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");

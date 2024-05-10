@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.PayLoad.Request.Quizzes;
+using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
@@ -19,5 +20,10 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> GradeExamOffLineAsync(ExamOffLineRequest exaOffLineStudentWork);
         Task<string> EvaluateExamOnLineAsync(Guid studentId, Guid examId, string status, int? noAttempt);
         Task<string> SettingExamTimeAsync(Guid examId, Guid classId, SettingQuizTimeRequest settingInfor);
+        Task<List<ExamWithQuizResponse>> LoadQuizzesAsync();
+        Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id);
+        Task<List<ExamResForStudent>> LoadExamOfClassByClassIdAsync(Guid id, Guid? studentId);
+        Task<List<ExamExtraClassInfor>> LoadExamOfCurrentStudentAsync(int numberOfDate);
+        Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, Guid classId, int? examPart);
     }
 }
