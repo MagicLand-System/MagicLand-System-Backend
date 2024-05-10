@@ -45,9 +45,4 @@
 		<ProjectReference Include="..\MagicLand-System.Repository\MagicLand-System.Repository.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="PayLoad\Response\Custom\" />
-	  <Folder Include="PayLoad\Response\Lectures\" />
-	</ItemGroup>
-
 </Project>

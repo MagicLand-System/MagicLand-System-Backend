@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
@@ -18,10 +19,53 @@ namespace MagicLand_System.Controllers
         {
             _userService = userService;
         }
-        [HttpGet(ApiEndpointConstant.UserEndpoint.RootEndpoint)]
-        public async Task<IActionResult> GetUsers()
+
+        #region document API Add New User System
+        /// <summary>
+        ///  Cho Phép Thêm Mới Người Dùng Hệ Thống
+        /// </summary>
+        /// <param name="request">Chứa Thông Tin Người Dùng</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "UserName":"Nguyen Van A",
+        ///    "UserPhone":"+84971822092",
+        ///    "Role":"STAFF",
+        ///    "LecturerCareerId":"2F1AB569-D516-4A46-9A55-61DBCD6B3692",
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Báo</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpPost(ApiEndpointConstant.UserEndpoint.AddUser)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        //[Authorize(Roles = "STAFF")]
+        public async Task<IActionResult> AddUser([FromBody] UserAccountRequest request)
         {
-            var users = await _userService.GetUsers();
+            var response = await _userService.AddUserAsync(request);
+            if (response)
+            {
+                return Ok("Tạo Thành Công");
+            }
+            return BadRequest();
+        }
+
+        [HttpGet(ApiEndpointConstant.UserEndpoint.RootEndpoint)]
+        public async Task<IActionResult> GetUsers([FromQuery] string? keyWord, [FromQuery] RoleEnum? role)
+        {
+            if(role == RoleEnum.DEVELOPER)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Quyền Này Không Được Cấp Phép Tạo",
+                    StatusCode = StatusCodes.Status404NotFound,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var users = await _userService.GetUsers(keyWord, role);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.CheckExist)]

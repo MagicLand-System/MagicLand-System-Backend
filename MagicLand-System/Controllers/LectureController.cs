@@ -5,6 +5,7 @@ using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Evaluates;
+using MagicLand_System.PayLoad.Response.Lectures;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.Services.Interfaces;
@@ -258,6 +259,25 @@ namespace MagicLand_System.Controllers
         }
 
 
+
+        #region document API Get Career Lecturer
+        /// <summary>
+        ///  Truy Suất Các Môn Dạy Học Của Giáo Viên
+        /// </summary>
+        /// <response code="200">Trả Về Các Môn Dạy Học</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetLecturerCareer)]
+        [ProducesResponseType(typeof(LecturerCareerResponse), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetLectureCareer()
+        {
+            var responses = await _userService.GetLecturerCareerAsync();
+            return Ok(responses);
+        }
 
         #region document API Get All Class Schedules
         /// <summary>

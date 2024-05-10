@@ -30,7 +30,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.NotificationEndpoint.GetNotifications)]
         [ProducesResponseType(typeof(NotificationResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        [Authorize(Roles = "PARENT")]
+        [Authorize]
         public async Task<IActionResult> GetNotifications()
         {
             //return Ok(DateTime.Now);
@@ -98,7 +98,7 @@ namespace MagicLand_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> DeleteNotification([FromQuery] List<Guid> ids)
         {
-            if(ids == null || !ids.Any())
+            if (ids == null || !ids.Any())
             {
                 return BadRequest(new ErrorResponse
                 {

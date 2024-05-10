@@ -7,8 +7,9 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System_Web.Pages.DataContants;
 using MagicLand_System_Web.Pages.Enums;
 using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Message;
 using MagicLand_System_Web.Pages.Message.SubMessage;
+using MagicLand_System_Web.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web.Pages.Messages.InforMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text;
@@ -30,7 +31,7 @@ namespace MagicLand_System_Web.Pages
         public bool IsLoading { get; set; }
 
         [BindProperty]
-        public List<ClassMessage> ClassMessages { get; set; } = new List<ClassMessage>();
+        public List<ClassDefaultMessage> ClassMessages { get; set; } = new List<ClassDefaultMessage>();
         [BindProperty]
         public List<CourseWithScheduleShorten> Courses { get; set; } = new List<CourseWithScheduleShorten>();
 
@@ -38,7 +39,7 @@ namespace MagicLand_System_Web.Pages
         public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<ClassMessage>>(HttpContext!.Session, "DataClass");
+            var data = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
             var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
 
             if (data != null && data.Count > 0)
@@ -141,7 +142,7 @@ namespace MagicLand_System_Web.Pages
         private async Task RenderProgress(CourseWithScheduleShorten course, int order, Random random)
         {
             var scheduleRequests = new List<ScheduleRequest>();
-            var scheduleMessages = new List<ClassSubMessage>();
+            var scheduleMessages = new List<ScheduleMessage>();
             var startDate = DateTime.Now.AddDays(random.Next(1, 4));
 
             var lecturer = await GetLecturer(course, random, scheduleRequests, scheduleMessages, startDate);
@@ -164,7 +165,7 @@ namespace MagicLand_System_Web.Pages
 
             if (lecturer.LectureId == default)
             {
-                ClassMessages.Add(new ClassMessage
+                ClassMessages.Add(new ClassDefaultMessage
                 {
                     ClassCode = objectRequest.ClassCode,
                     CourseBeLong = course.CourseDetail!.CourseName!,
@@ -180,7 +181,7 @@ namespace MagicLand_System_Web.Pages
 
             var result = await _apiHelper.FetchApiAsync<List<LecturerResponse>>(ApiEndpointConstant.UserEndpoint.GetLecturer, MethodEnum.POST, objectRequest);
 
-            ClassMessages.Add(new ClassMessage
+            ClassMessages.Add(new ClassDefaultMessage
             {
                 ClassCode = objectRequest.ClassCode,
                 CourseBeLong = course.CourseDetail!.CourseName!,
@@ -195,7 +196,7 @@ namespace MagicLand_System_Web.Pages
         }
 
         private async Task<LecturerResponse> GetLecturer(CourseWithScheduleShorten course, Random random, List<ScheduleRequest> scheduleRequests,
-            List<ClassSubMessage> scheduleMessages, DateTime startDate)
+            List<ScheduleMessage> scheduleMessages, DateTime startDate)
         {
             int numberSchedule = random.Next(1, 4);
 
@@ -210,7 +211,7 @@ namespace MagicLand_System_Web.Pages
                     SlotId = Guid.Parse(slot.Item1),
                 });
 
-                scheduleMessages.Add(new ClassSubMessage
+                scheduleMessages.Add(new ScheduleMessage
                 {
                     DayOfWeek = dayOfWeek.Item1,
                     Slot = slot.Item2,

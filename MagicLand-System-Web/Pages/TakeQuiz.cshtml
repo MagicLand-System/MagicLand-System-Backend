@@ -1,9 +1,8 @@
 ﻿@page
-@model MagicLand_System_Web.Pages.StudentModel
+@model MagicLand_System_Web.Pages.TakeQuizModel
 @{
-    ViewData["Title"] = "Student";
+    ViewData["Title"] = "Take Quiz";
     var Message = ViewData["Message"]?.ToString();
-    var a = "das";
     <link rel="stylesheet" href="~/css/cutom.css" />
 }
 <style>
@@ -11,30 +10,30 @@
         border: 1px solid black;
     }
 
-    #student {
+    #class {
         background-color: lightblue;
     }
 
-        #student .nav-link {
+        #class .nav-link {
             color: blue !important;
         }
 
-        #student i.fa {
+        #class i.fa {
             color: blue;
         }
 </style>
-
+@*
 <section class="body-class">
     <div class="text-center">
-        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Học Sinh Thuộc Ngẫu Nhiên Phụ Huynh</b></h6>
+        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Lớp Học Thuộc Ngẫu Nhiên Các Khóa Học</b></h6>
 
         <div class="form-group" onsubmit="return setLoader()">
             <form method="post">
-                <label for="inputField">Nhập Số Học Sinh: </label>
+                <label for="inputField">Nhập Số Lớp Học: </label>
                 <input type="text" id="inputField" name="inputField" />
-                <input type="hidden" id="input-value" name="listPhone" value="" />
+                <input type="hidden" id="input-value" name="listCourseId" value="" />
                 <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
-                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Người Dùng</button>
+                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Khóa Học</button>
             </form>
         </div>
 
@@ -56,9 +55,8 @@
             <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
             <div style="margin-left: 29%;">Now Progressing...</div>
         </div>
-
         <div id="table-progress" class="table-container" style="overflow-y: auto; height: 368px; width: 73%; margin-top: 22px; position: relative}">
-            @if (Model.StudentMessages != null && Model.StudentMessages.Count() > 0)
+            @if (Model.ClassMessages != null && Model.ClassMessages.Count() > 0)
             {
                 <table class="table">
                     <thead style="position: sticky; top: -1px; background-color: gainsboro;">
@@ -67,19 +65,19 @@
                                 Thứ Tự
                             </th>
                             <th>
-                                Tên
+                                Mã Lớp
                             </th>
                             <th>
-                                Số Tài Khoản Phát Sinh
+                                Thuộc Khóa
                             </th>
                             <th>
-                                Thuộc Phụ Huynh
-                            </th>
-                            <th>
-                                Độ Tuổi
+                                Ngày Bắt Đầu
                             </th>
                             <th style="width: 120px">
-                                Giới Tính
+                                Thuộc Giáo Viên
+                            </th>
+                            <th style="width: 200px">
+                                Lịch Học
                             </th>
                             <th style="width: 100px">
                                 Trạng Thái
@@ -93,7 +91,7 @@
                         @{
                             int index = 0;
                         }
-                        @foreach (var item in Model.StudentMessages)
+                        @foreach (var item in Model.ClassMessages)
                         {
                             {
                                 index++;
@@ -103,19 +101,47 @@
                                     @index
                                 </td>
                                 <td>
-                                    @item.StudentName
+                                    @item.ClassCode
                                 </td>
                                 <td>
-                                    @item.AccountArise
+                                    @item.CourseBeLong
                                 </td>
                                 <td>
-                                    @item.ParentBelong
+                                    @item.StartDate
                                 </td>
                                 <td>
-                                    @item.Age
+                                    @item.LecturerBeLong
                                 </td>
                                 <td>
-                                    @item.Gender
+                                    <div class="table-container-schedule" style="overflow-y: auto; height: 120px">
+                                        <table style="border-collapse: collapse; border: none; text-align: center; width: 100%">
+                                            @for (int i = 0; i < item.Schedules.Count(); i++)
+                                            {
+                                                if (i != 0)
+                                                {
+                                                    <tbody style="border-top: 1px solid black;">
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].DayOfWeek</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].Slot</td>
+                                                        </tr>
+                                                    </tbody>
+                                                }
+                                                else
+                                                {
+                                                    <tbody>
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].DayOfWeek</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="border: none">@item.Schedules[i].Slot</td>
+                                                        </tr>
+                                                    </tbody>
+                                                }
+                                            }
+                                        </table>
+                                    </div>
                                 </td>
                                 <td>
                                     @item.Status
@@ -128,31 +154,31 @@
                     </tbody>
                 </table>
             }
-            else if (Model.Parents != null)
+            else if (Model.Courses != null)
             {
-                if (Model.Parents.Count == 0)
+                if (Model.Courses.Count == 0)
                 {
-                    <h6>Không Tìm Thấy Người Dùng Nào</h6>
+                    <h6>Hiện Chưa Có Khóa Học Nào Trong Hệ Thống</h6>
                 }
                 else
                 {
                     <table class="table">
                         <thead style="position: sticky; top: -1px; background-color: gainsboro;">
                             <tr>
-                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Phụ Huynh Hoặc Tất Cả Phụ Huynh</th>
+                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Khóa Hoặc Tất Cả Các Khóa</th>
                             </tr>
                             <tr>
                                 <th>
                                     Thứ Tự
                                 </th>
                                 <th>
-                                    Tên
+                                    Tên Khóa Học
                                 </th>
                                 <th>
-                                    Số Điện Thoại
+                                    Độ Tuổi Phù Hợp
                                 </th>
                                 <th>
-                                    Email
+                                    Môn Dạy
                                 </th>
                             </tr>
                         </thead>
@@ -160,23 +186,23 @@
                             @{
                                 int index = 0;
                             }
-                            @foreach (var item in Model.Parents)
+                            @foreach (var item in Model.Courses)
                             {
                                 {
                                     index++;
                                 }
-                                <tr id="row-@index" onclick="rowClicked('@item.Phone', '@index')">
+                                <tr id="row-@index" onclick="rowClicked('@item.CourseId', '@index')">
                                     <td>
                                         @index
                                     </td>
                                     <td>
-                                        @item.FullName
+                                        @item.CourseDetail!.CourseName
                                     </td>
                                     <td>
-                                        @item.Phone
+                                        @item.CourseDetail.MinAgeStudent - @item.CourseDetail.MaxAgeStudent
                                     </td>
                                     <td>
-                                        @item.Email
+                                        @item.CourseDetail.Subject
                                     </td>
                                 </tr>
                             }
@@ -187,7 +213,7 @@
         </div>
     </div>
 </section>
-
+*@
 <script>
     function setLoader() {
         console.log("Set Loader");
@@ -216,8 +242,13 @@
         }
     }
 
-    function rowClicked(id, rowIndex) {
-        console.log("run in");
+    function rowClicked(courseId, rowIndex) {
+        //var tbody = document.getElementById("table-body");
+        //var rows = tbody.querySelectorAll("tr");
+        //rows.forEach(function (row) {
+        //    row.style.backgroundColor = "transparent";
+        //});
+
         var rowSelect = document.getElementById('row-' + rowIndex);
 
         var computedStyle = window.getComputedStyle(rowSelect);
@@ -232,7 +263,7 @@
             document.getElementById('input-value').value = currentValue
             rowSelect.style.backgroundColor = "transparent";
         } else {
-            document.getElementById('input-value').value += "|" + id + "|";
+            document.getElementById('input-value').value += "|" + courseId + "|";
             rowSelect.style.backgroundColor = "lightblue";
         }
 

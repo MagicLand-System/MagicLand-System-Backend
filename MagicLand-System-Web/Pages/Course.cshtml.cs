@@ -6,7 +6,7 @@ using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 using MagicLand_System_Web.Pages.DataContants;
 using MagicLand_System_Web.Pages.Enums;
 using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Message;
+using MagicLand_System_Web.Pages.Messages.DefaultMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -25,13 +25,13 @@ namespace MagicLand_System_Web.Pages
         public bool IsLoading { get; set; }
 
         [BindProperty]
-        public List<CourseMessage> CourseMessages { get; set; } = new List<CourseMessage>();
+        public List<CourseDefaultMessage> CourseMessages { get; set; } = new List<CourseDefaultMessage>();
         [BindProperty]
         public List<SyllabusResponseV2> ValidSyllabus { get; set; } = new List<SyllabusResponseV2>();
         public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<CourseMessage>>(HttpContext!.Session, "DataCourse");
+            var data = SessionHelper.GetObjectFromJson<List<CourseDefaultMessage>>(HttpContext!.Session, "DataCourse");
             var validSyllabus = SessionHelper.GetObjectFromJson<List<SyllabusResponseV2>>(HttpContext!.Session, "ValidSyllabus");
 
 
@@ -140,7 +140,7 @@ namespace MagicLand_System_Web.Pages
 
                 var result = await _apiHelper.FetchApiAsync<bool>(ApiEndpointConstant.CourseEndpoint.AddCourse, MethodEnum.POST, objectRequest);
 
-                CourseMessages.Add(new CourseMessage
+                CourseMessages.Add(new CourseDefaultMessage
                 {
                     CourseName = objectRequest.CourseName,
                     CoursePrice = objectRequest.Price,

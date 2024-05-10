@@ -3,6 +3,7 @@ using CorePush.Google;
 using MagicLand_System.Config;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Response.Notifications;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
@@ -22,7 +23,15 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<NotificationResponse>> GetCurrentUserNotificationsAsync()
         {
-            var notifications = await _unitOfWork.GetRepository<Notification>().GetListAsync(predicate: x => x.UserId == GetUserIdFromJwt(), orderBy: x => x.OrderBy(x => x.CreatedAt));
+            var notifications = new List<Notification>();
+            if(GetRoleFromJwt() == RoleEnum.STAFF.ToString())
+            {
+                notifications = (await _unitOfWork.GetRepository<Notification>().GetListAsync(predicate: x => x.UserId == null || x.UserId == default, orderBy: x => x.OrderBy(x => x.CreatedAt))).ToList();
+            }
+            else
+            {
+                notifications = (await _unitOfWork.GetRepository<Notification>().GetListAsync(predicate: x => x.UserId == GetUserIdFromJwt(), orderBy: x => x.OrderBy(x => x.CreatedAt))).ToList();
+            }
 
             return notifications.Select(noti => _mapper.Map<NotificationResponse>(noti)).ToList();
         }

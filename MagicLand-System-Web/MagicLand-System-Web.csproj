@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Pages\Objects\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 

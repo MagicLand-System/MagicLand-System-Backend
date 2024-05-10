@@ -12,6 +12,7 @@ using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Lectures;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
@@ -171,9 +172,83 @@ namespace MagicLand_System.Services.Implements
             return account;
         }
 
-        public async Task<List<User>> GetUsers()
+        public async Task<bool> AddUserAsync(UserAccountRequest request)
         {
-            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Id == x.Id, include: x => x.Include(x => x.Role)!);
+            try
+            {
+                var roles = await _unitOfWork.GetRepository<Role>().GetListAsync(predicate: x => x.Name == RoleEnum.ADMIN.ToString() || x.Name == RoleEnum.STAFF.ToString() || x.Name == RoleEnum.LECTURER.ToString());
+                var roleRequest = roles.SingleOrDefault(r => r.Name.ToLower() == request.Role.ToLower());
+                if (roleRequest == null)
+                {
+                    throw new BadHttpRequestException($"Chức Vụ [{request.Role}] Không Hợp Lệ", StatusCodes.Status400BadRequest);
+                }
+                if (roleRequest.Name == RoleEnum.LECTURER.ToString())
+                {
+                    if (request.LecturerCareerId == null || request.LecturerCareerId == default)
+                    {
+                        throw new BadHttpRequestException($"Chức Vụ [{request.Role}] Cần Có Id Môn Dạy Hợp Lệ", StatusCodes.Status400BadRequest);
+                    }
+                    var lecturerCareer = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate: x => x.Id == request.LecturerCareerId);
+                    if (lecturerCareer == null)
+                    {
+                        throw new BadHttpRequestException($"Id Môn Dạy [{request.LecturerCareerId}] Không Tồn Tại", StatusCodes.Status400BadRequest);
+                    }
+                }
+                var exsitedPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone == request.UserPhone);
+                if (exsitedPhone != null)
+                {
+                    throw new BadHttpRequestException($"Số Điện Thoại Người Dùng [{request.UserName}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
+                }
+
+                var newUser = new User
+                {
+                    Id = Guid.NewGuid(),
+                    FullName = request.UserName,
+                    Phone = request.UserPhone,
+                    RoleId = roleRequest.Id,
+                    Gender = string.Empty,
+                    Email = string.Empty,
+                    Address = string.Empty,
+                    LecturerFieldId = request.LecturerCareerId,
+                };
+
+                await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
+                _unitOfWork.Commit();
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{e.Message}]", StatusCodes.Status500InternalServerError);
+            }
+        }
+        public async Task<List<LecturerCareerResponse>> GetLecturerCareerAsync()
+        {
+            var responses = new List<LecturerCareerResponse>();
+            var careers = await _unitOfWork.GetRepository<LecturerField>().GetListAsync();
+            careers.ToList().ForEach(c => responses.Add(new LecturerCareerResponse
+            {
+                CareerId = c.Id,
+                CareerName = c.Name,
+            }));
+
+            return responses;
+        }
+
+        public async Task<List<User>> GetUsers(string? keyWord, RoleEnum? role)
+        {
+            var users = await _unitOfWork.GetRepository<User>().GetListAsync(predicate: x => x.Id == x.Id && x.Role!.Name != RoleEnum.DEVELOPER.ToString());
+            foreach (var user in users)
+            {
+                user.Role = await _unitOfWork.GetRepository<Role>().SingleOrDefaultAsync(predicate: x => x.Id == user.RoleId);
+            }
+            if (role != null)
+            {
+                users = users.Where(u => u.Role!.Name == role.ToString()).ToList();
+            }
+            if (keyWord != null)
+            {
+                users = users.Where(u => u.FullName!.Contains(keyWord) || u.Email!.Contains(keyWord)).ToList();
+            }
             return users.ToList();
         }
 
@@ -1232,5 +1307,6 @@ namespace MagicLand_System.Services.Implements
             }
             return classScheduleResponses;
         }
+
     }
 }

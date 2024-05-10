@@ -121,6 +121,8 @@ builder.Services.AddScoped<IPersonalWalletService, PersonalWalletService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISyllabusService, SyllabusService>();
 builder.Services.AddScoped<IDashboardService, DashBoardService>();
+builder.Services.AddScoped<IDeveloperService, DeveloperService>();
+
 
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();

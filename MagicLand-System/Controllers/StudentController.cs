@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.Constants;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
@@ -50,7 +51,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpPost(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate)]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
-        [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AccountStudentResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> AddStudent(CreateStudentRequest studentRequest)
         {
@@ -161,8 +162,8 @@ namespace MagicLand_System.Controllers
             }
             return Ok(response);
         }
-        [HttpGet(ApiEndpointConstant.StudentEndpoint.StudentGetCurrentChildren)]
-        [ProducesResponseType(typeof(StudentScheduleResponse), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndpointConstant.StudentEndpoint.GetStudentsOfCurrentUser)]
+        [ProducesResponseType(typeof(Student), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
         public async Task<IActionResult> GetStudentFromCurentUser()

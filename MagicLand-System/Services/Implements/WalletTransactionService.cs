@@ -493,7 +493,7 @@ namespace MagicLand_System.Services.Implements
 
             if (cls == null)
             {
-                throw new BadHttpRequestException($"Id {classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{classId}] Của Lớp Học Không Tồn Tại", StatusCodes.Status400BadRequest);
             }
 
             cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(

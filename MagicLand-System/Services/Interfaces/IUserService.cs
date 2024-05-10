@@ -1,10 +1,12 @@
 ﻿using MagicLand_System.Domain.Models;
+using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Request.User;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Bills;
+using MagicLand_System.PayLoad.Response.Lectures;
 using MagicLand_System.PayLoad.Response.Schedules.ForLecturer;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
@@ -13,7 +15,9 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<List<User>> GetUsers();
+        Task<List<LecturerCareerResponse>> GetLecturerCareerAsync();
+        Task<bool> AddUserAsync(UserAccountRequest request);
+        Task<List<User>> GetUsers(string? keyWord, RoleEnum? role);
         Task<UserExistRespone> CheckUserExistByPhone(string phone);
         Task<LoginResponse> Authentication(LoginRequest loginRequest);
         Task<User> GetCurrentUser();

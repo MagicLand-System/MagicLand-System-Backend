@@ -1,9 +1,8 @@
 ﻿@page
-@model MagicLand_System_Web.Pages.StudentModel
+@model MagicLand_System_Web.Pages.RegisterClassModel
 @{
-    ViewData["Title"] = "Student";
+    ViewData["Title"] = "Register Class";
     var Message = ViewData["Message"]?.ToString();
-    var a = "das";
     <link rel="stylesheet" href="~/css/cutom.css" />
 }
 <style>
@@ -11,30 +10,30 @@
         border: 1px solid black;
     }
 
-    #student {
+    #registerClass {
         background-color: lightblue;
     }
 
-        #student .nav-link {
+        #registerClass .nav-link {
             color: blue !important;
         }
 
-        #student i.fa {
+        #registerClass i.fa {
             color: blue;
         }
 </style>
 
 <section class="body-class">
     <div class="text-center">
-        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Học Sinh Thuộc Ngẫu Nhiên Phụ Huynh</b></h6>
+        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Đăng Ký Hàng Loạt Học Sinh Vào Lớp</b></h6>
 
         <div class="form-group" onsubmit="return setLoader()">
             <form method="post">
                 <label for="inputField">Nhập Số Học Sinh: </label>
                 <input type="text" id="inputField" name="inputField" />
-                <input type="hidden" id="input-value" name="listPhone" value="" />
+                <input type="hidden" id="input-value" name="listId" value="" />
                 <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
-                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Người Dùng</button>
+                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Lớp Học</button>
             </form>
         </div>
 
@@ -56,9 +55,8 @@
             <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
             <div style="margin-left: 29%;">Now Progressing...</div>
         </div>
-
         <div id="table-progress" class="table-container" style="overflow-y: auto; height: 368px; width: 73%; margin-top: 22px; position: relative}">
-            @if (Model.StudentMessages != null && Model.StudentMessages.Count() > 0)
+            @if (Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count() > 0)
             {
                 <table class="table">
                     <thead style="position: sticky; top: -1px; background-color: gainsboro;">
@@ -67,19 +65,13 @@
                                 Thứ Tự
                             </th>
                             <th>
-                                Tên
-                            </th>
-                            <th>
-                                Số Tài Khoản Phát Sinh
+                                Tên Học Sinh
                             </th>
                             <th>
                                 Thuộc Phụ Huynh
                             </th>
                             <th>
-                                Độ Tuổi
-                            </th>
-                            <th style="width: 120px">
-                                Giới Tính
+                                Lớp Đăng Ký
                             </th>
                             <th style="width: 100px">
                                 Trạng Thái
@@ -93,7 +85,7 @@
                         @{
                             int index = 0;
                         }
-                        @foreach (var item in Model.StudentMessages)
+                        @foreach (var item in Model.RegisterInforMessages)
                         {
                             {
                                 index++;
@@ -106,16 +98,10 @@
                                     @item.StudentName
                                 </td>
                                 <td>
-                                    @item.AccountArise
-                                </td>
-                                <td>
                                     @item.ParentBelong
                                 </td>
                                 <td>
-                                    @item.Age
-                                </td>
-                                <td>
-                                    @item.Gender
+                                    @item.RegisteredClass
                                 </td>
                                 <td>
                                     @item.Status
@@ -128,31 +114,43 @@
                     </tbody>
                 </table>
             }
-            else if (Model.Parents != null)
+            else if (Model.Classes != null)
             {
-                if (Model.Parents.Count == 0)
+                if (Model.Classes.Count == 0)
                 {
-                    <h6>Không Tìm Thấy Người Dùng Nào</h6>
+                    <h6>Hiện Chưa Có Lớp Học Nào Đang Mở</h6>
                 }
                 else
                 {
                     <table class="table">
                         <thead style="position: sticky; top: -1px; background-color: gainsboro;">
                             <tr>
-                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Phụ Huynh Hoặc Tất Cả Phụ Huynh</th>
+                                <th colspan="8" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Một Lớp Học</th>
                             </tr>
                             <tr>
                                 <th>
                                     Thứ Tự
                                 </th>
                                 <th>
-                                    Tên
+                                    Mã Lớp Học
                                 </th>
                                 <th>
-                                    Số Điện Thoại
+                                    Thuộc Khóa
                                 </th>
                                 <th>
-                                    Email
+                                    Ngày Bắt Đầu
+                                </th>
+                                <th style="width: 200px">
+                                    Lịch Học
+                                </th>
+                                <th>
+                                    Thuộc Giáo Viên
+                                </th>
+                                <th>
+                                    Số Học Sinh Đã Đăng Ký
+                                </th>
+                                <th>
+                                    Giới Hạn Học Sinh Đăng Ký
                                 </th>
                             </tr>
                         </thead>
@@ -160,23 +158,63 @@
                             @{
                                 int index = 0;
                             }
-                            @foreach (var item in Model.Parents)
+                            @foreach (var item in Model.Classes)
                             {
                                 {
                                     index++;
                                 }
-                                <tr id="row-@index" onclick="rowClicked('@item.Phone', '@index')">
+                                <tr id="row-@index" onclick="rowClicked('@item.ClassId', '@index')">
                                     <td>
                                         @index
                                     </td>
                                     <td>
-                                        @item.FullName
+                                        @item.ClassCode
                                     </td>
                                     <td>
-                                        @item.Phone
+                                        @item.CourseBeLong
                                     </td>
                                     <td>
-                                        @item.Email
+                                        @item.StartDate
+                                    </td>
+                                    <td>
+                                        <div class="table-container-schedule" style="overflow-y: auto; height: 120px">
+                                            <table style="border-collapse: collapse; border: none; text-align: center; width: 100%">
+                                                @for (int i = 0; i < item.Schedules.Count; i++)
+                                                {
+                                                    if (i != 0)
+                                                    {
+                                                        <tbody style="border-top: 1px solid black;">
+                                                            <tr>
+                                                                <td style="border: none">@item.Schedules[i].DayOfWeek</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="border: none">@item.Schedules[i].Slot</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    }
+                                                    else
+                                                    {
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style="border: none">@item.Schedules[i].DayOfWeek</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="border: none">@item.Schedules[i].Slot</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    }
+                                                }
+                                            </table>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @item.LecturerBeLong
+                                    </td>
+                                    <td>
+                                        @item.StudentRegistered
+                                    </td>
+                                    <td>
+                                        @item.MaxStudentRegistered
                                     </td>
                                 </tr>
                             }
@@ -203,7 +241,7 @@
             loaderContainer.style.display = "block";
             buttonSubmit.style.opacity = "0.5";
             buttonSubmit.disabled = true;
-            tableProgress.style.height = "200px";
+            tableProgress.style.height = "305px";
             return true;
         } else {
             loaderContainer.style.display = "none";
@@ -217,25 +255,31 @@
     }
 
     function rowClicked(id, rowIndex) {
-        console.log("run in");
+        var tbody = document.getElementById("table-body");
+        var rows = tbody.querySelectorAll("tr");
+        rows.forEach(function (row) {
+            row.style.backgroundColor = "transparent";
+        });
+
         var rowSelect = document.getElementById('row-' + rowIndex);
+        document.getElementById('input-value').value = "|" + id + "|";
+        rowSelect.style.backgroundColor = "lightblue";
 
-        var computedStyle = window.getComputedStyle(rowSelect);
-        var rowSelectColor = computedStyle.getPropertyValue("background-color");
+        //var computedStyle = window.getComputedStyle(rowSelect);
+        //var rowSelectColor = computedStyle.getPropertyValue("background-color");
 
-        console.log(rowSelectColor);
+        //console.log(rowSelectColor);
 
-        if (rowSelectColor === "rgb(173, 216, 230)") {
-            var currentValue = document.getElementById('input-value').value;
-            currentValue = currentValue.replace('|' + id + '|', '');
+        //if (rowSelectColor === "rgb(173, 216, 230)") {
+        //    var currentValue = document.getElementById('input-value').value;
+        //    currentValue = currentValue.replace('|' + id + '|', '');
 
-            document.getElementById('input-value').value = currentValue
-            rowSelect.style.backgroundColor = "transparent";
-        } else {
-            document.getElementById('input-value').value += "|" + id + "|";
-            rowSelect.style.backgroundColor = "lightblue";
-        }
+        //    document.getElementById('input-value').value = currentValue
+        //    rowSelect.style.backgroundColor = "transparent";
+        //} else {
+        //    document.getElementById('input-value').value += "|" + id + "|";
+        //    rowSelect.style.backgroundColor = "lightblue";
+        //}
 
     }
 </script>
-

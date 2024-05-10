@@ -5,7 +5,7 @@ using MagicLand_System.PayLoad.Response;
 using MagicLand_System_Web.Pages.DataContants;
 using MagicLand_System_Web.Pages.Enums;
 using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Message;
+using MagicLand_System_Web.Pages.Messages.DefaultMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -21,7 +21,7 @@ namespace MagicLand_System_Web.Pages
         }
 
         [BindProperty]
-        public List<SyllabusMessage> SyllabusMessages { get; set; } = new List<SyllabusMessage>();
+        public List<SyllabusDefaultMessage> SyllabusMessages { get; set; } = new List<SyllabusDefaultMessage>();
 
 
         [BindProperty]
@@ -31,7 +31,7 @@ namespace MagicLand_System_Web.Pages
         {
             IsLoading = false;
             var token = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "Token");
-            var data = SessionHelper.GetObjectFromJson<List<SyllabusMessage>>(HttpContext.Session, "DataSyllabus");
+            var data = SessionHelper.GetObjectFromJson<List<SyllabusDefaultMessage>>(HttpContext.Session, "DataSyllabus");
 
             if (data != null && data.Count > 0)
             {
@@ -54,6 +54,7 @@ namespace MagicLand_System_Web.Pages
             {
                 var user = result.Data;
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
                 return Page();
             }
 
@@ -105,7 +106,7 @@ namespace MagicLand_System_Web.Pages
 
                 IsLoading = true;
 
-                SyllabusMessages.Add(new SyllabusMessage
+                SyllabusMessages.Add(new SyllabusDefaultMessage
                 {
                     SyllabusName = objectRequest.SyllabusName,
                     Status = result.StatusCode,

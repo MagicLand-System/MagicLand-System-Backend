@@ -2581,61 +2581,60 @@ namespace MagicLand_System.Services.Implements
             //        Price = Couresult,
             //    });
             //}
-            //    var newEva = new List<Evaluate>();
-            //    var oldEva = new List<Evaluate>();
-            //    var newAtten = new List<Attendance>();
-            //    var oldAtten = new List<Attendance>();
+            //var newEva = new List<Evaluate>();
+            //var oldEva = new List<Evaluate>();
+            //var newAtten = new List<Attendance>();
+            //var oldAtten = new List<Attendance>();
 
-            //    var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("70013593-7c58-423c-a87a-cef2a391ca02"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
-            //    foreach (var stu in cls.StudentClasses)
+            //var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("C7EAB299-1511-4F61-B6D5-11BCBDCA650D"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
+            //foreach (var stu in cls.StudentClasses)
+            //{
+            //    foreach (var sch in cls.Schedules)
             //    {
-            //        foreach (var sch in cls.Schedules)
+            //var oa = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
+            //if (oa != null)
+            //{
+
+            //    oldAtten.Add(oa);
+            //}
+            //var oe = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
+            //if (oe != null)
+            //{
+
+            //    oldEva.Add(oe);
+            //}
+
+            //newEva.Add(new Evaluate
+            //{
+            //    Id = Guid.NewGuid(),
+            //    Status = null,
+            //    Note = null,
+            //    IsValid = true,
+            //    StudentId = stu.StudentId,
+            //    ScheduleId = sch.Id,
+            //});
+
+            //        newAtten.Add(new Attendance
             //        {
-            //            var oa = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
-            //            if (oa != null)
-            //            {
-
-            //                oldAtten.Add(oa);
-            //            }
-            //            var oe = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
-            //            if (oe != null)
-            //            {
-
-            //                oldEva.Add(oe);
-            //            }
-
-            //            newEva.Add(new Evaluate
-            //            {
-            //                Id = Guid.NewGuid(),
-            //                Status = null,
-            //                Note = null,
-            //                IsValid = true,
-            //                StudentId = stu.StudentId,
-            //                ScheduleId = sch.Id,
-            //            });
-
-            //            newAtten.Add(new Attendance
-            //            {
-            //                Id = Guid.NewGuid(),
-            //                IsPresent = null,
-            //                IsPublic = true,
-            //                IsValid = true,
-            //                Note = null,
-            //                StudentId = stu.StudentId,
-            //                ScheduleId = sch.Id,
-            //            });
-            //        }
+            //            Id = Guid.NewGuid(),
+            //            IsPresent = null,
+            //            IsPublic = true,
+            //            IsValid = true,
+            //            Note = null,
+            //            StudentId = stu.StudentId,
+            //            ScheduleId = sch.Id,
+            //        });
             //    }
+            //}
 
-            //    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newEva);
-            //    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newAtten);
-            //    _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldEva);
-            //    _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAtten);
-            //    _unitOfWork.Commit();
+            //await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newEva);
+            //await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newAtten);
+            //_unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldEva);
+            //_unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAtten);
+            //_unitOfWork.Commit();
 
 
             //}
-
             //catch (Exception ex)
             //{
             //    var s = ex;
@@ -4108,12 +4107,12 @@ namespace MagicLand_System.Services.Implements
         public async Task<bool> SetNotCanMakeUp(string scheduleId, string studentId)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId));
-            if(schedule.Date.Date < DateTime.Now.Date)
+            if (schedule.Date.Date < DateTime.Now.Date)
             {
                 throw new BadHttpRequestException("Lịch học bạn đưa ra đã nằm ở trong quá khứ", StatusCodes.Status400BadRequest);
             }
-            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate : x => x.ScheduleId.ToString().Equals(scheduleId) && x.StudentId.ToString().Equals(studentId));
-            if(attendance == null)
+            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId.ToString().Equals(scheduleId) && x.StudentId.ToString().Equals(studentId));
+            if (attendance == null)
             {
                 throw new BadHttpRequestException("Không tìm ra kết quả", StatusCodes.Status400BadRequest);
             }
@@ -4126,12 +4125,12 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<CanNotMakeUpResponse>> GetCanNotMakeUpResponses()
         {
             var listFound = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.Note.Equals("CanNotMakeUp"));
-            if(listFound == null)
+            if (listFound == null)
             {
                 return new List<CanNotMakeUpResponse>();
             }
             List<CanNotMakeUpResponse> canNotMakeUpResponses = new List<CanNotMakeUpResponse>();
-            foreach(var found in listFound)
+            foreach (var found in listFound)
             {
                 var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id == found.ScheduleId);
                 var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == schedule.ClassId);
@@ -4162,10 +4161,11 @@ namespace MagicLand_System.Services.Implements
                 };
                 var lastSc = listSc.OrderByDescending(x => x.Date).First();
                 var status = "";
-                if(lastSc.Date.Date >= DateTime.Now.Date)
+                if (lastSc.Date.Date >= DateTime.Now.Date)
                 {
                     status = "Đang chờ xếp";
-                } else
+                }
+                else
                 {
                     status = "Hết hạn";
                 }
@@ -4184,9 +4184,10 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> SaveCourse(string classId, string studentId)
         {
-            var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate : x => x.StudentId.ToString().Equals(studentId) && x.ClassId.ToString().Equals(classId));
+            var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && x.ClassId.ToString().Equals(classId));
             var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == studentClass.ClassId);
-            if(!(classx.Status.Equals(ClassStatusEnum.UPCOMING.ToString()) || classx.Status.Equals(ClassStatusEnum.CANCELED.ToString()))){
+            if (!(classx.Status.Equals(ClassStatusEnum.UPCOMING.ToString()) || classx.Status.Equals(ClassStatusEnum.CANCELED.ToString())))
+            {
                 throw new BadHttpRequestException("Lớp đã bắt đầu không thể bảo lưu", StatusCodes.Status400BadRequest);
             }
             studentClass.Status = "Saved";
@@ -4196,7 +4197,7 @@ namespace MagicLand_System.Services.Implements
             return isSuc;
         }
 
-        public async Task<List<SaveCourseResponse>> GetSaveCourseResponse (string? name, DateTime? dateOfBirth)
+        public async Task<List<SaveCourseResponse>> GetSaveCourseResponse(string? name, DateTime? dateOfBirth)
         {
             var listFound = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.Status.Equals("Saved"));
             if (listFound == null)
@@ -4247,15 +4248,15 @@ namespace MagicLand_System.Services.Implements
             }
             var canNotMakeUpResponse1 = new List<SaveCourseResponse>();
             var canNotMakeUpResponse2 = new List<SaveCourseResponse>();
-            if(name != null)
+            if (name != null)
             {
-                 canNotMakeUpResponse1= canNotMakeUpResponses.Where(x => x.StudentResponse.FullName.ToLower().Trim().Contains(name.ToLower().Trim())).ToList();
+                canNotMakeUpResponse1 = canNotMakeUpResponses.Where(x => x.StudentResponse.FullName.ToLower().Trim().Contains(name.ToLower().Trim())).ToList();
             }
-            if(dateOfBirth != null)
+            if (dateOfBirth != null)
             {
                 canNotMakeUpResponse2 = canNotMakeUpResponses.Where(x => x.StudentResponse.DateOfBirth.Date == dateOfBirth.Value.Date).ToList();
             }
-            if(name != null ||  dateOfBirth != null)
+            if (name != null || dateOfBirth != null)
             {
                 canNotMakeUpResponses = canNotMakeUpResponse1.UnionBy(canNotMakeUpResponse2, x => x.Id).ToList();
             }

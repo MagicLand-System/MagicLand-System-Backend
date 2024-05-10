@@ -8,10 +8,16 @@
         public const string RootEndPoint = "/api";
         public const string ApiVersion = "/v1";
         public const string ApiEndpoint = RootEndPoint + ApiVersion;
-        
+
+        public static class DeveloperEndpoint
+        {
+            public const string TakeFullAttendanceAndEvaluate = ApiEndpoint + "/developer/attendanceAndEvaluate";
+
+        }
         public static class UserEndpoint
         {
             public const string RootEndpoint = ApiEndpoint + "/users";
+            public const string AddUser = ApiEndpoint + "/users/add";
             public const string GetUserById = RootEndpoint + "/{id}";
             public const string CheckExist = RootEndpoint + "checkExist";
             public const string GetCurrentUser = RootEndpoint + "/getcurrentuser";
@@ -123,7 +129,7 @@
             public const string StudentEndpointGetClass = GetAll + "/getclass";
             public const string StudentGetSchedule = GetAll + "/getschedule";
             public const string GetStudentAccount = GetAll + "/getAccount";
-            public const string StudentGetCurrentChildren = GetAll + "/currentuser";
+            public const string GetStudentsOfCurrentUser = GetAll + "/currentuser";
             public const string UpdateStudent = GetAll + "/update";
             public const string DeleteStudent = GetAll + "/{id}/delete";
             public const string GetStudentCourseRegistered = GetAll + "/{id}/getcourses";
@@ -178,6 +184,7 @@
         public static class LectureEndpoint
         {
             public const string GetAll = ApiEndpoint + "/lectures";
+            public const string GetLecturerCareer = ApiEndpoint + "/lectures/career";
             public const string TakeStudentAttendance = GetAll + "/students/takeAttendance";
             public const string EvaluateStudent = GetAll + "/students/evaluate";
             public const string GetStudentEvaluates = GetAll + "/students/get/evaluates";

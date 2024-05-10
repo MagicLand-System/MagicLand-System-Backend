@@ -14,7 +14,7 @@ namespace MagicLand_System_Web.Pages.Helper
         //private readonly string Scheme = "https";
         private readonly string Scheme = "http";
         //private readonly string Domain = "7cae-115-74-192-50.ngrok-free.app";
-        //private readonly string Domain = "magiclandapiv2.somee.com"
+        //private readonly string Domain = "magiclandapiv2.somee.com";
         private readonly string Domain = "localhost:5097";
         private string RootUrl = "", CallUrl = "", JsonContent = "";
 
