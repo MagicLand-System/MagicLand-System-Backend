@@ -994,6 +994,21 @@ namespace MagicLand_System.Services.Implements
                 }
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                var studentclass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == c.Id && x.StudentId.ToString().Equals(studentId));
+                var statusx = "Normal";
+                if(studentclass.Status != null)
+                {
+                    if (studentclass.Status.Equals("Saved"))
+                    {
+                        statusx = "Bảo Lưu";
+                    }
+                    if (studentclass.Status.Equals("Changed"))
+                    {
+                        statusx = "Đã Chuyển";
+                    }
+
+                }
+              
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
                     ClassId = c.Id,
@@ -1015,6 +1030,7 @@ namespace MagicLand_System.Services.Implements
                     LecturerResponse = lecturerResponse,
                     RoomResponse = roomResponse,
                     CreatedDate = c.AddedDate.Value,
+                    StudentStatus = statusx,
                 };
                 var syllabusCode = "undefined";
                 var syllabusName = "undefined";
@@ -1270,6 +1286,10 @@ namespace MagicLand_System.Services.Implements
                 if (attendancesArray[i].IsPresent == null)
                 {
                     status = "Chưa diễn ra";
+                }
+                if (classx.Status.ToLower().Equals("canceled"))
+                {
+                    status = "Đã hủy";
                 }
                 List<SessionContentReponse> sessionContentReponses = new List<SessionContentReponse>();
                 foreach (var ss in sessionArray[i].SessionDescriptions)

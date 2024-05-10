@@ -4138,6 +4138,41 @@ namespace MagicLand_System.Services.Implements
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == found.StudentId);
                 var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == student.ParentId);
                 var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id);
+                var dateCheck = schedule.Date.Date;
+                var schArray = listSc.OrderBy(x => x.Date).ToArray();
+                var index = 0;
+                for(var i = 0; i < schArray.Length; i++)
+                {
+                    if (schArray[i].Date.Date == dateCheck)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == course.SyllabusId);
+                var listTopic = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId == syllabus.Id);
+                Session session = new Session();
+                Topic topic1 = new Topic();
+                foreach(var topic in listTopic)
+                {
+                    var sessionx = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.TopicId == topic.Id && x.NoSession == index + 1, include: x => x.Include(x => x.SessionDescriptions));
+                    if(sessionx != null)
+                    {
+                        session = sessionx;
+                        topic1 = topic;
+                        break;
+                    }
+                }
+                var ssd = session.SessionDescriptions;
+                List<StaffSessionDescriptionResponse> staffssd = new List<StaffSessionDescriptionResponse>();
+                foreach(var ssdx in ssd)
+                {
+                    staffssd.Add(new StaffSessionDescriptionResponse
+                    {
+                        Content = ssdx.Content,
+                        Details = ssdx.Detail.Split("/r/n").ToList()
+                    });
+                }
                 var studentRes = new StudentResponse
                 {
                     Age = (DateTime.Now.Year - student.DateOfBirth.Year),
@@ -4176,6 +4211,9 @@ namespace MagicLand_System.Services.Implements
                     ParentResponse = parentRes,
                     Status = status,
                     StudentResponse = studentRes,
+                    NoOfSession = index + 1,
+                    Topic = topic1.Name,
+                    SessionDescription = staffssd,
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
@@ -4197,7 +4235,7 @@ namespace MagicLand_System.Services.Implements
             return isSuc;
         }
 
-        public async Task<List<SaveCourseResponse>> GetSaveCourseResponse(string? name, DateTime? dateOfBirth)
+        public async Task<List<SaveCourseResponse>> GetSaveCourseResponse(string? search, DateTime? dateOfBirth)
         {
             var listFound = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.Status.Equals("Saved"));
             if (listFound == null)
@@ -4243,20 +4281,21 @@ namespace MagicLand_System.Services.Implements
                     Status = "Bảo lưu",
                     StudentResponse = studentRes,
                     Id = found.Id,
+                    CourseId = course.Id,
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
             var canNotMakeUpResponse1 = new List<SaveCourseResponse>();
             var canNotMakeUpResponse2 = new List<SaveCourseResponse>();
-            if (name != null)
+            if (search != null)
             {
-                canNotMakeUpResponse1 = canNotMakeUpResponses.Where(x => x.StudentResponse.FullName.ToLower().Trim().Contains(name.ToLower().Trim())).ToList();
+                canNotMakeUpResponse1 = canNotMakeUpResponses.Where(x => x.StudentResponse.FullName.ToLower().Trim().Contains(search.ToLower().Trim()) || x.CourseName.ToLower().Trim().Contains(search.ToLower().Trim())).ToList();
             }
             if (dateOfBirth != null)
             {
                 canNotMakeUpResponse2 = canNotMakeUpResponses.Where(x => x.StudentResponse.DateOfBirth.Date == dateOfBirth.Value.Date).ToList();
             }
-            if (name != null || dateOfBirth != null)
+            if (search != null || dateOfBirth != null)
             {
                 canNotMakeUpResponses = canNotMakeUpResponse1.UnionBy(canNotMakeUpResponse2, x => x.Id).ToList();
             }

@@ -596,9 +596,9 @@ namespace MagicLand_System.Controllers
             return Ok("Bảo lưu thành công");
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetListSavedCourse)]
-        public async Task<IActionResult> GetSavedCourse(string? name, DateTime? dateOfBirth)
+        public async Task<IActionResult> GetSavedCourse(string? search, DateTime? dateOfBirth)
         {
-            var isSuccess = await _classService.GetSaveCourseResponse(name,dateOfBirth);
+            var isSuccess = await _classService.GetSaveCourseResponse(search,dateOfBirth);
             return Ok(isSuccess);
         }
     }

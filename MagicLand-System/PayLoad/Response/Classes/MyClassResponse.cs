@@ -19,6 +19,7 @@ namespace MagicLand_System.PayLoad.Response.Classes
         public List<ClassScheduleResponse> ClassScheduleResponses { get; set; } = new List<ClassScheduleResponse>();
         public bool? CanChangeClass { get; set; }   
         public int? CurrentSession {  get; set; }   
+        public string StudentStatus { get; set; }  
 
     }
 }

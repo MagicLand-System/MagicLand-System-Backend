@@ -11,5 +11,6 @@ namespace MagicLand_System.PayLoad.Response
         public string CourseName { get; set; }
         public string Status { get; set; }
         public DateTime? SavedTime { get; set; }
+        public Guid CourseId { get; set; }  
     }
 }

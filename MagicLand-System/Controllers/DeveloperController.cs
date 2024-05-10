@@ -32,16 +32,16 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
 
-        //[HttpGet(ApiEndpointConstant.DeveloperEndpoint.)]
-        [ProducesResponseType(typeof(StudentAuthenAndExam), StatusCodes.Status200OK)]
-        [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
-        [Authorize(Roles = "DEVELOPER")]
-        public async Task<IActionResult> GetStudentAndExamByClassId([FromQuery] Guid classId)
-        {
-            //var response = await _quizService.loadE.(classId);
+        ////[HttpGet(ApiEndpointConstant.DeveloperEndpoint.)]
+        //[ProducesResponseType(typeof(StudentAuthenAndExam), StatusCodes.Status200OK)]
+        //[ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        //[Authorize(Roles = "DEVELOPER")]
+        //public async Task<IActionResult> GetStudentAndExamByClassId([FromQuery] Guid classId)
+        //{
+        //    //var response = await _quizService.loadE.(classId);
 
-            //return Ok(response);
-            return Ok();
-        }
+        //    //return Ok(response);
+        //    return Ok();
+        //}
     }
 }
