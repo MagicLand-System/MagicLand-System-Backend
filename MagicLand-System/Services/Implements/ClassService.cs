@@ -32,6 +32,7 @@ using System.Data;
 using System.Formats.Asn1;
 using System.Globalization;
 using System.Net.WebSockets;
+using static System.Reflection.Metadata.BlobBuilder;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Services.Implements
@@ -4300,6 +4301,201 @@ namespace MagicLand_System.Services.Implements
                 canNotMakeUpResponses = canNotMakeUpResponse1.UnionBy(canNotMakeUpResponse2, x => x.Id).ToList();
             }
             return canNotMakeUpResponses;
+        }
+
+        public async Task<List<MyClassResponse>> GetClassToRegister(string studentId, string courseId)
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)  && x.Status.ToLower().Equals("upcoming"),include : x => x.Include(x => x.StudentClasses).Include(x => x.Schedules));
+            List<Class> filterCls = new List<Class>();
+            foreach(var cls in classes)
+            {
+                var count = cls.StudentClasses.Where(x => x.StudentId.ToString().Equals(studentId));
+                if(count.Count() == 0)
+                {
+                    filterCls.Add(cls);
+                }
+            }
+            var att = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId),include : x => x.Include(x => x.Schedule));
+            List<Schedule> schedules = new List<Schedule>();
+            List<DateTime> dateTimes = new List<DateTime>();
+            foreach(var attE in att)
+            {
+               if(attE.Schedule.Date >= DateTime.Now.Date)
+                {
+                    schedules.Add(attE.Schedule);
+                    dateTimes.Add(attE.Schedule.Date.Date);
+                }
+            }
+            List<Class> filterClass2 = new List<Class>();
+            foreach (var cls in filterCls)
+            {
+                var classSch = cls.Schedules;
+                var check = false;
+                foreach(var sch in classSch)
+                {
+                   var flag = dateTimes.Any(x => x.Date == sch.Date);
+                    if (flag)
+                    {
+                        check = true;
+                        break;  
+                    }
+                }
+                if (!check) 
+                {
+                    filterClass2.Add(cls);
+                }
+            }
+            List<MyClassResponse> result = new List<MyClassResponse>();
+            var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
+            foreach (var c in filterClass2)
+            {
+                var schedulex = (await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == c.Id)).FirstOrDefault();
+                if (schedulex == null) { continue; }
+                var room = (await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == schedulex.RoomId));
+                if (room == null) { continue; }
+                var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.LecturerId.ToString()));
+                if (lecturer == null) { continue; }
+                RoomResponse roomResponse = new RoomResponse
+                {
+                    Floor = room.Floor.Value,
+                    Capacity = room.Capacity,
+                    RoomId = room.Id,
+                    Name = room.Name,
+                    Status = room.Status,
+                    LinkUrl = room.LinkURL,
+
+                };
+                LecturerResponse lecturerResponse = new LecturerResponse
+                {
+                    AvatarImage = lecturer.AvatarImage,
+                    DateOfBirth = lecturer.DateOfBirth,
+                    Email = lecturer.Email,
+                    FullName = lecturer.FullName,
+                    Gender = lecturer.Gender,
+                    LectureId = lecturer.Id,
+                    Phone = lecturer.Phone,
+                };
+                List<DailySchedule> schedules1 = new List<DailySchedule>();
+                var DaysOfWeek = c.Schedules.Select(c => new { c.DayOfWeek, c.SlotId }).Distinct().ToList();
+                foreach (var day in DaysOfWeek)
+                {
+                    var slot = slots.Where(x => x.Id.ToString().ToLower().Equals(day.SlotId.ToString().ToLower())).FirstOrDefault();
+                    if (day.DayOfWeek == 1)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Sunday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 2)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Monday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 4)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Tuesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 8)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Wednesday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 16)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Thursday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 32)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Friday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                    if (day.DayOfWeek == 64)
+                    {
+                        schedules1.Add(new DailySchedule
+                        {
+                            DayOfWeek = "Saturday",
+                            EndTime = slot.EndTime,
+                            StartTime = slot.StartTime,
+                        });
+                    }
+                }
+                Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+                var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                MyClassResponse myClassResponse = new MyClassResponse
+                {
+                    ClassId = c.Id,
+                    LimitNumberStudent = c.LimitNumberStudent,
+                    ClassCode = c.ClassCode,
+                    LecturerName = lecturer.FullName,
+                    CoursePrice = await GetDynamicPrice(course.Id, false),
+                    EndDate = c.EndDate,
+                    CourseId = c.CourseId,
+                    Image = c.Image,
+                    LeastNumberStudent = c.LeastNumberStudent,
+                    Method = c.Method,
+                    StartDate = c.StartDate,
+                    Status = c.Status,
+                    Video = c.Video,
+                    NumberStudentRegistered = studentList.Count,
+                    Schedules = schedules1,
+                    CourseName = course.Name,
+                    LecturerResponse = lecturerResponse,
+                    RoomResponse = roomResponse,
+                    CreatedDate = c.AddedDate.Value,
+                };
+                var syllabusCode = "undefined";
+                var syllabusName = "undefined";
+                var syllabusType = "undefined";
+                if (course.Syllabus != null)
+                {
+                    syllabusCode = course.Syllabus.SubjectCode;
+                    syllabusName = course.Syllabus.Name;
+                    syllabusType = course.Syllabus.SyllabusCategory.Name;
+                }
+                CustomCourseResponse customCourseResponse = new CustomCourseResponse
+                {
+                    Image = course.Image,
+                    MainDescription = course.MainDescription,
+                    MaxYearOldsStudent = course.MaxYearOldsStudent,
+                    MinYearOldsStudent = course.MinYearOldsStudent,
+                    Name = course.Name,
+                    Price = await GetDynamicPrice(course.Id, false),
+                    SyllabusCode = syllabusCode,
+                    SyllabusName = syllabusName,
+                    SyllabusType = syllabusType,
+                    Status = course.Status
+                };
+                myClassResponse.CourseResponse = customCourseResponse;
+                var canChange = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == myClassResponse.ClassId && x.StudentId.ToString().Equals(studentId));
+                myClassResponse.CanChangeClass = canChange.CanChangeClass;
+                result.Add(myClassResponse);
+            }
+            return result;
         }
 
         #endregion
