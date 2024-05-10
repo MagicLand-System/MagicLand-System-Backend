@@ -191,7 +191,7 @@ namespace MagicLand_System.Controllers
             return Ok(responses);
         }
 
-        #region document API Get Quizzes By Class Id
+        #region document API Get Quiz By Exam Id
         /// <summary>
         ///  Truy Suất Các Câu Hỏi (Quiz) Trong Bộ Đề Của Một Bài Kiểm Tra Dựa Vào Id Của Bài Kiểm Tra, *Các Câu Hỏi Sẽ Được Truy Suất Ngẫu Nhiên Và Thỏa Mãn Số Điểm Của Bài Kiểm Tra*
         /// </summary>
@@ -231,6 +231,7 @@ namespace MagicLand_System.Controllers
         ///  Lưu/Cập Nhập Điểm Và Đánh Giá Bài Kiểm Tra Làm Tại Nhà Của Các Học Sinh
         /// </summary>
         /// <param name="quizInfor">Chứa Thông Tin Của Bài Kiểm Tra Làm Tại Nhà</param>
+        /// <param name="isCheckingTime">Kiểm Tra Thời Gian</param>
         /// <param name="studentExamGrades">Chứa Id Của Các Học Sinh Và Điểm Của Giáo Viên</param>
         /// <remarks>
         /// Sample request:
@@ -253,8 +254,8 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.QuizEndpoint.GradeQuizOffLine)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GradeQuizOffLine([FromQuery] QuizRequest quizInfor, [FromBody] List<StudentExamGrade> studentExamGrades)
+        [Authorize(Roles = "LECTURER ,DEVELOPER")]
+        public async Task<IActionResult> GradeQuizOffLine([FromQuery] QuizRequest quizInfor, [FromQuery] bool? isCheckingTime, [FromBody] List<StudentExamGrade> studentExamGrades)
         {
             var examOffLineStudentWork = new ExamOffLineRequest
             {
@@ -262,7 +263,7 @@ namespace MagicLand_System.Controllers
                 ExamId = quizInfor.ExamId,
                 StudentQuizGardes = studentExamGrades,
             };
-            var response = await _quizService.GradeExamOffLineAsync(examOffLineStudentWork);
+            var response = await _quizService.GradeExamOffLineAsync(examOffLineStudentWork, isCheckingTime);
 
             return Ok(response);
         }
@@ -291,7 +292,7 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.QuizEndpoint.EvaluateQuizOnLine)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        [Authorize(Roles = "LECTURER")]
+        [Authorize(Roles = "LECTURER, DEVELOPER")]
         public async Task<IActionResult> EvaluateQuizOnLine([FromQuery] Guid studentId, [FromQuery] Guid examId, [FromQuery] string status, [FromQuery] int? noAttempt)
         {
             var response = await _quizService.EvaluateExamOnLineAsync(studentId, examId, status, noAttempt);
@@ -305,6 +306,7 @@ namespace MagicLand_System.Controllers
         /// </summary>
         /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra</param>
         /// <param name="doingTime">Tổng Thời Gian Làm Bài</param>
+        /// <param name="isCheckingTime">Kiểm Tra Thời Gian</param>
         /// <param name="studentWorkResults">Chứa Câu Hỏi Và Câu Trả Lời Của Học Sinh</param>
         /// <remarks>
         /// Sample request:
@@ -328,7 +330,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizMC([FromQuery] QuizRequest quizInfor, [FromQuery] TimeOnly doingTime, [FromBody] List<MCStudentAnswer> studentWorkResults)
+        public async Task<IActionResult> GradeQuizMC([FromQuery] QuizRequest quizInfor, [FromQuery] TimeOnly doingTime, [FromQuery] bool? isCheckingTime, [FromBody] List<MCStudentAnswer> studentWorkResults)
         {
             var duplicateQuestions = studentWorkResults
                 .GroupBy(x => x.QuestionId)
@@ -368,9 +370,9 @@ namespace MagicLand_System.Controllers
                 StudentQuestionResults = studentWorkResults,
             };
 
-            var responses = await _quizService.GradeQuizMCAsync(quizMcStudentWork, doingTime);
+            var response = await _quizService.GradeQuizMCAsync(quizMcStudentWork, doingTime, isCheckingTime);
 
-            return Ok(responses);
+            return Ok(response);
         }
 
         #region document API Grade Quiz Flash Card
@@ -379,6 +381,7 @@ namespace MagicLand_System.Controllers
         /// </summary>
         /// <param name="quizInfor">Chứa Thông Tin Bài Kiểm Tra</param>
         /// <param name="doingTime">Tổng Thời Gian Làm Bài</param>
+        /// <param name="isCheckingTime">Kiểm Tra Thời Gian</param>
         /// <param name="studentWorkResults">Chứa Câu Hỏi Và Câu Trả Lời Của Học Sinh</param>
         /// <remarks>
         /// Sample request:
@@ -403,7 +406,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResultResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor,[FromQuery] TimeOnly doingTime, [FromBody] List<FCStudentQuestion> studentWorkResults)
+        public async Task<IActionResult> GradeQuizFC([FromQuery] QuizRequest quizInfor, [FromQuery] TimeOnly doingTime, [FromQuery] bool? isCheckingTime, [FromBody] List<FCStudentQuestion> studentWorkResults)
         {
 
             var studentAnswers = studentWorkResults.SelectMany(sr => sr.Answers).ToList();
@@ -488,9 +491,9 @@ namespace MagicLand_System.Controllers
                 StudentQuestionResults = studentWorkResults,
             };
             //var responses = await _quizService.GradeQuizFCAsync(classId, examId, scoreEarned);
-            var responses = await _quizService.GradeQuizFCAsync(quizFCStudentWork, doingTime);
+            var response = await _quizService.GradeQuizFCAsync(quizFCStudentWork, doingTime, isCheckingTime);
 
-            return Ok(responses);
+            return Ok(response);
         }
 
         #region document API Get Test Result

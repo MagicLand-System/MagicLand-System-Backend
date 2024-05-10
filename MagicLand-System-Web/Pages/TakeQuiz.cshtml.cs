@@ -1,7 +1,22 @@
-﻿using MagicLand_System_Web.Pages.Helper;
+﻿using MagicLand_System.Constants;
+using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request.Quizzes;
+using MagicLand_System.PayLoad.Response.Classes;
+using MagicLand_System.PayLoad.Response.Custom;
+using MagicLand_System.PayLoad.Response.Quizzes;
+using MagicLand_System.PayLoad.Response.Quizzes.Answers;
+using MagicLand_System.PayLoad.Response.Quizzes.Questions;
+using MagicLand_System.PayLoad.Response.Quizzes.Result;
+using MagicLand_System_Web.Pages.DataContants;
+using MagicLand_System_Web.Pages.Enums;
+using MagicLand_System_Web.Pages.Helper;
+using MagicLand_System_Web.Pages.Message.SubMessage;
 using MagicLand_System_Web.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web.Pages.Messages.InforMessage;
+using MagicLand_System_Web.Pages.Messages.SubMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Text.RegularExpressions;
 
 namespace MagicLand_System_Web.Pages
 {
@@ -20,15 +35,20 @@ namespace MagicLand_System_Web.Pages
         [BindProperty]
         public List<ClassDefaultMessage> Classes { get; set; } = new List<ClassDefaultMessage>();
 
+        [BindProperty]
+        public StudentQuizInforMessage CurrentStudentQuizInforMessage { get; set; } = null;
+
 
         public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
-            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
+            var data = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext!.Session, "DataQuiz");
+            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "Classes");
+
             if (data != null && data.Count > 0)
             {
-                //ClassMessages = data;
+                CurrentStudentQuizInforMessage = data.First();
+                ViewData["IndexPage"] = 0;
             }
 
             if (classes != null && classes.Count > 0)
@@ -37,187 +57,317 @@ namespace MagicLand_System_Web.Pages
             }
             else
             {
-                //var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+                await FetchClass();
 
-                //if (result.IsSuccess)
-                //{
-                //    if (result.Data == null)
-                //    {
-                //        SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", Courses);
-                //    }
-                //    else
-                //    {
-                //        Courses = result.Data;
-                //        SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data!);
-                //    }
-
-                //    return Page();
-                //}
-
+                return Page();
             }
+
             return Page();
         }
-        public async Task<IActionResult> OnPostAsync(int inputField, string listCourseId, string submitButton)
+
+        private async Task FetchClass()
         {
-            //    if (submitButton == "Refresh")
-            //    {
-            //        ClassMessages.Clear();
+            var result = await _apiHelper.FetchApiAsync<List<ClassWithSlotShorten>>(ApiEndpointConstant.ClassEnpoint.GetAll, MethodEnum.GET, null);
 
-            //        var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+            if (result.Data == null)
+            {
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Classes", Classes);
+            }
+            else
+            {
+                var classes = new List<ClassDefaultMessage>();
+                var classFiltered = result.Data.Where(x => x.Status == ClassStatusEnum.PROGRESSING.ToString()).ToList();
+                foreach (var cls in classFiltered)
+                {
+                    var schedules = new List<ScheduleMessage>();
+                    int order = 0;
+                    foreach (var schedule in cls.Schedules.OrderBy(sc => sc.Schedule))
+                    {
+                        schedules.Add(new ScheduleMessage
+                        {
+                            Slot = schedule.Slot!,
+                            DayOfWeek = schedule.Schedule!,
+                            Order = order++,
+                        });
+                    }
+                    classes.Add(new ClassDefaultMessage
+                    {
+                        ClassId = cls.ClassId.ToString(),
+                        ClassCode = cls.ClassName!,
+                        CourseBeLong = cls.CourseName!,
+                        StartDate = cls.StartDate.ToString("MM/dd/yyyy"),
+                        LecturerBeLong = cls.Lecture!.FullName!,
+                        LecturerPhone = cls.Lecture.Phone,
+                        Schedules = schedules,
+                    });
+                }
+                Classes = classes;
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Classes", Classes);
+            }
+        }
+        public async Task<IActionResult> OnPostAsync(int inputField, string listId, string submitButton)
+        {
+            if (submitButton == "Refresh")
+            {
+                CurrentStudentQuizInforMessage = null;
+                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                return Page();
+            }
 
-            //        if (result.IsSuccess)
-            //        {
-            //            Courses = result.Data;
-            //            SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data);
-            //            IsLoading = true;
-            //            return Page();
-            //        }
-            //    }
+            if (string.IsNullOrEmpty(listId))
+            {
+                ViewData["Message"] = "Lớp Chưa Được Chọn";
+                CurrentStudentQuizInforMessage = null;
+                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                IsLoading = true;
+                return Page();
+            }
 
-            //    if (inputField == 0 || inputField < 0 || inputField >= 100)
-            //    {
-            //        ViewData["Message"] = "Số Lượng không Hợp Lệ";
-            //        var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+            ViewData["Message"] = "";
 
-            //        if (result.IsSuccess)
-            //        {
-            //            Courses = result.Data;
-            //            SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data);
-            //            IsLoading = true;
-            //            return Page();
-            //        }
-            //        return Page();
-            //    }
-            //    ViewData["Message"] = "";
+            var idParses = new List<string>();
+            if (!string.IsNullOrEmpty(listId))
+            {
+                string pattern = @"\|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\|";
+                MatchCollection matches = Regex.Matches(listId, pattern);
 
-            //    var courseIdParses = new List<Guid>();
-            //    if (!string.IsNullOrEmpty(listCourseId))
-            //    {
-            //        string pattern = @"\|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\|";
-            //        MatchCollection matches = Regex.Matches(listCourseId, pattern);
+                foreach (Match match in matches)
+                {
+                    idParses.Add(match.Groups[1].Value);
+                }
+            }
 
-            //        foreach (Match match in matches)
-            //        {
-            //            courseIdParses.Add(Guid.Parse(match.Groups[1].Value));
-            //        }
-            //    }
+            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "Classes");
+            if (idParses.Any())
+            {
+                classes = idParses.Select(id => classes.Single(c => c.ClassId == id)).ToList();
+            }
 
-            //    var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
-            //    if (courseIdParses.Any())
-            //    {
-            //        courses = courseIdParses.Select(id => courses.Single(c => c.CourseId == id)).ToList();
-            //    }
-            //    Random random = new Random();
+            Random random = new Random();
+            var studentQuizInforMessages = new List<StudentQuizInforMessage>();
+            var defaultToken = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "DeveloperToken");
 
-            //    foreach (var course in courses)
-            //    {
-            //        for (int order = 0; order < inputField; order++)
-            //        {
-            //            await RenderProgress(course, order, random);
-            //        }
-            //    }
+            foreach (var cls in classes)
+            {
+                var result = await _apiHelper.FetchApiAsync<StudentAuthenAndExam>(ApiEndpointConstant.DeveloperEndpoint.GetStudentAuthenAndExam + $"?classId={cls.ClassId}", MethodEnum.GET, null);
+                var students = result.Data.StudentAuthen;
+                var exams = result.Data.Exams;
+                var gradeOffline = new List<StudentExamGrade>();
 
-            //    SessionHelper.SetObjectAsJson(HttpContext.Session, "DataClass", ClassMessages);
-            //    IsLoading = true;
+                foreach (var stu in students)
+                {
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", stu.AccessToken!);
+                    var quizMessages = new List<QuizMessage>();
+                    foreach (var exam in exams)
+                    {
+                        var quizInfor = new QuizRequest
+                        {
+                            ClassId = Guid.Parse(cls.ClassId),
+                            ExamId = exam.ExamId,
+                        };
+                        var numberInCorrectAnswer = 0;
 
-            //    return Page();
-            //}
+                        if (exam.QuizType == "offline")
+                        {
+                            SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
+                            gradeOffline.Clear();
 
-            //private async Task RenderProgress(CourseWithScheduleShorten course, int order, Random random)
-            //{
-            //    var scheduleRequests = new List<ScheduleRequest>();
-            //    var scheduleMessages = new List<ScheduleMessage>();
-            //    var startDate = DateTime.Now.AddDays(random.Next(1, 4));
+                            var score = random.Next(5, 11);
+                            gradeOffline.Add(new StudentExamGrade
+                            {
+                                StudentId = stu.UserId!.Value,
+                                Score = score,
+                                Status = EvaluateData.GetQuizEvaluate(score, random),
+                            });
 
-            //    var lecturer = await GetLecturer(course, random, scheduleRequests, scheduleMessages, startDate);
+                            var quizResult = await _apiHelper.FetchApiAsync<string>(
+                            ApiEndpointConstant.QuizEndpoint.GradeQuizOffLine + $"?ClassId={quizInfor.ClassId}" + $"&ExamId={quizInfor.ExamId}" + $"&isCheckingTime={false}", MethodEnum.POST, gradeOffline);
+                        }
+                        else
+                        {
+                            await QuizOnlineProgress(inputField, random, cls, exam, numberInCorrectAnswer, quizInfor);
+                            string status = EvaluateData.GetQuizEvaluate(random.Next(5, 11), random);
 
-            //    var room = random.Next(2, 4) % 2 == 0 ? ClassData.RoomOfflines[random.Next(0, ClassData.RoomOfflines.Count)] : ClassData.RoomOnlines[random.Next(0, ClassData.RoomOnlines.Count)];
+                            SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
+                            var evaluateQuiz = await _apiHelper.FetchApiAsync<string>(
+                            ApiEndpointConstant.QuizEndpoint.EvaluateQuizOnLine + $"?studentId={stu.UserId}" + $"&examId={exam.ExamId}" + $"&status={status}", MethodEnum.POST, null);
+                        }
 
-            //    var objectRequest = new CreateClassRequest
-            //    {
-            //        ClassCode = course.CourseDetail!.SubjectCode + "-" + order,
-            //        CourseId = course.CourseId,
-            //        StartDate = startDate,
-            //        LeastNumberStudent = random.Next(1, 6),
-            //        LimitNumberStudent = random.Next(25, 31),
-            //        LecturerId = lecturer.LectureId,
-            //        Method = random.Next(2, 4) % 2 == 0 ? "OFFLINE" : "ONLINE",
-            //        ScheduleRequests = scheduleRequests,
-            //        RoomId = Guid.Parse(room.Item2),
-            //    };
+                        SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", stu.AccessToken!);
+                    }
 
+                    var allCurrentStudentTestResult = await _apiHelper.FetchApiAsync<List<QuizResultExtraInforResponse>>(ApiEndpointConstant.QuizEndpoint.GetCurrentStudentQuizDone, MethodEnum.GET, null);
+                    foreach (var test in allCurrentStudentTestResult.Data)
+                    {
+                        quizMessages.Add(new QuizMessage
+                        {
+                            QuizName = test.QuizName!,
+                            NoAttempt = test.NoAttempt,
+                            TotalMark = test.TotalMark,
+                            CorrectMark = test.CorrectMark,
+                            TotalScore = test.TotalScore,
+                            ScoreEarned = test.ScoreEarned,
+                            ExamStatus = test.ExamStatus,
+                        });
+                    }
+                    studentQuizInforMessages.Add(new StudentQuizInforMessage
+                    {
+                        StudentName = stu.FullName!,
+                        Quizzes = quizMessages,
+                    });
+                }
+            }
 
-            //    if (lecturer.LectureId == default)
-            //    {
-            //        ClassMessages.Add(new ClassDefaultMessage
-            //        {
-            //            ClassCode = objectRequest.ClassCode,
-            //            CourseBeLong = course.CourseDetail!.CourseName!,
-            //            StartDate = startDate.ToString("MM/dd/yyyy"),
-            //            LecturerBeLong = "Không",
-            //            Schedules = scheduleMessages.OrderBy(sc => sc.Order).ToList(),
-            //            Status = "400",
-            //            Note = "Không Có Giáo Viên Phù Hợp",
-            //        });
+            CurrentStudentQuizInforMessage = studentQuizInforMessages.First();
+            ViewData["IndexPage"] = 0;
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataQuiz", studentQuizInforMessages);
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
 
-            //        return;
-            //    }
-
-            //    var result = await _apiHelper.FetchApiAsync<List<LecturerResponse>>(ApiEndpointConstant.UserEndpoint.GetLecturer, MethodEnum.POST, objectRequest);
-
-            //    ClassMessages.Add(new ClassDefaultMessage
-            //    {
-            //        ClassCode = objectRequest.ClassCode,
-            //        CourseBeLong = course.CourseDetail!.CourseName!,
-            //        StartDate = startDate.ToString("MM/dd/yyyy"),
-            //        LecturerBeLong = lecturer.FullName!,
-            //        Schedules = scheduleMessages.OrderBy(sc => sc.Order).ToList(),
-            //        Status = result.StatusCode,
-            //        Note = result.Message,
-            //    });
+            IsLoading = true;
 
             return Page();
         }
 
-        //private async Task<LecturerResponse> GetLecturer(CourseWithScheduleShorten course, Random random, List<ScheduleRequest> scheduleRequests,
-        //    List<ScheduleMessage> scheduleMessages, DateTime startDate)
-        //{
-        //    int numberSchedule = random.Next(1, 4);
+        private async Task QuizOnlineProgress(int inputField, Random random, ClassDefaultMessage cls, ExamResForStudent exam, int numberInCorrectAnswer, QuizRequest quizInfor)
+        {
+            var quiz = await _apiHelper.FetchApiAsync<List<QuizResponse>>(
+                                        ApiEndpointConstant.QuizEndpoint.GetQuizOffExamByExamId + $"?id={exam.ExamId}" + $"&classId={cls.ClassId}", MethodEnum.GET, null);
 
-        //    for (int i = 0; i < numberSchedule; i++)
-        //    {
-        //        var slot = ClassData.Slots[random.Next(0, ClassData.Slots.Count)];
-        //        var dayOfWeek = ClassData.DayOfWeeks[random.Next(0, ClassData.DayOfWeeks.Count)];
+            if (exam.QuizType == "flashcard")
+            {
+                await QuizFlashCardProgress(inputField, random, numberInCorrectAnswer, quiz, quizInfor);
+            }
+            else
+            {
+                await QuizMultipleChoiceProgress(inputField, random, quiz, quizInfor);
+            }
 
-        //        scheduleRequests.Add(new ScheduleRequest
-        //        {
-        //            DateOfWeek = dayOfWeek.Item1,
-        //            SlotId = Guid.Parse(slot.Item1),
-        //        });
+        }
 
-        //        scheduleMessages.Add(new ScheduleMessage
-        //        {
-        //            DayOfWeek = dayOfWeek.Item1,
-        //            Slot = slot.Item2,
-        //            Order = dayOfWeek.Item2
-        //        });
+        private async Task QuizMultipleChoiceProgress(int inputField, Random random, ResultHelper<List<QuizResponse>> quiz, QuizRequest quizInfor)
+        {
+            int numberInCorrectAnswer = 0;
+            var workRequest = new List<MCStudentAnswer>();
+            var inCorrectIndexStored = new List<int>();
+            int order = 0;
 
-        //    }
+            numberInCorrectAnswer = (inputField * quiz.Data.Count) / 100;
+            for (int i = 0; i < numberInCorrectAnswer; i++)
+            {
+                int incorrectIndex;
+                do
+                {
+                    incorrectIndex = random.Next(0, quiz.Data.Count);
+                } while (inCorrectIndexStored.Contains(incorrectIndex));
+                inCorrectIndexStored.Add(incorrectIndex);
+            }
 
-        //    var objectRequest = new FilterLecturerRequest
-        //    {
-        //        StartDate = startDate,
-        //        Schedules = scheduleRequests,
-        //        CourseId = course.CourseId.ToString(),
-        //    };
+            foreach (var question in quiz.Data)
+            {
+                order++;
+                var multipleChoiceAnswer = question.AnswersMutipleChoicesInfor;
 
-        //    var result = await _apiHelper.FetchApiAsync<List<LecturerResponse>>(ApiEndpointConstant.UserEndpoint.GetLecturer, MethodEnum.POST, objectRequest);
-        //    if (!result.IsSuccess)
-        //    {
-        //        return new LecturerResponse();
-        //    }
-        //    return result.Data[random.Next(0, result.Data.Count)];
-        //}
+                var answer = inCorrectIndexStored.Contains(order)
+                    ? multipleChoiceAnswer!.FirstOrDefault(x => x.Score == 0)
+                    : multipleChoiceAnswer!.FirstOrDefault(x => x.Score != 0);
+
+                workRequest.Add(new MCStudentAnswer
+                {
+                    QuestionId = question.QuestionId,
+                    AnswerId = answer!.AnswerId,
+                });
+            }
+
+
+            var quizResult = await _apiHelper.FetchApiAsync<QuizResultResponse>(
+                              ApiEndpointConstant.QuizEndpoint.GradeQuizMC + $"?ClassId={quizInfor.ClassId}" + $"&ExamId={quizInfor.ExamId}" + $"&doingTime={TimeSpan.FromMinutes(1)}" + $"&isCheckingTime={false}", MethodEnum.POST, workRequest);
+        }
+
+        private async Task QuizFlashCardProgress(int inputField, Random random, int numberInCorrectAnswer, ResultHelper<List<QuizResponse>> quiz, QuizRequest quizInfor)
+        {
+            var workRequest = new List<FCStudentQuestion>();
+            var inCorrectIndexStored = new List<int>();
+
+            foreach (var question in quiz.Data)
+            {
+                var flashCardAnswers = question.AnwserFlashCarsInfor;
+                numberInCorrectAnswer = (inputField * flashCardAnswers!.Count / 2) / 100;
+
+                for (int i = 0; i < numberInCorrectAnswer; i++)
+                {
+                    int incorrectIndex;
+                    do
+                    {
+                        incorrectIndex = random.Next(0, flashCardAnswers!.Count / 2);
+                    } while (inCorrectIndexStored.Contains(incorrectIndex));
+                    inCorrectIndexStored.Add(incorrectIndex);
+                }
+
+                var answerStored = new List<Guid>();
+                var answerRequest = new List<FCStudentAnswer>();
+                for (int j = 0; j < flashCardAnswers!.Count / 2; j++)
+                {
+                    FCAnswerResponse firstCard;
+                    do
+                    {
+                        firstCard = flashCardAnswers[random.Next(0, flashCardAnswers!.Count)];
+                    } while (answerStored.Contains(firstCard.CardId));
+
+                    answerStored.Add(firstCard.CardId);
+                    var secondCard = inCorrectIndexStored.Contains(j)
+                        ? flashCardAnswers.FirstOrDefault(fc => fc.NumberCoupleIdentify != firstCard.NumberCoupleIdentify)
+                        : flashCardAnswers.FirstOrDefault(fc => fc.NumberCoupleIdentify == firstCard.NumberCoupleIdentify && !answerStored.Contains(fc.CardId));
+
+                    if (!inCorrectIndexStored.Contains(j))
+                    {
+                        answerStored.Add(secondCard!.CardId);
+                    }
+                    else
+                    {
+                        var nonAnswerSecondCard = flashCardAnswers.FirstOrDefault(fc => fc.NumberCoupleIdentify == firstCard.NumberCoupleIdentify && !answerStored.Contains(fc.CardId));
+                        answerStored.Add(nonAnswerSecondCard!.CardId);
+                    }
+
+
+                    answerRequest.Add(new FCStudentAnswer
+                    {
+                        FirstCardId = firstCard.CardId,
+                        SecondCardId = secondCard!.CardId,
+                    });
+                };
+
+                workRequest.Add(new FCStudentQuestion
+                {
+                    QuestionId = question.QuestionId,
+                    Answers = answerRequest,
+                });
+            }
+
+            var quizResult = await _apiHelper.FetchApiAsync<QuizResultResponse>(
+                                   ApiEndpointConstant.QuizEndpoint.GradeQuizFC + $"?ClassId={quizInfor.ClassId}" + $"&ExamId={quizInfor.ExamId}" + $"&doingTime={TimeSpan.FromMinutes(1)}" + $"&isCheckingTime={false}", MethodEnum.POST, workRequest);
+        }
+
+        public IActionResult OnPostTableControl(string indexPage, string tableButtonSubmit)
+        {
+            var classes = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext.Session, "DataQuiz");
+            int parseIndex = int.Parse(indexPage);
+            int newIndex = tableButtonSubmit == "Next" ? parseIndex + 1 : parseIndex - 1;
+
+            if (parseIndex == 0 && tableButtonSubmit == "Previous")
+            {
+                newIndex = parseIndex;
+            }
+            if (parseIndex == classes.Count - 1 && tableButtonSubmit == "Next")
+            {
+                newIndex = parseIndex;
+            }
+
+            CurrentStudentQuizInforMessage = classes[newIndex];
+            ViewData["IndexPage"] = newIndex;
+
+            return Page();
+        }
+
 
     }
 }

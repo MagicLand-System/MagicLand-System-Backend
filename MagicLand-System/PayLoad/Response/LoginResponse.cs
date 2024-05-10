@@ -2,6 +2,7 @@
 {
     public class LoginResponse
     {
+        public Guid? UserId { get; set; }
         public string? FullName { set; get; }
         public required string Phone { get; set; }
         public string? Gender { get; set; }

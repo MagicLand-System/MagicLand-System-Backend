@@ -21,6 +21,11 @@
         #registerClass i.fa {
             color: blue;
         }
+
+
+    tbody, td, tfoot, th, thead, tr {
+        align-content: center;
+    }
 </style>
 
 <section class="body-class">
@@ -177,30 +182,43 @@
                                         @item.StartDate
                                     </td>
                                     <td>
-                                        <div class="table-container-schedule" style="overflow-y: auto; height: 120px">
+                                        <div class="table-container-schedule" style="overflow-y: auto;  height: 100px; align-content: center;">
                                             <table style="border-collapse: collapse; border: none; text-align: center; width: 100%">
                                                 @for (int i = 0; i < item.Schedules.Count; i++)
                                                 {
                                                     if (i != 0)
                                                     {
                                                         <tbody style="border-top: 1px solid black;">
-                                                            <tr>
-                                                                <td style="border: none">@item.Schedules[i].DayOfWeek</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td style="border: none">@item.Schedules[i].Slot</td>
-                                                            </tr>
+                                                            @if (item.Schedules[i].DayOfWeek.ToLower() == "sunday")
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Chủ Nhật: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+                                                            else
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Thứ @item.Schedules[i].DayOfWeek: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+
                                                         </tbody>
                                                     }
                                                     else
                                                     {
                                                         <tbody>
-                                                            <tr>
-                                                                <td style="border: none">@item.Schedules[i].DayOfWeek</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td style="border: none">@item.Schedules[i].Slot</td>
-                                                            </tr>
+                                                            @if (item.Schedules[i].DayOfWeek.ToLower() == "sunday")
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Chủ Nhật: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+                                                            else
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Thứ @item.Schedules[i].DayOfWeek: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
                                                         </tbody>
                                                     }
                                                 }

@@ -544,7 +544,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<QuizResultResponse> GradeQuizMCAsync(QuizMCRequest quizStudentWork, TimeOnly doingTime)
+        public async Task<QuizResultResponse> GradeQuizMCAsync(QuizMCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime)
         {
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
@@ -571,7 +571,7 @@ namespace MagicLand_System.Services.Implements
 
             var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
 
-            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, false);
+            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, false, isCheckingTime);
 
             var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
                 orderBy: x => x.OrderByDescending(x => x.CreatedTime),
@@ -984,7 +984,7 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        private void ValidateGradeCurrentQuiz(Guid examId, QuestionPackage? currentQuiz, List<Schedule> schedules, TimeOnly doingTime, bool isFlashCard)
+        private void ValidateGradeCurrentQuiz(Guid examId, QuestionPackage? currentQuiz, List<Schedule> schedules, TimeOnly doingTime, bool isFlashCard, bool? isCheckingTime)
         {
             if (currentQuiz == null)
             {
@@ -1015,13 +1015,16 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
-            var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
-
-            if (dayDoingExam.Date > GetCurrentTime().Date)
+            if(isCheckingTime == null || isCheckingTime == true)
             {
-                throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
-            }
+                var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
 
+                if (dayDoingExam.Date > GetCurrentTime().Date)
+                {
+                    throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
+                }
+            }
+           
             var timeSpend = doingTime.Hour * 60 + doingTime.Minute;
 
             if (timeSpend <= 0 || timeSpend > 30)
@@ -1086,7 +1089,7 @@ namespace MagicLand_System.Services.Implements
         }
 
         //public async Task<QuizResultResponse> GradeQuizFCAsync(Guid classId, Guid examId, double scoreEarned)
-        public async Task<QuizResultResponse> GradeQuizFCAsync(QuizFCRequest quizStudentWork, TimeOnly doingTime)
+        public async Task<QuizResultResponse> GradeQuizFCAsync(QuizFCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime)
         {
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
@@ -1115,7 +1118,7 @@ namespace MagicLand_System.Services.Implements
             var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
             //var currentQuiz = quizzes.Find(q => q!.Id == examId);
 
-            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, true);
+            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, true, isCheckingTime);
             //ValidateGradeCurrentQuiz(examId, currentQuiz, true);
 
             var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
@@ -1355,7 +1358,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<string> GradeExamOffLineAsync(ExamOffLineRequest exaOffLineStudentWork)
+        public async Task<string> GradeExamOffLineAsync(ExamOffLineRequest exaOffLineStudentWork, bool? isCheckingTime)
         {
             string message = "Lưu Điểm Thành Công";
 
@@ -1392,11 +1395,15 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Bài Kiểm Tra Không Thuộc Dạng Tự Làm Tại Nhà, Yêu Cầu Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
 
-            //var dayDoingExam = cls.Schedules.ToList()[currentQuiz.NoSession - 1].Date;
-            //if (dayDoingExam.Date > GetCurrentTime().Date)
-            //{
-            //    throw new BadHttpRequestException($"Id [{exaOffLineStudentWork.ExamId}] Vẫn Chưa Tới Ngày Nhập Điểm", StatusCodes.Status400BadRequest);
-            //}
+            if (isCheckingTime == null || isCheckingTime == true)
+            {
+                var dayDoingExam = cls.Schedules.ToList()[currentQuiz.NoSession - 1].Date;
+                if (dayDoingExam.Date > GetCurrentTime().Date)
+                {
+                    throw new BadHttpRequestException($"Id [{exaOffLineStudentWork.ExamId}] Vẫn Chưa Tới Ngày Nhập Điểm", StatusCodes.Status400BadRequest);
+                }
+            }
+
 
             var newTestResults = new List<TestResult>();
             var updateTestResults = new List<TestResult>();
@@ -1945,9 +1952,12 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id Của Lớp/Học Sinh Không Tồn Tại, Hoặc Học Sinh Chưa Làm Bài Kiểm Tra Này", StatusCodes.Status400BadRequest);
             }
 
-            if (testResults.Any(x => x.StudentClass!.Class!.LecturerId != GetUserIdFromJwt()))
+            if(GetRoleFromJwt() == RoleEnum.LECTURER.ToString())
             {
-                throw new BadHttpRequestException($"Bài Kiểm Tra Đang Đánh Giá Thuộc Lớp Không Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
+                if (testResults.Any(x => x.StudentClass!.Class!.LecturerId != GetUserIdFromJwt()))
+                {
+                    throw new BadHttpRequestException($"Bài Kiểm Tra Đang Đánh Giá Thuộc Lớp Không Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
+                }
             }
 
             var testResult = testResults.ToList()[0];

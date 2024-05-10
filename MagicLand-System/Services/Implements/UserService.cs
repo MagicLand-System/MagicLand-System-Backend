@@ -65,6 +65,7 @@ namespace MagicLand_System.Services.Implements
             var token = JwtUtil.GenerateJwtToken(user, guidClaim);
             var loginResponse = new LoginResponse
             {
+                UserId = user.Role.Name == RoleEnum.STUDENT.ToString() ? user.StudentIdAccount : user.Id,
                 Role = user.Role!.Name,
                 AccessToken = token,
                 DateOfBirth = user.DateOfBirth,

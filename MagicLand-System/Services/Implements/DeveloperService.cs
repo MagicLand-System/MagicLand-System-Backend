@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response.Custom;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,18 @@ namespace MagicLand_System.Services.Implements
     {
         public DeveloperService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<DeveloperService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+        }
+
+        public async Task<List<AccountStudentResponse>> GetStudentAccount(List<Guid> studentIdList)
+        {
+            var responses = new List<AccountStudentResponse>();
+            foreach (var id in studentIdList)
+            {
+                var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.StudentIdAccount == id);
+                responses.Add(_mapper.Map<AccountStudentResponse>(account));
+            }
+
+            return responses;
         }
 
         public async Task<List<StudentLearningInfor>> TakeFullAttendanceAndEvaluateAsync(Guid classId, int percentageAbsent, List<EvaluateDataRequest> noteEvaluate)

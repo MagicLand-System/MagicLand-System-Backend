@@ -12,6 +12,7 @@
         public static class DeveloperEndpoint
         {
             public const string TakeFullAttendanceAndEvaluate = ApiEndpoint + "/developer/attendanceAndEvaluate";
+            public const string GetStudentAuthenAndExam = ApiEndpoint + "/developer/authenAndExam";
 
         }
         public static class UserEndpoint
