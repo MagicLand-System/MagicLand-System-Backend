@@ -82,6 +82,7 @@
             public const string GetListCanNotMakeUp = GetAll + "/getListCanNotMakeUp";
             public const string SaveCourse = GetAll + "/{classId}/{studentId}/SaveCouse";
             public const string GetListSavedCourse = GetAll + "/getListSavedCourse";
+            public const string GetClassToRegister = GetAll + "/getClassToRegister";
         }
         public static class PromotionEnpoint
         {

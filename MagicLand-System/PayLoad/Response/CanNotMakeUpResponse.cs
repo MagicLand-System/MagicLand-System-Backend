@@ -1,4 +1,5 @@
-﻿using MagicLand_System.PayLoad.Response.Students;
+﻿using MagicLand_System.PayLoad.Response.Sessions;
+using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;
 
 namespace MagicLand_System.PayLoad.Response
@@ -10,6 +11,9 @@ namespace MagicLand_System.PayLoad.Response
         public string ClassCode {  get; set; }  
         public string CourseName {  get; set; } 
         public string Status { get; set; }  
+        public int NoOfSession { get; set; }    
+        public string Topic { get; set; }   
+        public List<StaffSessionDescriptionResponse> SessionDescription {  get; set; }
 
     }
 }
