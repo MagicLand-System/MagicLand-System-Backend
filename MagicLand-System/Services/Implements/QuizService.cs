@@ -7,12 +7,15 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Quizzes;
+using MagicLand_System.PayLoad.Response.Custom;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Final;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
+using MagicLand_System.PayLoad.Response.Students;
+using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
@@ -1015,7 +1018,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
 
-            if(isCheckingTime == null || isCheckingTime == true)
+            if (isCheckingTime == null || isCheckingTime == true)
             {
                 var dayDoingExam = schedules[currentQuiz.NoSession - 1].Date;
 
@@ -1024,7 +1027,7 @@ namespace MagicLand_System.Services.Implements
                     throw new BadHttpRequestException($"Id [{examId}] Vẫn Chưa Tới Ngày Làm Bài Không Thể Chấm Điểm", StatusCodes.Status400BadRequest);
                 }
             }
-           
+
             var timeSpend = doingTime.Hour * 60 + doingTime.Minute;
 
             if (timeSpend <= 0 || timeSpend > 30)
@@ -1952,7 +1955,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id Của Lớp/Học Sinh Không Tồn Tại, Hoặc Học Sinh Chưa Làm Bài Kiểm Tra Này", StatusCodes.Status400BadRequest);
             }
 
-            if(GetRoleFromJwt() == RoleEnum.LECTURER.ToString())
+            if (GetRoleFromJwt() == RoleEnum.LECTURER.ToString())
             {
                 if (testResults.Any(x => x.StudentClass!.Class!.LecturerId != GetUserIdFromJwt()))
                 {
@@ -1988,6 +1991,116 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex}{ex.InnerException}]", StatusCodes.Status500InternalServerError);
             }
 
+        }
+
+        public async Task<List<StudenInforAndScore>> GetStudentInforAndScoreAsync(Guid classId, Guid? studentId)
+        {
+            var cls = await ValidateClass(classId, studentId);
+
+            var quizzes = new List<QuestionPackage>();
+
+            var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                predicate: x => x.Course!.Id == cls.CourseId,
+                include: x => x.Include(x => x.ExamSyllabuses)!);
+
+            var sessions = (await _unitOfWork.GetRepository<Topic>().GetListAsync(
+                predicate: x => x.SyllabusId == syllabus.Id,
+                include: x => x.Include(x => x.Sessions!))).SelectMany(x => x.Sessions!).ToList();
+
+            foreach (var ses in sessions)
+            {
+                var package = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
+                if (package != null)
+                {
+                    quizzes.Add(package);
+                }
+            }
+
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
+                predicate: x => x.ClassId == classId,
+                selector: x => x.Student);
+
+            if (students == null || students.Count == 0)
+            {
+                throw new BadHttpRequestException($"Không Tìm Thấy Học Sinh Nào Trong Lớp", StatusCodes.Status400BadRequest);
+            }
+
+            if (studentId != null && studentId != default)
+            {
+                students = students.Where(s => s!.Id == studentId).ToList();
+            }
+
+            var exams = syllabus.ExamSyllabuses;
+            var responses = new List<StudenInforAndScore>();
+            await GenerateStudentInforAndScore(studentId, quizzes, students, exams, responses);
+
+            return responses;
+        }
+
+        private async Task GenerateStudentInforAndScore(Guid? studentId, List<QuestionPackage> quizzes, ICollection<Student?> students, ICollection<ExamSyllabus>? exams, List<StudenInforAndScore> responses)
+        {
+            foreach (var stu in students)
+            {
+                var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == stu!.ParentId);
+                var studentWorkFullyInfors = new List<StudentWorkFullyInfor>();
+
+                foreach (var quiz in quizzes)
+                {
+                    var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                        orderBy: x => x.OrderBy(x => x.NoAttempt),
+                        predicate: x => x.StudentClass!.StudentId == studentId && x.ExamId == quiz.Id);
+
+                    var exam = exams!.SingleOrDefault(e => StringHelper.TrimStringAndNoSpace(e.ContentName!) == StringHelper.TrimStringAndNoSpace(quiz.ContentName));
+
+                    var extensionName = quiz.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + quiz.OrderPackage;
+
+                    if (testResult == null)
+                    {
+                        studentWorkFullyInfors.Add(new StudentWorkFullyInfor
+                        {
+                            ExamId = quiz.Id,
+                            ExamName = "Bài " + quiz.ContentName.ToLower() + extensionName,
+                            NoAttempt = 0,
+                            QuizCategory = exam == null ? PackageTypeEnum.Review.ToString() : exam.Category!,
+                            QuizType = quiz.QuizType.ToLower(),
+                            QuizName = quiz.Score! == 0 ? "Làm Tại Lớp" : quiz.Title!,
+                            TotalMark = null,
+                            CorrectMark = null,
+                            TotalScore = quiz.Score,
+                            ScoreEarned = null,
+                            DoingTime = null,
+                            ExamStatus = null,
+                            Weight = null,
+                        });
+                    }
+                    else
+                    {
+                        studentWorkFullyInfors.Add(new StudentWorkFullyInfor
+                        {
+                            ExamId = quiz.Id,
+                            ExamName = "Bài " + quiz.ContentName.ToLower() + extensionName,
+                            NoAttempt = testResult.NoAttempt,
+                            QuizCategory = exam == null ? PackageTypeEnum.Review.ToString() : exam.Category!,
+                            QuizType = quiz.QuizType.ToLower(),
+                            QuizName = quiz.Score! == 0 ? "Làm Tại Lớp" : quiz.Title!,
+                            TotalMark = testResult.TotalMark,
+                            CorrectMark = testResult.CorrectMark,
+                            TotalScore = quiz.Score,
+                            ScoreEarned = testResult.ScoreEarned,
+                            DoingTime = testResult.DoingTime,
+                            ExamStatus = testResult.ExamStatus,
+                            Weight = exam != null ? exam.Weight : 0,
+                        });
+                    }
+                }
+
+                responses.Add(new StudenInforAndScore
+                {
+                    StudentInfor = _mapper.Map<StudentResponse>(stu),
+                    ParentInfor = _mapper.Map<UserResponse>(parent),
+                    ExamInfors = studentWorkFullyInfors,
+                });
+            }
         }
         #region UnUse Code
 

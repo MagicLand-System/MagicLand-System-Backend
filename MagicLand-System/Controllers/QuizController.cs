@@ -2,6 +2,7 @@
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Quizzes;
 using MagicLand_System.PayLoad.Response;
+using MagicLand_System.PayLoad.Response.Custom;
 using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
@@ -100,6 +101,7 @@ namespace MagicLand_System.Controllers
         //    return Ok(responses);
         //}
 
+
         #region document API Get Exams Of Class By Class Id
         /// <summary>
         ///  Truy Suất Các Bài Kiểm Tra Của Một Lớp Học, Nếu Có Id Của Học Sinh Sẽ Kiểm Tra Và Truất Thông Tin Bài Tập Của Học Sinh Đó
@@ -125,6 +127,35 @@ namespace MagicLand_System.Controllers
         public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid id, [FromQuery] Guid? studentId)
         {
             var responses = await _quizService.LoadExamOfClassByClassIdAsync(id, studentId);
+
+            return Ok(responses);
+        }
+
+        #region document API Get Student Quiz Done By ClassId
+        /// <summary>
+        ///  Truy Suất Thông Tin Điểm Số Và Thồn Tin Của Học Sinh Thuộc 1 Lớp
+        /// </summary>
+        /// <param name="classId">Id Của Lớp Học</param>
+        /// <param name="studentId">Id Của Học Sinh (Option)</param>
+        /// <remarks>
+        /// Sample request:
+        ///{     
+        ///    "classId":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
+        ///    "studentId":"ec98a490-ca85-4ebf-0f84-08dc4fcdee05",
+        ///}
+        /// </remarks>
+        /// <response code="200">Trả Về Thông Tin Điểm Số Và Thông Tin Của Học Sinh</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.QuizEndpoint.GetStudentInforAndScore)]
+        [ProducesResponseType(typeof(StudenInforAndScore), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(Exception))]
+        //[Authorize(Roles = "STAFF")]
+        public async Task<IActionResult> GetStudentQuizInfor([FromQuery] Guid classId, [FromQuery] Guid? studentId)
+        {
+            var responses = await _quizService.GetStudentInforAndScoreAsync(classId, studentId);
 
             return Ok(responses);
         }

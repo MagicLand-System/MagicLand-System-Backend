@@ -1,4 +1,5 @@
 ﻿using MagicLand_System.PayLoad.Request.Quizzes;
+using MagicLand_System.PayLoad.Response.Custom;
 using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
@@ -9,13 +10,11 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IQuizService
     {
-        //Task<FullyExamRes> GetFullyExamInforStudent(Guid studentId, Guid examId);
-        //Task<List<FCQuizResponse>> GetFCQuestionPackageAsync(Guid examId);
+        Task<List<StudenInforAndScore>> GetStudentInforAndScoreAsync(Guid classId, Guid? studentId);
         Task<List<FinalResultResponse>> GetFinalResultAsync(List<Guid> studentIdList);
         Task<List<QuizResultExtraInforResponse>> GetCurrentStudentQuizDoneAsync();
         Task<List<StudentWorkResult>> GetCurrentStudentQuizDoneWorkAsync(Guid examId, int? noAttempt);
         Task<QuizResultResponse> GradeQuizMCAsync(QuizMCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime);
-        //Task<QuizResultResponse> GradeQuizFCAsync(Guid classId, Guid examId, double score);
         Task<QuizResultResponse> GradeQuizFCAsync(QuizFCRequest quizFCStudentWork, TimeOnly doingTime, bool? isCheckingTime);
         Task<string> GradeExamOffLineAsync(ExamOffLineRequest exaOffLineStudentWork, bool? isCheckingTime);
         Task<string> EvaluateExamOnLineAsync(Guid studentId, Guid examId, string status, int? noAttempt);

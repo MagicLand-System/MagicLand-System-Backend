@@ -239,6 +239,7 @@
             public const string GetFCQuestionPackage = ApiEndpoint + "/exam/quiz/flashCard/package";
             public const string GetQuizOverallByCourseId = ApiEndpoint + "/exams/quizzes/course";
             public const string GetExamOffClassByClassId = ApiEndpoint + "/exams/class";
+            public const string GetStudentInforAndScore = ApiEndpoint + "/exams/class/students/score";
             public const string GetExamOffCurrentStudentByTime = ApiEndpoint + "/exams/student/byTime";
             public const string GetQuizOffExamByExamId = ApiEndpoint + "/exam/quiz";
             public const string GetQuizForStaff = ApiEndpoint + "/{id}/staff/get";
