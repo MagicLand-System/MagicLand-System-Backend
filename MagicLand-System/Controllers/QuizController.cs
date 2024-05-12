@@ -152,7 +152,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.QuizEndpoint.GetStudentInforAndScore)]
         [ProducesResponseType(typeof(StudenInforAndScore), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        //[Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF")]
         public async Task<IActionResult> GetStudentQuizInfor([FromQuery] Guid classId, [FromQuery] Guid? studentId)
         {
             var responses = await _quizService.GetStudentInforAndScoreAsync(classId, studentId);

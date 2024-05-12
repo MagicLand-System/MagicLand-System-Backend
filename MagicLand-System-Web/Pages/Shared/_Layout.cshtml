@@ -50,10 +50,13 @@
                         <i class="fa fa-cogs" style="height: 30px; padding:8px;  margin-left: 20px"></i>
                         <a class="nav-link text-dark" asp-area="" asp-page="/TakeQuiz" style="color: black;  text-decoration: none; display: inline-flex; align-items: center;">Làm Bài Tập Cho Tất Cả Học Sinh Trong Lớp</a>
                     </li>
+                    <li style="text-align: center; margin-top: 30px">
+                        <form method="post" action="/Error">
+                            <input type="hidden" name="Page" value="@ViewData["Page"]" />
+                            <button type="submit" style="width: 90px; height:30px; border: 1px;">Clear Data</button>
+                        </form>
+                    </li>
                 </ul>
-                <form method="post">
-                    <button type="submit">Clear Data</button>
-                </form>
             </div>
         </div>
         <div>
