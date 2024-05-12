@@ -6,6 +6,7 @@ namespace MagicLand_System.PayLoad.Response
 {
     public class CanNotMakeUpResponse
     {
+        public Guid Id { get; set; }    
         public StudentResponse StudentResponse {  get; set; }   
         public UserResponse ParentResponse { get; set; }
         public string ClassCode {  get; set; }  

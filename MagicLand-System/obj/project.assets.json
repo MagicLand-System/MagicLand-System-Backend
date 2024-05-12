@@ -4641,11 +4641,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "projectUniqueName": "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
       "projectName": "MagicLand-System",
-      "projectPath": "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
+      "projectPath": "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System\\MagicLand-System.csproj",
       "packagesPath": "C:\\Users\\Thuong\\.nuget\\packages\\",
-      "outputPath": "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
+      "outputPath": "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -4666,11 +4666,11 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
-              "projectPath": "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
+            "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj": {
+              "projectPath": "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System.Domain\\MagicLand-System.Domain.csproj"
             },
-            "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
-              "projectPath": "D:\\code-105\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
+            "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj": {
+              "projectPath": "D:\\code-125\\MagicLand-System-Backend\\MagicLand-System.Repository\\MagicLand-System.Repository.csproj"
             }
           }
         }
