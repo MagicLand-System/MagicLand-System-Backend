@@ -898,6 +898,11 @@ namespace MagicLand_System.Services.Implements
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             foreach (var c in classes)
             {
+                var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && x.ClassId == c.Id);
+                if (studentClass.Status.Equals("Saved"))
+                {
+                    continue;
+                }
                 var schedulex = (await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == c.Id)).FirstOrDefault();
                 if (schedulex == null) { continue; }
                 var room = (await _unitOfWork.GetRepository<Room>().SingleOrDefaultAsync(predicate: x => x.Id == schedulex.RoomId));

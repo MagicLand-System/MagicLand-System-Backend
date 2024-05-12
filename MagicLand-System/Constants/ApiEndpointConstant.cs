@@ -120,6 +120,8 @@
             public const string UpdateCourse = GetAll + "/{id}/updateCourse";
             public const string GetAllStaff = ApiEndpoint + "/staff/courses";
             public const string GetAllStaffV2 = ApiEndpoint + "/staff/courses/search";
+            public const string RegisterSavedCourse = ApiEndpoint + "/staff/courses/registerSaved";
+
         }
         public static class StudentEndpoint
         {

@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
+using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
@@ -1212,6 +1213,86 @@ namespace MagicLand_System.Services.Implements
                 Courses = findCourse,
                 NumberOfCourse = courseCount,
             };
+        }
+
+        public async Task<bool> RegisterSavedCourse(string studentId,string courseId, string classId)
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId),selector : x => x.Id);
+            var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && classes.Any(p => p == x.ClassId));
+            if(studentClass == null) 
+            {
+                throw new BadHttpRequestException("Bạn chưa đăng ký lớp học nào  của kháo");
+            }
+            if (!studentClass.Status.Equals("Saved"))
+            {
+                throw new BadHttpRequestException("Bạn chưa bảo lưu khóa học");
+            }
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == studentClass.ClassId,selector : x => x.Id);
+            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && schedules.Any(p => p == x.ScheduleId));
+            _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(attendances);
+            _unitOfWork.GetRepository<StudentClass>().DeleteAsync(studentClass);
+            await _unitOfWork.CommitAsync();
+            var newStudentClass = new StudentClass
+            {
+                AddedTime = DateTime.Now,
+                CanChangeClass = true,
+                ClassId = Guid.Parse(classId),
+                StudentId = Guid.Parse(studentId),
+                Status = "ChangeFromAnotherClass",
+                SavedTime = DateTime.Now,
+                Id = Guid.NewGuid(),
+            };
+            await _unitOfWork.GetRepository<StudentClass>().InsertAsync(newStudentClass);
+            await _unitOfWork.CommitAsync();
+            var newClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
+            var newSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId));
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate : x => x.Id == studentClass.StudentId,include : x => x.Include(x => x.User));
+            List<Attendance> attendances1 = new List<Attendance>();
+            foreach( var schedule in newSchedule)
+            {
+                var attendance = new Attendance
+                {
+                    Id = Guid.NewGuid(),
+                    IsPresent = null,
+                    IsPublic = true,
+                    ScheduleId = schedule.Id,
+                    StudentId = studentClass.StudentId,
+                    IsValid = true,
+                };
+                attendances1.Add(attendance);
+             
+            }
+            await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(attendances1);
+            await _unitOfWork.CommitAsync();
+            var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                        {
+                          ($"{AttachValueEnum.ClassId}", $"{newClass.Id}"),
+                          ($"{AttachValueEnum.StudentId}", $"{studentClass.StudentId}"),
+                        });
+            var listItemIdentify = new List<string>
+                {
+                          StringHelper.TrimStringAndNoSpace(student.User.Id.ToString()),
+                          StringHelper.TrimStringAndNoSpace("Chuyển lớp sau khi bảo lưu"),
+                          StringHelper.TrimStringAndNoSpace($"Bạn đã được chuyển vào lớp {newClass.ClassCode}"),
+                          StringHelper.TrimStringAndNoSpace(newClass.Id.ToString()),
+                          StringHelper.TrimStringAndNoSpace(actionData),
+                };
+
+            var newNotification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                Body = $"Bạn đã được chuyển vào lớp {newClass.ClassCode}",
+                CreatedAt = DateTime.Now,
+                Image = newClass.Image!,
+                IsRead = false,
+                Title = "Chuyển sau khi bảo lưu",
+                Priority =  NotificationPriorityEnum.IMPORTANCE.ToString(),
+                ActionData = actionData,
+                UserId = student.User.Id,
+                Identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify)),
+            };
+            await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
+            return await _unitOfWork.CommitAsync() > 0;
         }
         #endregion
     }

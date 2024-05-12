@@ -365,6 +365,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.Status.Equals("Saved"));
                 var scheduleCompleted = c.Schedules.Where(x => x.Date.Date <= DateTime.Now.Date);
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
@@ -381,7 +382,7 @@ namespace MagicLand_System.Services.Implements
                     StartDate = c.StartDate,
                     Status = c.Status,
                     Video = c.Video,
-                    NumberStudentRegistered = studentList.Count,
+                    NumberStudentRegistered = studentList.Count - studentClassCount.Count,
                     Schedules = schedules,
                     CourseName = course.Name,
                     LecturerResponse = lecturerResponse,
@@ -583,6 +584,7 @@ namespace MagicLand_System.Services.Implements
             }
             Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
             var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+            var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.Status.Equals("Saved"));
             MyClassResponse myClassResponse = new MyClassResponse
             {
                 ClassId = c.Id,
@@ -598,7 +600,7 @@ namespace MagicLand_System.Services.Implements
                 StartDate = c.StartDate,
                 Status = c.Status,
                 Video = c.Video,
-                NumberStudentRegistered = studentList.Count,
+                NumberStudentRegistered = studentList.Count - studentClassCount.Count,
                 Schedules = schedules,
                 CourseName = course.Name,
                 LecturerResponse = lecturerResponse,
@@ -4123,7 +4125,7 @@ namespace MagicLand_System.Services.Implements
             return isSuc;
         }
 
-        public async Task<List<CanNotMakeUpResponse>> GetCanNotMakeUpResponses()
+        public async Task<List<CanNotMakeUpResponse>> GetCanNotMakeUpResponses(string? search, DateTime? dateOfBirth)
         {
             var listFound = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.Note.Equals("CanNotMakeUp"));
             if (listFound == null)
@@ -4207,6 +4209,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 var newresponse = new CanNotMakeUpResponse
                 {
+                    Id = found.Id,
                     ClassCode = classx.ClassCode,
                     CourseName = course.Name,
                     ParentResponse = parentRes,
@@ -4215,9 +4218,25 @@ namespace MagicLand_System.Services.Implements
                     NoOfSession = index + 1,
                     Topic = topic1.Name,
                     SessionDescription = staffssd,
+                    ValidDate = schArray[schArray.Length -1].Date,
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
+            var canNotMakeUpResponse1 = new List<CanNotMakeUpResponse>();
+            var canNotMakeUpResponse2 = new List<CanNotMakeUpResponse>();
+            if (search != null)
+            {
+                canNotMakeUpResponse1 = canNotMakeUpResponses.Where(x => x.StudentResponse.FullName.ToLower().Trim().Contains(search.ToLower().Trim()) || x.CourseName.ToLower().Trim().Contains(search.ToLower().Trim())).ToList();
+            }
+            if (dateOfBirth != null)
+            {
+                canNotMakeUpResponse2 = canNotMakeUpResponses.Where(x => x.StudentResponse.DateOfBirth.Date == dateOfBirth.Value.Date).ToList();
+            }
+            if (search != null || dateOfBirth != null)
+            {
+                canNotMakeUpResponses = canNotMakeUpResponse1.UnionBy(canNotMakeUpResponse2, x => x.Id).ToList();
+            }
+
             return canNotMakeUpResponses;
         }
 
@@ -4283,6 +4302,7 @@ namespace MagicLand_System.Services.Implements
                     StudentResponse = studentRes,
                     Id = found.Id,
                     CourseId = course.Id,
+                    ValidDate = found.SavedTime.Value.AddMonths(3),
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
@@ -4446,6 +4466,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
+                var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.Status.Equals("Saved"));
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
                     ClassId = c.Id,
@@ -4461,7 +4482,7 @@ namespace MagicLand_System.Services.Implements
                     StartDate = c.StartDate,
                     Status = c.Status,
                     Video = c.Video,
-                    NumberStudentRegistered = studentList.Count,
+                    NumberStudentRegistered = studentList.Count - studentClassCount.Count,
                     Schedules = schedules1,
                     CourseName = course.Name,
                     LecturerResponse = lecturerResponse,

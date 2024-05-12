@@ -26,6 +26,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<bool> UpdateCourse(string id, UpdateCourseRequest request);
         Task<List<CourseWithScheduleShorten>> GetCourseByStaff();
         Task<CourseSearchResponse> GetCourseSearch(string keyword);
+        Task<bool> RegisterSavedCourse(string studentId,string courseId,string classId);
 
     }
 }

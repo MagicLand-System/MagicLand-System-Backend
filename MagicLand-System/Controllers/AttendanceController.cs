@@ -20,7 +20,6 @@ namespace MagicLand_System.Controllers
             _attendanceService = attendanceService;
         }
         [HttpGet(ApiEndpointConstant.AttendanceEndpoint.LoadAttandance)]
-        [CustomAuthorize(Enums.RoleEnum.STAFF)]
         public async Task<IActionResult> LoadAttandance(string scheduleId, string? searchString)
         {
             var result = await _attendanceService.LoadAttandance(scheduleId, searchString);

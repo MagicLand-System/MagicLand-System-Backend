@@ -31,8 +31,14 @@ namespace MagicLand_System.Services.Implements
             }
             List<StaffAttandaceResponse> responses = new List<StaffAttandaceResponse>();
             var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()), include: x => x.Include(x => x.Student).ThenInclude(x => x.User));
+            var studentclassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == classx.Id && x.Status.Equals("Saved"));
             foreach (var attendance in attandances)
             {
+                var studentclass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == attendance.StudentId && x.ClassId == classx.Id);
+                if (studentclass.Status.Equals("Saved"))
+                {
+                    continue;
+                }
                 var isPresent = false;
                 if (attendance.IsPresent != null)
                 {
@@ -62,7 +68,7 @@ namespace MagicLand_System.Services.Implements
                         Method = classx.Method,
                         StartDate = classx.StartDate,
                         CourseId = classx.CourseId,
-                        NumberStudentRegistered = classx.StudentClasses.Count(),
+                        NumberStudentRegistered = classx.StudentClasses.Count() - studentclassCount.Count,
                         Status = classx.Status,
                     },
                     Day = schedule.Date,
