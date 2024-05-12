@@ -229,5 +229,11 @@ namespace MagicLand_System.Controllers
             var isSucc = await _courseService.GetCourseSearch(keyword);
             return Ok(isSucc);
         }
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.RegisterSavedCourse)]
+        public async Task<IActionResult> RegisterAfterSaved(string studentId, string courseId, string classId)
+        {
+            var isSucc = await _courseService.RegisterSavedCourse(studentId, courseId, classId);
+            return Ok(isSucc);
+        }
     }
 }

@@ -4218,6 +4218,7 @@ namespace MagicLand_System.Services.Implements
                     NoOfSession = index + 1,
                     Topic = topic1.Name,
                     SessionDescription = staffssd,
+                    ValidDate = schArray[schArray.Length -1].Date,
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
@@ -4301,6 +4302,7 @@ namespace MagicLand_System.Services.Implements
                     StudentResponse = studentRes,
                     Id = found.Id,
                     CourseId = course.Id,
+                    ValidDate = found.SavedTime.Value.AddMonths(3),
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }

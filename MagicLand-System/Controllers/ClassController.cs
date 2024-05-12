@@ -580,9 +580,9 @@ namespace MagicLand_System.Controllers
             return Ok("Cập nhật trạng thái thành công");
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetListCanNotMakeUp)]
-        public async Task<IActionResult> GetListCanNotMakeRes()
+        public async Task<IActionResult> GetListCanNotMakeRes(string? search, DateTime? dateOfBirth)
         {
-            var isSuccess = await _classService.GetCanNotMakeUpResponses();
+            var isSuccess = await _classService.GetCanNotMakeUpResponses(search,dateOfBirth);
             return Ok(isSuccess);
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.SaveCourse)]

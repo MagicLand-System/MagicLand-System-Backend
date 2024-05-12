@@ -14,6 +14,7 @@ namespace MagicLand_System.PayLoad.Response
         public string Status { get; set; }  
         public int NoOfSession { get; set; }    
         public string Topic { get; set; }   
+        public DateTime ValidDate { get; set; } 
         public List<StaffSessionDescriptionResponse> SessionDescription {  get; set; }
 
     }
