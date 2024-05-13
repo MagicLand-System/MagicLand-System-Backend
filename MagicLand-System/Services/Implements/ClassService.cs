@@ -4172,6 +4172,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     staffssd.Add(new StaffSessionDescriptionResponse
                     {
+                        ScheduleId = schArray[index].Id,
                         Content = ssdx.Content,
                         Details = ssdx.Detail.Split("/r/n").ToList()
                     });
@@ -4298,7 +4299,7 @@ namespace MagicLand_System.Services.Implements
                     CourseName = course.Name,
                     SavedTime = found.SavedTime,
                     ParentResponse = parentRes,
-                    Status = "Bảo lưu",
+                    Status = "Saved",
                     StudentResponse = studentRes,
                     Id = found.Id,
                     CourseId = course.Id,
