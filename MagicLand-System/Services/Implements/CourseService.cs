@@ -353,7 +353,7 @@ namespace MagicLand_System.Services.Implements
         {
             var currentStudent = await GetUserFromJwt();
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
-                predicate: x => x.Classes.Any(cls => cls.StudentClasses.Any(sc => sc.StudentId == currentStudent.StudentIdAccount)),
+                predicate: x => x.Classes.Any(cls => cls.StudentClasses.Any(sc => sc.StudentId == currentStudent.StudentIdAccount && sc.SavedTime == null)),
                 include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents));
 
             var coursePrerequisites = await GetCoursePrerequesites(courses);
@@ -1229,8 +1229,10 @@ namespace MagicLand_System.Services.Implements
             }
             var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == studentClass.ClassId,selector : x => x.Id);
             var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && schedules.Any(p => p == x.ScheduleId));
+            var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && schedules.Any(p => p == x.ScheduleId));
             _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(attendances);
             _unitOfWork.GetRepository<StudentClass>().DeleteAsync(studentClass);
+            _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(evaluates);
             await _unitOfWork.CommitAsync();
             var newStudentClass = new StudentClass
             {

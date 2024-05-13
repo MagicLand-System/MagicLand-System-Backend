@@ -4513,7 +4513,6 @@ namespace MagicLand_System.Services.Implements
                 };
                 myClassResponse.CourseResponse = customCourseResponse;
                 var canChange = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == myClassResponse.ClassId && x.StudentId.ToString().Equals(studentId));
-                myClassResponse.CanChangeClass = canChange.CanChangeClass;
                 result.Add(myClassResponse);
             }
             return result;

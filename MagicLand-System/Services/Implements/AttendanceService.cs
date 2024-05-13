@@ -35,6 +35,10 @@ namespace MagicLand_System.Services.Implements
             foreach (var attendance in attandances)
             {
                 var studentclass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == attendance.StudentId && x.ClassId == classx.Id);
+                if (attendance.Note.Equals("CanNotMakeUp"))
+                {
+                    continue;
+                }
                 if (studentclass.Status.Equals("Saved"))
                 {
                     continue;
