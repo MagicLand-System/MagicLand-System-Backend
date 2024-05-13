@@ -446,11 +446,17 @@ namespace MagicLand_System.Services.Implements
             {
                 foreach (Guid id in studentIdList)
                 {
-                    if (cls.StudentClasses.Any(sc => sc.StudentId == id))
+                    var exsitedStudent = cls.StudentClasses.SingleOrDefault(sc => sc.StudentId == id);
+                    if (exsitedStudent == null)
                     {
-                        continue;
+                        throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Không Thuộc Lớp Đang Điểm Danh", StatusCodes.Status400BadRequest);
                     }
-                    throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Không Thuộc Lớp Đang Điểm Danh", StatusCodes.Status400BadRequest);
+
+                    if (exsitedStudent.SavedTime != null)
+                    {
+                        throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Thuộc Lớp Này Đã Bảo Lưu Không Thể Điểm Danh", StatusCodes.Status400BadRequest);
+                    }
+                    continue;
                 }
             }
 
@@ -669,13 +675,13 @@ namespace MagicLand_System.Services.Implements
 
             if (noSession != null)
             {
-                await GetEvaluates(noSession.Value, schedules[noSession.Value - 1], responses);
+                await GetEvaluates(noSession.Value, schedules[noSession.Value - 1], cls.Id, responses);
             }
             else
             {
                 for (int i = 0; i < schedules.Count(); i++)
                 {
-                    await GetEvaluates(i + 1, schedules[i], responses);
+                    await GetEvaluates(i + 1, schedules[i], cls.Id, responses);
                 }
             }
 
@@ -683,11 +689,13 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        private async Task GetEvaluates(int noSession, Schedule schedule, List<EvaluateResponse> responses)
+        private async Task GetEvaluates(int noSession, Schedule schedule, Guid classId, List<EvaluateResponse> responses)
         {
             var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(
                predicate: x => x.ScheduleId == schedule.Id,
-               include: x => x.Include(x => x.Student!));
+               include: x => x.Include(x => x.Student!).ThenInclude(stu => stu.StudentClasses.Single(sc => sc.ClassId == classId)));
+
+            evaluates = evaluates.Where(eva => !eva.Student!.StudentClasses.Any(sc => sc.SavedTime != null)).ToList();
 
             responses.Add(EvaluateCustomMapper.fromEvaluateInforRelatedToEvaluateResponse(schedule, evaluates.ToList(), noSession));
         }
