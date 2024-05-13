@@ -1006,11 +1006,11 @@ namespace MagicLand_System.Services.Implements
                 {
                     if (studentclass.Status.Equals("Saved"))
                     {
-                        statusx = "Bảo Lưu";
+                        statusx = "Saved";
                     }
                     if (studentclass.Status.Equals("Changed"))
                     {
-                        statusx = "Đã Chuyển";
+                        statusx = "Changed";
                     }
 
                 }
@@ -1282,20 +1282,20 @@ namespace MagicLand_System.Services.Implements
                 {
                     if (attendancesArray[i].IsPresent.Value)
                     {
-                        status = "Có mặt";
+                        status = "present";
                     }
                     if (!attendancesArray[i].IsPresent.Value)
                     {
-                        status = "Vắng";
+                        status = "absent";
                     }
                 }
                 if (attendancesArray[i].IsPresent == null)
                 {
-                    status = "Chưa diễn ra";
+                    status = "upcoming";
                 }
                 if (classx.Status.ToLower().Equals("canceled"))
                 {
-                    status = "Đã hủy";
+                    status = "cancel";
                 }
                 List<SessionContentReponse> sessionContentReponses = new List<SessionContentReponse>();
                 foreach (var ss in sessionArray[i].SessionDescriptions)
