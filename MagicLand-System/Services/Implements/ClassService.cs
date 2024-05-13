@@ -2754,8 +2754,9 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
-            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id),
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && !x.Status.Equals("Saved"),
                include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
+            
 
             if (students == null)
             {
