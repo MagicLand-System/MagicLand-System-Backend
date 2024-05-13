@@ -3966,21 +3966,23 @@ namespace MagicLand_System.Services.Implements
 
             var classes = new List<Class>();
 
-            var allCourseClass = await _unitOfWork.GetRepository<Class>()
-               .GetListAsync(predicate: x => x.CourseId == currentClass.CourseId,
-               include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
-               .Include(x => x.Lecture)
-               .Include(x => x.StudentClasses).Include(x => x.Course));
+            var allCourseClass = await _unitOfWork.GetRepository<Class>().GetListAsync(
+                predicate: x => x.CourseId == currentClass.CourseId,
+                include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
+               .Include(x => x.Lecture)!
+               .Include(x => x.StudentClasses).Include(x => x.Course)!);
 
             var suitableClasses = allCourseClass.Where(courCls =>
-                !courCls.Schedules.Any(courSchedule =>
-                    classes.Any(currCls =>
-                        currCls.Schedules.Any(schedule =>
-                            schedule.Slot?.StartTime == courSchedule.Slot?.StartTime))))
-                .ToList();
+               !courCls.Schedules.Any(courSchedule =>
+                classes.Any(currCls =>
+                currCls.Schedules.Any(schedule =>
+                schedule.Slot?.StartTime == courSchedule.Slot?.StartTime)))).ToList();
+
+
             suitableClasses = suitableClasses
            .Where(cls => cls.StudentClasses.Count + 1 <= cls.LimitNumberStudent)
            .Where(cls => cls.Id != currentClass.Id).ToList();
+
             if (currentClass.Status.ToLower().Equals("upcoming"))
             {
                 suitableClasses = suitableClasses.Where(x => x.Status.ToLower().Equals("upcoming")).ToList();
@@ -4075,12 +4077,10 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
                 var toClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(toClassId),
-               include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
-
+                include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId),
-                include: x => x.Include(x => x.StudentClasses.Where(sc => !sc.ClassId.ToString().Equals(fromClass))).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!
-                .ThenInclude(x => x.Slot!).Include(x => x.User));
+                include: x => x.Include(x => x.StudentClasses.Where(sc => !sc.ClassId.ToString().Equals(fromClass)));
 
 
                 await ChangeClassProgress(fromClass, toClass, student);

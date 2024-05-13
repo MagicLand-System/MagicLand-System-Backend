@@ -549,7 +549,7 @@ namespace MagicLand_System.Services.Implements
         {
             var currentSyllabusPrequisite = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 selector: x => x.SyllabusPrerequisites,
-                predicate: x => x.Course.Id == cls.CourseId);
+                predicate: x => x.Course!.Id == cls.CourseId);
 
             if (currentSyllabusPrequisite is null)
             {

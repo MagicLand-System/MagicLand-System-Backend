@@ -31,11 +31,11 @@ namespace MagicLand_System.Services.Implements
         }
 
         #region thanh_lee code
-        public async Task<bool> AddSyllabus(OverallSyllabusRequest request)
+        public async Task<bool> AddSyllabus(OverallSyllabusRequest request, bool isNewVersion)
         {
             if (request != null)
             {
-                var overal = await GenerateOveralInfor(request);
+                var overal = await GenerateOveralInfor(request, isNewVersion);
 
                 SettingAndChekingQPR(request);
 
@@ -172,14 +172,30 @@ namespace MagicLand_System.Services.Implements
             }
             return message;
         }
-        private async Task<(Syllabus, List<SyllabusPrerequisite>)> GenerateOveralInfor(OverallSyllabusRequest request)
+        private async Task<(Syllabus, List<SyllabusPrerequisite>)> GenerateOveralInfor(OverallSyllabusRequest request, bool isNewVersion)
         {
             var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
 
-            ValidateSyllabus(request.SubjectCode, request.SyllabusName, syllabuses);
-
             Guid newSyllabusId = Guid.NewGuid();
+            var subjectCode = request.SubjectCode;
 
+            if (isNewVersion)
+            {
+                var allSubjectCodeVersion = syllabuses.Where(syll => syll.SubjectCode!.Substring(0, syll.SubjectCode.Length - 2) == subjectCode).Select(x => x.SubjectCode!.Substring(x.SubjectCode.Length - 2)).ToList();
+                if (allSubjectCodeVersion == null || !allSubjectCodeVersion.Any())
+                {
+                    throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh Không Tìm Thấy Mã Giáo Trình, Vui Lòng Chờ Sử Lý", StatusCodes.Status500InternalServerError);
+                }
+
+                var largestVersion = allSubjectCodeVersion.Select(code => int.Parse(code)).ToList().OrderDescending().First() + 1;
+                var newVersion = largestVersion < 10 ? "0" + largestVersion.ToString() : largestVersion.ToString();
+                subjectCode = subjectCode + newVersion;
+            }
+            else
+            {
+                ValidateSyllabus(request.SubjectCode, request.SyllabusName, syllabuses);
+                subjectCode = subjectCode + "01";
+            }
             var syllabus = new Syllabus
             {
                 Id = newSyllabusId,
@@ -189,7 +205,7 @@ namespace MagicLand_System.Services.Implements
                 Name = request.SyllabusName,
                 ScoringScale = request.ScoringScale!.Value,
                 StudentTasks = request.StudentTasks,
-                SubjectCode = request.SubjectCode + "01",
+                SubjectCode = subjectCode,
                 SyllabusLink = request.SyllabusLink,
                 TimePerSession = request.TimePerSession,
                 NumOfSessions = request.NumOfSessions,
@@ -911,6 +927,11 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Course!),
                 predicate: x => x.Id.ToString().Equals(id));
 
+            if (syllabus == null)
+            {
+                throw new BadHttpRequestException($"Id [{id}] Của Giáo Trình Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+
             if (syllabus.Course == null)
             {
                 await UpdateGeneralSyllabus(syllabus.Id, request);
@@ -919,7 +940,7 @@ namespace MagicLand_System.Services.Implements
                 await UpdateLearningItems(request, syllabus.Id);
                 return await _unitOfWork.CommitAsync() > 0;
             }
-            bool isSuccess = await AddSyllabus(request);
+            bool isSuccess = await AddSyllabus(request, true);
             return isSuccess;
         }
         public async Task<bool> UpdateOverallSyllabus(string id, UpdateOverallSyllabus request)
@@ -1073,6 +1094,7 @@ namespace MagicLand_System.Services.Implements
              .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type!.ToLower().Trim()));
                 syllabus.SyllabusCategoryId = categoryId;
                 _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syllabus);
+
                 await _unitOfWork.CommitAsync();
             }
         }

@@ -153,7 +153,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<AttendanceWithClassResponse>> GetAttendanceOfClassStudent(Guid id)
         {
             var classes = await _unitOfWork.GetRepository<Class>()
-                .GetListAsync(predicate: x => x.StudentClasses.Any(sc => sc.StudentId == id) && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
+                .GetListAsync(predicate: x => x.StudentClasses.Any(sc => sc.StudentId == id && sc.SavedTime == null) && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
                 include: x => x.Include(x => x.Lecture)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)
@@ -161,7 +161,7 @@ namespace MagicLand_System.Services.Implements
 
             if (classes == null)
             {
-                throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Học Sinh Vẫn Chưa Có Lịch Học Diễn Ra", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại, Học Sinh Chưa Tham Gia Lớp Học Nào Hoặc Học Sinh Đã Bảo Lưu Lớp Đang Học", StatusCodes.Status400BadRequest);
             }
 
             return classes.Select(x => _mapper.Map<AttendanceWithClassResponse>(x)).ToList();

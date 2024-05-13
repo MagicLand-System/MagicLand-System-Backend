@@ -23,7 +23,7 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.SyllabusEndpoint.AddSyllabus)]
         public async Task<IActionResult> InsertSyllabus([FromBody] OverallSyllabusRequest request)
         {
-            var isSuccess = await _syllabusService.AddSyllabus(request);
+            var isSuccess = await _syllabusService.AddSyllabus(request, false);
             string message = "Tạo Giáo Trình Sảy Ra Lỗi";
             if (isSuccess)
             {
@@ -181,6 +181,7 @@ namespace MagicLand_System.Controllers
             return Ok(course);
         }
         [HttpPut(ApiEndpointConstant.SyllabusEndpoint.UpdateSyllabus)]
+        //[Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> UpdateSyll([FromRoute] string id, OverallSyllabusRequest request)
         {
             var isSuccess = await _syllabusService.UpdateSyllabus(request, id);

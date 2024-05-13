@@ -927,7 +927,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Không Tồn Tại", StatusCodes.Status400BadRequest);
             }
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().Equals(studentId)),
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().Equals(studentId) && sc.SavedTime == null),
                 include: x => x.Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Slot)
                 .Include(x => x.Schedules.OrderBy(sch => sch.Date)).ThenInclude(sch => sch.Room!));
 
@@ -967,10 +967,6 @@ namespace MagicLand_System.Services.Implements
                     var schedule = schedules[i];
                     var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId.ToLower());
                     var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedule.Id && x.StudentId.ToString().ToLower() == studentId.ToLower());
-                    if (evaluate == null)
-                    {
-                        var a = "";
-                    }
 
                     var studentSchedule = new StudentScheduleResponse
                     {
