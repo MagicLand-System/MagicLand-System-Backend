@@ -1215,25 +1215,55 @@ namespace MagicLand_System.Services.Implements
             };
         }
 
-        public async Task<bool> RegisterSavedCourse(string studentId,string courseId, string classId)
+        public async Task<bool> RegisterSavedCourse(string studentId, string courseId, string classId)
         {
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId),selector : x => x.Id);
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId), selector: x => x.Id);
             var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && classes.Any(p => p == x.ClassId));
-            if(studentClass == null) 
+            if (studentClass == null)
             {
-                throw new BadHttpRequestException("Bạn chưa đăng ký lớp học nào  của kháo");
+                throw new BadHttpRequestException("Bạn chưa đăng ký lớp học nào của khóa");
             }
             if (!studentClass.Status.Equals("Saved"))
             {
                 throw new BadHttpRequestException("Bạn chưa bảo lưu khóa học");
             }
-            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == studentClass.ClassId,selector : x => x.Id);
+            await DeleteOldClassInfor(studentId, courseId, classId);
+            var isSucc = await AddNewInfor(studentId, courseId, classId);
+            return isSucc;
+        }
+        private async Task DeleteOldClassInfor(string studentId, string courseId, string classId)
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId), selector: x => x.Id);
+            var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && classes.Any(p => p == x.ClassId));
+            var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == studentClass.ClassId, selector: x => x.Id);
             var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && schedules.Any(p => p == x.ScheduleId));
             var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && schedules.Any(p => p == x.ScheduleId));
-            _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(attendances);
-            _unitOfWork.GetRepository<StudentClass>().DeleteAsync(studentClass);
-            _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(evaluates);
-            await _unitOfWork.CommitAsync();
+            try
+            {
+                if (attendances != null && attendances.Count > 0)
+                {
+                    _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(attendances);
+                }
+                if (studentClass != null)
+                {
+                    _unitOfWork.GetRepository<StudentClass>().DeleteAsync(studentClass);
+                }
+                if (evaluates != null && evaluates.Count > 0)
+                {
+                    _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(evaluates);
+
+                }
+                 _unitOfWork.Commit();
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Hệ thống phát sinh {ex.Message}",StatusCodes.Status500InternalServerError);
+            }
+
+        }
+        private async Task<bool> AddNewInfor(string studentId, string courseId, string classId)
+        {
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId), selector: x => x.Id);
             var newStudentClass = new StudentClass
             {
                 AddedTime = DateTime.Now,
@@ -1246,11 +1276,13 @@ namespace MagicLand_System.Services.Implements
             };
             await _unitOfWork.GetRepository<StudentClass>().InsertAsync(newStudentClass);
             await _unitOfWork.CommitAsync();
+            var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && classes.Any(p => p == x.ClassId));
             var newClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
             var newSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId));
-            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate : x => x.Id == studentClass.StudentId,include : x => x.Include(x => x.User));
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentClass.StudentId, include: x => x.Include(x => x.User));
             List<Attendance> attendances1 = new List<Attendance>();
-            foreach( var schedule in newSchedule)
+            List<Evaluate> evaluates = new List<Evaluate>();
+            foreach (var schedule in newSchedule)
             {
                 var attendance = new Attendance
                 {
@@ -1261,10 +1293,20 @@ namespace MagicLand_System.Services.Implements
                     StudentId = studentClass.StudentId,
                     IsValid = true,
                 };
+                var evaluate = new Evaluate
+                {
+                    Id = Guid.NewGuid(),
+                    IsValid = true,
+                    ScheduleId = schedule.Id,
+                    StudentId = student.Id,
+
+                };
                 attendances1.Add(attendance);
-             
+                evaluates.Add(evaluate);
+
             }
             await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(attendances1);
+            await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(evaluates);
             await _unitOfWork.CommitAsync();
             var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
@@ -1288,7 +1330,7 @@ namespace MagicLand_System.Services.Implements
                 Image = newClass.Image!,
                 IsRead = false,
                 Title = "Chuyển sau khi bảo lưu",
-                Priority =  NotificationPriorityEnum.IMPORTANCE.ToString(),
+                Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
                 ActionData = actionData,
                 UserId = student.User.Id,
                 Identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify)),

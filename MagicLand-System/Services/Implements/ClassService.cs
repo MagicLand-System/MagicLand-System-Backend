@@ -2756,8 +2756,9 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
-            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && x.SavedTime == null,
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && !x.Status.Equals("Saved"),
                include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
+            
 
             if (students == null)
             {
@@ -4183,6 +4184,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     staffssd.Add(new StaffSessionDescriptionResponse
                     {
+                        ScheduleId = schArray[index].Id,
                         Content = ssdx.Content,
                         Details = ssdx.Detail.Split("/r/n").ToList()
                     });
@@ -4309,7 +4311,7 @@ namespace MagicLand_System.Services.Implements
                     CourseName = course.Name,
                     SavedTime = found.SavedTime,
                     ParentResponse = parentRes,
-                    Status = "Bảo lưu",
+                    Status = "Saved",
                     StudentResponse = studentRes,
                     Id = found.Id,
                     CourseId = course.Id,
