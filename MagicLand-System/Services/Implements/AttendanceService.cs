@@ -144,11 +144,21 @@ namespace MagicLand_System.Services.Implements
                  include: x => x.Include(x => x.Lecture)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)
-                .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Attendances.Where(att => att.IsPublic == true)).ThenInclude(att => att.Student)!);
+                .Include(x => x.Schedules.OrderBy(sc => sc.Date)));
 
             if (classes == null)
             {
                 throw new BadHttpRequestException($"Các Lớp Của Giao Viên Hiện Chưa Diễn Ra Hoặc Giao Viên Chưa Được Phân Công Dạy", StatusCodes.Status400BadRequest);
+            }
+
+            foreach (var cls in classes)
+            {
+                foreach (var sch in cls.Schedules)
+                {
+                    sch.Attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                        predicate: x => x.Id == sch.Id && x.Student!.StudentClasses.Any(sc => sc.ClassId == cls.Id && sc.SavedTime == null),
+                        include: x => x.Include(x => x.Student)!);
+                }
             }
 
             return classes.Select(x => _mapper.Map<AttendanceWithClassResponse>(x)).ToList();

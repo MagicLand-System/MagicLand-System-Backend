@@ -264,9 +264,14 @@ namespace MagicLand_System.Services.Implements
             if (studentId != null && studentId != default)
             {
                 var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == classId && x.StudentId == studentId.Value);
+
                 if (studentClass is null)
                 {
                     throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Không Thuộc Lớp Học Đang Truy Suất", StatusCodes.Status400BadRequest);
+                }
+                if (studentClass.SavedTime != null)
+                {
+                    throw new BadHttpRequestException($"Id [{studentId}] Của Học Sinh Thuộc Lớp Học Này, Đã Bảo Lưu Không Thể Truy Suất", StatusCodes.Status400BadRequest);
                 }
             }
 
@@ -298,11 +303,11 @@ namespace MagicLand_System.Services.Implements
                     StatusCodes.Status500InternalServerError);
             }
 
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.PROGRESSING.ToString());
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId && sc.SavedTime == null) && x.Status == ClassStatusEnum.PROGRESSING.ToString());
 
             if (!classes.Any())
             {
-                throw new BadHttpRequestException("Bé Chưa Tham Gia Lớp Học Nào", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException("Bé Chưa Tham Gia Lớp Học Nào Hoặc Lơp Học Tham Gia Đã Bảo Lưu Không Thể Truy Suất", StatusCodes.Status400BadRequest);
             }
             var responses = new List<ExamExtraClassInfor>();
             foreach (var cls in classes)
@@ -1059,7 +1064,8 @@ namespace MagicLand_System.Services.Implements
 
         private void ValidateStudent(Guid? studentId, Class cls, bool isOffLine)
         {
-            if (!cls.StudentClasses.Any(sc => sc.StudentId == studentId))
+            var currentStudentClass = cls.StudentClasses.SingleOrDefault(sc => sc.StudentId == studentId);
+            if (currentStudentClass == null)
             {
                 string message = string.Empty;
                 if (isOffLine)
@@ -1071,6 +1077,11 @@ namespace MagicLand_System.Services.Implements
                     message = "Học Sinh Hiện Tại Không Thuộc Lớp Học Đang Tính Điểm Kiểm Tra";
                 }
                 throw new BadHttpRequestException(message, StatusCodes.Status400BadRequest);
+            }
+
+            if (currentStudentClass.SavedTime != null)
+            {
+                throw new BadHttpRequestException($"Id [{studentId}] Học Sinh Hiện Tại Thuộc Lớp Này, Đang Bảo Lưu Không Thể Thao Thực Hiện Các Thao Tác Liên Quan Đến Lớp Này", StatusCodes.Status400BadRequest);
             }
         }
 
@@ -1605,7 +1616,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                    predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id) && x.Status != ClassStatusEnum.CANCELED.ToString(),
+                    predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id && sc.SavedTime == null) && x.Status != ClassStatusEnum.CANCELED.ToString(),
                     include: x => x.Include(x => x.Course!));
 
                 if (classes == null || !classes.Any())

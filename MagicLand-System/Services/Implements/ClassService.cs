@@ -814,7 +814,9 @@ namespace MagicLand_System.Services.Implements
             foreach (var schedule in schedules)
             {
                 var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(schedule.Class.LecturerId.ToString()));
-                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()));
+                var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                    predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()) && x.Student!.StudentClasses.Any(sc => sc.ClassId == schedule.ClassId && sc.SavedTime == null));
+
                 if (attendances != null && attendances.Count > 0)
                 {
                     var attendanceStatus = "NTA";
@@ -2754,7 +2756,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
-            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id),
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && x.SavedTime == null,
                include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
 
             if (students == null)
@@ -2893,7 +2895,7 @@ namespace MagicLand_System.Services.Implements
              include: x => x.Include(x => x.Lecture).Include(x => x.Course)
             .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)
             .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Room)
-            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Attendances.Where(att => att.IsPublic == true)).ThenInclude(att => att.Student)!);
+            .Include(x => x.Schedules.OrderBy(sc => sc.Date)));
 
             if (cls == null)
             {
@@ -2907,16 +2909,21 @@ namespace MagicLand_System.Services.Implements
                     $" Lớp [{cls.ClassCode}] [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status)}]", StatusCodes.Status400BadRequest);
             }
 
-            return GenerateSchedultAttendance(cls, date);
+            return await GenerateSchedultAttendance(cls, date);
         }
 
-        private ScheduleWithAttendanceResponse GenerateSchedultAttendance(Class cls, DateTime date)
+        private async Task<ScheduleWithAttendanceResponse> GenerateSchedultAttendance(Class cls, DateTime date)
         {
             var schedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == date.Date);
+
             if (schedule == null)
             {
                 return new ScheduleWithAttendanceResponse();
             }
+
+            schedule.Attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                                 predicate: x => x.Id == schedule.Id && x.Student!.StudentClasses.Any(sc => sc.ClassId == cls.Id && sc.SavedTime == null),
+                                 include: x => x.Include(x => x.Student)!);
 
             var response = _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
             response.ClassSubject = cls.Course!.SubjectName;
@@ -4080,8 +4087,12 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId),
-                include: x => x.Include(x => x.StudentClasses.Where(sc => !sc.ClassId.ToString().Equals(fromClass)));
+                    include: x => x.Include(x => x.User));
 
+                if(toClass.StudentClasses.Any(sc => sc.StudentId.ToString() == studentId))
+                {
+                    throw new BadHttpRequestException($"Id [{studentId}] Đã Có Trong Lớp Cần Chuyển", StatusCodes.Status400BadRequest);
+                }
 
                 await ChangeClassProgress(fromClass, toClass, student);
                 _unitOfWork.Commit();
@@ -4144,7 +4155,7 @@ namespace MagicLand_System.Services.Implements
                 var dateCheck = schedule.Date.Date;
                 var schArray = listSc.OrderBy(x => x.Date).ToArray();
                 var index = 0;
-                for(var i = 0; i < schArray.Length; i++)
+                for (var i = 0; i < schArray.Length; i++)
                 {
                     if (schArray[i].Date.Date == dateCheck)
                     {
@@ -4156,10 +4167,10 @@ namespace MagicLand_System.Services.Implements
                 var listTopic = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId == syllabus.Id);
                 Session session = new Session();
                 Topic topic1 = new Topic();
-                foreach(var topic in listTopic)
+                foreach (var topic in listTopic)
                 {
                     var sessionx = await _unitOfWork.GetRepository<Session>().SingleOrDefaultAsync(predicate: x => x.TopicId == topic.Id && x.NoSession == index + 1, include: x => x.Include(x => x.SessionDescriptions));
-                    if(sessionx != null)
+                    if (sessionx != null)
                     {
                         session = sessionx;
                         topic1 = topic;
@@ -4168,7 +4179,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 var ssd = session.SessionDescriptions;
                 List<StaffSessionDescriptionResponse> staffssd = new List<StaffSessionDescriptionResponse>();
-                foreach(var ssdx in ssd)
+                foreach (var ssdx in ssd)
                 {
                     staffssd.Add(new StaffSessionDescriptionResponse
                     {
@@ -4218,7 +4229,7 @@ namespace MagicLand_System.Services.Implements
                     NoOfSession = index + 1,
                     Topic = topic1.Name,
                     SessionDescription = staffssd,
-                    ValidDate = schArray[schArray.Length -1].Date,
+                    ValidDate = schArray[schArray.Length - 1].Date,
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
@@ -4325,22 +4336,22 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<MyClassResponse>> GetClassToRegister(string studentId, string courseId)
         {
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId)  && x.Status.ToLower().Equals("upcoming"),include : x => x.Include(x => x.StudentClasses).Include(x => x.Schedules));
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId) && x.Status.ToLower().Equals("upcoming"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules));
             List<Class> filterCls = new List<Class>();
-            foreach(var cls in classes)
+            foreach (var cls in classes)
             {
                 var count = cls.StudentClasses.Where(x => x.StudentId.ToString().Equals(studentId));
-                if(count.Count() == 0)
+                if (count.Count() == 0)
                 {
                     filterCls.Add(cls);
                 }
             }
-            var att = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId),include : x => x.Include(x => x.Schedule));
+            var att = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Schedule));
             List<Schedule> schedules = new List<Schedule>();
             List<DateTime> dateTimes = new List<DateTime>();
-            foreach(var attE in att)
+            foreach (var attE in att)
             {
-               if(attE.Schedule.Date >= DateTime.Now.Date)
+                if (attE.Schedule.Date >= DateTime.Now.Date)
                 {
                     schedules.Add(attE.Schedule);
                     dateTimes.Add(attE.Schedule.Date.Date);
@@ -4351,16 +4362,16 @@ namespace MagicLand_System.Services.Implements
             {
                 var classSch = cls.Schedules;
                 var check = false;
-                foreach(var sch in classSch)
+                foreach (var sch in classSch)
                 {
-                   var flag = dateTimes.Any(x => x.Date == sch.Date);
+                    var flag = dateTimes.Any(x => x.Date == sch.Date);
                     if (flag)
                     {
                         check = true;
-                        break;  
+                        break;
                     }
                 }
-                if (!check) 
+                if (!check)
                 {
                     filterClass2.Add(cls);
                 }

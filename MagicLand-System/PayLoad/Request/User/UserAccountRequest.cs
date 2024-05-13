@@ -11,7 +11,6 @@ namespace MagicLand_System.PayLoad.Request.User
         public required string UserName { get; set; }
         [Required(ErrorMessage = "Số Điện Thoại Người Dùng Đang Trống")]
         [MaxLength(12, ErrorMessage = "Số Điện Thoại Người Dùng Không Được Vượt Quá 12 Ký Tự")]
-        [MinLength(12, ErrorMessage = "Số Điện Thoại Người Dùng Phải Có Ít Nhất 12 Ký Tự")]
         public required string UserPhone { get; set; }
         [Required(ErrorMessage = "Chức Vụ Người Dùng Đang Trống")]
         public required string Role { get; set; }

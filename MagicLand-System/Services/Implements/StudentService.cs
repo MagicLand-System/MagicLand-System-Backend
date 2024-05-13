@@ -423,7 +423,8 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Lớp Học [{cls.ClassCode}] Hôm Nay Không Có Lịch Để Điểm Danh", StatusCodes.Status400BadRequest);
             }
 
-            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == currentSchedule.Id,
+            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                predicate: x => x.ScheduleId == currentSchedule.Id && x.Student!.StudentClasses.Any(sc => sc.ClassId == cls.Id),
                 include: x => x.Include(x => x.Student)!.Include(x => x.Schedule)!);
 
             var responses = new List<AttendanceResponse>();
@@ -454,7 +455,7 @@ namespace MagicLand_System.Services.Implements
 
                     if (exsitedStudent.SavedTime != null)
                     {
-                        throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Thuộc Lớp Này Đã Bảo Lưu Không Thể Điểm Danh", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Thuộc Lớp Này Đã Bảo Lưu Không Thể Điểm Danh Hoặc Truy Suất", StatusCodes.Status400BadRequest);
                     }
                     continue;
                 }
@@ -645,11 +646,17 @@ namespace MagicLand_System.Services.Implements
 
             foreach (Guid id in studentEvaluateRequests.Select(se => se.StudentId).ToList())
             {
-                if (cls.StudentClasses.Any(sc => sc.StudentId == id))
+                var currentStudent = cls.StudentClasses.SingleOrDefault(sc => sc.StudentId == id);
+                if (currentStudent == null)
                 {
-                    continue;
+                    throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Không Thuộc Lớp Đang Đánh Giá", StatusCodes.Status400BadRequest);
                 }
-                throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Không Thuộc Lớp Đang Đánh Giá", StatusCodes.Status400BadRequest);
+               
+                if(currentStudent.SavedTime != null)
+                {
+                    throw new BadHttpRequestException($"Id [{id}] Của Học Sinh Thuộc Lớp Học, Đã Bảo Lưu Không Thể Đánh Giá", StatusCodes.Status400BadRequest);
+                }
+                continue;
             }
 
             return await EvaluateStudentProgress(studentEvaluateRequests, schedule, cls.StudentClasses.Select(sc => sc.Student!).ToList());
@@ -888,7 +895,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().ToLower() == studentId.ToLower()),
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().ToLower() == studentId.ToLower() && sc.SavedTime == null),
                 include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses!));
 
             if (classes is null)
@@ -1014,12 +1021,12 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<StudentLearningProgress>> GetStudentLearningProgressAsync(Guid studentId, Guid classId)
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
-                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Id == classId,
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId && sc.SavedTime == null) && x.Id == classId,
                 include: x => x.Include(x => x.Schedules.OrderBy(x => x.Date)));
 
             if (cls == null)
             {
-                throw new BadHttpRequestException($"Id Của Lớp Học Và Id Của Học Sinh Không Tồn Tại Hoặc Học Sinh Không Thuộc Lớp Đang Truy Suất ", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Id Của Lớp Học Và Id Của Học Sinh Không Tồn Tại, Học Sinh Không Thuộc Lớp Đang Truy Suất Hoặc Học Sinh Thuộc Lớp Này Đã Bảo Lưu Không Thể Truy Suất", StatusCodes.Status400BadRequest);
             }
 
             if (cls.Status == ClassStatusEnum.COMPLETED.ToString() || cls.Status == ClassStatusEnum.CANCELED.ToString())

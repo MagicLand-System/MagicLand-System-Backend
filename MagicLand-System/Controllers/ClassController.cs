@@ -448,7 +448,7 @@ namespace MagicLand_System.Controllers
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.UpdateClass)]
         [CustomAuthorize(Enums.RoleEnum.STAFF)]
-        public async Task<IActionResult> UpdateStudent([FromRoute] string id, [FromBody] UpdateClassRequest request)
+        public async Task<IActionResult> UpdateClass([FromRoute] string id, [FromBody] UpdateClassRequest request)
         {
             var isSuccess = await _classService.UpdateClass(id, request);
             if (!isSuccess)

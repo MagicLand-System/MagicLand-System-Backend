@@ -181,31 +181,34 @@ namespace MagicLand_System.Services.Implements
                 var roleRequest = roles.SingleOrDefault(r => r.Name.ToLower() == request.Role.ToLower());
                 if (roleRequest == null)
                 {
-                    throw new BadHttpRequestException($"Chức Vụ [{request.Role}] Không Hợp Lệ", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Error: Chức Vụ [{request.Role}] Không Hợp Lệ", StatusCodes.Status400BadRequest);
                 }
                 if (roleRequest.Name == RoleEnum.LECTURER.ToString())
                 {
                     if (request.LecturerCareerId == null || request.LecturerCareerId == default)
                     {
-                        throw new BadHttpRequestException($"Chức Vụ [{request.Role}] Cần Có Id Môn Dạy Hợp Lệ", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Error: Chức Vụ [{request.Role}] Cần Có Id Môn Dạy Hợp Lệ", StatusCodes.Status400BadRequest);
                     }
                     var lecturerCareer = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate: x => x.Id == request.LecturerCareerId);
                     if (lecturerCareer == null)
                     {
-                        throw new BadHttpRequestException($"Id Môn Dạy [{request.LecturerCareerId}] Không Tồn Tại", StatusCodes.Status400BadRequest);
+                        throw new BadHttpRequestException($"Error: Id Môn Dạy [{request.LecturerCareerId}] Không Tồn Tại", StatusCodes.Status400BadRequest);
                     }
                 }
-                var exsitedPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone == request.UserPhone);
+
+                var parsePhone = request.UserPhone.StartsWith("84") ? "+" + request.UserPhone : "+84" + request.UserPhone.Substring(1);
+
+                var exsitedPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone == parsePhone);
                 if (exsitedPhone != null)
                 {
-                    throw new BadHttpRequestException($"Số Điện Thoại Người Dùng [{request.UserName}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Error: Số Điện Thoại Người Dùng [{request.UserName}] Đã Tồn Tại", StatusCodes.Status400BadRequest);
                 }
 
                 var newUser = new User
                 {
                     Id = Guid.NewGuid(),
                     FullName = request.UserName,
-                    Phone = request.UserPhone,
+                    Phone = parsePhone,
                     RoleId = roleRequest.Id,
                     Gender = string.Empty,
                     Email = string.Empty,
@@ -245,6 +248,13 @@ namespace MagicLand_System.Services.Implements
             if (role != null)
             {
                 users = users.Where(u => u.Role!.Name == role.ToString()).ToList();
+                if (role == RoleEnum.LECTURER)
+                {
+                    foreach (var user in users)
+                    {
+                        user.LecturerField = await _unitOfWork.GetRepository<LecturerField>().SingleOrDefaultAsync(predicate: x => x.Id == user.LecturerFieldId!);
+                    }
+                }
             }
             if (keyWord != null)
             {
@@ -888,7 +898,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<ClassResultResponse> GetClassOfStudent(string studentId, string? status, string? searchString, DateTime? date)
         {
-            var classxx = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), selector: x => x.ClassId);
+            var classxx = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && x.SavedTime == null, selector: x => x.ClassId);
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => classxx.Any(p => p == x.Id), include: x => x.Include(x => x.Schedules));
             if (classes.Count < 1)
             {
@@ -1002,7 +1012,7 @@ namespace MagicLand_System.Services.Implements
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
                 var studentclass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == c.Id && x.StudentId.ToString().Equals(studentId));
                 var statusx = "Normal";
-                if(studentclass.Status != null)
+                if (studentclass.Status != null)
                 {
                     if (studentclass.Status.Equals("Saved"))
                     {
@@ -1014,7 +1024,7 @@ namespace MagicLand_System.Services.Implements
                     }
 
                 }
-              
+
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
                     ClassId = c.Id,
@@ -1221,7 +1231,8 @@ namespace MagicLand_System.Services.Implements
         public async Task<StudentSessionResponse> GetStudentSession(string scheduleId)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId), include: x => x.Include(x => x.Slot));
-            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == schedule.ClassId);
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == schedule.ClassId && x.SavedTime == null);
+
             var studentId = (students.FirstOrDefault()).StudentId.ToString();
             var res = await GetScheduleOfStudentInDate(studentId, schedule.Date.Date);
             var response = res.Single(x => x.SessionId.ToString().Equals(scheduleId));
