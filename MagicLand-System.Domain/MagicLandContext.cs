@@ -19,9 +19,6 @@ namespace MagicLand_System.Domain
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<StudentInCart> StudentIncarts { get; set; }
 
-        public DbSet<UserPromotion> UserPromotions { get; set; } // On Fixing
-        public DbSet<Promotion> Promotions { get; set; } // On Fixing
-        public DbSet<PromotionTransaction> PromotionTransactions { get; set; } // On Fixing
         public DbSet<Student> Students { get; set; }
         public DbSet<Class> Classes { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }

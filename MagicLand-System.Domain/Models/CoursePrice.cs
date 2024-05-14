@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -12,7 +7,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public double Price { get; set; }
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }   
+        public DateTime EndDate { get; set; }
 
 
         [ForeignKey("Course")]

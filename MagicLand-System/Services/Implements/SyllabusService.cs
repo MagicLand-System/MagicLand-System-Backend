@@ -305,7 +305,7 @@ namespace MagicLand_System.Services.Implements
             {
                 Category = exam.Type,
                 ContentName = exam.ContentName,
-                CompleteionCriteria = exam.CompleteionCriteria!.Value,
+                CompletionCriteria = exam.CompleteionCriteria!.Value,
                 SyllabusId = syllabusId,
                 QuestionType = exam.QuestionType,
                 Weight = exam.Weight,
@@ -1321,7 +1321,7 @@ namespace MagicLand_System.Services.Implements
                 StaffExamSyllabusResponse staffExamSyllabusResponse = new StaffExamSyllabusResponse
                 {
                     ExamSyllabusId = syll.Id,
-                    CompletionCriteria = syll.CompleteionCriteria,
+                    CompletionCriteria = syll.CompletionCriteria,
                     ContentName = syll.ContentName,
                     Method = syll.Method,
                     Part = syll.Part,

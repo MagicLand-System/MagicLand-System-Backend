@@ -15,7 +15,6 @@ namespace MagicLand_System.Domain.Models
         public string? Priority { get; set; } = "NORMAL";
         public string? Image { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime? NotificationTimer { get; set; }
         public bool IsRead { get; set; } = false;
         public string? ActionData { get; set; }
         public string? Identify { get; set; } = string.Empty;

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -12,10 +7,10 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public string? Category { get; set; }   // it is type in FE need.
         public double Weight { get; set; }
-        public double CompleteionCriteria { get; set; }
+        public double CompletionCriteria { get; set; }
         public string? QuestionType { get; set; }
         public int Part { get; set; }
-        public string? ContentName { get; set; } 
+        public string? ContentName { get; set; }
         public string? Method { get; set; }
         public string? Duration { get; set; }
 

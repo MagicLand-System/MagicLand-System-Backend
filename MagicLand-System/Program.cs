@@ -113,7 +113,6 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
-builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IWalletTransactionService, WalletTransactionService>();
