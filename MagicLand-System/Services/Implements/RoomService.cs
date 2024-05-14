@@ -156,14 +156,7 @@ namespace MagicLand_System.Services.Implements
             }
             if (searchString != null)
             {
-                foreach(var res in responses)
-                {
-                    var schedules = res.Schedules.ToList();
-                    foreach(var schedule in schedules)
-                    {
-
-                    }
-                }
+                responses = responses.Where(x => x.Name.Trim().ToLower().Contains(searchString.ToLower().Trim())).ToList();
             }
             return responses.OrderBy(x => x.Name).ToList();
         }

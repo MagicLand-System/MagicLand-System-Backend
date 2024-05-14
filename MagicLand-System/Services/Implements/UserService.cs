@@ -534,15 +534,17 @@ namespace MagicLand_System.Services.Implements
             try
             {
                 var id = GetUserIdFromJwt();
-                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
+                var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet)!);
                 if (currentUser == null)
                 {
                     throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng, Vui Lòng Đăng Nhập Lại Và Thực Hiện Lại Thao Tác", StatusCodes.Status400BadRequest);
                 }
                 if (request.FullName != null)
                 {
-                    await UpdateCurrentUserTransaction(request, currentUser);
-
+                    if(currentUser.PersonalWallet != null)
+                    {
+                        await UpdateCurrentUserTransaction(request, currentUser);
+                    }
                     currentUser.FullName = request.FullName!;
                 }
 

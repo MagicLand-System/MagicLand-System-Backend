@@ -109,6 +109,13 @@ namespace MagicLand_System.Services.Implements
                 result.Add(response);
             }
             if (endDate != null) { endDate = endDate.Value.AddHours(23).AddMinutes(59); }
+            if(phone != null && phone.Length > 3)
+            {
+                if (!phone.Substring(0, 3).Equals("+84"))
+                {
+                    phone = "+84" + phone.Substring(1);
+                }
+            }
             result = (result.OrderByDescending(x => x.CreatedTime)).ToList();
             if (transactionCode != null)
             {

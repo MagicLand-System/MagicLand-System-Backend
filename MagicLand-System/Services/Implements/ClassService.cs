@@ -700,6 +700,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId)
         {
             var scheduleFounds = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId), include: x => x.Include(x => x.Room).Include(x => x.Slot).Include(x => x.Class));
+            var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
             if (scheduleFounds == null)
             {
                 return new List<ClassProgressResponse>();
@@ -741,11 +742,17 @@ namespace MagicLand_System.Services.Implements
                     EndTime = TimeOnly.Parse(schedule.Slot.EndTime),
                     StartTime = TimeOnly.Parse(schedule.Slot.StartTime),
                     SlotId = schedule.SlotId,
+                    StartTimeString = TimeOnly.Parse(schedule.Slot.StartTime).ToString("HH:mm"),
+                    EndTimeString = TimeOnly.Parse(schedule.Slot.EndTime).ToString("HH:mm"),
                 };
                 var status = "completed";
                 if (schedule.Date > DateTime.Now.AddHours(-23))
                 {
                     status = "future";
+                }
+                if (classx.Status.Equals(ClassStatusEnum.CANCELED.ToString()))
+                {
+                    status = "canceled";
                 }
                 var dateOfWeek = "monday";
                 if (schedule.DayOfWeek == 1)
@@ -867,7 +874,7 @@ namespace MagicLand_System.Services.Implements
             }
             if (searchString != null)
             {
-                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Equals(searchString.Trim().ToLower()))).ToList();
+                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Contains(searchString.Trim().ToLower()))).ToList();
             }
             if (attendanceStatusInput != null)
             {

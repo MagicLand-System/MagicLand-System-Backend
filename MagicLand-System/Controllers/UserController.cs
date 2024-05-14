@@ -145,7 +145,7 @@ namespace MagicLand_System.Controllers
 
         #region document API update User
         /// <summary>
-        ///  Cho Phép Phụ Huynh Cập Nhập Thông Tin Của Mình
+        ///  Cho Phép Người Dùng Cập Nhập Thông Tin Của Mình
         /// </summary>
         /// <param name="request">Chứa Thông Tin Cần Cập Nhập</param>
         /// <remarks>
@@ -169,7 +169,7 @@ namespace MagicLand_System.Controllers
         [HttpPut(ApiEndpointConstant.UserEndpoint.UpdateUser)]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
-        [Authorize(Roles = "PARENT")]
+        [Authorize(Roles = "PARENT,LECTURER")]
         public async Task<IActionResult> UpdateUser([FromBody] UserRequest request)
         {
             var response = await _userService.UpdateUserAsync(request);
