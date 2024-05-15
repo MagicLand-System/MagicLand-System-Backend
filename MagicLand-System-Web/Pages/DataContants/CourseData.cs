@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-
-namespace MagicLand_System_Web.Pages.DataContants
+﻿namespace MagicLand_System_Web_Dev.Pages.DataContants
 {
     public static class CourseData
     {

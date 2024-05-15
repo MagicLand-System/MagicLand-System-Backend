@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System_Web.Pages.Message.SubMessage
+﻿namespace MagicLand_System_Web_Dev.Pages.Message.SubMessage
 {
     public class ScheduleMessage
     {

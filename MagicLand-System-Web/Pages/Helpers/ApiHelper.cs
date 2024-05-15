@@ -1,21 +1,21 @@
-﻿using MagicLand_System_Web.Pages.Enums;
+﻿using MagicLand_System_Web_Dev.Pages.Enums;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace MagicLand_System_Web.Pages.Helper
+namespace MagicLand_System_Web_Dev.Pages.Helper
 {
     public class ApiHelper
     {
         private readonly HttpClient _httpClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        //private readonly string Scheme = "https";
-        private readonly string Scheme = "http";
-        //private readonly string Domain = "7cae-115-74-192-50.ngrok-free.app";
+        private readonly string Scheme = "https";
+        //private readonly string Scheme = "http";
+        private readonly string Domain = "https://0abf-2401-d800-7b32-dc1-2c59-564c-ea1-3319.ngrok-free.app";
         //private readonly string Domain = "magiclandapiv2.somee.com";
-        private readonly string Domain = "localhost:5097";
+        //private readonly string Domain = "localhost:5097";
         private string RootUrl = "", CallUrl = "", JsonContent = "";
 
         public ApiHelper(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)

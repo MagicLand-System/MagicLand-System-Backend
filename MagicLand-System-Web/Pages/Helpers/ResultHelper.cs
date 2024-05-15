@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System_Web.Pages.Helper
+﻿namespace MagicLand_System_Web_Dev.Pages.Helper
 {
     public class ResultHelper<T> : IResultHelper<T>
     {

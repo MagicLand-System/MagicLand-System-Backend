@@ -96,7 +96,7 @@ namespace MagicLand_System.Controllers
                     });
                 }
             }
-            await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
+            await _classService.ValidateScheduleOfClassesAsync(requests.Select(r => r.ClassId).ToList());
 
             var response = await _walletTransactionService.CheckoutAsync(requests);
 
@@ -168,7 +168,7 @@ namespace MagicLand_System.Controllers
                     StudentIdList = request.StudentIdList,
                 });
             }
-            await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
+            await _classService.ValidateScheduleOfClassesAsync(requests.Select(r => r.ClassId).ToList());
 
             var transResult = await _walletTransactionService.GeneratePaymentTransAsync(itemGenerates);
             var linkResult = _gatewayService.GetLinkGateway(transResult.Item2, transResult.Item1, "Register Students Into Classes");
@@ -248,7 +248,7 @@ namespace MagicLand_System.Controllers
                 });
 
             }
-            await _classService.ValidateScheduleAmongClassesAsync(itemGenerates.Select(ig => ig.ClassId).ToList());
+            await _classService.ValidateScheduleOfClassesAsync(itemGenerates.Select(ig => ig.ClassId).ToList());
 
             var transResult = await _walletTransactionService.GeneratePaymentTransAsync(itemGenerates);
             var linkResult = _gatewayService.GetLinkGateway(transResult.Item2, transResult.Item1, "Register Students Into Classes From Cart");
@@ -327,7 +327,7 @@ namespace MagicLand_System.Controllers
                 requests.Add(request);
 
             }
-            await _classService.ValidateScheduleAmongClassesAsync(requests.Select(r => r.ClassId).ToList());
+            await _classService.ValidateScheduleOfClassesAsync(requests.Select(r => r.ClassId).ToList());
             var response = await _walletTransactionService.CheckoutAsync(requests);
             await _cartService.DeleteItemInCartOfCurrentParentAsync(cartItemIdList);
 
@@ -397,7 +397,7 @@ namespace MagicLand_System.Controllers
 
             foreach (var student in exsitStudents)
             {
-                if (!student.IsActive!.Value)
+                if (!student.IsActive)
                 {
                     return BadRequest(new ErrorResponse
                     {

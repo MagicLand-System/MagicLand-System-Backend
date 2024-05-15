@@ -7,18 +7,18 @@ using MagicLand_System.PayLoad.Response.Quizzes;
 using MagicLand_System.PayLoad.Response.Quizzes.Answers;
 using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
-using MagicLand_System_Web.Pages.DataContants;
-using MagicLand_System_Web.Pages.Enums;
-using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Message.SubMessage;
-using MagicLand_System_Web.Pages.Messages.DefaultMessage;
-using MagicLand_System_Web.Pages.Messages.InforMessage;
-using MagicLand_System_Web.Pages.Messages.SubMessage;
+using MagicLand_System_Web_Dev.Pages.DataContants;
+using MagicLand_System_Web_Dev.Pages.Enums;
+using MagicLand_System_Web_Dev.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.InforMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.SubMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.RegularExpressions;
 
-namespace MagicLand_System_Web.Pages
+namespace MagicLand_System_Web_Dev.Pages
 {
     public class TakeQuizModel : PageModel
     {

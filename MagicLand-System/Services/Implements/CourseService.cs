@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
-using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
-using MagicLand_System.Domain.Models.TempEntity.Class;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
@@ -17,9 +15,7 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Ocsp;
 using System.Globalization;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -127,6 +123,57 @@ namespace MagicLand_System.Services.Implements
             return response;
         }
 
+        public async Task<List<CourseWithScheduleShorten>> GetCoursesRealted()
+        {
+            var role = GetRoleFromJwt();
+            var user = await GetUserFromJwt();
+            var courses = await GetDefaultCourse();
+            var courseIdToFinds = new List<Guid>();
+
+            if (role == RoleEnum.STUDENT.ToString())
+            {
+                courseIdToFinds = (await _unitOfWork.GetRepository<Class>().GetListAsync(
+                selector: x => x.CourseId,
+                predicate: x => x.StudentClasses.Any(x => x.StudentId == user.StudentIdAccount) && x.Status == ClassStatusEnum.COMPLETED.ToString())).ToList();
+
+            }
+            if (role == RoleEnum.PARENT.ToString())
+            {
+                var courseRegisterd = (await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
+                    selector: x => x.Class!.CourseId,
+                    predicate: x => x.Student!.ParentId == user.Id && x.Class!.Status == ClassStatusEnum.COMPLETED.ToString())).ToList();
+
+                var courseFavoriet = (await _unitOfWork.GetRepository<Cart>().SingleOrDefaultAsync(
+                    selector: x => x.CartItems.Select(x => x.CourseId),
+                    predicate: x => x.UserId == user.Id)).ToList();
+
+                courseIdToFinds.AddRange(courseRegisterd);
+                courseIdToFinds.AddRange(courseFavoriet);
+            }
+
+            if (courseIdToFinds.Count > 0)
+            {
+                courseIdToFinds = courseIdToFinds.Distinct().ToList();
+                courses = courses.Where(x => courseIdToFinds.Contains(x.Id)).ToList();
+            }
+            else
+            {
+                return new List<CourseWithScheduleShorten>();
+            }
+            var responses = new List<CourseWithScheduleShorten>();
+            foreach (var course in courses)
+            {
+                ////////////////////////////////////////////////////////////////////////////
+
+                var response = CourseCustomMapper.(course);
+            }
+
+
+            await SettingLastResponse(true, role == RoleEnum.PARENT.ToString() ? user.Id : null, responses);
+
+            return responses;
+        }
+
         public async Task<List<CourseWithScheduleShorten>> GetCoursesAsync(bool isValid)
         {
             var courses = await GetDefaultCourse();
@@ -157,10 +204,6 @@ namespace MagicLand_System.Services.Implements
             await SettingLastResponse(isValid, userId != default ? userId : null, responses);
 
             return responses;
-            //return courses.Select(c => CourseCustomMapper
-            //.fromCourseToCourseResExtraInfor(c, coursePrerequisites
-            //.Where(cp => c.Syllabus != null && c.Syllabus!.SyllabusPrerequisites!.Any(sp => cp.Syllabus != null && sp.PrerequisiteSyllabusId == cp.Syllabus!.Id)),
-            //coureSubsequents)).ToList();
         }
 
         private async Task SettingLastResponse(bool isValid, Guid? userId, List<CourseWithScheduleShorten> responses)
@@ -178,6 +221,11 @@ namespace MagicLand_System.Services.Implements
                      predicate: x => x.UserId == userId,
                      include: x => x.Include(x => x.CartItems.OrderByDescending(ci => ci.DateCreated)).ThenInclude(cts => cts.StudentInCarts));
 
+                if (currentUserCart == null)
+                {
+                    responses.ForEach(res => res.IsInCart = null);
+                    return;
+                }
 
                 foreach (var response in responses)
                 {
@@ -270,8 +318,7 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var syll in courses.Where(c => c.Syllabus! != null).ToList())
             {
-                var course = await _unitOfWork.GetRepository<Syllabus>()
-                    .SingleOrDefaultAsync(selector: x => x.Course, predicate: x => x.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == syll.Id));
+                var course = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(selector: x => x.Course, predicate: x => x.SyllabusPrerequisites!.Any(sp => sp.PrerequisiteSyllabusId == syll.Id));
 
                 if (course != null)
                 {
@@ -289,8 +336,9 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var cp in syllabusPrerequisites)
             {
-                var course = await _unitOfWork.GetRepository<Course>()
-                    .SingleOrDefaultAsync(predicate: c => c.Syllabus!.Id == cp.PrerequisiteSyllabusId, include: x => x.Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites!));
+                var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                    predicate: c => c.Syllabus!.Id == cp.PrerequisiteSyllabusId, 
+                    include: x => x.Include(x => x.Syllabus).ThenInclude(syll => syll!.SyllabusPrerequisites!));
 
                 if (course != null)
                 {
@@ -1253,11 +1301,11 @@ namespace MagicLand_System.Services.Implements
                     _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(evaluates);
 
                 }
-                 _unitOfWork.Commit();
+                _unitOfWork.Commit();
             }
             catch (Exception ex)
             {
-                throw new BadHttpRequestException($"Hệ thống phát sinh {ex.Message}",StatusCodes.Status500InternalServerError);
+                throw new BadHttpRequestException($"Hệ thống phát sinh {ex.Message}", StatusCodes.Status500InternalServerError);
             }
 
         }

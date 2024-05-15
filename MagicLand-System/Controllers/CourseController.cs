@@ -53,6 +53,26 @@ namespace MagicLand_System.Controllers
             return Ok(courses);
         }
 
+        #region document API Get Courses Related
+        /// <summary>
+        ///  Truy Suất Các Khóa Học Liên Quán Đến Các Khóa Đã Yêu Thích Hoặc Đã Học 
+        /// </summary>
+        /// <response code="200">Trả Về Danh Sách Khóa Học</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetAllRelated)]
+        [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT, STUDENT")]
+
+        public async Task<IActionResult> GetCoursesRealted()
+        {
+            var courses = await _courseService.GetCoursesRealted();
+            return Ok(courses);
+        }
+
+
         #region document API Search Courses
         /// <summary>
         ///  Truy Suất Khóa Học Theo Tên

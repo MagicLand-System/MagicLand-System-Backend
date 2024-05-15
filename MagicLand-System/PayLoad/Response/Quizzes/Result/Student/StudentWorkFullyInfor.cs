@@ -13,6 +13,7 @@
         public required double? TotalScore { get; set; }
         public required double? ScoreEarned { get; set; }
         public required TimeSpan? DoingTime { get; set; }
+        public DateTime? DoingDate { get; set; }
         public required string? ExamStatus { get; set; }
         public double? Weight { get; set; }
         public List<StudentWorkResult>? StudentWorkResult { get; set; }

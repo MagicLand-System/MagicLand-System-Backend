@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System_Web.Pages.Messages.InforMessage
+﻿namespace MagicLand_System_Web_Dev.Pages.Messages.InforMessage
 {
     public class ApiInforMessage
     {

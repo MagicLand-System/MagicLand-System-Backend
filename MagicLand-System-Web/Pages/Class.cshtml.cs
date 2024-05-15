@@ -2,21 +2,17 @@
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response.Courses;
-using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 using MagicLand_System.PayLoad.Response.Users;
-using MagicLand_System_Web.Pages.DataContants;
-using MagicLand_System_Web.Pages.Enums;
-using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Message.SubMessage;
-using MagicLand_System_Web.Pages.Messages.DefaultMessage;
-using MagicLand_System_Web.Pages.Messages.InforMessage;
+using MagicLand_System_Web_Dev.Pages.DataContants;
+using MagicLand_System_Web_Dev.Pages.Enums;
+using MagicLand_System_Web_Dev.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace MagicLand_System_Web.Pages
+namespace MagicLand_System_Web_Dev.Pages
 {
     public class ClassModel : PageModel
     {
@@ -31,49 +27,53 @@ namespace MagicLand_System_Web.Pages
         public bool IsLoading { get; set; }
 
         [BindProperty]
-        public List<ClassDefaultMessage> ClassMessages { get; set; } = new List<ClassDefaultMessage>();
+        public List<ClassDefaultMessage> ClassMessages { get; set; } = null;
         [BindProperty]
-        public List<CourseWithScheduleShorten> Courses { get; set; } = new List<CourseWithScheduleShorten>();
+        public List<CourseWithScheduleShorten> Courses { get; set; } = null;
 
 
         public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
-            var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
-
-            if (data != null && data.Count > 0)
+            if (ClassMessages == null || ClassMessages.Count == 0)
             {
-                ClassMessages = data;
-            }
+                var messages = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
+                var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
 
-            if (courses != null && courses.Count > 0)
-            {
-                Courses = courses;
-            }
-            else
-            {
-                var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
-
-                if (result.IsSuccess)
+                if (messages != null && messages.Count > 0)
                 {
-                    if (result.Data == null)
-                    {
-                        SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", Courses);
-                    }
-                    else
-                    {
-                        Courses = result.Data;
-                        SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data!);
-                    }
-
-                    return Page();
+                    ClassMessages = messages;
                 }
 
+                if (courses != null && courses.Count > 0)
+                {
+                    Courses = courses;
+                }
+                else
+                {
+                    var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+
+                    if (result.IsSuccess)
+                    {
+                        if (result.Data == null)
+                        {
+                            SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", Courses);
+                        }
+                        else
+                        {
+                            Courses = result.Data;
+                            SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data!);
+                        }
+
+                        return Page();
+                    }
+
+                }
             }
+
             return Page();
         }
-        public async Task<IActionResult> OnPostAsync(int inputField, string listCourseId, string submitButton)
+        public async Task<IActionResult> OnPostProgressAsync(int inputField, string listCourseId, string submitButton)
         {
             if (submitButton == "Refresh")
             {
@@ -235,5 +235,45 @@ namespace MagicLand_System_Web.Pages
             return result.Data[random.Next(0, result.Data.Count)];
         }
 
+        public async Task<IActionResult> OnPostSearchAsync(string searchKey, string searchType)
+        {
+
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                ClassMessages.Clear();
+
+                var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+
+                if (result.IsSuccess)
+                {
+                    Courses = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data);
+                    IsLoading = true;
+                    return Page();
+                }
+            }
+            var key = searchKey.Trim().ToLower();
+            if (searchType == "MESSAGE")
+            {
+                var messages = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
+
+                ClassMessages = messages.Where(
+                   mess => mess.LecturerPhone.ToLower().Contains(key) ||
+                   mess.ClassCode.ToLower().Contains(key) ||
+                   mess.CourseBeLong.ToLower().Contains(key)
+                   ).ToList();
+            }
+            if (searchType == "DATA")
+            {
+                var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
+
+                Courses = courses.Where(
+                    c => c.CourseDetail!.CourseName!.ToLower().Contains(key) ||
+                    c.CourseDetail.SubjectCode!.ToLower().Contains(key)
+                    ).ToList();
+            }
+
+            return Page();
+        }
     }
 }

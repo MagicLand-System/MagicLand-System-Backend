@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System_Web.Pages.Messages.SubMessage
+﻿namespace MagicLand_System_Web_Dev.Pages.Messages.SubMessage
 {
     public class QuizMessage
     {

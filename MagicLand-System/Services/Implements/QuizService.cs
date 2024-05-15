@@ -643,20 +643,7 @@ namespace MagicLand_System.Services.Implements
 
             await GenerateMCResultNonAnswerItems(questionItems.Item2, testResultId, examQuestions, multipleChoiceAnswers);
 
-            testResult.CorrectMark = correctMark;
-            testResult.ScoreEarned = scoreEarned;
-            testResult.ExamStatus = status;
-            testResult.DoingTime = doingTime.ToTimeSpan();
-
-            var response = new QuizResultResponse
-            {
-                TotalMark = testResult.TotalMark,
-                CorrectMark = correctMark,
-                TotalScore = testResult.TotalScore,
-                ScoreEarned = scoreEarned,
-                DoingTime = doingTime.ToTimeSpan(),
-                ExamStatus = status,
-            };
+            var response = SettingLastResultInfor(doingTime, testResult, correctMark, scoreEarned, status, false);
 
             await SaveGrading(currentTempQuiz, testResult, examQuestions, multipleChoiceAnswers, null);
 
@@ -1102,13 +1089,11 @@ namespace MagicLand_System.Services.Implements
             return cls;
         }
 
-        //public async Task<QuizResultResponse> GradeQuizFCAsync(Guid classId, Guid examId, double scoreEarned)
         public async Task<QuizResultResponse> GradeQuizFCAsync(QuizFCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime)
         {
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
             var cls = await ValidateGradeQuizClass(quizStudentWork.ClassId, currentStudentId);
-            //Class cls = await ValidateGradeQuizClass(classId, currentStudentId);
 
             var quizzes = new List<QuestionPackage>();
 
@@ -1130,19 +1115,13 @@ namespace MagicLand_System.Services.Implements
             }
 
             var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
-            //var currentQuiz = quizzes.Find(q => q!.Id == examId);
 
             ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, true, isCheckingTime);
-            //ValidateGradeCurrentQuiz(examId, currentQuiz, true);
 
             var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
                 orderBy: x => x.OrderByDescending(x => x.CreatedTime),
                 predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
                 include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.FCAnswers));
-
-            //var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
-            //  orderBy: x => x.OrderByDescending(x => x.CreatedTime),
-            //  predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id);
 
             if (currentTempQuiz == null)
             {
@@ -1165,10 +1144,9 @@ namespace MagicLand_System.Services.Implements
             int correctMark = 0;
             double scoreEarned = 0;
             string status = "Chưa Có Đánh Giá";
-            //GenerateExamStatus(testResult.TotalMark, (int)scoreEarned);
 
             int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentId, cls.Id, currentQuiz!.PackageType);
-            //int noAttempt = await GetAttempt(examId, currentStudentId, cls.Id, currentQuiz!.PackageType);
+
             GenrateTestResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, cls.StudentClasses.ToList().Find(sc => sc.StudentId == currentStudentId)!, noAttempt, out testResultId, out testResult);
             var questionItems = ValidateStudentFCWorkRequest(quizStudentWork, currentTempQuiz);
 
@@ -1233,25 +1211,30 @@ namespace MagicLand_System.Services.Implements
 
             await GenerateFCResultNonAnswerFlashCards(examQuestions, flashCardAnswers, questionItems);
 
+            var response = SettingLastResultInfor(doingTime, testResult, correctMark, scoreEarned, status, true);
+
+            await SaveGrading(currentTempQuiz, testResult, examQuestions, null, flashCardAnswers);
+
+            return response;
+        }
+
+        private QuizResultResponse SettingLastResultInfor(TimeOnly doingTime, TestResult testResult, int correctMark, double scoreEarned, string status, bool isFlashCard)
+        {
             testResult.CorrectMark = correctMark;
             testResult.ScoreEarned = scoreEarned;
             testResult.ExamStatus = status;
             testResult.DoingTime = doingTime.ToTimeSpan();
+            testResult.DoingDate = GetCurrentTime();
 
-            //testResult.CorrectMark = (int)scoreEarned;
-            //testResult.ScoreEarned = scoreEarned;
-            //testResult.ExamStatus = status;
             var response = new QuizResultResponse
             {
                 TotalMark = testResult.TotalMark,
-                CorrectMark = (int)scoreEarned,
+                CorrectMark = isFlashCard ? (int)scoreEarned : correctMark,
                 TotalScore = testResult.TotalScore,
                 ScoreEarned = scoreEarned,
                 DoingTime = doingTime.ToTimeSpan(),
                 ExamStatus = status,
             };
-
-            await SaveGrading(currentTempQuiz, testResult, examQuestions, null, flashCardAnswers);
 
             return response;
         }
@@ -1463,6 +1446,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     currentTest.ScoreEarned = studentWork.Score;
                     currentTest.ExamStatus = studentWork.Status;
+                    currentTest.DoingDate = GetCurrentTime();
                     updateTestResults.Add(currentTest);
                 }
                 else
@@ -1475,6 +1459,7 @@ namespace MagicLand_System.Services.Implements
                     testResult.ScoreEarned = studentWork.Score;
                     testResult.ExamStatus = studentWork.Status;
                     testResult.CorrectMark = (int)studentWork.Score;
+                    testResult.DoingDate = GetCurrentTime();
                     newTestResults.Add(testResult);
                 }
             }
@@ -2080,6 +2065,7 @@ namespace MagicLand_System.Services.Implements
                             TotalScore = quiz.Score,
                             ScoreEarned = null,
                             DoingTime = null,
+                            DoingDate = null,
                             ExamStatus = null,
                             Weight = null,
                         });
@@ -2099,6 +2085,7 @@ namespace MagicLand_System.Services.Implements
                             TotalScore = quiz.Score,
                             ScoreEarned = testResult.ScoreEarned,
                             DoingTime = testResult.DoingTime,
+                            DoingDate = testResult.DoingDate,
                             ExamStatus = testResult.ExamStatus,
                             Weight = exam != null ? exam.Weight : 0,
                         });

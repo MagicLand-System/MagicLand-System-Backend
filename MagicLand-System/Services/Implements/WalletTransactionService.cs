@@ -109,7 +109,7 @@ namespace MagicLand_System.Services.Implements
                 result.Add(response);
             }
             if (endDate != null) { endDate = endDate.Value.AddHours(23).AddMinutes(59); }
-            if(phone != null && phone.Length > 3)
+            if (phone != null && phone.Length > 3)
             {
                 if (!phone.Substring(0, 3).Equals("+84"))
                 {
@@ -528,12 +528,21 @@ namespace MagicLand_System.Services.Implements
 
             foreach (Guid id in studentIds)
             {
-                var student = await _unitOfWork.GetRepository<Student>()
-                .SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.Equals(id));
 
                 if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
                     throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
+                }
+
+                var allRegisteredCourse = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
+                    selector: x => x.Class!.CourseId,
+                    predicate: x => x.StudentId == id);
+
+                if (allRegisteredCourse.Contains(cls.CourseId))
+                {
+                    throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Một Lớp Ghi Nhất Ở Mỗi Khóa, Học Sinh [{student.FullName}] Đã Dăng Ký Một Lớp Khác Thuộc Chung Khóa Học Với Lớp Này",
+                    StatusCodes.Status400BadRequest);
                 }
 
                 int age = DateTime.Now.Year - student.DateOfBirth.Year;

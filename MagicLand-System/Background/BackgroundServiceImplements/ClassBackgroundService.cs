@@ -30,7 +30,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
                         predicate: x => x.Status != ClassStatusEnum.CANCELED.ToString() && x.Status != ClassStatusEnum.COMPLETED.ToString(),
-                        include: x => x.Include(x => x.StudentClasses).ThenInclude(sc => sc.Student).Include(x => x.Schedules).ThenInclude(sc => sc.Attendances));
+                        include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Attendances));
 
                     var newNotifications = new List<Notification>();
                     newNotifications.Add(new Notification
@@ -44,7 +44,12 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         await CheckingDateTime(cls, currentTime, newNotifications, _unitOfWork);
                     }
 
-                    await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
+                    _unitOfWork.GetRepository<Class>().UpdateRange(classes);
+                    if (newNotifications.Count > 0)
+                    {
+                        await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
+
+                    }
                     _unitOfWork.Commit();
                 }
             }
@@ -57,39 +62,36 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         private async Task CheckingDateTime(Class cls, DateTime currentTime, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
         {
+            var studentClass = (await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id)).ToList();
+
             try
             {
                 if (cls.StartDate.Date == currentTime.AddDays(3).Date)
                 {
-                    if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                    if (studentClass.Count < cls.LeastNumberStudent)
                     {
-                        await UpdateItem(cls, currentTime, ClassStatusEnum.CANCELED, newNotifications, _unitOfWork);
-                        _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
-                        await _unitOfWork.CommitAsync();
+                        //await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.CANCELED, newNotifications, _unitOfWork);
                         return;
                     }
                 }
 
                 if (cls.StartDate.Date == currentTime.Date)
                 {
-                    if (cls.StudentClasses.Count() < cls.LeastNumberStudent)
+                    if (studentClass.Count < cls.LeastNumberStudent)
                     {
                         return;
                     }
 
-                    await UpdateItem(cls, currentTime, ClassStatusEnum.PROGRESSING, newNotifications, _unitOfWork);
-                    _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
-                    await _unitOfWork.CommitAsync();
+                    await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.PROGRESSING, newNotifications, _unitOfWork);
                     return;
                 }
 
                 if (cls.EndDate.Date == currentTime.AddDays(1).Date)
                 {
-                    await UpdateItem(cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
-                    _unitOfWork.GetRepository<Class>().UpdateAsync(cls);
-                    await _unitOfWork.CommitAsync();
+                    await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
                     return;
                 }
+
 
             }
             catch (Exception ex)
@@ -98,37 +100,54 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             }
         }
 
-        private async Task UpdateItem(Class cls, DateTime currentTime, ClassStatusEnum classStatus, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
+        private async Task UpdateItem(List<StudentClass> studentClass, Class cls, DateTime currentTime, ClassStatusEnum classStatus, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
         {
-            var studentClass = cls.StudentClasses.ToList();
-            if (studentClass.Count > 0 && !studentClass.Any())
+            try
             {
-                foreach (var stu in studentClass)
+                if (studentClass.Count > 0 && studentClass.Any())
                 {
-                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                    foreach (var stu in studentClass)
+                    {
+                        var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == stu.StudentId);
+
+                        var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
                           ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
-                          ($"{AttachValueEnum.StudentId}", $"{stu.StudentId}"),
+                          ($"{AttachValueEnum.StudentId}", $"{student.Id}"),
                         });
 
-                    await GenerateRemindClassNotification(classStatus == ClassStatusEnum.PROGRESSING
-                           ? NotificationMessageContant.ClassStartedTitle
-                           : classStatus == ClassStatusEnum.CANCELED
-                           ? NotificationMessageContant.ClassCanceledTitle
-                           : NotificationMessageContant.ClassCompletedTitle,
-                           classStatus == ClassStatusEnum.PROGRESSING
-                           ? NotificationMessageContant.ClassStartedBody(stu.Student!.FullName!, cls.ClassCode!)
-                           : classStatus == ClassStatusEnum.CANCELED
-                           ? NotificationMessageContant.ClassCanceledBody(stu.Student!.FullName!, cls.ClassCode!)
-                           : NotificationMessageContant.ClassCompletedBody(stu.Student!.FullName!, cls.ClassCode!),
-                           NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, currentTime, actionData, stu.Student.ParentId, newNotifications, _unitOfWork);
-
-                    stu.CanChangeClass = false;
+                        await GenerateRemindClassNotification(
+                                classStatus == ClassStatusEnum.PROGRESSING
+                               ? NotificationMessageContant.ClassStartedTitle
+                               : classStatus == ClassStatusEnum.CANCELED
+                               ? NotificationMessageContant.ClassCanceledTitle
+                               : NotificationMessageContant.ClassCompletedTitle,
+                               classStatus == ClassStatusEnum.PROGRESSING
+                               ? NotificationMessageContant.ClassStartedBody(student!.FullName!, cls.ClassCode!)
+                               : classStatus == ClassStatusEnum.CANCELED
+                               ? NotificationMessageContant.ClassCanceledBody(student!.FullName!, cls.ClassCode!)
+                               : NotificationMessageContant.ClassCompletedBody(student!.FullName!, cls.ClassCode!),
+                               NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, currentTime, actionData, student.ParentId, newNotifications, _unitOfWork);
+                    }
                 }
+
+
+                cls.Status = classStatus.ToString();
+                UpdateAttendance(cls, classStatus);
+
+                if (classStatus == ClassStatusEnum.PROGRESSING)
+                {
+                    studentClass.ForEach(sc => sc.CanChangeClass = false);
+                    _unitOfWork.GetRepository<StudentClass>().UpdateRange(studentClass);
+                    await _unitOfWork.CommitAsync();
+                }
+
+            }
+            catch (Exception e)
+            {
+                throw;
             }
 
-            cls.Status = classStatus.ToString();
-            UpdateAttendance(cls, classStatus);
         }
 
         private async Task GenerateRemindClassNotification(string title, string body, string priority, string image, DateTime createAt, string actionData, Guid targetUserId, List<Notification> newNotifications, IUnitOfWork _unitOfWork)

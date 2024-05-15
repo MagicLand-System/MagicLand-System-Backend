@@ -51,7 +51,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpPost(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate)]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
-        [ProducesResponseType(typeof(AccountStudentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> AddStudent(CreateStudentRequest studentRequest)
         {
@@ -65,16 +65,6 @@ namespace MagicLand_System.Controllers
                 });
             }
             var response = await _studentService.AddStudent(studentRequest);
-            //if (!isSuccess)
-            //{
-            //    return BadRequest(new ErrorResponse
-            //    {
-            //        Error = "Insert to db failed",
-            //        StatusCode = StatusCodes.Status400BadRequest,
-            //        TimeStamp = DateTime.Now,
-            //    });
-            //}
-            //return Ok(new { Message = "Create Successfully" });
             return Ok(response);
         }
 
@@ -98,7 +88,7 @@ namespace MagicLand_System.Controllers
         #endregion
         [HttpPost(ApiEndpointConstant.StudentEndpoint.GetStudentAccount)]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
-        [ProducesResponseType(typeof(AccountStudentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> GetStudentAccountIfor([FromQuery] Guid? studentId)
         {
@@ -163,7 +153,7 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
         [HttpGet(ApiEndpointConstant.StudentEndpoint.GetStudentsOfCurrentUser)]
-        [ProducesResponseType(typeof(Student), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(StudentWithAccountResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
         public async Task<IActionResult> GetStudentFromCurentUser()
@@ -210,28 +200,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> UpdateStudent([FromBody] UpdateStudentRequest request)
         {
-            var student = (await _studentService.GetStudentsOfCurrentParent()).FirstOrDefault(stu => stu.Id == request.StudentId);
-
-            if (student == null)
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Id [{request.StudentId}] Của Học Sinh Không Tồn Tại Hoặc Bạn Đang Sử Dụng Id Của Học Sinh Khác Không Phải Con Bạn.",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
-
-            if (!student.IsActive!.Value)
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Id [{request.StudentId}] Của Học Sinh Đã Ngưng Hoạt Động.",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
-            var response = await _studentService.UpdateStudentAsync(request, student);
+            var response = await _studentService.UpdateStudentAsync(request);
 
             return Ok(response);
         }
@@ -260,28 +229,8 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> DeleteStudent(Guid id)
         {
-            var student = (await _studentService.GetStudentsOfCurrentParent()).FirstOrDefault(stu => stu.Id == id);
 
-            if (student == null)
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Id [{id}] Của Học Sinh Không Tồn Tại Hoặc Bạn Đang Sử Dụng Id Của Học Sinh Khác Không Phải Con Bạn.",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
-
-            if (!student.IsActive!.Value)
-            {
-                return BadRequest(new ErrorResponse
-                {
-                    Error = $"Id [{id}] Của Học Sinh Đã Ngưng Hoạt Động.",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
-            }
-            var response = await _studentService.DeleteStudentAsync(student);
+            var response = await _studentService.DeleteStudentAsync(id);
 
             return Ok(response);
         }
@@ -416,7 +365,7 @@ namespace MagicLand_System.Controllers
         [Authorize(Roles = "PARENT")]
         public async Task<IActionResult> FindValidDayReLearning([FromQuery] Guid studentId, [FromQuery] Guid classId, [FromQuery] List<DateOnly> dayOffs)
         {
-            if(dayOffs.Count == 0 || dayOffs.Count > 4)
+            if (dayOffs.Count == 0 || dayOffs.Count > 4)
             {
                 return BadRequest(new ErrorResponse
                 {

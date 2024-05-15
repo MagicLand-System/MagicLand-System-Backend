@@ -1,6 +1,6 @@
-﻿using MagicLand_System_Web.Pages.Messages.InforMessage;
+﻿using MagicLand_System_Web_Dev.Pages.Messages.InforMessage;
 
-namespace MagicLand_System_Web.Pages.Messages.DefaultMessage
+namespace MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage
 {
     public class SyllabusDefaultMessage : ApiInforMessage
     {

@@ -8,6 +8,6 @@ namespace MagicLand_System.Services.Interfaces
     public interface IDeveloperService
     {
         Task<List<StudentLearningInfor>> TakeFullAttendanceAndEvaluateAsync(Guid classId, int percentageAbsent, List<EvaluateDataRequest> noteEvaluate);
-        Task<List<AccountStudentResponse>> GetStudentAccount(List<Guid> studentIdList);
+        Task<List<AccountResponse>> GetStudentAccount(List<Guid> studentIdList);
     }
 }

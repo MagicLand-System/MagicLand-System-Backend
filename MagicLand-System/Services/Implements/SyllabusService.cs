@@ -131,7 +131,7 @@ namespace MagicLand_System.Services.Implements
                         ContentName = exam.ContentName,
                         NoOfSession = session.Order,
                         Type = QuizTypeEnum.offline.ToString(),
-                        Title = "Làm Tại Nhà",
+                        Title = "Tự Chọn",
                         Score = 0,
                         Duration = 0,
                         QuestionRequests = new List<QuestionRequest>(),

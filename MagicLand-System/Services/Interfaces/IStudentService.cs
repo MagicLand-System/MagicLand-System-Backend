@@ -18,13 +18,13 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<QuizResultWithStudentWork>> GetStudentQuizFullyInforAsync(Guid classId, List<Guid>? studentIdList, List<Guid>? examIdList, bool isLatestAttempt);
         Task<List<ScheduleReLearn>> FindValidDayReLearningAsync(Guid studentId, Guid classId, List<DateOnly> dayOffs);
         Task<List<StudentLearningProgress>> GetStudentLearningProgressAsync(Guid studentId, Guid classId);
-        Task<AccountStudentResponse> AddStudent(CreateStudentRequest request);
+        Task<AccountResponse> AddStudent(CreateStudentRequest request);
         Task<List<ClassWithSlotShorten>> GetClassOfStudent(String studentId, string status);
-        Task<List<AccountStudentResponse>> GetStudentAccountAsync(Guid? id);
+        Task<List<AccountResponse>> GetStudentAccountAsync(Guid? id);
         Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId);
-        Task<List<Student>> GetStudentsOfCurrentParent();
-        Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor, Student oldStudentInfor);
-        Task<string> DeleteStudentAsync(Student student);
+        Task<List<StudentWithAccountResponse>> GetStudentsOfCurrentParent();
+        Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor);
+        Task<string> DeleteStudentAsync(Guid id);
         Task<string> TakeStudentAttendanceAsync(AttendanceRequest request, SlotEnum slot);
         Task<string> EvaluateStudentAsync(EvaluateRequest request, int noSession);
         Task<List<EvaluateResponse>> GetStudentEvaluatesAsync(Guid classId, int? noSession);

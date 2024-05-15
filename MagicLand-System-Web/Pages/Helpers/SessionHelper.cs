@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
 
-namespace MagicLand_System_Web.Pages.Helper
+namespace MagicLand_System_Web_Dev.Pages.Helper
 {
     public static class SessionHelper
     {

@@ -7,17 +7,17 @@ using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Custom;
-using MagicLand_System_Web.Pages.DataContants;
-using MagicLand_System_Web.Pages.Enums;
-using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Message.SubMessage;
-using MagicLand_System_Web.Pages.Messages.DefaultMessage;
-using MagicLand_System_Web.Pages.Messages.InforMessage;
+using MagicLand_System_Web_Dev.Pages.DataContants;
+using MagicLand_System_Web_Dev.Pages.Enums;
+using MagicLand_System_Web_Dev.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.InforMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.RegularExpressions;
 
-namespace MagicLand_System_Web.Pages
+namespace MagicLand_System_Web_Dev.Pages
 {
     public class TakeAttendanceModel : PageModel
     {
@@ -39,12 +39,12 @@ namespace MagicLand_System_Web.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var data = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
+            var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
             var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
 
-            if (data != null && data.Count > 0)
+            if (messages != null && messages.Count > 0)
             {
-                CurrentStudentLearningMessage = data.First();
+                CurrentStudentLearningMessage = messages.First();
                 ViewData["IndexPage"] = 0;
             }
 
@@ -104,7 +104,7 @@ namespace MagicLand_System_Web.Pages
             }
         }
 
-        public async Task<IActionResult> OnPostAsync(int inputField, string listId, string submitButton)
+        public async Task<IActionResult> OnPostProgressAsync(int inputField, string listId, string submitButton)
         {
             if (submitButton == "Refresh")
             {
@@ -183,6 +183,42 @@ namespace MagicLand_System_Web.Pages
 
             CurrentStudentLearningMessage = classes[newIndex];
             ViewData["IndexPage"] = newIndex;
+
+            return Page();
+        }
+
+        public IActionResult OnPostSearch(string searchKey, string searchType)
+        {
+
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                CurrentStudentLearningMessage = null;
+                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                return Page();
+            }
+
+            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+
+            //var key = searchKey.Trim().ToLower();
+            //if (searchType == "MESSAGE")
+            //{
+            //    var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
+
+            //    StudentMessages = messages.Where(
+            //       mess => mess.StudentName.ToLower().Contains(key) ||
+            //       mess.ParentBelong.ToLower().Contains(key) ||
+            //       mess.AccountArise.ToLower().Contains(key)
+            //       ).ToList();
+            //}
+            //if (searchType == "DATA")
+            //{
+            //    var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
+
+            //    Parents = parents.Where(
+            //        c => c.FullName.ToLower().Contains(key) ||
+            //        c.Phone.ToLower().Contains(key)
+            //        ).ToList();
+            //}
 
             return Page();
         }

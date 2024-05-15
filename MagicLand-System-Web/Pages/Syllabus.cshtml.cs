@@ -2,14 +2,14 @@
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System_Web.Pages.DataContants;
-using MagicLand_System_Web.Pages.Enums;
-using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web_Dev.Pages.DataContants;
+using MagicLand_System_Web_Dev.Pages.Enums;
+using MagicLand_System_Web_Dev.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace MagicLand_System_Web.Pages
+namespace MagicLand_System_Web_Dev.Pages
 {
     public class SyllabusModel : PageModel
     {

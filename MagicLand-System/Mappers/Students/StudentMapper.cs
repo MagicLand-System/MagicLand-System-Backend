@@ -40,6 +40,17 @@ namespace MagicLand_System.Mappers.Students
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
             .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.User.FullName))
             .ForMember(dest => dest.AddedTime, opt => opt.MapFrom(src => src.AddedTime));
+
+            CreateMap<Student, StudentWithAccountResponse>()
+           .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+           .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+           .ForMember(dest => dest.AvatarImage, opt => opt.MapFrom(src => src.AvatarImage))
+           .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+           .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+           .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+           .ForMember(dest => dest.ParentId, opt => opt.MapFrom(src => src.ParentId))
+           .ForMember(dest => dest.AddedTime, opt => opt.MapFrom(src => src.AddedTime))
+           .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
         }
     }
 }

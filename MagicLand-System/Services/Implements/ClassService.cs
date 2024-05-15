@@ -2776,7 +2776,7 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        public async Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList)
+        public async Task ValidateScheduleOfClassesAsync(List<Guid> classIdList)
         {
             var classes = new List<Class>();
 
@@ -2928,10 +2928,24 @@ namespace MagicLand_System.Services.Implements
             {
                 return new ScheduleWithAttendanceResponse();
             }
+            var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
+            var attendances = new List<Attendance>();
+            foreach(var stu in studentClass)
+            {
+                if(stu.SavedTime != null)
+                {
+                    continue;
+                }
 
-            schedule.Attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
-                                 predicate: x => x.Id == schedule.Id && x.Student!.StudentClasses.Any(sc => sc.ClassId == cls.Id && sc.SavedTime == null),
-                                 include: x => x.Include(x => x.Student)!);
+                var atts = (await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                               predicate: x => x.ScheduleId == schedule.Id && x.Student!.Id == stu.StudentId,
+                               include: x => x.Include(x => x.Student)!)).ToList();
+
+                attendances.AddRange(atts);
+            }
+
+            schedule.Attendances = attendances;
+          
 
             var response = _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
             response.ClassSubject = cls.Course!.SubjectName;
@@ -3340,7 +3354,7 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        public async Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students)
+        public async Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Guid> studentIds)
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
              predicate: x => x.Id == classId,
@@ -3359,8 +3373,10 @@ namespace MagicLand_System.Services.Implements
 
             var responses = new List<StudentResponse>();
 
-            foreach (var student in students)
+            foreach (var id in studentIds)
             {
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id);
+
                 int age = DateTime.Now.Year - student.DateOfBirth.Year;
                 if (age < cls.Course!.MinYearOldsStudent || age > cls.Course!.MaxYearOldsStudent)
                 {

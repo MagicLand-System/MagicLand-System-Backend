@@ -1,4 +1,4 @@
-using MagicLand_System_Web.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 

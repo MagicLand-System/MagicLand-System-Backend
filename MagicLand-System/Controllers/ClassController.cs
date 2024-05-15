@@ -171,8 +171,8 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            var students = await _studentService.GetStudentsOfCurrentParent();
-            if (students == null)
+            var studentIds = (await _studentService.GetStudentsOfCurrentParent()).Select(stu => stu.Id).ToList();
+            if (studentIds == null)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -181,7 +181,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
-            var responses = await _classService.GetValidStudentForClassAsync(classId, students);
+            var responses = await _classService.GetValidStudentForClassAsync(classId, studentIds);
             return Ok(responses);
         }
 

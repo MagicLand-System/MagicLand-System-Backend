@@ -133,7 +133,7 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Student Quiz Done By ClassId
         /// <summary>
-        ///  Truy Suất Thông Tin Điểm Số Và Thồn Tin Của Học Sinh Thuộc 1 Lớp
+        ///  Truy Suất Thông Tin Điểm Số Và Thông Tin Của Học Sinh Thuộc 1 Lớp
         /// </summary>
         /// <param name="classId">Id Của Lớp Học</param>
         /// <param name="studentId">Id Của Học Sinh (Option)</param>
@@ -484,24 +484,6 @@ namespace MagicLand_System.Controllers
                 }
             }
 
-
-            //var similarCoupleCards = studentAnswers
-            //.GroupBy(answer => new HashSet<Guid> { answer.FirstCardId, answer.SecondCardId })
-            //.Where(group => group.Count() > 1)
-            //.SelectMany(group => group)
-            //.ToList();
-
-            // duplicateCards.AddRange(studentAnswers
-            //.GroupBy(x => x.FirstCardId)
-            //.Where(g => g.Count() > 1)
-            //.SelectMany(g => g)
-            //.Distinct().Select(x => x.FirstCardId));
-
-            // duplicateCards.AddRange(studentAnswers
-            // .GroupBy(x => x.SecondCardId)
-            // .Where(g => g.Count() > 1)
-            // .SelectMany(g => g)
-            // .Distinct().Select(x => x.SecondCardId));
             if (similarCoupleCards != null && similarCoupleCards.Any())
             {
                 var duplicateCardStrings = similarCoupleCards.Select(card => $"({card.FirstCardId}, {card.SecondCardId})");
@@ -521,7 +503,7 @@ namespace MagicLand_System.Controllers
                 ExamId = quizInfor.ExamId,
                 StudentQuestionResults = studentWorkResults,
             };
-            //var responses = await _quizService.GradeQuizFCAsync(classId, examId, scoreEarned);
+
             var response = await _quizService.GradeQuizFCAsync(quizFCStudentWork, doingTime, isCheckingTime);
 
             return Ok(response);

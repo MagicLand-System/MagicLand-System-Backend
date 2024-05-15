@@ -23,7 +23,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ClassWithSlotShorten>> GetClassesByCourseIdAsync(Guid id, ClassStatusEnum status);
         Task<TopicResponse> GetTopicLearningAsync(Guid classId, int topicOrder);
         Task<List<ClassWithSlotShorten>> GetValidClassForStudentAsync(Guid courseId, Guid studentId);
-        Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Student> students);
+        Task<List<StudentResponse>> GetValidStudentForClassAsync(Guid classId, List<Guid> studentIds);
         Task<List<ClassWithSlotShorten>> FilterClassAsync(List<string>? keyWords, int? leastNumberStudent, int? limitStudent, PeriodTimeEnum time);
         Task<ClassResExtraInfor> GetClassByIdAsync(Guid id);
         Task<CreateSingleClassResponse> CreateNewClass(CreateClassRequest request);
@@ -33,7 +33,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<string> AutoCreateClassCode(string courseId);
         Task<bool> UpdateClass(string classId, UpdateClassRequest request);
         Task<List<ClassProgressResponse>> GetClassProgressResponsesAsync(string classId);
-        Task ValidateScheduleAmongClassesAsync(List<Guid> classIdList);
+        Task ValidateScheduleOfClassesAsync(List<Guid> classIdList);
         Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime, string? attendanceStatus);
         Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync();
         Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date);

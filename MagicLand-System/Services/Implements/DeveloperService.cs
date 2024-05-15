@@ -18,13 +18,13 @@ namespace MagicLand_System.Services.Implements
         {
         }
 
-        public async Task<List<AccountStudentResponse>> GetStudentAccount(List<Guid> studentIdList)
+        public async Task<List<AccountResponse>> GetStudentAccount(List<Guid> studentIdList)
         {
-            var responses = new List<AccountStudentResponse>();
+            var responses = new List<AccountResponse>();
             foreach (var id in studentIdList)
             {
                 var account = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.StudentIdAccount == id);
-                responses.Add(_mapper.Map<AccountStudentResponse>(account));
+                responses.Add(_mapper.Map<AccountResponse>(account));
             }
 
             return responses;

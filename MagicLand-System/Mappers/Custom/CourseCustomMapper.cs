@@ -95,7 +95,6 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
-                //Price = (decimal)course.Price,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),

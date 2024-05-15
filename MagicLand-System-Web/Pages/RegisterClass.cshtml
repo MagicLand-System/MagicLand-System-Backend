@@ -1,5 +1,5 @@
 ﻿@page
-@model MagicLand_System_Web.Pages.RegisterClassModel
+@model MagicLand_System_Web_Dev.Pages.RegisterClassModel
 @{
     ViewData["Title"] = "Register Class";
     ViewData["Page"] = "RegisterClass";
@@ -34,7 +34,7 @@
         <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Đăng Ký Hàng Loạt Học Sinh Vào Lớp</b></h6>
 
         <div class="form-group" onsubmit="return setLoader()">
-            <form method="post">
+            <form method="post" asp-page-handler="Progress">
                 <label for="inputField">Nhập Số Học Sinh: </label>
                 <input type="text" id="inputField" name="inputField" />
                 <input type="hidden" id="input-value" name="listId" value="" />
@@ -61,7 +61,23 @@
             <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
             <div style="margin-left: 29%;">Now Progressing...</div>
         </div>
-        <div id="table-progress" class="table-container" style="overflow-y: auto; height: 368px; width: 73%; margin-top: 22px; position: relative}">
+
+        
+        @if ((Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count > 0) || (Model.Classes != null && Model.Classes.Count > 0))
+        {
+            {
+                ViewData["Type"] = Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count > 0 ? "MESSAGE" : "DATA";
+            }
+            <div class="from-search" style="float: left; margin-top: 30px; margin-bottom: 5px;">
+                <form method="post" asp-page-handler="Search">
+                    <input type="hidden" id="input-search-type" name="searchType" value="@ViewData["Type"]">
+                    <input type="text" id="input-search-value" name="searchKey" value="" />
+                    <button id="button-submit-search" type="submit" style="background-color: white; color: black">Tìm Kiếm</button>
+                </form>
+            </div>
+        }
+
+        <div id="table-progress" class="table-container" style="overflow-y: auto; height: 363px; width: 73%; margin-top: 22px; position: relative}">
             @if (Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count() > 0)
             {
                 <table class="table">
@@ -268,7 +284,7 @@
 
         if (@Model.IsLoading) {
             buttonSubmit.style.opacity = "1";
-            tableProgress.style.height = "368px";
+            tableProgress.style.height = "363px";
             buttonSubmit.disabled = false;
         }
     }

@@ -5,20 +5,21 @@ using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System_Web.Pages.DataContants;
-using MagicLand_System_Web.Pages.Enums;
-using MagicLand_System_Web.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.DataContants;
+using MagicLand_System_Web_Dev.Pages.Enums;
+using MagicLand_System_Web_Dev.Pages.Helper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.RegularExpressions;
 using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System_Web.Pages.Messages.DefaultMessage;
-using MagicLand_System_Web.Pages.Messages.InforMessage;
-using MagicLand_System_Web.Pages.Message.SubMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.InforMessage;
+using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response.Bills;
+using MagicLand_System.PayLoad.Response.Courses;
 
-namespace MagicLand_System_Web.Pages
+namespace MagicLand_System_Web_Dev.Pages
 {
     public class RegisterClassModel : PageModel
     {
@@ -41,14 +42,14 @@ namespace MagicLand_System_Web.Pages
         public async Task<IActionResult> OnGetAsync()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<RegisterInforMessage>>(HttpContext.Session, "DataRegister");
+            var messages = SessionHelper.GetObjectFromJson<List<RegisterInforMessage>>(HttpContext.Session, "DataRegister");
             var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
             var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
 
 
-            if (data != null && data.Count > 0)
+            if (messages != null && messages.Count > 0)
             {
-                RegisterInforMessages = data;
+                RegisterInforMessages = messages;
             }
 
             if (parents == null || parents.Count == 0)
@@ -127,7 +128,7 @@ namespace MagicLand_System_Web.Pages
             }
         }
 
-        public async Task<IActionResult> OnPostAsync(int inputField, string listId, string submitButton)
+        public async Task<IActionResult> OnPostProgressAsync(int inputField, string listId, string submitButton)
         {
             if (submitButton == "Refresh")
             {
@@ -299,6 +300,42 @@ namespace MagicLand_System_Web.Pages
             var defaultToken = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "DeveloperToken");
             SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
             IsLoading = true;
+
+            return Page();
+        }
+
+        public IActionResult OnPostSearch(string searchKey, string searchType)
+        {
+
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                Classes.Clear();
+                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                return Page();
+            }
+
+
+            var key = searchKey.Trim().ToLower();
+            if (searchType == "MESSAGE")
+            {
+                var messages = SessionHelper.GetObjectFromJson<List<RegisterInforMessage>>(HttpContext.Session, "DataRegister");
+
+                RegisterInforMessages = messages.Where(
+                   mess => mess.StudentName.ToLower().Contains(key) ||
+                   mess.ParentBelong.ToLower().Contains(key) ||
+                   mess.RegisteredClass.ToLower().Contains(key)
+                   ).ToList();
+            }
+            if (searchType == "DATA")
+            {
+                var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+
+                Classes = classes.Where(
+                    c => c.ClassCode.ToLower().Contains(key) ||
+                    c.CourseBeLong.ToLower().Contains(key) ||
+                    c.LecturerBeLong.ToLower().Contains(key)
+                    ).ToList();
+            }
 
             return Page();
         }

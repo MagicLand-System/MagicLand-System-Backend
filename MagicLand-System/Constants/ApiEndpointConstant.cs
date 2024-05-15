@@ -106,6 +106,7 @@
         {
             public const string GetAll = ApiEndpoint + "/courses";
             public const string GetAllValid = ApiEndpoint + "/courses/validRegister";
+            public const string GetAllRelated = ApiEndpoint + "/courses/related";
             public const string GetCurrentStudentCourses = ApiEndpoint + "/courses/currentStudent";
             public const string SearchCourse = GetAll + "/search";
             public const string CourseById = GetAll + "/{id}";

@@ -5,15 +5,16 @@ using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Users;
-using MagicLand_System_Web.Pages.DataContants;
-using MagicLand_System_Web.Pages.Enums;
-using MagicLand_System_Web.Pages.Helper;
-using MagicLand_System_Web.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web_Dev.Pages.DataContants;
+using MagicLand_System_Web_Dev.Pages.Enums;
+using MagicLand_System_Web_Dev.Pages.Helper;
+using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
+using MagicLand_System_Web_Dev.Pages.Messages.InforMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.RegularExpressions;
 
-namespace MagicLand_System_Web.Pages
+namespace MagicLand_System_Web_Dev.Pages
 {
     public class StudentModel : PageModel
     {
@@ -36,11 +37,11 @@ namespace MagicLand_System_Web.Pages
         public async Task<IActionResult> OnGetAsync()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<StudentDefaultMessage>>(HttpContext.Session, "DataStudent");
+            var messages = SessionHelper.GetObjectFromJson<List<StudentDefaultMessage>>(HttpContext.Session, "DataStudent");
             var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
-            if (data != null && data.Count > 0)
+            if (messages != null && messages.Count > 0)
             {
-                StudentMessages = data;
+                StudentMessages = messages;
             }
 
 
@@ -78,7 +79,7 @@ namespace MagicLand_System_Web.Pages
             }
         }
 
-        public async Task<IActionResult> OnPostAsync(int inputField, string listPhone, string submitButton)
+        public async Task<IActionResult> OnPostProgressAsync(int inputField, string listPhone, string submitButton)
         {
             if (submitButton == "Refresh")
             {
@@ -135,7 +136,7 @@ namespace MagicLand_System_Web.Pages
                         AvatarImage = ImageUrlConstant.DefaultAvatar(),
                     };
 
-                    var result = await _apiHelper.FetchApiAsync<AccountStudentResponse>(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate, MethodEnum.POST, studentRequest);
+                    var result = await _apiHelper.FetchApiAsync<AccountResponse>(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate, MethodEnum.POST, studentRequest);
                     StudentMessages.Add(new StudentDefaultMessage
                     {
                         StudentName = studentRequest.FullName,
@@ -152,6 +153,41 @@ namespace MagicLand_System_Web.Pages
             var defaultToken = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "DeveloperToken");
             SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
             IsLoading = true;
+
+            return Page();
+        }
+
+
+        public IActionResult OnPostSearch(string searchKey, string searchType)
+        {
+
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                StudentMessages.Clear();
+                Parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
+                return Page();
+            }
+
+            var key = searchKey.Trim().ToLower();
+            if (searchType == "MESSAGE")
+            {
+                var messages = SessionHelper.GetObjectFromJson<List<StudentDefaultMessage>>(HttpContext.Session, "DataStudent");
+
+                StudentMessages = messages.Where(
+                   mess => mess.StudentName.ToLower().Contains(key) ||
+                   mess.ParentBelong.ToLower().Contains(key) ||
+                   mess.AccountArise.ToLower().Contains(key)
+                   ).ToList();
+            }
+            if (searchType == "DATA")
+            {
+                var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
+
+                Parents = parents.Where(
+                    c => c.FullName.ToLower().Contains(key) ||
+                    c.Phone.ToLower().Contains(key) 
+                    ).ToList();
+            }
 
             return Page();
         }

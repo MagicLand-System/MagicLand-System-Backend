@@ -153,10 +153,12 @@ namespace MagicLand_System.Services.Implements
 
             foreach (var cls in classes)
             {
+                var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
+                var nonStudentClass = studentClass.Where(stu => stu.SavedTime != null).Select(stu => stu.StudentId).ToList();
                 foreach (var sch in cls.Schedules)
                 {
                     sch.Attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
-                        predicate: x => x.Id == sch.Id && x.Student!.StudentClasses.Any(sc => sc.ClassId == cls.Id && sc.SavedTime == null),
+                        predicate: x => x.ScheduleId == sch.Id && !nonStudentClass.Contains(x.StudentId),
                         include: x => x.Include(x => x.Student)!);
                 }
             }

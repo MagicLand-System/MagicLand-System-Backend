@@ -134,21 +134,6 @@ namespace MagicLand_System.Controllers
                 });
             }
 
-            var exsitStudents = students.Where(stu => cartRequest.StudentIdList.Any(id => id == stu.Id)).ToList();
-
-            foreach (var student in exsitStudents)
-            {
-                if (!student.IsActive!.Value)
-                {
-                    return BadRequest(new ErrorResponse
-                    {
-                        Error = $"Id [{student.Id}] Của Học Sinh Đã Ngưng Hoạt Động",
-                        StatusCode = StatusCodes.Status400BadRequest,
-                        TimeStamp = DateTime.Now,
-                    });
-                }
-            }
-
             var result = await _cartService.ModifyCartOffCurrentParentAsync(cartRequest.StudentIdList, cartRequest.ClassId);
             if (result)
             {

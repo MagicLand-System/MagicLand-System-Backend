@@ -1,4 +1,4 @@
-﻿namespace MagicLand_System_Web.Pages.Enums
+﻿namespace MagicLand_System_Web_Dev.Pages.Enums
 {
     public enum TypeDataEnum
     {
