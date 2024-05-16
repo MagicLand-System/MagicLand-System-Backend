@@ -425,7 +425,7 @@ namespace MagicLand_System.Services.Implements
                 var response = CourseCustomMapper.fromCourseToCourseWithScheduleShorten(course, studentId, prequisiteCourses, relatedCourses);
                 response.Price = await GetDynamicPrice(id, false);
 
-                var currentStudentClass = course.Classes.Single(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId)).StudentClasses.Single(sc => sc.StudentId == studentId);
+                var currentStudentClass = course.Classes.First(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId)).StudentClasses.Single(sc => sc.StudentId == studentId);
                 if(currentStudentClass.SavedTime != null)
                 {
                     response.IsSuspend = true;
