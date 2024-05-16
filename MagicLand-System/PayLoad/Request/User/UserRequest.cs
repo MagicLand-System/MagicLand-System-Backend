@@ -5,7 +5,8 @@ namespace MagicLand_System.PayLoad.Request.User
 
     public class UserRequest
     {
-        [RegularExpression("^[A-Z][a-z]*( [A-Z][a-z]*)*$", ErrorMessage = "FullName Cần Phải Viết Hoa Đầu Mỗi Ký Chữ")]
+        [MaxLength(100, ErrorMessage = "Tên Người Dùng Không Được Vượt Quá 100 Ký Tự")]
+        [MinLength(3, ErrorMessage = "Tên Người Dùng Phải Có Ít Nhất 3 Ký Tự")]
         public string? FullName { get; set; }
         [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; } = default;

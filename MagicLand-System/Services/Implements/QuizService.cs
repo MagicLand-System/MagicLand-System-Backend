@@ -2072,7 +2072,7 @@ namespace MagicLand_System.Services.Implements
                             DoingTime = null,
                             DoingDate = null,
                             ExamStatus = null,
-                            Weight = null,
+                            Weight = exam != null ? exam.Weight : null,
                         });
                     }
                     else
