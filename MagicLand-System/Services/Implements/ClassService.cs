@@ -869,7 +869,7 @@ namespace MagicLand_System.Services.Implements
             }
             if (searchString != null)
             {
-                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Contains(searchString.Trim().ToLower()))).ToList();
+                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Contains(searchString.Trim().ToLower()) || x.Lecturer.FullName.Trim().ToLower().Contains(searchString.Trim().ToLower()))).ToList();
             }
             if (attendanceStatusInput != null)
             {
@@ -4173,7 +4173,7 @@ namespace MagicLand_System.Services.Implements
                 var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == classx.CourseId);
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == found.StudentId);
                 var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == student.ParentId);
-                var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id);
+                var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id,include : x => x.Include(x => x.Slot)!);
                 var dateCheck = schedule.Date.Date;
                 var schArray = listSc.OrderBy(x => x.Date).ToArray();
                 var index = 0;
@@ -4235,12 +4235,15 @@ namespace MagicLand_System.Services.Implements
                 var status = "";
                 if (lastSc.Date.Date >= DateTime.Now.Date)
                 {
-                    status = "Đang chờ xếp";
+                    status = "Waiting Arranging";
                 }
                 else
                 {
-                    status = "Hết hạn";
+                    status = "Invalid";
                 }
+                var endTime = schArray[schArray.Length -1].Slot!.EndTime;
+                var hour = int.Parse(endTime.Split(':')[0]);
+                var minute = int.Parse(endTime.Split(':')[1]);
                 var newresponse = new CanNotMakeUpResponse
                 {
                     Id = found.Id,
@@ -4252,7 +4255,7 @@ namespace MagicLand_System.Services.Implements
                     NoOfSession = index + 1,
                     Topic = topic1.Name,
                     SessionDescription = staffssd,
-                    ValidDate = schArray[schArray.Length - 1].Date,
+                    ValidDate = schArray[schArray.Length - 1].Date.AddHours(hour).AddMinutes(minute),
                 };
                 canNotMakeUpResponses.Add(newresponse);
             }
