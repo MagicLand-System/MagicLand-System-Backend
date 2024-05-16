@@ -1271,13 +1271,13 @@ namespace MagicLand_System.Services.Implements
             var attendancesArray = new List<Attendance>();
             for (int i = 0; i < schedules.Length; i++)
             {
-                var att = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedules[i].Id && x.StudentId.ToString().Equals(studentId));
+                var att = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedules[i].Id && x.StudentId.ToString().Equals(studentId),include : x => x.Include(x => x.Schedule)!);
                 if (att != null)
                 {
                     attendancesArray.Add(att);
                 }
             }
-            //var attendancesArray = attendances.OrderBy(x => x.Schedule.Date).ToArray();
+            var attendancesArray1 = attendancesArray.OrderBy(x => x.Schedule.Date).ToArray();
             var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Course.Id == classx.CourseId, selector: x => x.Id);
             var topics = await _unitOfWork.GetRepository<Topic>().GetListAsync(predicate: x => x.SyllabusId == syllabusId);
             var sessions = new List<Session>();
@@ -1291,18 +1291,22 @@ namespace MagicLand_System.Services.Implements
             for (int i = 0; i < schedules.Length; i++)
             {
                 var status = "";
+                if(i >= attendancesArray1.Length -1 )
+                {
+                    break;
+                }
                 if (attendancesArray[i].IsPresent != null)
                 {
-                    if (attendancesArray[i].IsPresent.Value)
+                    if (attendancesArray1[i].IsPresent.Value)
                     {
                         status = "present";
                     }
-                    if (!attendancesArray[i].IsPresent.Value)
+                    if (!attendancesArray1[i].IsPresent.Value)
                     {
                         status = "absent";
                     }
                 }
-                if (attendancesArray[i].IsPresent == null)
+                if (attendancesArray1[i].IsPresent == null)
                 {
                     status = "upcoming";
                 }

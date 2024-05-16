@@ -1121,7 +1121,7 @@ namespace MagicLand_System.Services.Implements
             {
                 Ids.Add(group.Key);
             }
-            var scheduleClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString())).ToList();
+            var scheduleClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString()) &&  x.Class.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString())).ToList();
             var scheduleClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
             int index = -1;
             for (int i = 0; i < scheduleClassSort.Length; i++)
