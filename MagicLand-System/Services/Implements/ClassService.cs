@@ -874,7 +874,7 @@ namespace MagicLand_System.Services.Implements
             }
             if (searchString != null)
             {
-                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Contains(searchString.Trim().ToLower()))).ToList();
+                classForAttendances = classForAttendances.Where(x => (x.ClassCode.ToLower().Equals(searchString.Trim().ToLower()) || x.CourseName.Trim().ToLower().Contains(searchString.Trim().ToLower()) || x.Lecturer.FullName.Trim().ToLower().Contains(searchString.Trim().ToLower()))).ToList();
             }
             if (attendanceStatusInput != null)
             {
