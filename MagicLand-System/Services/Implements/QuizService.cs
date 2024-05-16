@@ -2042,6 +2042,11 @@ namespace MagicLand_System.Services.Implements
 
                 foreach (var quiz in quizzes)
                 {
+                    if(quiz.PackageType.ToLower() == PackageTypeEnum.Review.ToString().ToLower())
+                    {
+                        continue;
+                    }
+
                     var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
                         orderBy: x => x.OrderBy(x => x.NoAttempt),
                         predicate: x => x.StudentClass!.StudentId == studentId && x.ExamId == quiz.Id);

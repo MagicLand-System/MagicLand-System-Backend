@@ -1,14 +1,11 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
-using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Custom;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace MagicLand_System.Controllers
 {

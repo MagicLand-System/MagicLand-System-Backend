@@ -948,7 +948,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
-                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().ToLower() == studentId.ToLower() && sc.SavedTime == null),
+                predicate: x => x.StudentClasses.Any(sc => sc.StudentId.ToString().ToLower() == studentId.ToLower()),
                 include: x => x.Include(x => x.Lecture).Include(x => x.StudentClasses!));
 
             if (classes is null)
@@ -980,6 +980,11 @@ namespace MagicLand_System.Services.Implements
             }
             foreach (var res in responses)
             {
+                var studentClass = classes.Single(x => x.Id == res.ClassId).StudentClasses.Single(x => x.StudentId.ToString().Trim().ToLower() == studentId.Trim().ToLower());
+                if (studentClass.SavedTime != null)
+                {
+                    res.IsSuspend = true;
+                }
                 res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
             }
 
@@ -1077,12 +1082,23 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId && sc.SavedTime == null) && x.Id == classId,
                 include: x => x.Include(x => x.Schedules.OrderBy(x => x.Date)));
 
+
             if (cls == null)
             {
                 throw new BadHttpRequestException($"Id Của Lớp Học Và Id Của Học Sinh Không Tồn Tại, Học Sinh Không Thuộc Lớp Đang Truy Suất Hoặc Học Sinh Thuộc Lớp Này Đã Bảo Lưu Không Thể Truy Suất", StatusCodes.Status400BadRequest);
             }
 
-            if (cls.Status == ClassStatusEnum.COMPLETED.ToString() || cls.Status == ClassStatusEnum.CANCELED.ToString())
+            if (cls.Status == ClassStatusEnum.UPCOMING.ToString())
+            {
+                return new List<StudentLearningProgress>
+            {
+                new StudentLearningProgress{ProgressName = "Attendance", PercentageProgress = 0},
+                new StudentLearningProgress{ProgressName = "Learning", PercentageProgress = 0},
+                new StudentLearningProgress{ProgressName = "Exam", PercentageProgress = 0},
+            };
+            }
+
+            if (cls.Status == ClassStatusEnum.CANCELED.ToString())
             {
                 throw new BadHttpRequestException($"Không Thể Truy Suất Tiến Độ Từ Lớp Học [{EnumUtil.CompareAndGetDescription<ClassStatusEnum>(cls.Status)}] ",
                 StatusCodes.Status400BadRequest);
@@ -1110,28 +1126,39 @@ namespace MagicLand_System.Services.Implements
             examProgress = (quizDone * 100) / totalQuiz;
 
             var schedules = cls.Schedules.ToList();
-            var currentDate = GetCurrentTime().Date;
+            var currentDate = GetCurrentTime();
 
-            for (int i = 0; i < schedules.Count(); i++)
+            if (cls.Status == ClassStatusEnum.COMPLETED.ToString())
             {
-                var scheduleDate = schedules[i].Date.Date;
-                var difference = scheduleDate - currentDate;
-                int day = difference.Days;
-
-                if (day < 0)
+                learningProgress = 100;
+            }
+            else
+            {
+                int order = 0;
+                foreach (var sch in schedules)
                 {
-                    continue;
-                }
+                    order++;
 
-                if (day >= 0)
-                {
-                    if (i == 0)
+                    var scheduleDate = sch.Date;
+                    var difference = currentDate - scheduleDate;
+                    int day = difference.Days;
+
+                    if (day > 0)
                     {
+                        continue;
+                    }
+
+                    if (day == 0)
+                    {
+                        learningProgress = (order * 100) / schedules.Count;
                         break;
                     }
 
-                    learningProgress = (i * 100) / schedules.Count();
-                    break;
+                    if (day < 0)
+                    {
+                        learningProgress = (order - 1) * 100 / schedules.Count;
+                        break;
+                    }
                 }
             }
 
@@ -1142,7 +1169,7 @@ namespace MagicLand_System.Services.Implements
                     selector: x => x.IsPresent,
                     predicate: x => x.ScheduleId == schedule.Id && x.StudentId == studentId);
 
-                if (isAttendance != null && isAttendance.Value)
+                if (isAttendance != null)
                 {
                     totalAttendance++;
                 }

@@ -1,6 +1,4 @@
-﻿using MagicLand_System.Config;
-using MagicLand_System.Domain.Models;
-using MagicLand_System.PayLoad.Response.Notifications;
+﻿using MagicLand_System.PayLoad.Response.Notifications;
 
 namespace MagicLand_System.Services.Interfaces
 {
@@ -10,6 +8,5 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<NotificationResponse>> GetStaffNotificationsAsync();
         Task<string> UpdateNotificationAsync(List<Guid> ids);
         Task<string> DeleteNotificationAsync(List<Guid> ids);
-        Task<PushNotificationResponse> SendNotification(NotificationModel notificationModel);
     }
 }

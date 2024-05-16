@@ -1,10 +1,8 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Topics;
 using MagicLand_System.Services.Interfaces;
@@ -12,7 +10,6 @@ using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using OfficeOpenXml.Utils;
 
 namespace MagicLand_System.Controllers
 {
@@ -560,20 +557,20 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.ClassEnpoint.RoomForUpdateSession)]
         public async Task<IActionResult> UpdateSessionRoom(string classId, string slotId, DateTime date)
         {
-            var isSuccess = await _classService.GetRoomForUpdateSession(classId,slotId,date);
+            var isSuccess = await _classService.GetRoomForUpdateSession(classId, slotId, date);
             return Ok(isSuccess);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.LecturerForUpdateSession)]
         public async Task<IActionResult> UpdateSesionLecturer(string classId, string slotId, DateTime date)
         {
-            var isSuccess = await _classService.GetLecturerResponseForUpdateSession(classId,slotId,date);
+            var isSuccess = await _classService.GetLecturerResponseForUpdateSession(classId, slotId, date);
             return Ok(isSuccess);
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.SetNotCanMakeUp)]
-        public async Task<IActionResult> SetNotCanMakeUp(string scheduleId,string studentId)
+        public async Task<IActionResult> SetNotCanMakeUp(string scheduleId, string studentId)
         {
             var isSuccess = await _classService.SetNotCanMakeUp(scheduleId, studentId);
-            if(!isSuccess) 
+            if (!isSuccess)
             {
                 return Ok("Không thể cập nhật trạng thái");
             }
@@ -582,13 +579,13 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetListCanNotMakeUp)]
         public async Task<IActionResult> GetListCanNotMakeRes(string? search, DateTime? dateOfBirth)
         {
-            var isSuccess = await _classService.GetCanNotMakeUpResponses(search,dateOfBirth);
+            var isSuccess = await _classService.GetCanNotMakeUpResponses(search, dateOfBirth);
             return Ok(isSuccess);
         }
         [HttpPut(ApiEndpointConstant.ClassEnpoint.SaveCourse)]
         public async Task<IActionResult> SaveCourse(string classId, string studentId)
         {
-            var isSuccess = await _classService.SaveCourse(classId,studentId);
+            var isSuccess = await _classService.SaveCourse(classId, studentId);
             if (!isSuccess)
             {
                 return Ok("Không thể bảo lưu");
@@ -598,7 +595,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetListSavedCourse)]
         public async Task<IActionResult> GetSavedCourse(string? search, DateTime? dateOfBirth)
         {
-            var isSuccess = await _classService.GetSaveCourseResponse(search,dateOfBirth);
+            var isSuccess = await _classService.GetSaveCourseResponse(search, dateOfBirth);
             return Ok(isSuccess);
         }
         [HttpGet(ApiEndpointConstant.ClassEnpoint.GetClassToRegister)]

@@ -1,9 +1,8 @@
 ﻿using MagicLand_System.Background.BackgroundServiceInterfaces;
-using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain;
-using MagicLand_System.Repository.Interfaces;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Quiz;
-using MagicLand_System.Domain.Models.TempEntity.Class;
+using MagicLand_System.Repository.Interfaces;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {

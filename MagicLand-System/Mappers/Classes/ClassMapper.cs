@@ -41,7 +41,6 @@ namespace MagicLand_System.Mappers.Classes
              .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
              .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
              .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
-             //.ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
              .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
              ? ClassMethodEnum.ONLINE.ToString()
              : ClassMethodEnum.OFFLINE.ToString()))
@@ -57,7 +56,6 @@ namespace MagicLand_System.Mappers.Classes
              .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
              .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
              .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
-             //.ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
              .ForMember(dest => dest.ScheduleInfors, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToScheduleWithOutLectureList(src.Schedules.ToList())))
              .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
              ? ClassMethodEnum.ONLINE.ToString()
@@ -72,7 +70,6 @@ namespace MagicLand_System.Mappers.Classes
                 .ForMember(dest => dest.ClassCode, opt => opt.MapFrom(src => src.Course!.Name))
                 .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
                 .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course!.Name))
-                //.ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
                 .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
                 .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
                 .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
@@ -95,7 +92,6 @@ namespace MagicLand_System.Mappers.Classes
               .ForMember(dest => dest.ClassCode, opt => opt.MapFrom(src => src.Course!.Name))
               .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
               .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course!.Name))
-              //.ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
               .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
               .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
               .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
@@ -105,7 +101,6 @@ namespace MagicLand_System.Mappers.Classes
               .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Street + " " + src.District + " " + src.City))
               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status!.ToString()))
               .ForMember(dest => dest.Lecture, opt => opt.MapFrom(src => UserCustomMapper.fromUserToUserResponse(src.Lecture!)))
-              //.ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToScheduleShortenResponse(src)));
               .ForMember(dest => dest.Schedules, opt => opt.MapFrom(src => ScheduleCustomMapper.fromScheduleToScheduleShortenResponses(src)));
 
 
@@ -122,7 +117,6 @@ namespace MagicLand_System.Mappers.Classes
                .ForMember(dest => dest.LimitNumberStudent, opt => opt.MapFrom(src => src.LimitNumberStudent))
                .ForMember(dest => dest.ClassSubject, opt => opt.MapFrom(src => src.Course!.SubjectName))
                .ForMember(dest => dest.LeastNumberStudent, opt => opt.MapFrom(src => src.LeastNumberStudent))
-               //.ForMember(dest => dest.CoursePrice, opt => opt.MapFrom(src => src.Course!.Price))
                .ForMember(dest => dest.Method, opt => opt.MapFrom(src => src.Method!.ToString().Equals(ClassMethodEnum.ONLINE.ToString())
                ? ClassMethodEnum.ONLINE.ToString()
                : ClassMethodEnum.OFFLINE.ToString()))

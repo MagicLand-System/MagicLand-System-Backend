@@ -1,6 +1,4 @@
-﻿using Azure.Core;
-using MagicLand_System.Constants;
-using MagicLand_System.Helpers;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request.Cart;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response;
@@ -18,15 +16,13 @@ namespace MagicLand_System.Controllers
     public class CheckOutController : BaseController<CheckOutController>
     {
 
-        private readonly IUserService _userService;
         private readonly ICartService _cartService;
         private readonly IClassService _classService;
         private readonly IStudentService _studentService;
         private readonly IWalletTransactionService _walletTransactionService;
         private readonly IGatewayService _gatewayService;
-        public CheckOutController(ILogger<CheckOutController> logger, IUserService userService, ICartService cartService, IClassService classService, IStudentService studentService, IWalletTransactionService walletTransactionService, IGatewayService gatewayService) : base(logger)
+        public CheckOutController(ILogger<CheckOutController> logger, ICartService cartService, IClassService classService, IStudentService studentService, IWalletTransactionService walletTransactionService, IGatewayService gatewayService) : base(logger)
         {
-            _userService = userService;
             _cartService = cartService;
             _classService = classService;
             _studentService = studentService;
@@ -68,7 +64,7 @@ namespace MagicLand_System.Controllers
                 return BadRequest();
             }
 
-            foreach(var request in requests)
+            foreach (var request in requests)
             {
                 var result = await ValidRequest(request.ClassId, request.StudentIdList);
 

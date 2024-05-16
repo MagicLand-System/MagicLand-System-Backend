@@ -4,7 +4,6 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
-using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,63 +16,6 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
         public NotificationBackgroundService(IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
-        }
-
-        //public async Task<string> ModifyNotificationAfterTime()
-        //{
-        //    try
-        //    {
-        //        using (var scope = _serviceScopeFactory.CreateScope())
-        //        {
-        //            var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-        //            var currentTime = BackgoundTime.GetTime();
-
-        //            var notifications = await _unitOfWork.GetRepository<Notification>()
-        //             .GetListAsync(predicate: x => x.IsRead == false);
-
-        //            foreach (var noti in notifications)
-        //            {
-        //                int time = currentTime.Day - noti.CreatedAt.Day;
-
-        //                if (time >= 30)
-        //                {
-        //                    noti.IsRead = true;
-        //                }
-
-        //                if (time >= 2)
-        //                {
-        //                    _unitOfWork.GetRepository<Notification>().DeleteAsync(noti);
-        //                }
-        //            }
-
-        //            _unitOfWork.GetRepository<Notification>().UpdateRange(notifications);
-        //            _unitOfWork.Commit();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return $"Push Notifications Got An Error: [{ex.Message}]";
-        //    }
-        //    return "Push Notifications Success";
-        //}
-        public async Task<string> PushNotificationRealTime()
-        {
-            try
-            {
-                using (var scope = _serviceScopeFactory.CreateScope())
-                {
-                    var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
-                    var currentDate = DateTime.Now;
-
-                    //   await _unitOfWork.GetRepository<Notification>().InsertRangeAsync(newNotifications);
-                    _unitOfWork.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                return $"Push Notifications Got An Error: [{ex.Message}]";
-            }
-            return "Push Notifications Success";
         }
         public async Task<string> CreateNewNotificationInCondition()
         {

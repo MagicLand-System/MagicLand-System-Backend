@@ -11,7 +11,6 @@ namespace MagicLand_System.Domain.Models
         public int NumberOfSession { get; set; }
         public int? MinYearOldsStudent { get; set; } = 3;
         public int? MaxYearOldsStudent { get; set; } = 120;
-        public string? Status { get; set; }
         public string? Image { get; set; } = null;
         public string? MainDescription { get; set; }
         public DateTime? UpdateDate { get; set; } = default;

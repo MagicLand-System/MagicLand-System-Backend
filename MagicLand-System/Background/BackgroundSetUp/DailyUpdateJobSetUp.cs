@@ -26,6 +26,13 @@ namespace MagicLand_System.Background.BackgroundSetUp
            .AddTrigger(trigger => trigger
            .ForJob(jobKey)
            .WithCronSchedule(cronExpression));
+
+            //for server
+           // options
+           //.AddJob<DailyUpdateJob>(jobBuilder => jobBuilder.WithIdentity(jobKey))
+           //.AddTrigger(trigger => trigger
+           //.ForJob(jobKey)
+           //.WithSimpleSchedule(schedule => schedule.WithIntervalInHours(24).WithIntervalInMinutes(3).RepeatForever()).StartNow().Build());
         }
     }
 }

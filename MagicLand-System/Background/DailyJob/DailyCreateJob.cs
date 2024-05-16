@@ -3,7 +3,6 @@ using Quartz;
 
 namespace MagicLand_System.Background.DailyJob
 {
-    //[DisallowConcurrentExecution]
     public class DailyCreateJob : IJob
     {
         private readonly ILogger<DailyCreateJob> _logger;

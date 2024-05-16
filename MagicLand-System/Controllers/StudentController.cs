@@ -1,11 +1,9 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
-using MagicLand_System.PayLoad.Response.Schedules;
 using MagicLand_System.PayLoad.Response.Schedules.ForStudent;
 using MagicLand_System.PayLoad.Response.Students;
 using MagicLand_System.PayLoad.Response.Users;

@@ -1,5 +1,4 @@
 ﻿using MagicLand_System.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -8,7 +7,7 @@ namespace MagicLand_System.Controllers
     public class SystemController : BaseController<SystemController>
     {
         private readonly IDashboardService _dashboardService;
-        public SystemController(ILogger<SystemController> logger,IDashboardService dashboardService) : base(logger)
+        public SystemController(ILogger<SystemController> logger, IDashboardService dashboardService) : base(logger)
         {
             _dashboardService = dashboardService;
         }
@@ -28,14 +27,14 @@ namespace MagicLand_System.Controllers
             return Ok(await _dashboardService.GetRevenueDashBoardResponse(startDate, endDate));
         }
         [HttpGet("System/GetRegistered")]
-        public async Task<IActionResult> GetRegistered(string quarter,string? courseId) 
+        public async Task<IActionResult> GetRegistered(string quarter, string? courseId)
         {
-            return Ok(await _dashboardService.GetDashboardRegisterResponses(quarter,courseId));
+            return Ok(await _dashboardService.GetDashboardRegisterResponses(quarter, courseId));
         }
         [HttpGet("System/GetFavoriteCourse")]
-        public async Task<IActionResult> GetFavoriteCourse(DateTime? startDate , DateTime? endDate)
+        public async Task<IActionResult> GetFavoriteCourse(DateTime? startDate, DateTime? endDate)
         {
-            return Ok(await _dashboardService.GetFavoriteCourseResponse(startDate,endDate));
+            return Ok(await _dashboardService.GetFavoriteCourseResponse(startDate, endDate));
         }
     }
 }

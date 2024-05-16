@@ -27,13 +27,8 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Data;
-using System.Formats.Asn1;
 using System.Globalization;
-using System.Net.WebSockets;
-using static System.Reflection.Metadata.BlobBuilder;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -410,7 +405,7 @@ namespace MagicLand_System.Services.Implements
                     SyllabusCode = syllabusCode,
                     SyllabusName = syllabusName,
                     SyllabusType = syllabusType,
-                    Status = course.Status
+                    Status = string.Empty,
                 };
                 myClassResponse.CourseResponse = customCourseResponse;
                 result.Add(myClassResponse);
@@ -627,7 +622,7 @@ namespace MagicLand_System.Services.Implements
                 SyllabusCode = syllabusCode,
                 SyllabusName = syllabusName,
                 SyllabusType = syllabusType,
-                Status = course.Status
+                Status = string.Empty,
             };
             myClassResponse.CourseResponse = customCourseResponse;
             return myClassResponse;
@@ -1710,7 +1705,7 @@ namespace MagicLand_System.Services.Implements
                 NumberOfSession = course.NumberOfSession,
                 //Price = course.Price,
                 UpdateDate = course.UpdateDate,
-                Status = course.Status,
+                Status = string.Empty,
             };
             var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == classx.LecturerId, include: x => x.Include(x => x.LecturerField));
             var lecturerResponse = new LecturerResponse
@@ -2765,7 +2760,7 @@ namespace MagicLand_System.Services.Implements
         {
             var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && !x.Status.Equals("Saved"),
                include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
-            
+
 
             if (students == null)
             {
@@ -2930,9 +2925,9 @@ namespace MagicLand_System.Services.Implements
             }
             var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
             var attendances = new List<Attendance>();
-            foreach(var stu in studentClass)
+            foreach (var stu in studentClass)
             {
-                if(stu.SavedTime != null)
+                if (stu.SavedTime != null)
                 {
                     continue;
                 }
@@ -2945,7 +2940,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             schedule.Attendances = attendances;
-          
+
 
             var response = _mapper.Map<ScheduleWithAttendanceResponse>(schedule);
             response.ClassSubject = cls.Course!.SubjectName;
@@ -3333,14 +3328,17 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                var syllabusRequired = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId == course.SyllabusId);
-                if (syllabusRequired != null)
+                var syllabusRequired = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    selector: x => x.PrequisiteSyllabusId,
+                    predicate: x => x.Id == course.SyllabusId);
+
+                if (syllabusRequired != null && syllabusRequired != default)
                 {
                     var syllabusCompleted = await _unitOfWork.GetRepository<Class>().GetListAsync(
                         selector: x => x.Course!.Syllabus!.Id,
                         predicate: x => x.StudentClasses.Any(sc => sc.StudentId == studentId) && x.Status == ClassStatusEnum.COMPLETED.ToString());
 
-                    var result = syllabusRequired.All(sylr => syllabusCompleted.Any(sylc => sylr.PrerequisiteSyllabusId == sylc));
+                    var result = syllabusCompleted.Contains(syllabusRequired.Value);
                     if (!result)
                     {
                         continue;
@@ -3370,6 +3368,10 @@ namespace MagicLand_System.Services.Implements
                orderBy: x => x.OrderBy(x => x.Date),
                predicate: x => x.ClassId == cls.Id,
                include: x => x.Include(x => x.Slot!));
+
+            var syllabusRequired = (await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.PrequisiteSyllabusId,
+                predicate: x => x.Id == cls.Course!.SyllabusId));
 
             var responses = new List<StudentResponse>();
 
@@ -3405,17 +3407,13 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                var syllabusRequired = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync(
-                    predicate: x => x.Id == cls.Course.SyllabusId,
-                    include: x => x.Include(x => x.SyllabusPrerequisites)!)).SelectMany(x => x.SyllabusPrerequisites!.Select(sp => sp.PrerequisiteSyllabusId));
-
-                if (syllabusRequired != null)
+                if (syllabusRequired != null && syllabusRequired != default)
                 {
                     var syllabusCompleted = await _unitOfWork.GetRepository<Class>().GetListAsync(
                         selector: x => x.Course!.Syllabus!.Id,
                         predicate: x => x.StudentClasses.Any(sc => sc.StudentId == student.Id) && x.Status == ClassStatusEnum.COMPLETED.ToString());
 
-                    var result = syllabusRequired.All(sylr => syllabusCompleted.Any(sylc => sylr == sylc));
+                    var result = syllabusCompleted.Contains(syllabusRequired.Value);
                     if (!result)
                     {
                         continue;
@@ -4113,7 +4111,7 @@ namespace MagicLand_System.Services.Implements
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId),
                     include: x => x.Include(x => x.User));
 
-                if(toClass.StudentClasses.Any(sc => sc.StudentId.ToString() == studentId))
+                if (toClass.StudentClasses.Any(sc => sc.StudentId.ToString() == studentId))
                 {
                     throw new BadHttpRequestException($"Id [{studentId}] Đã Có Trong Lớp Cần Chuyển", StatusCodes.Status400BadRequest);
                 }
@@ -4545,7 +4543,7 @@ namespace MagicLand_System.Services.Implements
                     SyllabusCode = syllabusCode,
                     SyllabusName = syllabusName,
                     SyllabusType = syllabusType,
-                    Status = course.Status
+                    Status = string.Empty,
                 };
                 myClassResponse.CourseResponse = customCourseResponse;
                 var canChange = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.ClassId == myClassResponse.ClassId && x.StudentId.ToString().Equals(studentId));

@@ -532,7 +532,7 @@ namespace MagicLand_System.Services.Implements
 
                 if (cls.StudentClasses.Any(sc => sc.StudentId.Equals(id)))
                 {
-                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
+                    throw new BadHttpRequestException($"Học Sinh [{student.FullName}] Đã Có Trong Lớp [{cls.ClassCode}], Hoặc Lớp Này Của Học Sinh Đã Bảo Lưu", StatusCodes.Status400BadRequest);
                 }
 
                 var allRegisteredCourse = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
@@ -563,39 +563,31 @@ namespace MagicLand_System.Services.Implements
 
         private async Task ValidateCoursePrerequisite(Student student, Class cls)
         {
-            var currentSyllabusPrequisite = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                selector: x => x.SyllabusPrerequisites,
+            var currentPrequisiteSyllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                selector: x => x.PrequisiteSyllabusId,
                 predicate: x => x.Course!.Id == cls.CourseId);
 
-            if (currentSyllabusPrequisite is null)
+            if (currentPrequisiteSyllabusId is null || currentPrequisiteSyllabusId == default)
             {
                 return;
             }
 
-            var allSyllabusPrerIdRequired = await FindAllIdSyllabusPrerRequired(currentSyllabusPrequisite!.Select(csp => csp.PrerequisiteSyllabusId).ToList());
+            var allPrequisiteCourse = await FindAllPrequisteCourses(currentPrequisiteSyllabusId.Value);
 
-            if (allSyllabusPrerIdRequired?.Any() ?? false)
+            if (allPrequisiteCourse?.Any() ?? false)
             {
-                await ValidateCoursePrerProgress(student, cls, allSyllabusPrerIdRequired);
+                await ValidateCoursePrerProgress(student, cls, allPrequisiteCourse);
             }
         }
 
-        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Guid> allSyllabusPrerIdRequired)
+        private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Course> allPrequisiteCourse)
         {
-            var courseRequiredList = new List<Course>();
-
-            foreach (Guid id in allSyllabusPrerIdRequired)
-            {
-                var courseRequired = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == id);
-                courseRequiredList.Add(courseRequired);
-            }
-
             var courseCompleted = await _unitOfWork.GetRepository<Course>().GetListAsync(
                 predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()))));
 
             if (courseCompleted?.Any() ?? false)
             {
-                var courseNotSatisfied = courseRequiredList.Where(cr => !courseCompleted.Any(c => cr.Id == c.Id)).ToList();
+                var courseNotSatisfied = allPrequisiteCourse.Where(cr => !courseCompleted.Any(c => cr.Id == c.Id)).ToList();
                 if (courseNotSatisfied?.Any() ?? false)
                 {
                     throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
@@ -605,53 +597,45 @@ namespace MagicLand_System.Services.Implements
             else
             {
                 throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
-                       $"[ {string.Join(", ", courseRequiredList.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
+                       $"[ {string.Join(", ", allPrequisiteCourse.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
             }
 
         }
 
-        private async Task<List<Guid>> FindAllIdSyllabusPrerRequired(List<Guid> currentSyllabusIdPreList)
+        private async Task<List<Course>> FindAllPrequisteCourses(Guid id)
         {
-            var allSyllabusPreIdRequired = new List<Guid>();
+            var allPrequisiteCourses = new List<Course>();
+            bool loop = true;
+            Guid tempId = id;
 
-            if (currentSyllabusIdPreList?.Any() ?? false)
+            while (loop)
             {
-                allSyllabusPreIdRequired.AddRange(currentSyllabusIdPreList);
-                allSyllabusPreIdRequired.AddRange(await GetIdPreSyllabusOfPreSyllabusIdRequired(currentSyllabusIdPreList));
-            }
+                var prequisiteSyllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                    predicate: x => x.Id == tempId,
+                    include: x => x.Include(x => x.Course)!);
 
-            return allSyllabusPreIdRequired;
-        }
-
-        private async Task<List<Guid>> GetIdPreSyllabusOfPreSyllabusIdRequired(List<Guid> currentSyllabusIdPreList)
-        {
-            var preSyllabusIdOfPreSyllabusList = new List<Guid>();
-
-            bool isAll = false;
-
-            while (isAll == false)
-            {
-                var tempSyllabusIdRequiredList = new List<Guid>();
-
-                foreach (Guid id in currentSyllabusIdPreList!)
+                if(prequisiteSyllabus == null)
                 {
-                    var preSyllabusesOfPreSyllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
-                        selector: x => x.SyllabusPrerequisites,
-                        predicate: x => x.SyllabusPrerequisites!.Any(sp => sp.CurrentSyllabusId == id));
 
-                    if (preSyllabusesOfPreSyllabus?.Any() ?? false)
-                    {
-                        tempSyllabusIdRequiredList.AddRange(preSyllabusesOfPreSyllabus.Select(psps => psps.PrerequisiteSyllabusId));
-                    }
+                    throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh Id [{id}] Khóa Tiên Quyết Không Tồn Tại", StatusCodes.Status500InternalServerError);
                 }
-                currentSyllabusIdPreList = tempSyllabusIdRequiredList;
 
-                preSyllabusIdOfPreSyllabusList.AddRange(currentSyllabusIdPreList);
-
-                isAll = currentSyllabusIdPreList.Any() ? false : true;
+                if(prequisiteSyllabus.Course != null)
+                {
+                    allPrequisiteCourses.Add(prequisiteSyllabus.Course);
+                }
+                if (prequisiteSyllabus.PrequisiteSyllabusId != null && prequisiteSyllabus.PrequisiteSyllabusId != default)
+                {
+                    tempId = prequisiteSyllabus.PrequisiteSyllabusId.Value;
+                }
+                else
+                {
+                    loop = false;
+                    break;
+                }
             }
 
-            return preSyllabusIdOfPreSyllabusList ??= new List<Guid>();
+            return allPrequisiteCourses;
         }
 
         private void ValidateSchedule(List<StudentScheduleResponse> allStudentSchedules, Class cls)

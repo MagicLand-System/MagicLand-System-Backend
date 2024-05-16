@@ -1,5 +1,4 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Syllabus;
 using MagicLand_System.PayLoad.Response.Syllabuses;

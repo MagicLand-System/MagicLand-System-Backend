@@ -1,14 +1,11 @@
-﻿using MagicLand_System.Config;
-using MagicLand_System.Constants;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
-using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Vnpay;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Vnpay;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace MagicLand_System.Controllers
 {

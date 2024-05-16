@@ -39,16 +39,11 @@ namespace MagicLand_System.Services.Implements
 
                 SettingAndChekingQPR(request);
 
-                var syllabusItems = GenerateSyllabusItems(request, overal.Item1.Id);
+                var syllabusItems = GenerateSyllabusItems(request, overal.Id);
 
                 try
                 {
-                    await _unitOfWork.GetRepository<Syllabus>().InsertAsync(overal.Item1);
-                    if (overal.Item2.Count > 0)
-                    {
-                        await _unitOfWork.GetRepository<SyllabusPrerequisite>().InsertRangeAsync(overal.Item2);
-                    }
-
+                    await _unitOfWork.GetRepository<Syllabus>().InsertAsync(overal);
                     await _unitOfWork.GetRepository<Topic>().InsertRangeAsync(syllabusItems.Item1);
                     await _unitOfWork.GetRepository<QuestionPackage>().InsertRangeAsync(syllabusItems.Item2);
                     await _unitOfWork.GetRepository<ExamSyllabus>().InsertRangeAsync(syllabusItems.Item3);
@@ -172,7 +167,7 @@ namespace MagicLand_System.Services.Implements
             }
             return message;
         }
-        private async Task<(Syllabus, List<SyllabusPrerequisite>)> GenerateOveralInfor(OverallSyllabusRequest request, bool isNewVersion)
+        private async Task<Syllabus> GenerateOveralInfor(OverallSyllabusRequest request, bool isNewVersion)
         {
             var syllabuses = (await _unitOfWork.GetRepository<Syllabus>().GetListAsync()).ToList();
 
@@ -225,36 +220,37 @@ namespace MagicLand_System.Services.Implements
 
             }
 
-            var syllabusPrerequisties = new List<SyllabusPrerequisite>();
-            if (request.PreRequisite != null && request.PreRequisite.Any())
-            {
-                foreach (string code in request.PreRequisite!)
-                {
-                    var syllabusId = await _unitOfWork.GetRepository<Syllabus>()
-                   .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.SubjectCode!.ToLower().Trim().Equals(code!.ToLower().Trim()));
 
-                    if (syllabusId == default)
-                    {
-                        throw new BadHttpRequestException($"Mã Giáo Trình Tiên Quyết Không Tồn Tại [{code}]", StatusCodes.Status400BadRequest);
-                    }
-
-                    syllabusPrerequisties.Add(new SyllabusPrerequisite
-                    {
-                        Id = Guid.NewGuid(),
-                        CurrentSyllabusId = newSyllabusId,
-                        PrerequisiteSyllabusId = syllabusId,
-                    });
-                }
-
-                //await _unitOfWork.GetRepository<SyllabusPrerequisite>().InsertRangeAsync(syllabusPrerequisties);
-            }
-
-            var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>()
-               .SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.Name!.ToLower().Trim().Equals(request.Type.ToLower().Trim()));
+            var categoryId = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(
+                selector: x => x.Id,
+                predicate: x => x.Name!.ToLower().Trim().Equals(request.Type.ToLower().Trim()));
 
             if (categoryId == default)
             {
                 throw new BadHttpRequestException($"Loại Môn Học Không Hợp Lệ [{request.Type}]", StatusCodes.Status400BadRequest);
+            }
+
+
+            if (request.PreRequisite != null && request.PreRequisite.Any())
+            {
+                foreach (string code in request.PreRequisite!)
+                {
+                    var prequisiteSyllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+                        predicate: x => x.SubjectCode!.ToLower().Trim().Equals(code!.ToLower().Trim()),
+                        include: x => x.Include(x => x.SyllabusCategory!));
+
+                    if (prequisiteSyllabus == default)
+                    {
+                        throw new BadHttpRequestException($"Mã Giáo Trình Tiên Quyết Không Tồn Tại [{code}]", StatusCodes.Status400BadRequest);
+                    }
+
+                    if (prequisiteSyllabus.SyllabusCategory!.Id != categoryId)
+                    {
+                        throw new BadHttpRequestException($"Chỉ Có Thể Thêm Giáo Trình Tiên Quyết Thuộc Cùng Một Môn Học, Mã Giáo Tiên Quyết Yêu Cầu Có Môn Học [{prequisiteSyllabus.SyllabusCategory.Name}]", StatusCodes.Status400BadRequest);
+                    }
+
+                    syllabus.PrequisiteSyllabusId = prequisiteSyllabus.Id;
+                }
             }
 
             syllabus.SyllabusCategoryId = categoryId;
@@ -267,9 +263,7 @@ namespace MagicLand_System.Services.Implements
                 Name = mat.FileName,
             }).ToList();
 
-            //await _unitOfWork.GetRepository<Syllabus>().InsertAsync(syllabus);
-            //await _unitOfWork.GetRepository<Material>().InsertRangeAsync(syllabus.Materials);
-            return (syllabus, syllabusPrerequisties);
+            return syllabus;
         }
 
         private void ValidateSyllabus(string syllabusCode, string syllabusName, List<Syllabus> syllabuses)
@@ -1234,14 +1228,10 @@ namespace MagicLand_System.Services.Implements
             }
             var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()), selector: x => x.Name);
             List<string> strings = new List<string>();
-            var namePre = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId.ToString().Equals(syllabus.Id.ToString()), selector: x => x.PrerequisiteSyllabusId);
-            if (namePre != null)
-            {
-                foreach (var prerequisite in namePre)
-                {
-                    strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()), selector: x => x.SubjectCode));
-                }
-            }
+
+            var namePre = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == syllabus.PrequisiteSyllabusId, selector: x => x.SubjectCode);
+            strings.Add(namePre);
+
             var count = 0;
             if (syllabus.NumOfSessions != null)
             {
@@ -1639,14 +1629,10 @@ namespace MagicLand_System.Services.Implements
             }
             var cagegory = await _unitOfWork.GetRepository<SyllabusCategory>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(syllabus.SyllabusCategoryId.ToString()), selector: x => x.Name);
             List<string> strings = new List<string>();
-            var namePre = await _unitOfWork.GetRepository<SyllabusPrerequisite>().GetListAsync(predicate: x => x.CurrentSyllabusId.ToString().Equals(syllabus.Id.ToString()), selector: x => x.PrerequisiteSyllabusId);
-            if (namePre != null)
-            {
-                foreach (var prerequisite in namePre)
-                {
-                    strings.Add(await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(prerequisite.ToString()), selector: x => x.SubjectCode));
-                }
-            }
+
+            var namePre = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == syllabus.PrequisiteSyllabusId, selector: x => x.SubjectCode);
+            strings.Add(namePre);
+
             var syllRes = new GeneralSyllabusResponse()
             {
                 SyllabusLink = syllabus.SyllabusLink,

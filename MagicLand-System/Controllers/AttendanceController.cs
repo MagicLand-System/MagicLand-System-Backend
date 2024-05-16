@@ -2,11 +2,9 @@
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Attendances;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Validators;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers

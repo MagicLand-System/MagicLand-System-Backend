@@ -1070,7 +1070,7 @@ namespace MagicLand_System.Services.Implements
                     SyllabusCode = syllabusCode,
                     SyllabusName = syllabusName,
                     SyllabusType = syllabusType,
-                    Status = course.Status
+                    Status = string.Empty,
                 };
                 myClassResponse.CourseResponse = customCourseResponse;
                 myClassResponse.ClassScheduleResponses = await GetStudentSessionAsync(myClassResponse.ClassId.ToString(), studentId, date);

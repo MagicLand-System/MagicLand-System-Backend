@@ -1,10 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Request;
-using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Request.Evaluates;
-using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Custom;
 using MagicLand_System_Web_Dev.Pages.DataContants;
@@ -12,7 +8,6 @@ using MagicLand_System_Web_Dev.Pages.Enums;
 using MagicLand_System_Web_Dev.Pages.Helper;
 using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
 using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
-using MagicLand_System_Web_Dev.Pages.Messages.InforMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.RegularExpressions;
@@ -190,14 +185,14 @@ namespace MagicLand_System_Web_Dev.Pages
         public IActionResult OnPostSearch(string searchKey, string searchType)
         {
 
-            if (string.IsNullOrEmpty(searchKey))
-            {
-                CurrentStudentLearningMessage = null;
-                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
-                return Page();
-            }
+            //if (string.IsNullOrEmpty(searchKey))
+            //{
+            //    CurrentStudentLearningMessage = null;
+            //    Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+            return Page();
+            //}
 
-            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+            //var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
 
             //var key = searchKey.Trim().ToLower();
             //if (searchType == "MESSAGE")
@@ -220,7 +215,7 @@ namespace MagicLand_System_Web_Dev.Pages
             //        ).ToList();
             //}
 
-            return Page();
+            //return Page();
         }
     }
 }

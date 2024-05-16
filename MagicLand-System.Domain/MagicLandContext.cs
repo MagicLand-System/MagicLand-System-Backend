@@ -23,7 +23,6 @@ namespace MagicLand_System.Domain
         public DbSet<Class> Classes { get; set; }
         public DbSet<StudentClass> StudentClasses { get; set; }
         public DbSet<Course> Courses { get; set; }
-        public DbSet<SyllabusPrerequisite> SyllabusPrerequisites { get; set; }
         public DbSet<Slot> Slots { get; set; }
         public DbSet<Schedule> Sessions { get; set; }
         public DbSet<Room> Rooms { get; set; }
@@ -200,12 +199,6 @@ namespace MagicLand_System.Domain
                 entity.HasKey(entity => entity.Id);
                 entity.HasOne(entity => entity.SyllabusCategory).WithMany(e => e.Syllabuses).HasForeignKey(e => e.SyllabusCategoryId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(entity => entity.Course).WithOne(e => e.Syllabus).HasForeignKey<Course>(e => e.SyllabusId).IsRequired(false);
-            });
-            modelBuilder.Entity<SyllabusPrerequisite>(entity =>
-            {
-                entity.ToTable("SyllabusPrerequisite");
-                entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.Syllabus).WithMany(e => e.SyllabusPrerequisites).HasForeignKey(e => e.CurrentSyllabusId);
             });
             modelBuilder.Entity<Topic>(entity =>
             {

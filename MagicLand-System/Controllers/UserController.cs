@@ -42,7 +42,7 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.UserEndpoint.AddUser)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
-        //[Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF")]
         public async Task<IActionResult> AddUser([FromBody] UserAccountRequest request)
         {
             var response = await _userService.AddUserAsync(request);
@@ -56,7 +56,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.UserEndpoint.RootEndpoint)]
         public async Task<IActionResult> GetUsers([FromQuery] string? keyWord, [FromQuery] RoleEnum? role)
         {
-            if(role == RoleEnum.DEVELOPER)
+            if (role == RoleEnum.DEVELOPER)
             {
                 return BadRequest(new ErrorResponse
                 {
@@ -177,9 +177,9 @@ namespace MagicLand_System.Controllers
             return Ok(response);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetByAdmin)]
-        public async Task<IActionResult> GetByAdmin(DateTime? startDate , DateTime? endDate , string? searchString, string? slotId)
+        public async Task<IActionResult> GetByAdmin(DateTime? startDate, DateTime? endDate, string? searchString, string? slotId)
         {
-            var result = await _userService.GetAdminLecturerResponses(startDate, endDate, searchString,slotId);
+            var result = await _userService.GetAdminLecturerResponses(startDate, endDate, searchString, slotId);
             return Ok(result);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetByPhone)]
@@ -189,33 +189,33 @@ namespace MagicLand_System.Controllers
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetStudent)]
-        public async Task<IActionResult> GetStudents(string classId,string phone)
+        public async Task<IActionResult> GetStudents(string classId, string phone)
         {
-            var users = await _userService.GetStudents(classId,phone);
+            var users = await _userService.GetStudents(classId, phone);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetFromName)]
         public async Task<IActionResult> GetUserFromName(string name)
         {
-            var users = await _userService.GetUserFromName(name);   
+            var users = await _userService.GetUserFromName(name);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetStudentInfor)]
         public async Task<IActionResult> GetStudentInfor(string? name, DateTime? birthdate, string? id)
         {
-            var users = await _userService.GetFromNameAndBirthDate(name,birthdate,id);
+            var users = await _userService.GetFromNameAndBirthDate(name, birthdate, id);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetClassOfStudent)]
-        public async Task<IActionResult> GetClassOfStudent(string studentId, string? status, string? searchString,DateTime? dateTime)
+        public async Task<IActionResult> GetClassOfStudent(string studentId, string? status, string? searchString, DateTime? dateTime)
         {
-            var users = await _userService.GetClassOfStudent(studentId,status,searchString,dateTime);
+            var users = await _userService.GetClassOfStudent(studentId, status, searchString, dateTime);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetScheduleOfStudent)]
-        public async Task<IActionResult> GetScheduleOfStudent(string studentId,DateTime date)
+        public async Task<IActionResult> GetScheduleOfStudent(string studentId, DateTime date)
         {
-            var users = await _userService.GetScheduleOfStudentInDate(studentId,date);
+            var users = await _userService.GetScheduleOfStudentInDate(studentId, date);
             return Ok(users);
         }
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetSessionOfStudent)]
@@ -227,7 +227,7 @@ namespace MagicLand_System.Controllers
         [HttpGet(ApiEndpointConstant.UserEndpoint.GetListSessionOfStudent)]
         public async Task<IActionResult> GetListContentsOfSession(string classId, string studentId, DateTime? date)
         {
-            var users = await _userService.GetStudentSessionAsync(classId,studentId,date);
+            var users = await _userService.GetStudentSessionAsync(classId, studentId, date);
             return Ok(users);
         }
     }

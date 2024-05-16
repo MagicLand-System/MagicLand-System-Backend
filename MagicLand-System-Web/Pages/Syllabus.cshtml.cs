@@ -90,7 +90,7 @@ namespace MagicLand_System_Web_Dev.Pages
                     SyllabusName = syllabusNameItems.Item1 + "-" + index,
                     ScoringScale = 10,
                     StudentTasks = "Hoàn thành các khóa học, thực hiện đầy đủ các bài tập và làm bài kiểm tra.",
-                    SubjectCode = syllabusNameItems.Item2 + "-" + index,
+                    SubjectCode = syllabusNameItems.Item2 + index,
                     SyllabusLink = "https://firebasestorage.googleapis.com/v0/b/magic-2e5fc.appspot.com/o/syllabuses%2FTo%C3%A1n%20t%C6%B0%20duy%20cho%20b%C3%A9%2F28%2F2%2F...2b1dd733",
                     TimePerSession = index % 2 == 0 ? 60 : 90,
                     NumOfSessions = 20,

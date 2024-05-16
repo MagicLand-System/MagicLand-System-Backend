@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicLand-System.Domain", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicLand-System", "MagicLand-System\MagicLand-System.csproj", "{77F3185B-1240-4CE5-82A1-6F7C6CF86B7D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicLand-System-Web", "MagicLand-System-Web\MagicLand-System-Web.csproj", "{15145A9D-C5D6-4A18-B60F-0B26CCE250D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicLand-System-Web-Dev", "MagicLand-System-Web\MagicLand-System-Web-Dev.csproj", "{15145A9D-C5D6-4A18-B60F-0B26CCE250D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

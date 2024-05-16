@@ -1,8 +1,6 @@
 ﻿using MagicLand_System.Constants;
-using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
-using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -61,14 +59,14 @@ namespace MagicLand_System.Controllers
         /// <response code="403">Chức Vụ Không Hợp Lệ</response>
         /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
         #endregion
-        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetAllRelated)]
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.GetUserRelatedCourse)]
         [ProducesResponseType(typeof(CourseWithScheduleShorten), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "PARENT, STUDENT")]
 
-        public async Task<IActionResult> GetCoursesRealted()
+        public async Task<IActionResult> GetUserRelatedCourse()
         {
-            var courses = await _courseService.GetCoursesRealted();
+            var courses = await _courseService.GetUserRelatedCoursesAsync();
             return Ok(courses);
         }
 

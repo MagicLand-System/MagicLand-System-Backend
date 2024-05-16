@@ -13,7 +13,6 @@ using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using System.Numerics;
 
 namespace MagicLand_System.Controllers
 {
@@ -75,31 +74,6 @@ namespace MagicLand_System.Controllers
 
             return Ok(responses);
         }
-        #region document API Get Question Package Flas Card
-        /// <summary>
-        ///  Truy Suất Toàn Bộ Gói Câu Hỏi Và Câu Trả Lời Của Một Bài Kiểm Tra (Chỉ Áp Dụng Dạng Nối Thẻ)
-        /// </summary>
-        /// <param name="examId">Id Của Bài Kiểm Tra Nối Thẻ</param>
-        /// <remarks>
-        /// Sample request:
-        ///{     
-        ///    "examId":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
-        ///}
-        /// </remarks>
-        /// <response code="200">Trả Về Các Câu Hỏi Và Cặp Thẻ Trả Lời</response>
-        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
-        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
-        #endregion
-        //[HttpGet(ApiEndpointConstant.QuizEndPoint.GetFCQuestionPackage)]
-        //[ProducesResponseType(typeof(FCQuizResponse), StatusCodes.Status200OK)]
-        //[ProducesErrorResponseType(typeof(Exception))]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> GetFCQuestionPackage([FromQuery] Guid examId)
-        //{
-        //    var responses = await _quizService.GetFCQuestionPackageAsync(examId);
-
-        //    return Ok(responses);
-        //}
 
 
         #region document API Get Exams Of Class By Class Id
@@ -159,35 +133,6 @@ namespace MagicLand_System.Controllers
 
             return Ok(responses);
         }
-
-        #region document API Get Fully Exam Infor
-        /// <summary>
-        ///  Truy Suất Thông Tin Bài Kiểm Tra Của Học Sinh
-        /// </summary>
-        /// <param name="examId">Id Của Bài Kiểm Tra</param>
-        /// <param name="studentId">Id Của Học Sinh</param>
-        /// <remarks>
-        /// Sample request:
-        ///{     
-        ///    "examId":"3c1849af-400c-43ca-979e-58c71ce9301d" ,
-        ///    "studentId": "EC4C3593-7C58-423C-A87A-CEF2A391C57a"
-        ///}
-        /// </remarks>
-        /// <response code="200">Trả Thông Tin Bài Kiểm Tra</response>
-        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
-        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
-        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
-        #endregion
-        //[HttpGet(ApiEndpointConstant.QuizEndPoint.)]
-        //[ProducesResponseType(typeof(ExamResponse), StatusCodes.Status200OK)]
-        //[ProducesErrorResponseType(typeof(Exception))]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> GetExamOfClassByClassId([FromQuery] Guid examId, [FromQuery] Guid studentId)
-        //{
-        //    var responses = await _quizService.(examId, studentId);
-
-        //    return Ok(responses);
-        //}
 
         #region document API Get Exams Of Current Student In Time
         /// <summary>

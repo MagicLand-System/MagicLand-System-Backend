@@ -1,8 +1,8 @@
 ﻿using MagicLand_System.Background.BackgroundServiceInterfaces;
-using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain;
-using MagicLand_System.Repository.Interfaces;
+using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
+using MagicLand_System.Repository.Interfaces;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
@@ -27,9 +27,9 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     var transactions = await _unitOfWork.GetRepository<WalletTransaction>()
                       .GetListAsync(predicate: x => x.Status == TransactionStatusEnum.Processing.ToString());
 
-                    foreach(var trans in transactions)
+                    foreach (var trans in transactions)
                     {
-                        if(currentTime.Day - trans.CreateTime.Day >= 15)
+                        if (currentTime.Day - trans.CreateTime.Day >= 15)
                         {
                             trans.Status = TransactionStatusEnum.Failed.ToString();
                             trans.UpdateTime = currentTime;

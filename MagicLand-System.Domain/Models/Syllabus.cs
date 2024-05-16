@@ -21,6 +21,8 @@ namespace MagicLand_System.Domain.Models
         public string? SyllabusLink { get; set; }
         public string? SubjectCode { get; set; }
         public int? NumOfSessions {  get; set; }
+        public Guid? PrequisiteSyllabusId { get; set; }
+        
 
         public Course? Course { get; set; }
 
@@ -30,6 +32,5 @@ namespace MagicLand_System.Domain.Models
         public ICollection<Topic>? Topics { get; set; }
         public ICollection<Material>? Materials { get; set; }
         public ICollection<ExamSyllabus>? ExamSyllabuses { get; set; }
-        public ICollection<SyllabusPrerequisite>? SyllabusPrerequisites { get; set; }
     }
 }

@@ -185,9 +185,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int>("NumberOfSession")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("SubjectName")
                         .HasColumnType("nvarchar(max)");
 
@@ -944,6 +941,9 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<int?>("NumOfSessions")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("PrequisiteSyllabusId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<double>("ScoringScale")
                         .HasColumnType("float");
 
@@ -984,25 +984,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SyllabusCategory", (string)null);
-                });
-
-            modelBuilder.Entity("MagicLand_System.Domain.Models.SyllabusPrerequisite", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CurrentSyllabusId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PrerequisiteSyllabusId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrentSyllabusId");
-
-                    b.ToTable("SyllabusPrerequisite", (string)null);
                 });
 
             modelBuilder.Entity("MagicLand_System.Domain.Models.TempEntity.Class.TempQuizTime", b =>
@@ -1137,6 +1118,9 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Property<int>("CorrectMark")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("DoingDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<TimeSpan>("DoingTime")
                         .HasColumnType("time");
@@ -1646,17 +1630,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("SyllabusCategory");
                 });
 
-            modelBuilder.Entity("MagicLand_System.Domain.Models.SyllabusPrerequisite", b =>
-                {
-                    b.HasOne("MagicLand_System.Domain.Models.Syllabus", "Syllabus")
-                        .WithMany("SyllabusPrerequisites")
-                        .HasForeignKey("CurrentSyllabusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Syllabus");
-                });
-
             modelBuilder.Entity("MagicLand_System.Domain.Models.TempEntity.Quiz.TempFCAnswer", b =>
                 {
                     b.HasOne("MagicLand_System.Domain.Models.TempEntity.Quiz.TempQuestion", "TempQuestion")
@@ -1877,8 +1850,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Navigation("ExamSyllabuses");
 
                     b.Navigation("Materials");
-
-                    b.Navigation("SyllabusPrerequisites");
 
                     b.Navigation("Topics");
                 });

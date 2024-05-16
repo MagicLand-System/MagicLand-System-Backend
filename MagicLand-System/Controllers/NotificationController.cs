@@ -1,8 +1,4 @@
-﻿using MagicLand_System.Config;
-using MagicLand_System.Constants;
-using MagicLand_System.Domain.Models;
-using MagicLand_System.Enums;
-using MagicLand_System.PayLoad.Request.Attendance;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Notifications;
 using MagicLand_System.Services.Interfaces;
@@ -33,7 +29,6 @@ namespace MagicLand_System.Controllers
         [Authorize]
         public async Task<IActionResult> GetNotifications()
         {
-            //return Ok(DateTime.Now);
             var responses = await _notificationService.GetCurrentUserNotificationsAsync();
             return Ok(responses);
         }
@@ -110,23 +105,5 @@ namespace MagicLand_System.Controllers
             var response = await _notificationService.DeleteNotificationAsync(ids);
             return Ok(response);
         }
-
-        //#region document API Direct Push Notification
-        ///// <summary>
-        /////  
-        ///// </summary>
-        ///// <response code="200">Xóa Thành Công</response>
-        ///// <response code="403">Chức Vụ Không Hợp Lệ</response>
-        ///// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
-        //#endregion
-        //[HttpPost(ApiEndpointConstant.NotificationEndPoint.DirectPushNotification)]
-        //[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        //[ProducesErrorResponseType(typeof(Exception))]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> DirectPushNotification([FromBody] NotificationModel notificationModel)
-        //{
-        //    var response = await _notificationService.SendNotification(notificationModel);
-        //    return Ok(response);
-        //}
     }
 }
