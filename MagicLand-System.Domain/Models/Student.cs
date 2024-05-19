@@ -16,7 +16,7 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("User")]
         public Guid ParentId { get; set; }
-        public required User User { get; set; }
+        public required User Parent { get; set; }
 
 
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();

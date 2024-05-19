@@ -852,7 +852,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentResultResponse>> GetFromNameAndBirthDate(string? name, DateTime? birthdate, string? id)
         {
-            var students = await _unitOfWork.GetRepository<Student>().GetListAsync(include: x => x.Include(x => x.User));
+            var students = await _unitOfWork.GetRepository<Student>().GetListAsync(include: x => x.Include(x => x.Parent));
             if (name != null)
             {
                 students = students.Where(x => x.FullName.ToLower().Trim().Contains(name.ToLower().Trim())).ToList();
@@ -882,14 +882,14 @@ namespace MagicLand_System.Services.Implements
                     },
                     Parent = new UserResponse
                     {
-                        FullName = student.User.FullName,
-                        Gender = student.User.Gender,
-                        Email = student.User.Email,
-                        DateOfBirth = student.User.DateOfBirth.Value,
-                        Address = student.User.Address,
-                        AvatarImage = student.User.AvatarImage,
-                        Id = student.User.Id,
-                        Phone = student.User.Phone
+                        FullName = student.Parent.FullName,
+                        Gender = student.Parent.Gender,
+                        Email = student.Parent.Email,
+                        DateOfBirth = student.Parent.DateOfBirth.Value,
+                        Address = student.Parent.Address,
+                        AvatarImage = student.Parent.AvatarImage,
+                        Id = student.Parent.Id,
+                        Phone = student.Parent.Phone
                     }
                 };
                 responses.Add(res);

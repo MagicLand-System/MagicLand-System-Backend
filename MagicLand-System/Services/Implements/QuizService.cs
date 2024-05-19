@@ -2081,7 +2081,7 @@ namespace MagicLand_System.Services.Implements
         {
             foreach (var sc in studentClasses)
             {
-                var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Students.Any(stu => stu.Id == sc.StudentId));
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == sc.StudentId, include: x => x.Include(x => x.Parent)!);
                 var studentWorkFullyInfors = new List<StudentWorkFullyInfor>();
 
                 foreach (var quiz in quizzes)
@@ -2093,7 +2093,7 @@ namespace MagicLand_System.Services.Implements
 
                     var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
                         orderBy: x => x.OrderByDescending(x => x.NoAttempt),
-                        predicate: x => x.StudentClass!.StudentId == sc.Id && x.ExamId == quiz.Id);
+                        predicate: x => x.StudentClass!.StudentId == sc.StudentId && x.ExamId == quiz.Id);
 
                     var currentExam = exams!.SingleOrDefault(e => StringHelper.TrimStringAndNoSpace(e.ContentName!) == StringHelper.TrimStringAndNoSpace(quiz.ContentName));
 
@@ -2153,8 +2153,8 @@ namespace MagicLand_System.Services.Implements
 
                 responses.Add(new StudenInforAndScore
                 {
-                    StudentInfor = _mapper.Map<StudentResponse>(sc),
-                    ParentInfor = _mapper.Map<UserResponse>(parent),
+                    StudentInfor = _mapper.Map<StudentResponse>(student),
+                    ParentInfor = _mapper.Map<UserResponse>(student.Parent),
                     ExamInfors = studentWorkFullyInfors,
                     ParticipationInfor = new Participation
                     {

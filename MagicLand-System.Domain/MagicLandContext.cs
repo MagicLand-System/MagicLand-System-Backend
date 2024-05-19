@@ -173,7 +173,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("Student");
                 entity.HasKey(entity => entity.Id);
-                entity.HasOne(e => e.User).WithMany(e => e.Students).HasForeignKey(e => e.ParentId);
+                entity.HasOne(e => e.Parent).WithMany(e => e.Students).HasForeignKey(e => e.ParentId);
 
             });
             modelBuilder.Entity<SyllabusCategory>(entity =>

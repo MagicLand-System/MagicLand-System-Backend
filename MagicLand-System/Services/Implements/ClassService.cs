@@ -2803,7 +2803,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
             var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && !x.Status.Equals("Saved"),
-               include: x => x.Include(x => x.Student)!.ThenInclude(x => x.User));
+               include: x => x.Include(x => x.Student)!.ThenInclude(x => x.Parent));
 
 
             if (students == null)
@@ -3101,7 +3101,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == id,
                     include: x => x.Include(x => x.StudentClasses.Where(sc => sc.ClassId != fromClassId)).ThenInclude(sc => sc.Class!).ThenInclude(cls => cls.Schedules)!
-                    .ThenInclude(x => x.Slot!).Include(x => x.User));
+                    .ThenInclude(x => x.Slot!).Include(x => x.Parent));
 
                     ValidateStudentChangeClassRequest(toClassId, studentIdList, fromClass, toClass, id, student);
 
@@ -3186,7 +3186,7 @@ namespace MagicLand_System.Services.Implements
                         ($"{AttachValueEnum.ClassId}", $"{fromClass.Id} , {toClass.Id}"),
                         ($"{AttachValueEnum.StudentId}", $"{student.Id}"),
                       }),
-                UserId = student.User.Id,
+                UserId = student.Parent.Id,
             };
 
             await SaveChangeProgress(fromClass, oldStudentClass, newStudentClass, oldStudentAttendance, newStudentAttendance, oldStudentEvaluate, newStudentEvaluate, newNotification);
@@ -4003,7 +4003,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var st in students)
             {
                 var studentId = st.StudentId;
-                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId, include: x => x.Include(x => x.User));
+                var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentId, include: x => x.Include(x => x.Parent));
                 var res = new StudentGradeResponse
                 {
                     DateOfBirth = student.DateOfBirth,
@@ -4011,7 +4011,7 @@ namespace MagicLand_System.Services.Implements
                     Id = student.Id,
                     ImgAvatar = student.AvatarImage,
                     Name = student.FullName,
-                    ParentPhoneNumber = student.User.Phone,
+                    ParentPhoneNumber = student.Parent.Phone,
                 };
                 var syllabusId = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId), selector: x => x.Course!.SyllabusId);
                 //var syllabusId = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == syllabusId, selector: x => x.Id);
@@ -4147,7 +4147,7 @@ namespace MagicLand_System.Services.Implements
                 include: x => x.Include(x => x.Course!).Include(x => x.StudentClasses).Include(x => x.Schedules).ThenInclude(sc => sc.Slot!));
 
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId),
-                    include: x => x.Include(x => x.User));
+                    include: x => x.Include(x => x.Parent));
 
                 if (toClass.StudentClasses.Any(sc => sc.StudentId.ToString() == studentId))
                 {

@@ -591,7 +591,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             var students = await _unitOfWork.GetRepository<Student>()
-               .GetListAsync(predicate: x => x.AddedTime >= GetCurrentTime().AddDays((int)time), include: x => x.Include(x => x.User));
+               .GetListAsync(predicate: x => x.AddedTime >= GetCurrentTime().AddDays((int)time), include: x => x.Include(x => x.Parent));
 
             return students.Select(stu => _mapper.Map<StudentStatisticResponse>(stu)).ToList();
         }

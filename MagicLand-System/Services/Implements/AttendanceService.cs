@@ -30,7 +30,7 @@ namespace MagicLand_System.Services.Implements
                 return new List<StaffAttandaceResponse>();
             }
             List<StaffAttandaceResponse> responses = new List<StaffAttandaceResponse>();
-            var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()), include: x => x.Include(x => x.Student).ThenInclude(x => x.User));
+            var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()), include: x => x.Include(x => x.Student).ThenInclude(x => x.Parent));
             var studentclassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == classx.Id && x.Status.Equals("Saved"));
             foreach (var attendance in attandances)
             {
@@ -84,7 +84,7 @@ namespace MagicLand_System.Services.Implements
             }
             if (searchString != null)
             {
-                responses = responses.Where(x => (x.Student.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim()) || x.Student.User.Phone.Trim().Equals(searchString))).ToList();
+                responses = responses.Where(x => (x.Student.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim()) || x.Student.Parent.Phone.Trim().Equals(searchString))).ToList();
             }
 
             return responses;

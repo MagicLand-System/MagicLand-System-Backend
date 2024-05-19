@@ -1350,7 +1350,7 @@ namespace MagicLand_System.Services.Implements
             var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && classes.Any(p => p == x.ClassId));
             var newClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId));
             var newSchedule = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(classId));
-            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentClass.StudentId, include: x => x.Include(x => x.User));
+            var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == studentClass.StudentId, include: x => x.Include(x => x.Parent));
             List<Attendance> attendances1 = new List<Attendance>();
             List<Evaluate> evaluates = new List<Evaluate>();
             foreach (var schedule in newSchedule)
@@ -1386,7 +1386,7 @@ namespace MagicLand_System.Services.Implements
                         });
             var listItemIdentify = new List<string>
                 {
-                          StringHelper.TrimStringAndNoSpace(student.User.Id.ToString()),
+                          StringHelper.TrimStringAndNoSpace(student.Parent.Id.ToString()),
                           StringHelper.TrimStringAndNoSpace("Chuyển lớp sau khi bảo lưu"),
                           StringHelper.TrimStringAndNoSpace($"Bạn đã được chuyển vào lớp {newClass.ClassCode}"),
                           StringHelper.TrimStringAndNoSpace(newClass.Id.ToString()),
@@ -1403,7 +1403,7 @@ namespace MagicLand_System.Services.Implements
                 Title = "Chuyển sau khi bảo lưu",
                 Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
                 ActionData = actionData,
-                UserId = student.User.Id,
+                UserId = student.Parent.Id,
                 Identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify)),
             };
             await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);

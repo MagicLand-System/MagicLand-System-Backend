@@ -27,8 +27,8 @@ namespace MagicLand_System.Mappers.Students
            .ForMember(dest => dest.ImgAvatar, opt => opt.MapFrom(src => src.Student!.AvatarImage))
            .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.Student!.DateOfBirth))
            .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Student!.Gender))
-           .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.Student!.User.FullName))
-           .ForMember(dest => dest.ParentPhoneNumber, opt => opt.MapFrom(src => src.Student!.User.Phone));
+           .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.Student!.Parent.FullName))
+           .ForMember(dest => dest.ParentPhoneNumber, opt => opt.MapFrom(src => src.Student!.Parent.Phone));
 
             CreateMap<Student, StudentStatisticResponse>()
             .ForMember(dest => dest.StudentId, opt => opt.MapFrom(src => src.Id))
@@ -38,7 +38,7 @@ namespace MagicLand_System.Mappers.Students
             .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
             .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-            .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.User.FullName))
+            .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.Parent.FullName))
             .ForMember(dest => dest.AddedTime, opt => opt.MapFrom(src => src.AddedTime));
 
             CreateMap<Student, StudentWithAccountResponse>()
