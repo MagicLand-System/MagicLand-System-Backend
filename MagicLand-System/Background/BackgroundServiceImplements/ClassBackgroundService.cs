@@ -6,7 +6,6 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
@@ -133,10 +132,16 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
 
                 cls.Status = classStatus.ToString();
-                UpdateAttendance(cls, classStatus);
 
                 if (classStatus == ClassStatusEnum.PROGRESSING)
                 {
+                    var schedules = cls.Schedules;
+
+                    foreach (var schedule in schedules)
+                    {
+                        schedule.Attendances.ToList().ForEach(att => att.IsPublic = true);
+                    }
+
                     studentClass.ForEach(sc => sc.CanChangeClass = false);
                     _unitOfWork.GetRepository<StudentClass>().UpdateRange(studentClass);
                     await _unitOfWork.CommitAsync();
@@ -183,21 +188,79 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
             });
         }
 
-        private void UpdateAttendance(Class cls, ClassStatusEnum classStatus)
+        public async Task<string> UpdateAttendanceInTimeAsync()
         {
-            var schedules = cls.Schedules;
-
-            foreach (var schedule in schedules)
+            try
             {
-                if (classStatus == ClassStatusEnum.COMPLETED)
+                using (var scope = _serviceScopeFactory.CreateScope())
                 {
-                    schedule.Attendances.ToList().ForEach(att => att.IsValid = false);
-                }
-                if (classStatus == ClassStatusEnum.PROGRESSING)
-                {
-                    schedule.Attendances.ToList().ForEach(att => att.IsPublic = true);
+
+                    var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
+                    var currentTime = BackgoundTime.GetTime();
+
+                    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status == ClassStatusEnum.PROGRESSING.ToString());
+
+                    var updateAttendances = new List<Attendance>();
+                    var deleteAttendances = new List<Attendance>();
+                    var updateEvaluates = new List<Evaluate>();
+                    var deleteEvaluates = new List<Evaluate>();
+
+                    foreach (var cls in classes)
+                    {
+                        var scheduleHasStudentMakeUp = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                            predicate: x => x.Schedule!.ClassId == cls.Id && x.MakeUpFromScheduleId != null,
+                            include: x => x.Include(x => x.Schedule)!);
+
+                        foreach (var currentAttendance in scheduleHasStudentMakeUp)
+                        {
+                            if (currentAttendance.Schedule!.Date.Date == currentTime.AddDays(-1).Date)
+                            {
+                                var currentEvaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == currentAttendance.ScheduleId && x.StudentId == currentAttendance.StudentId);
+
+                                var originAttendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == currentAttendance.MakeUpFromScheduleId && x.StudentId == currentAttendance.StudentId);
+                                var originEvaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == currentAttendance.MakeUpFromScheduleId && x.StudentId == currentAttendance.StudentId);
+
+                                originAttendance.IsPresent = currentAttendance.IsPresent;
+                                originAttendance.Note = currentAttendance.Note;
+                                originAttendance.IsPublic = true;
+
+                                originEvaluate.Status = currentEvaluate.Status;
+                                originEvaluate.Note = currentEvaluate.Note;
+                                originEvaluate.IsPublic = true;
+
+                                updateAttendances.Add(originAttendance);
+                                updateEvaluates.Add(originEvaluate);
+                                deleteAttendances.Add(currentAttendance);
+                                deleteEvaluates.Add(currentEvaluate);
+                            }
+                        }
+                    }
+
+
+                    if (updateAttendances.Count > 0)
+                    {
+                        _unitOfWork.GetRepository<Attendance>().UpdateRange(updateAttendances);
+                    }
+                    if (deleteAttendances.Count > 0)
+                    {
+                        _unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(deleteAttendances);
+                    }
+                    if (updateEvaluates.Count > 0)
+                    {
+                        _unitOfWork.GetRepository<Evaluate>().UpdateRange(updateEvaluates);
+                    }
+                    if (deleteEvaluates.Count > 0)
+                    {
+                        _unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(deleteEvaluates);
+                    }
+                    _unitOfWork.Commit();
                 }
             }
+            catch (Exception ex)
+            {
+                return $"Updating Attendances Got An Error: [{ex.Message}]";
+            }
+            return "Updating Attendances Success";
         }
     }
 }

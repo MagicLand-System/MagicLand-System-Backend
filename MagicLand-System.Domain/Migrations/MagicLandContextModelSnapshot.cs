@@ -34,8 +34,8 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<bool?>("IsPublic")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("IsValid")
-                        .HasColumnType("bit");
+                    b.Property<Guid?>("MakeUpFromScheduleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
@@ -233,8 +233,11 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("IsValid")
+                    b.Property<bool?>("IsPublic")
                         .HasColumnType("bit");
+
+                    b.Property<Guid?>("MakeUpFromScheduleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
@@ -1118,9 +1121,6 @@ namespace MagicLand_System.Domain.Migrations
 
                     b.Property<int>("CorrectMark")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("DoingDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<TimeSpan>("DoingTime")
                         .HasColumnType("time");

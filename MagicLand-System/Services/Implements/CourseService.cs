@@ -1362,12 +1362,12 @@ namespace MagicLand_System.Services.Implements
                     IsPublic = true,
                     ScheduleId = schedule.Id,
                     StudentId = studentClass.StudentId,
-                    IsValid = true,
+                    MakeUpFromScheduleId = null,
                 };
                 var evaluate = new Evaluate
                 {
                     Id = Guid.NewGuid(),
-                    IsValid = true,
+                    IsPublic = true,
                     ScheduleId = schedule.Id,
                     StudentId = student.Id,
 

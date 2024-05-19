@@ -13,7 +13,6 @@ namespace MagicLand_System.Domain.Models
         public int TotalMark { get; set; }
         public int CorrectMark { get; set; }
         public TimeSpan DoingTime { get; set; }
-        public DateTime DoingDate { get; set; }
         public double TotalScore { get; set; }
         public double ScoreEarned { get; set; }
         public string? ExamStatus { get; set; }

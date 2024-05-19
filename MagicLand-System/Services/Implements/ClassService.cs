@@ -1097,13 +1097,57 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<bool> MakeUpClass(string StudentId, string ScheduleId, MakeupClassRequest request)
         {
-            var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId)));
-            if (attendance == null) { return false; }
-            attendance.ScheduleId = Guid.Parse(request.ScheduleId);
-            attendance.Note = string.Empty;
-            _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
-            var isSuccess = await _unitOfWork.CommitAsync() > 0;
-            return isSuccess;
+            try
+            {
+                var currentClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Schedules.Any(sch => sch.Id == Guid.Parse(ScheduleId)));
+                var makeUpClass = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Schedules.Any(sch => sch.Id == Guid.Parse(request.ScheduleId)));
+
+                if (currentClass == null || makeUpClass == null) { return false; }
+
+                if (currentClass.CourseId != makeUpClass.CourseId)
+                {
+                    throw new BadHttpRequestException($"Không Thể Chuyển Lớp Học Bù Cho 2 Lớp Khác Khóa Học", StatusCodes.Status400BadRequest);
+                }
+
+                var attendance = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId)));
+                var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => (x.StudentId.ToString().Equals(StudentId) && x.ScheduleId.ToString().Equals(ScheduleId)));
+
+                attendance.IsPublic = false;
+                evaluate.IsPublic = false;
+
+                var makeUpAttendance = new Attendance
+                {
+                    Id = Guid.NewGuid(),
+                    IsPresent = null,
+                    IsPublic = true,
+                    Note = null,
+                    MakeUpFromScheduleId = Guid.Parse(ScheduleId),
+                    StudentId = Guid.Parse(StudentId),
+                    ScheduleId = Guid.Parse(request.ScheduleId)
+                };
+                var makeUpEvaluate = new Evaluate
+                {
+                    Id = Guid.NewGuid(),
+                    IsPublic = true,
+                    Note = null,
+                    Status = null,
+                    MakeUpFromScheduleId = Guid.Parse(ScheduleId),
+                    StudentId = Guid.Parse(StudentId),
+                    ScheduleId = Guid.Parse(request.ScheduleId),
+                };
+
+                _unitOfWork.GetRepository<Evaluate>().UpdateAsync(evaluate);
+                _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
+                await _unitOfWork.GetRepository<Evaluate>().InsertAsync(makeUpEvaluate);
+                await _unitOfWork.GetRepository<Attendance>().InsertAsync(makeUpAttendance);
+
+                var isSuccess = _unitOfWork.Commit() > 0;
+                return isSuccess;
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh: [{ex}]", StatusCodes.Status500InternalServerError);
+            }
         }
 
         public async Task<List<ScheduleResponse>> GetScheduleCanMakeUp(string scheduleId, string studentId, DateTime? date = null, string? keyword = null, string? slotId = null)
@@ -1121,7 +1165,7 @@ namespace MagicLand_System.Services.Implements
             {
                 Ids.Add(group.Key);
             }
-            var scheduleClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString()) &&  x.Class.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString())).ToList();
+            var scheduleClassIndex = allSchedule.Where(x => x.Class.Id.ToString().Equals(schedule.Class.Id.ToString()) && x.Class.Status!.Equals(ClassStatusEnum.PROGRESSING.ToString())).ToList();
             var scheduleClassSort = scheduleClassIndex.OrderBy(x => x.Date).ToArray();
             int index = -1;
             for (int i = 0; i < scheduleClassSort.Length; i++)
@@ -2497,7 +2541,7 @@ namespace MagicLand_System.Services.Implements
             //{
             //var deleteClasses = new List<Class>();
             //var deleteSyllabuses = new List<Syllabus>();
-            //var deleteCourses = new List<Course>();
+            //var deleteCourses = new List<Course>();            
 
             //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
 
@@ -2923,20 +2967,14 @@ namespace MagicLand_System.Services.Implements
             {
                 return new ScheduleWithAttendanceResponse();
             }
-            var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
-            var attendances = new List<Attendance>();
-            foreach (var stu in studentClass)
+            var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
+                predicate: x => x.ScheduleId == schedule.Id && x.IsPublic == true,
+                include: x => x.Include(x => x.Student)!);
+
+            var savedStudentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id && x.SavedTime != null);
+            if (savedStudentClass != null && savedStudentClass.Any())
             {
-                if (stu.SavedTime != null)
-                {
-                    continue;
-                }
-
-                var atts = (await _unitOfWork.GetRepository<Attendance>().GetListAsync(
-                               predicate: x => x.ScheduleId == schedule.Id && x.Student!.Id == stu.StudentId,
-                               include: x => x.Include(x => x.Student)!)).ToList();
-
-                attendances.AddRange(atts);
+                attendances = attendances.Where(att => !savedStudentClass.Select(x => x.StudentId).Contains(att.StudentId)).ToList();
             }
 
             schedule.Attendances = attendances;
@@ -3126,7 +3164,7 @@ namespace MagicLand_System.Services.Implements
                     Id = Guid.NewGuid(),
                     Status = null,
                     Note = null,
-                    IsValid = true,
+                    IsPublic = true,
                     StudentId = student.Id,
                     ScheduleId = schedule.Id,
                 });
@@ -4173,7 +4211,7 @@ namespace MagicLand_System.Services.Implements
                 var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == classx.CourseId);
                 var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == found.StudentId);
                 var parent = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == student.ParentId);
-                var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id,include : x => x.Include(x => x.Slot)!);
+                var listSc = await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == classx.Id, include: x => x.Include(x => x.Slot)!);
                 var dateCheck = schedule.Date.Date;
                 var schArray = listSc.OrderBy(x => x.Date).ToArray();
                 var index = 0;
@@ -4241,7 +4279,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     status = "Invalid";
                 }
-                var endTime = schArray[schArray.Length -1].Slot!.EndTime;
+                var endTime = schArray[schArray.Length - 1].Slot!.EndTime;
                 var hour = int.Parse(endTime.Split(':')[0]);
                 var minute = int.Parse(endTime.Split(':')[1]);
                 var newresponse = new CanNotMakeUpResponse

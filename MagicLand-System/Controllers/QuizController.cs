@@ -111,6 +111,7 @@ namespace MagicLand_System.Controllers
         /// </summary>
         /// <param name="classId">Id Của Lớp Học</param>
         /// <param name="studentId">Id Của Học Sinh (Option)</param>
+        /// <param name="examId">Id Của Bài Kiểm Tra (Option)</param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -127,9 +128,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(StudenInforAndScore), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STAFF")]
-        public async Task<IActionResult> GetStudentQuizInfor([FromQuery] Guid classId, [FromQuery] Guid? studentId)
+        public async Task<IActionResult> GetStudentQuizInfor([FromQuery] Guid classId, [FromQuery] Guid? studentId, [FromQuery] Guid? examId)
         {
-            var responses = await _quizService.GetStudentInforAndScoreAsync(classId, studentId);
+            var responses = await _quizService.GetStudentInforAndScoreAsync(classId, studentId, examId);
 
             return Ok(responses);
         }
@@ -230,7 +231,7 @@ namespace MagicLand_System.Controllers
         [HttpPost(ApiEndpointConstant.QuizEndpoint.GradeQuizOffLine)]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
-        [Authorize(Roles = "LECTURER ,DEVELOPER")]
+        [Authorize(Roles = "LECTURER ,DEVELOPER, STAFF")]
         public async Task<IActionResult> GradeQuizOffLine([FromQuery] QuizRequest quizInfor, [FromQuery] bool? isCheckingTime, [FromBody] List<StudentExamGrade> studentExamGrades)
         {
             var examOffLineStudentWork = new ExamOffLineRequest

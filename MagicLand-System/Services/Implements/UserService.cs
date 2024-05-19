@@ -541,7 +541,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 if (request.FullName != null)
                 {
-                    if(currentUser.PersonalWallet != null)
+                    if (currentUser.PersonalWallet != null)
                     {
                         await UpdateCurrentUserTransaction(request, currentUser);
                     }
@@ -555,7 +555,7 @@ namespace MagicLand_System.Services.Implements
                 currentUser.Address = request.Address;
 
                 _unitOfWork.GetRepository<User>().UpdateAsync(currentUser);
-                await _unitOfWork.CommitAsync();
+                _unitOfWork.Commit();
 
                 return _mapper.Map<UserResponse>(currentUser);
 
@@ -570,15 +570,14 @@ namespace MagicLand_System.Services.Implements
         {
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId == currentUser.Id);
 
-            var oldTransactions = await _unitOfWork.GetRepository<WalletTransaction>()
-               .GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id);
+            var oldTransactions = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.PersonalWalletId == personalWallet.Id);
 
             foreach (var trans in oldTransactions)
             {
                 trans.CreateBy = request.FullName;
                 trans.UpdateTime = DateTime.Now;
-                trans.PersonalWalletId = personalWallet.Id;
-                trans.PersonalWallet = personalWallet;
+                //trans.PersonalWalletId = personalWallet.Id;
+                //trans.PersonalWallet = personalWallet;
             }
 
             _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(oldTransactions);
@@ -1271,7 +1270,7 @@ namespace MagicLand_System.Services.Implements
             var attendancesArray = new List<Attendance>();
             for (int i = 0; i < schedules.Length; i++)
             {
-                var att = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedules[i].Id && x.StudentId.ToString().Equals(studentId),include : x => x.Include(x => x.Schedule)!);
+                var att = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == schedules[i].Id && x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Schedule)!);
                 if (att != null)
                 {
                     attendancesArray.Add(att);
@@ -1291,7 +1290,7 @@ namespace MagicLand_System.Services.Implements
             for (int i = 0; i < schedules.Length; i++)
             {
                 var status = "";
-                if(i >= attendancesArray1.Length -1 )
+                if (i >= attendancesArray1.Length - 1)
                 {
                     break;
                 }

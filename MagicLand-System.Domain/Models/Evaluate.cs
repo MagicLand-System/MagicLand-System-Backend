@@ -7,7 +7,8 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public string? Status { get; set; } = string.Empty;
         public string? Note { get; set; } = string.Empty;
-        public bool? IsValid { get; set; } = true;
+        public bool? IsPublic { get; set; } = true;
+        public Guid? MakeUpFromScheduleId { get; set; } = null;
 
         [ForeignKey("Student")]
         public Guid StudentId { get; set; }

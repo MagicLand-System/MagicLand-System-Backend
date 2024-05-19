@@ -169,6 +169,7 @@ namespace MagicLand_System.Controllers
         [HttpPut(ApiEndpointConstant.UserEndpoint.UpdateUser)]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
+        [Authorize]
         public async Task<IActionResult> UpdateUser([FromBody] UserRequest request)
         {
             var response = await _userService.UpdateUserAsync(request);

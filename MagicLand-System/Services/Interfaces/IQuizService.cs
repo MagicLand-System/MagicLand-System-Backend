@@ -10,7 +10,7 @@ namespace MagicLand_System.Services.Interfaces
 {
     public interface IQuizService
     {
-        Task<List<StudenInforAndScore>> GetStudentInforAndScoreAsync(Guid classId, Guid? studentId);
+        Task<List<StudenInforAndScore>> GetStudentInforAndScoreAsync(Guid classId, Guid? studentId, Guid? examId);
         Task<List<FinalResultResponse>> GetFinalResultAsync(List<Guid> studentIdList);
         Task<List<QuizResultExtraInforResponse>> GetCurrentStudentQuizDoneAsync();
         Task<List<StudentWorkResult>> GetCurrentStudentQuizDoneWorkAsync(Guid examId, int? noAttempt);

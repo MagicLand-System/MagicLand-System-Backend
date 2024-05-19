@@ -472,7 +472,7 @@ namespace MagicLand_System.Services.Implements
                     ScheduleId = schedule.Id,
                     Status = null,
                     Note = string.Empty,
-                    IsValid = true,
+                    IsPublic = true,
                 }).ToList();
 
                 studentEvaluateList.AddRange(studentEvaluate);
