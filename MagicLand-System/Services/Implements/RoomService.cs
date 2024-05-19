@@ -131,7 +131,7 @@ namespace MagicLand_System.Services.Implements
                     if(searchString != null && sch.IsUse)
                     {
                         var isMatch = false;
-                        isMatch = ((sch.ClassCode.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (lecturer.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim())));
+                        isMatch = ((sch.ClassCode.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (lecturer.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (sch.Date.ToString() == searchString));
                         if (!isMatch)
                         {
                             sch.IsUse = false;
