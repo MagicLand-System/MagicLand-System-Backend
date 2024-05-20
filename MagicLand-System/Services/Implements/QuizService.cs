@@ -2091,7 +2091,7 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
 
-                    var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                    var allTestResult = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
                         orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                         predicate: x => x.StudentClass!.StudentId == sc.StudentId && x.ExamId == quiz.Id);
 
@@ -2100,7 +2100,7 @@ namespace MagicLand_System.Services.Implements
                     var extensionName = quiz.PackageType == PackageTypeEnum.FinalExam.ToString() ? "" : " " + quiz.OrderPackage;
 
                     var currentWeight = currentExam != null ? currentExam.Weight / currentExam.Part : 0;
-                    if (testResult == null)
+                    if (allTestResult == null || !allTestResult.Any())
                     {
                         studentWorkFullyInfors.Add(new StudentWorkFullyInfor
                         {
@@ -2122,6 +2122,8 @@ namespace MagicLand_System.Services.Implements
                     }
                     else
                     {
+                        var testResult = allTestResult.First();
+
                         studentWorkFullyInfors.Add(new StudentWorkFullyInfor
                         {
                             ExamId = quiz.Id,
