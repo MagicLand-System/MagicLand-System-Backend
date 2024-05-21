@@ -668,6 +668,62 @@ namespace MagicLand_System.Services.Implements
                 adminLecturerResponses = adminLecturerResponses.OrderByDescending(x => x.Date).ThenBy(x => x.FullName).ToList();
             }
             return adminLecturerResponses;
+            //// var user = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role).Include(x => x.LecturerField));
+            //var lecturers = user.Where(x => x.Role.Name.ToLower().Equals("lecturer"));
+            //List<AdminLecturerResponse> adminLecturerResponses = new List<AdminLecturerResponse>();
+            //foreach (var lecturer in lecturers)
+            //{
+            //    List<Schedule> mySchedule = new List<Schedule>();
+            //    var schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(include: x => x.Include(x => x.Class).Include(x => x.Room).Include(x => x.Slot));
+            //    var filterSchedules2 = schedules.Where(x => x.Class.LecturerId.ToString().Equals(lecturer.Id.ToString()));
+            //    mySchedule.AddRange(filterSchedules2);
+            //    if (mySchedule.Count > 0)
+            //    {
+            //        foreach (var schedule in mySchedule)
+            //        {
+            //            var adminResponse = new AdminLecturerResponse
+            //            {
+            //                Address = lecturer.Address,
+            //                AvatarImage = lecturer.AvatarImage,
+            //                ClassCode = schedule.Class.ClassCode,
+            //                ClassRoom = schedule.Room.Name,
+            //                Date = schedule.Date,
+            //                DateOfBirth = lecturer.DateOfBirth,
+            //                Email = lecturer.Email,
+            //                StartTime = schedule.Slot.StartTime,
+            //                EndTime = schedule.Slot.EndTime,
+            //                FullName = lecturer.FullName,
+            //                Gender = lecturer.Gender,
+            //                LecturerField = lecturer.LecturerField.Name,
+            //                Phone = lecturer.Phone
+            //            };
+            //            adminLecturerResponses.Add(adminResponse);
+
+            //        }
+            //    }
+            //}
+            //if (adminLecturerResponses.Count > 0)
+            //{
+            //    if (startDate != null)
+            //    {
+            //        adminLecturerResponses = adminLecturerResponses.Where(x => x.Date >= startDate).ToList();
+            //    }
+            //    if (endDate != null)
+            //    {
+            //        adminLecturerResponses = adminLecturerResponses.Where(x => x.Date <= endDate.Value.AddHours(23)).ToList();
+            //    }
+            //    if (searchString != null)
+            //    {
+            //        adminLecturerResponses = adminLecturerResponses.Where(x => (x.LecturerField.ToLower().Trim().Contains(searchString.ToLower().Trim()) || x.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim()) || x.Phone.Trim().ToLower().Contains(searchString.ToLower().Trim()))).ToList();
+            //    }
+            //    if (slotId != null)
+            //    {
+            //        var startTime = await _unitOfWork.GetRepository<Slot>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(slotId), selector: x => x.StartTime);
+            //        adminLecturerResponses = adminLecturerResponses.Where(x => x.StartTime.Equals(startTime)).ToList();
+            //    }
+            //    adminLecturerResponses = adminLecturerResponses.OrderByDescending(x => x.Date).ThenBy(x => x.FullName).ToList();
+            //}
+            //return adminLecturerResponses;
 
         }
 
