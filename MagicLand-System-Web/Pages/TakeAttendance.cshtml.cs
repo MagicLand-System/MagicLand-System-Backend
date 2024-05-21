@@ -101,6 +101,103 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnPostProgressAsync(int inputField, string listId, string submitButton)
         {
+            var a = new List<StudentLearningInfor>
+            {
+                new StudentLearningInfor
+                {
+                    StudentName = "a",
+                    LearningInfors = new List<AttendanceAndEvaluateInfor>
+                    {
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "a",
+                            Date = " a",
+                            EvaluateNote = "a",
+                            EvaluateStatus = "a",
+                        },
+
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "a",
+                            Date = " a",
+                            EvaluateNote = "a",
+                            EvaluateStatus = "a",
+                        },
+
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "a",
+                            Date = " a",
+                            EvaluateNote = "a",
+                            EvaluateStatus = "a",
+                        },
+                    }
+                },
+                 new StudentLearningInfor
+                {
+                    StudentName = "b",
+                    LearningInfors = new List<AttendanceAndEvaluateInfor>
+                    {
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "b",
+                            Date = " a",
+                            EvaluateNote = "a",
+                            EvaluateStatus = "a",
+                        },
+
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "b",
+                            Date = " a",
+                            EvaluateNote = "b",
+                            EvaluateStatus = "b",
+                        },
+
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "b",
+                            Date = " a",
+                            EvaluateNote = "a",
+                            EvaluateStatus = "a",
+                        },
+                    }
+                },
+                  new StudentLearningInfor
+                {
+                    StudentName = "c",
+                    LearningInfors = new List<AttendanceAndEvaluateInfor>
+                    {
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "c",
+                            Date = " c",
+                            EvaluateNote = "c",
+                            EvaluateStatus = "c",
+                        },
+
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "c",
+                            Date = " c",
+                            EvaluateNote = "c",
+                            EvaluateStatus = "c",
+                        },
+
+                        new AttendanceAndEvaluateInfor
+                        {
+                            AttendanceStatus = "c",
+                            Date = " c",
+                            EvaluateNote = "c",
+                            EvaluateStatus = "c",
+                        },
+                    }
+                }
+            };
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataLearning", a);
+            return Page();
+
+
             if (submitButton == "Refresh")
             {
                 CurrentStudentLearningMessage = null;
@@ -163,7 +260,9 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public IActionResult OnPostTableControl(string indexPage, string tableButtonSubmit)
         {
-            var classes = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
+            var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
+            var messagesSearch = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearningSearch");
+
             int parseIndex = int.Parse(indexPage);
             int newIndex = tableButtonSubmit == "Next" ? parseIndex + 1 : parseIndex - 1;
 
@@ -171,51 +270,68 @@ namespace MagicLand_System_Web_Dev.Pages
             {
                 newIndex = parseIndex;
             }
-            if (parseIndex == classes.Count - 1 && tableButtonSubmit == "Next")
+
+            if (messagesSearch != null)
             {
-                newIndex = parseIndex;
+                if (parseIndex == messagesSearch.Count - 1 && tableButtonSubmit == "Next")
+                {
+                    newIndex = parseIndex;
+                }
+
+                CurrentStudentLearningMessage = messagesSearch[newIndex];
+            }
+            else
+            {
+                if (parseIndex == messages.Count - 1 && tableButtonSubmit == "Next")
+                {
+                    newIndex = parseIndex;
+                }
+
+                CurrentStudentLearningMessage = messages[newIndex];
             }
 
-            CurrentStudentLearningMessage = classes[newIndex];
             ViewData["IndexPage"] = newIndex;
-
             return Page();
         }
 
         public IActionResult OnPostSearch(string searchKey, string searchType)
         {
+            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+            var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
 
-            //if (string.IsNullOrEmpty(searchKey))
-            //{
-            //    CurrentStudentLearningMessage = null;
-            //    Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                if (classes != null && classes.Any())
+                {
+                    Classes = classes;
+                    return Page();
+                }
+
+                if (messages != null && messages.Any())
+                {
+                    CurrentStudentLearningMessage = messages.First();
+                }
+
+            }
+
+            var key = searchKey.Trim().ToLower();
+            if (searchType == "MESSAGE")
+            {
+                messages = messages!.Where(mess => mess.StudentName.ToLower().Contains(key)).ToList();
+
+                CurrentStudentLearningMessage = messages.First();
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DataLearningSearch", messages);
+            }
+            if (searchType == "DATA")
+            {
+                Classes = classes!.Where(
+                    c => c.ClassCode.ToLower().Contains(key) ||
+                    c.CourseBeLong.ToLower().Contains(key) ||
+                    c.LecturerBeLong.ToLower().Contains(key)
+                    ).ToList();
+            }
+
             return Page();
-            //}
-
-            //var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
-
-            //var key = searchKey.Trim().ToLower();
-            //if (searchType == "MESSAGE")
-            //{
-            //    var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
-
-            //    StudentMessages = messages.Where(
-            //       mess => mess.StudentName.ToLower().Contains(key) ||
-            //       mess.ParentBelong.ToLower().Contains(key) ||
-            //       mess.AccountArise.ToLower().Contains(key)
-            //       ).ToList();
-            //}
-            //if (searchType == "DATA")
-            //{
-            //    var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
-
-            //    Parents = parents.Where(
-            //        c => c.FullName.ToLower().Contains(key) ||
-            //        c.Phone.ToLower().Contains(key)
-            //        ).ToList();
-            //}
-
-            //return Page();
         }
     }
 }

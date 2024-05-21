@@ -136,9 +136,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(StudentScheduleResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(NotFoundResult))]
         [CustomAuthorize(Enums.RoleEnum.PARENT)]
-        public async Task<IActionResult> GetScheduleFromStudent([FromQuery] string studentId)
+        public async Task<IActionResult> GetScheduleFromStudent([FromQuery] string studentId, [FromQuery] Guid? classId, [FromQuery] DateTime? date)
         {
-            var response = await _studentService.GetScheduleOfStudent(studentId);
+            var response = await _studentService.GetScheduleOfStudent(studentId, classId, date);
             if (response == null || response.Count == 0)
             {
                 return NotFound(new ErrorResponse

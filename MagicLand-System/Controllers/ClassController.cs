@@ -282,7 +282,7 @@ namespace MagicLand_System.Controllers
 
             var allStudentSchedules = new List<StudentScheduleResponse>();
             foreach (var task in studentIdList.Select(async stu => await _studentService
-            .GetScheduleOfStudent(stu.ToString())))
+            .GetScheduleOfStudent(stu.ToString(), null, null)))
             {
                 var schedules = await task;
                 allStudentSchedules.AddRange(schedules);

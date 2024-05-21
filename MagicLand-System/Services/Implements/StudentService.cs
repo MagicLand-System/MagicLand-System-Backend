@@ -991,9 +991,8 @@ namespace MagicLand_System.Services.Implements
             return responses;
 
         }
-        public async Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId)
+        public async Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId, Guid? classId, DateTime? date)
         {
-
             var student = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(studentId));
             if (student == null)
             {
@@ -1008,6 +1007,16 @@ namespace MagicLand_System.Services.Implements
             {
                 return new List<StudentScheduleResponse>();
             }
+            if (classId != null && classId != default)
+            {
+                classes = classes.Where(cls => cls.Id == classId).ToList();
+
+                if (!classes.Any())
+                {
+                    throw new BadHttpRequestException($"Id [{classId}] Của Lớp Không Tồn Tại, Không Thuộc Lớp Học Của Học Sinh Hoặc Id Thuộc Lớp Đã Bảo Lưu", StatusCodes.Status400BadRequest);
+                }
+            }
+
             var listStudentSchedule = new List<StudentScheduleResponse>();
             foreach (var cls in classes)
             {
@@ -1035,6 +1044,19 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 var schedules = cls.Schedules.ToList();
+                if (date != null && date != default)
+                {
+                    schedules = schedules.Where(sch => sch.Date.Date == date.Value.Date).ToList();
+                    if (!schedules.Any())
+                    {
+                        if (classId != null && classId != default)
+                        {
+                            throw new BadHttpRequestException($"Ngày [{date}] Không Hợp Lệ Khi Không Thuộc Lịch Học Lớp Đang Truy Vấn", StatusCodes.Status400BadRequest);
+                        }
+                        continue;
+                    }
+                }
+
                 for (int i = 0; i < schedules.Count; i++)
                 {
                     var schedule = schedules[i];

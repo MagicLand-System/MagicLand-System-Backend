@@ -2113,7 +2113,7 @@ namespace MagicLand_System.Services.Implements
                             TotalMark = null,
                             CorrectMark = null,
                             TotalScore = quiz.Score,
-                            ScoreEarned = null,
+                            ScoreEarned = cls.Status == ClassStatusEnum.COMPLETED.ToString() ? 0 : null,
                             DoingTime = null,
                             DoingDate = cls.Schedules.ToList()[quiz.NoSession - 1].Date,
                             ExamStatus = null,

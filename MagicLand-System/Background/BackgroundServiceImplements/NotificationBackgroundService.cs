@@ -6,6 +6,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
@@ -171,6 +172,37 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         await GenerateNotification(currentDate, newNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
                               NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
                               currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                    }
+                }
+            }
+
+            await HandelSavedStudentClass(currentDate, newNotifications, cls, _unitOfWork);
+        }
+
+        private async Task HandelSavedStudentClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
+        {
+            var studentSavedClass = cls.StudentClasses.Where(sc => sc.SavedTime != null).ToList();
+            if (studentSavedClass != null && studentSavedClass.Any())
+            {
+                foreach (var savedStudent in studentSavedClass)
+                {
+                    if (savedStudent.SavedTime!.Value.Date >= currentDate)
+                    {
+                        var allNewClassOpen = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == cls.CourseId && x.Status == ClassStatusEnum.UPCOMING.ToString());
+                        if (allNewClassOpen != null && allNewClassOpen.Any())
+                        {
+                            foreach (var openClass in allNewClassOpen)
+                            {
+                                var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                                {
+                                    ($"{AttachValueEnum.ClassId}", $"{openClass.Id}"),
+                                });
+
+                                await GenerateNotification(currentDate, newNotifications, savedStudent.Student!.ParentId, NotificationMessageContant.RemindRegisterNewClassWhenMakeUpTitle,
+                                NotificationMessageContant.RemindRegisterNewClassWhenMakeUpBody(savedStudent.Student!.FullName!, openClass.ClassCode!, cls.ClassCode!, openClass.StartDate),
+                                NotificationPriorityEnum.REMIND.ToString(), openClass.Image!, actionData, _unitOfWork);
+                            }
+                        }
                     }
                 }
             }

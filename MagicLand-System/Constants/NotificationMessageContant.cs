@@ -25,6 +25,7 @@ namespace MagicLand_System.Constants
         public const string ClassStartedTitle = "Lớp Học Đã Bắt Đầu";
         public const string ClassCanceledTitle = "Lớp Học Đã Hủy";
         public const string ClassCompletedTitle = "Bé Đã Hoàn Thành Lớp Học";
+        public const string RemindRegisterNewClassWhenMakeUpTitle = "Đăng Ký Lớp Mới Cho Lớp Đã Bảo Lưu";
 
         public static string ChangeClassRequestBody(string classCode, string studentName)
         {
@@ -104,5 +105,12 @@ namespace MagicLand_System.Constants
         {
             return $"Chúc Mừng Bé {studentName} Đã Hoàn Thành Lớp Học {classCode} Vào Ngày {DateTime.UtcNow.ToString("MM/dd/yyyy")} ,Vẫn Còn Đó Nhiều Khóa Học Thú Vị Khác Phụ Huynh Hãy Cho Bé Tham Gia Đi Nào";
         }
+
+        public static string RemindRegisterNewClassWhenMakeUpBody (string studentName, string newClassCode, string savedClassCode, DateTime date)
+        {
+            return $"Lớp Học {newClassCode} Mới Mở Có Thời Gian Bắt Đầu Vào Ngày {date.ToString("MM/dd/yyyy")} Thuộc Cùng Khóa Học Với Lớp Học Đã Bảo Lưu {savedClassCode} Của Bé {studentName} Hãy Nhanh Tay Đăng Ký Trước Khi Hết Hạn Bảo Lưu";
+        }
+
+        
     }
 }

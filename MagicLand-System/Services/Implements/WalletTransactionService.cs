@@ -614,13 +614,13 @@ namespace MagicLand_System.Services.Implements
                     predicate: x => x.Id == tempId,
                     include: x => x.Include(x => x.Course)!);
 
-                if(prequisiteSyllabus == null)
+                if (prequisiteSyllabus == null)
                 {
 
                     throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh Id [{id}] Khóa Tiên Quyết Không Tồn Tại", StatusCodes.Status500InternalServerError);
                 }
 
-                if(prequisiteSyllabus.Course != null)
+                if (prequisiteSyllabus.Course != null)
                 {
                     allPrequisiteCourses.Add(prequisiteSyllabus.Course);
                 }
@@ -673,19 +673,20 @@ namespace MagicLand_System.Services.Implements
         {
             double discount = 0.0;
 
-            if (numberItem == 2)
-            {
-                discount = double.Round((total * 10) / 100 / numberItem);
-            }
+            //if (numberItem == 2)
+            //{
+            //    discount = double.Round((total * 10) / 100 / numberItem);
+            //}
 
-            if (numberItem >= 3)
-            {
-                int percent = 10 + (numberItem - 2) * 5;
-                percent = percent > 30 ? 30 : percent;
+            //if (numberItem >= 3)
+            //{
+            //    int percent = 10 + (numberItem - 2) * 5;
+            //    percent = percent > 30 ? 30 : percent;
 
-                discount = double.Round((total * percent) / 100 / numberItem);
-            }
+            //    discount = double.Round((total * percent) / 100 / numberItem);
+            //}
 
+            discount = total / numberItem;
             return discount;
         }
 

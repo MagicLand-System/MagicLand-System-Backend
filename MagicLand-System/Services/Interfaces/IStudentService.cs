@@ -21,7 +21,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<AccountResponse> AddStudent(CreateStudentRequest request);
         Task<List<ClassWithSlotShorten>> GetClassOfStudent(String studentId, string status);
         Task<List<AccountResponse>> GetStudentAccountAsync(Guid? id);
-        Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId);
+        Task<List<StudentScheduleResponse>> GetScheduleOfStudent(string studentId, Guid? classId, DateTime? date);
         Task<List<StudentWithAccountResponse>> GetStudentsOfCurrentParent();
         Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor);
         Task<string> DeleteStudentAsync(Guid id);

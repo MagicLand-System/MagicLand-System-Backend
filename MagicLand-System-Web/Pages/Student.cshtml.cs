@@ -184,7 +184,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
 
                 Parents = parents.Where(
-                    c => c.FullName.ToLower().Contains(key) ||
+                    c => c.FullName!.ToLower().Contains(key) ||
                     c.Phone.ToLower().Contains(key) 
                     ).ToList();
             }

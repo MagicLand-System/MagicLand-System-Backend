@@ -75,7 +75,7 @@ namespace MagicLand_System.Controllers
 
                 var allStudentSchedules = new List<StudentScheduleResponse>();
                 foreach (var task in request.StudentIdList.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.ToString())))
+                .GetScheduleOfStudent(stu.ToString(), null, null)))
                 {
                     var schedules = await task;
                     allStudentSchedules.AddRange(schedules);
@@ -141,7 +141,7 @@ namespace MagicLand_System.Controllers
 
                 var allStudentSchedules = new List<StudentScheduleResponse>();
                 foreach (var task in request.StudentIdList.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.ToString())))
+                .GetScheduleOfStudent(stu.ToString(), null, null)))
                 {
                     var schedules = await task;
                     allStudentSchedules.AddRange(schedules);
@@ -219,7 +219,7 @@ namespace MagicLand_System.Controllers
                 var allStudentSchedules = new List<StudentScheduleResponse>();
 
                 foreach (var task in item!.Students.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.StudentId.ToString())))
+                .GetScheduleOfStudent(stu.StudentId.ToString(), null, null)))
                 {
                     var schedules = await task;
                     allStudentSchedules.AddRange(schedules);
@@ -297,7 +297,7 @@ namespace MagicLand_System.Controllers
                 var allStudentSchedules = new List<StudentScheduleResponse>();
 
                 foreach (var task in item!.Students.Select(async stu => await _studentService
-                .GetScheduleOfStudent(stu.StudentId.ToString())))
+                .GetScheduleOfStudent(stu.StudentId.ToString(), null, null)))
                 {
                     var schedules = await task;
                     allStudentSchedules.AddRange(schedules);

@@ -12,10 +12,10 @@ namespace MagicLand_System_Web_Dev.Pages.Helper
         private readonly HttpClient _httpClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
         //private readonly string Scheme = "https";
-        private readonly string Scheme = "http";
+        //private readonly string Scheme = "http";
         //private readonly string Domain = "https://0abf-2401-d800-7b32-dc1-2c59-564c-ea1-3319.ngrok-free.app";
         //private readonly string Domain = "magiclandapiv2.somee.com";
-        private readonly string Domain = "localhost:5097";
+        //private readonly string Domain = "localhost:5097";
         private string RootUrl = "", CallUrl = "", JsonContent = "";
 
         public ApiHelper(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)
@@ -29,7 +29,8 @@ namespace MagicLand_System_Web_Dev.Pages.Helper
         public async Task<ResultHelper<T>> FetchApiAsync<T>(string postFixUrl, MethodEnum method, object data)
         {
 
-            RootUrl = Scheme + "://" + Domain;
+            //RootUrl = Scheme + "://" + Domain;
+            RootUrl = "http://localhost:5097";
             CallUrl = RootUrl + postFixUrl;
 
             JsonSerializerOptions options = SetHeader();
