@@ -101,103 +101,6 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnPostProgressAsync(int inputField, string listId, string submitButton)
         {
-            var a = new List<StudentLearningInfor>
-            {
-                new StudentLearningInfor
-                {
-                    StudentName = "a",
-                    LearningInfors = new List<AttendanceAndEvaluateInfor>
-                    {
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "a",
-                            Date = " a",
-                            EvaluateNote = "a",
-                            EvaluateStatus = "a",
-                        },
-
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "a",
-                            Date = " a",
-                            EvaluateNote = "a",
-                            EvaluateStatus = "a",
-                        },
-
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "a",
-                            Date = " a",
-                            EvaluateNote = "a",
-                            EvaluateStatus = "a",
-                        },
-                    }
-                },
-                 new StudentLearningInfor
-                {
-                    StudentName = "b",
-                    LearningInfors = new List<AttendanceAndEvaluateInfor>
-                    {
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "b",
-                            Date = " a",
-                            EvaluateNote = "a",
-                            EvaluateStatus = "a",
-                        },
-
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "b",
-                            Date = " a",
-                            EvaluateNote = "b",
-                            EvaluateStatus = "b",
-                        },
-
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "b",
-                            Date = " a",
-                            EvaluateNote = "a",
-                            EvaluateStatus = "a",
-                        },
-                    }
-                },
-                  new StudentLearningInfor
-                {
-                    StudentName = "c",
-                    LearningInfors = new List<AttendanceAndEvaluateInfor>
-                    {
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "c",
-                            Date = " c",
-                            EvaluateNote = "c",
-                            EvaluateStatus = "c",
-                        },
-
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "c",
-                            Date = " c",
-                            EvaluateNote = "c",
-                            EvaluateStatus = "c",
-                        },
-
-                        new AttendanceAndEvaluateInfor
-                        {
-                            AttendanceStatus = "c",
-                            Date = " c",
-                            EvaluateNote = "c",
-                            EvaluateStatus = "c",
-                        },
-                    }
-                }
-            };
-            SessionHelper.SetObjectAsJson(HttpContext.Session, "DataLearning", a);
-            return Page();
-
-
             if (submitButton == "Refresh")
             {
                 CurrentStudentLearningMessage = null;
@@ -301,29 +204,37 @@ namespace MagicLand_System_Web_Dev.Pages
 
             if (string.IsNullOrEmpty(searchKey))
             {
-                if (classes != null && classes.Any())
+                if (searchType == "DATA")
                 {
+                    CurrentStudentLearningMessage = null;
                     Classes = classes;
                     return Page();
                 }
 
-                if (messages != null && messages.Any())
+                if (messages != null && messages.Any() && searchType == "MESSAGE")
                 {
+                    HttpContext.Session.Remove("DataLearningSearch");
                     CurrentStudentLearningMessage = messages.First();
                 }
 
+                ViewData["IndexPage"] = 0;
+                return Page();
             }
 
             var key = searchKey.Trim().ToLower();
             if (searchType == "MESSAGE")
             {
                 messages = messages!.Where(mess => mess.StudentName.ToLower().Contains(key)).ToList();
-
-                CurrentStudentLearningMessage = messages.First();
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DataLearningSearch", messages);
+                if (messages.Any())
+                {
+                    CurrentStudentLearningMessage = messages.First();
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DataLearningSearch", messages);
+                    ViewData["IndexPage"] = 0;
+                }
             }
             if (searchType == "DATA")
             {
+                CurrentStudentLearningMessage = null;
                 Classes = classes!.Where(
                     c => c.ClassCode.ToLower().Contains(key) ||
                     c.CourseBeLong.ToLower().Contains(key) ||

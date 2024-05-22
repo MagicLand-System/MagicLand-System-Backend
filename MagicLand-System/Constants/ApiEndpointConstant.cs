@@ -105,6 +105,7 @@
         public static class CourseEndpoint
         {
             public const string GetAll = ApiEndpoint + "/courses";
+            public const string RatingCourse = ApiEndpoint + "/course/rating";
             public const string GetAllValid = ApiEndpoint + "/courses/validRegister";
             public const string GetUserRelatedCourse = ApiEndpoint + "/courses/related";
             public const string GetCurrentStudentCourses = ApiEndpoint + "/courses/currentStudent";

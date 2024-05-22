@@ -11,6 +11,7 @@ namespace MagicLand_System.Services.Interfaces
     {
         Task<List<CourseWithScheduleShorten>> GetCurrentStudentCoursesAsync();
         Task<List<CourseWithScheduleShorten>> GetCoursesAsync(bool isValid);
+        Task<string> RatingCourseAsync(Guid courseId, double rateScore);
         Task<List<CourseWithScheduleShorten>> GetUserRelatedCoursesAsync();
         Task<CourseWithScheduleShorten> GetCourseByIdAsync(Guid id);
         Task<List<CourseResExtraInfor>> SearchCourseByNameOrAddedDateAsync(string keyWord);

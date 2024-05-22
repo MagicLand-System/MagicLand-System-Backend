@@ -34,6 +34,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
+                CourseRate = course.TotalRate != 0 ? course.TotalRate / 5 : 0,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
@@ -53,6 +54,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
+                CourseRate = course.TotalRate != 0 ? course.TotalRate / 5 : 0,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
@@ -87,6 +89,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
+                CourseRate = course.TotalRate != 0 ? course.TotalRate / 5 : 0,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),

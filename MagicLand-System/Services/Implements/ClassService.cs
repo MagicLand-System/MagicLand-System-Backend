@@ -854,6 +854,7 @@ namespace MagicLand_System.Services.Implements
                         //CoursePrice = schedule.Class.Course.Price,
                         CourseId = schedule.Class.Course.Id,
                         CourseName = schedule.Class.Course.Name,
+                        CourseRate = schedule.Class.Course.TotalRate / 5,
                         LeastNumberStudent = schedule.Class.LeastNumberStudent,
                         LimitNumberStudent = schedule.Class.LimitNumberStudent,
                         StartDate = schedule.Class.StartDate,
@@ -2893,7 +2894,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var currentSchedule = new Schedule();
 
-                if (currentTime.Hour < 21 && currentTime.Hour != 0)
+                if (currentTime.Hour < 21 && currentTime.Hour >= 0)
                 {
                     var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == GetCurrentTime().Date);
                     if (checkingSchedule == null)
@@ -2907,7 +2908,7 @@ namespace MagicLand_System.Services.Implements
                     }
                     currentSchedule = checkingSchedule;
                 }
-                else
+                else if (currentTime.Hour >= 21 || currentTime.Hour <= 24)
                 {
                     var checkingSchedule = cls.Schedules.SingleOrDefault(sc => sc.Date.Date == GetCurrentTime().AddDays(1).Date);
                     if (checkingSchedule == null)
@@ -3177,7 +3178,7 @@ namespace MagicLand_System.Services.Implements
                 Title = NotificationMessageContant.ChangeClassTitle,
                 Body = NotificationMessageContant.ChangeClassBody(fromClass.ClassCode!, toClass.ClassCode!,
                       student.FullName!, fromClass.Status == ClassStatusEnum.UPCOMING.ToString() ? ChangeClassReasoneEnum.REQUEST : ChangeClassReasoneEnum.CANCELED),
-                Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
+                Type = NotificationTypeEnum.TransferClass.ToString(),
                 Image = ImageUrlConstant.SystemImageUrl,
                 CreatedAt = GetCurrentTime(),
                 IsRead = false,

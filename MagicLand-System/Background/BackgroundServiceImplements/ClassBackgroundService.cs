@@ -115,18 +115,28 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                           ($"{AttachValueEnum.StudentId}", $"{student.Id}"),
                         });
 
-                        await GenerateRemindClassNotification(
-                                classStatus == ClassStatusEnum.PROGRESSING
-                               ? NotificationMessageContant.ClassStartedTitle
-                               : classStatus == ClassStatusEnum.CANCELED
-                               ? NotificationMessageContant.ClassCanceledTitle
-                               : NotificationMessageContant.ClassCompletedTitle,
-                               classStatus == ClassStatusEnum.PROGRESSING
-                               ? NotificationMessageContant.ClassStartedBody(student!.FullName!, cls.ClassCode!)
-                               : classStatus == ClassStatusEnum.CANCELED
-                               ? NotificationMessageContant.ClassCanceledBody(student!.FullName!, cls.ClassCode!)
-                               : NotificationMessageContant.ClassCompletedBody(student!.FullName!, cls.ClassCode!),
-                               NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, currentTime, actionData, student.ParentId, newNotifications, _unitOfWork);
+                        string title = "", body = "", type = "";
+
+                        if (classStatus == ClassStatusEnum.PROGRESSING)
+                        {
+                            title = NotificationMessageContant.ClassStartedTitle;
+                            body = NotificationMessageContant.ClassStartedBody(student!.FullName!, cls.ClassCode!);
+                            type = NotificationTypeEnum.ProgressingClass.ToString();
+                        }
+                        if (classStatus == ClassStatusEnum.CANCELED)
+                        {
+                            title = NotificationMessageContant.ClassCanceledTitle;
+                            body = NotificationMessageContant.ClassCanceledBody(student!.FullName!, cls.ClassCode!);
+                            type = NotificationTypeEnum.CanceledClass.ToString();
+                        }
+                        if (classStatus == ClassStatusEnum.COMPLETED)
+                        {
+                            title = NotificationMessageContant.ClassCompletedTitle;
+                            body = NotificationMessageContant.ClassCompletedBody(student!.FullName!, cls.ClassCode!);
+                            type = NotificationTypeEnum.CompletedClass.ToString();
+                        }
+
+                        await GenerateRemindClassNotification(title, body, type, cls.Image!, currentTime, actionData, student.ParentId, newNotifications, _unitOfWork);
                     }
                 }
 
@@ -155,7 +165,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         }
 
-        private async Task GenerateRemindClassNotification(string title, string body, string priority, string image, DateTime createAt, string actionData, Guid targetUserId, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
+        private async Task GenerateRemindClassNotification(string title, string body, string type, string image, DateTime createAt, string actionData, Guid targetUserId, List<Notification> newNotifications, IUnitOfWork _unitOfWork)
         {
             var listItemIdentify = new List<string>
                 {
@@ -178,7 +188,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 Id = Guid.NewGuid(),
                 Title = title,
                 Body = body,
-                Priority = priority,
+                Type = type,
                 Image = image,
                 CreatedAt = createAt,
                 IsRead = false,

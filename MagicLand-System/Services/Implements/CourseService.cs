@@ -39,7 +39,7 @@ namespace MagicLand_System.Services.Implements
 
             var courses = await GetDefaultCourse();
 
-            var filteredCourses = await FilterProgress(minYearsOld, maxYearsOld, minNumberSession, maxNumberSession, minPrice, maxPrice, subject, courses);
+            var filteredCourses = await FilterProgress(minYearsOld, maxYearsOld, minNumberSession, maxNumberSession, minPrice, maxPrice, subject, rate, courses);
 
             var prerequisiteCoursesFilter = await GetPrequisiteCourses(filteredCourses);
             var relatedCoursesFilter = await GetRelatedCourses(filteredCourses);
@@ -57,8 +57,9 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task<List<Course>> FilterProgress(int minYearsOld, int maxYearsOld, int? minNumberSession, int? maxNumberSession, double minPrice, double? maxPrice, string? subject, ICollection<Course> courses)
+        private async Task<List<Course>> FilterProgress(int minYearsOld, int maxYearsOld, int? minNumberSession, int? maxNumberSession, double minPrice, double? maxPrice, string? subject, int? rate, ICollection<Course> courses)
         {
+            rate ??= 0;
             maxNumberSession ??= int.MaxValue;
             maxPrice ??= double.MaxValue;
 
@@ -91,6 +92,13 @@ namespace MagicLand_System.Services.Implements
             filteredCourses = subject != null
             ? filteredCourses.Where(x => x.SubjectName!.ToLower().Equals(subject.ToLower())).ToList()
             : filteredCourses;
+
+            if (rate < 0 || rate > 5)
+            {
+                throw new BadHttpRequestException("Điểm Đánh Giá Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
+
+            filteredCourses = filteredCourses.Where(x => x.TotalRate / 5 >= rate).ToList();
 
             return filteredCourses;
         }
@@ -426,7 +434,7 @@ namespace MagicLand_System.Services.Implements
                 response.Price = await GetDynamicPrice(id, false);
 
                 var currentStudentClass = course.Classes.First(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId)).StudentClasses.Single(sc => sc.StudentId == studentId);
-                if(currentStudentClass.SavedTime != null)
+                if (currentStudentClass.SavedTime != null)
                 {
                     response.IsSuspend = true;
                 }
@@ -442,7 +450,7 @@ namespace MagicLand_System.Services.Implements
             var currentStudent = await GetUserFromJwt();
             var courses = (await _unitOfWork.GetRepository<Course>().GetListAsync(
                 predicate: x => x.Classes.Any(cls => cls.StudentClasses.Any(sc => sc.StudentId == currentStudent.StudentIdAccount && sc.SavedTime == null)),
-                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents))).ToList();
+                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents).Include(x => x.Syllabus!))).ToList();
 
             var prequisiteCourses = await GetPrequisiteCourses(courses);
             var relatedCourses = await GetRelatedCourses(courses);
@@ -481,7 +489,7 @@ namespace MagicLand_System.Services.Implements
             var courses = string.IsNullOrEmpty(keyWord)
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
-             .Include(x => x.Syllabus)
+            .Include(x => x.Syllabus)
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents));
 
@@ -1401,13 +1409,33 @@ namespace MagicLand_System.Services.Implements
                 Image = newClass.Image!,
                 IsRead = false,
                 Title = "Chuyển sau khi bảo lưu",
-                Priority = NotificationPriorityEnum.IMPORTANCE.ToString(),
+                Type = NotificationTypeEnum.TransferClass.ToString(),
                 ActionData = actionData,
                 UserId = student.Parent.Id,
                 Identify = StringHelper.ComputeSHA256Hash(string.Join("", listItemIdentify)),
             };
             await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
             return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        public async Task<string> RatingCourseAsync(Guid courseId, double rateScore)
+        {
+            var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == courseId);
+            if (course == null)
+            {
+                throw new BadHttpRequestException($"Id Khóa Học Không Tồn Tại", StatusCodes.Status400BadRequest);
+            }
+            try
+            {
+                course.TotalRate += rateScore;
+                _unitOfWork.GetRepository<Course>().UpdateAsync(course);
+                _unitOfWork.Commit();
+                return "Đánh Giá Khóa Học Thành Công";
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Hệ thống phát sinh {ex.Message}", StatusCodes.Status500InternalServerError);
+            }
         }
         #endregion
     }

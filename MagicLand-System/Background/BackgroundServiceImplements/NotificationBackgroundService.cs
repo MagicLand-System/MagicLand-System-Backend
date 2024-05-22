@@ -94,7 +94,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     await GenerateNotification(currentTime, newNotifications, null, NotificationMessageContant.ChangeClassRequestTitle,
                                  NotificationMessageContant.ChangeClassRequestBody(cls.ClassCode!, stu.Student!.FullName!),
-                                 currentTime.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                                 NotificationTypeEnum.TransferClass.ToString(), cls.Image!, actionData, _unitOfWork);
                 }
             }
         }
@@ -116,7 +116,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     await GenerateNotification(currentTime, newNotifications, stu.Student!.ParentId, NotificationMessageContant.ClassUpComingTitle,
                            NotificationMessageContant.ClassUpComingBody(stu.Student.FullName!, cls.ClassCode!, dayDifferent),
-                         dayDifferent <= 1 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.REMIND.ToString(), cls.Image!, actionData, _unitOfWork);
+                           NotificationTypeEnum.UpcomingClass.ToString(), cls.Image!, actionData, _unitOfWork);
                 }
             }
         }
@@ -139,7 +139,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpEvaluateLecturerTitle,
                            NotificationMessageContant.MakeUpEvaluateLecturerBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
-                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                         NotificationTypeEnum.RemindEvaluate.ToString(), cls.Image!, actionData, _unitOfWork);
                 }
 
                 if (attendances.All(att => att.IsPresent == null))
@@ -151,7 +151,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpAttendanceLecturerTitle,
                            NotificationMessageContant.MakeUpAttendanceLecturerBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
-                           currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                            NotificationTypeEnum.RemindAttendance.ToString(), cls.Image!, actionData, _unitOfWork);
 
                 }
                 else if (attendances.Any(att => att.IsPresent == null))
@@ -171,7 +171,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                         await GenerateNotification(currentDate, newNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,
                               NotificationMessageContant.MakeUpAttendanceBody(cls.ClassCode!, attendance.Student!.FullName!, schedule.Date),
-                              currentDate.Day - cls.StartDate.Day <= 3 ? NotificationPriorityEnum.IMPORTANCE.ToString() : NotificationPriorityEnum.WARNING.ToString(), cls.Image!, actionData, _unitOfWork);
+                              NotificationTypeEnum.RemindAttendance.ToString(), cls.Image!, actionData, _unitOfWork);
                     }
                 }
             }
@@ -200,7 +200,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                                 await GenerateNotification(currentDate, newNotifications, savedStudent.Student!.ParentId, NotificationMessageContant.RemindRegisterNewClassWhenMakeUpTitle,
                                 NotificationMessageContant.RemindRegisterNewClassWhenMakeUpBody(savedStudent.Student!.FullName!, openClass.ClassCode!, cls.ClassCode!, openClass.StartDate),
-                                NotificationPriorityEnum.REMIND.ToString(), openClass.Image!, actionData, _unitOfWork);
+                                NotificationTypeEnum.RemindRegister.ToString(), openClass.Image!, actionData, _unitOfWork);
                             }
                         }
                     }
@@ -246,7 +246,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                 });
 
                                 await GenerateNotification(currentTime, newNotifications, userId, NotificationMessageContant.LastDayRegisterTitle, NotificationMessageContant.LastDayRegisterBody(cls.ClassCode!),
-                                       NotificationPriorityEnum.IMPORTANCE.ToString(), cls.Image!, actionData, _unitOfWork);
+                                       NotificationTypeEnum.RemindRegister.ToString(), cls.Image!, actionData, _unitOfWork);
                             }
 
                             if (cls.StartDate.AddDays(-3).Date == currentTime.Date)
@@ -293,7 +293,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 Id = Guid.NewGuid(),
                 Title = title,
                 Body = body,
-                Priority = type,
+                Type = type,
                 Image = image,
                 CreatedAt = currentTime,
                 IsRead = false,
@@ -335,8 +335,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                                     });
 
                                     await GenerateNotification(currentTime, newNotifications, userId, NotificationMessageContant.RemindRegisterCourseTitle,
-                                        NotificationMessageContant.RemindRegisterCourseBody(course.Name!),
-                                   NotificationPriorityEnum.REMIND.ToString(), course.Image!, actionData, _unitOfWork);
+                                    NotificationMessageContant.RemindRegisterCourseBody(course.Name!),
+                                   NotificationTypeEnum.RemindRegister.ToString(), course.Image!, actionData, _unitOfWork);
                                 }
                             }
                         }

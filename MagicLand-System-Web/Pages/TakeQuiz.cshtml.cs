@@ -42,12 +42,12 @@ namespace MagicLand_System_Web_Dev.Pages
         public async Task<IActionResult> OnGet()
         {
             IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext!.Session, "DataQuiz");
+            var messages = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext!.Session, "DataQuiz");
             var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "Classes");
 
-            if (data != null && data.Count > 0)
+            if (messages != null && messages.Count > 0)
             {
-                CurrentStudentQuizInforMessage = data.First();
+                CurrentStudentQuizInforMessage = messages.First();
                 ViewData["IndexPage"] = 0;
             }
 
@@ -105,7 +105,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "Classes", Classes);
             }
         }
-        public async Task<IActionResult> OnPostAsync(int inputField, string listId, string submitButton)
+        public async Task<IActionResult> OnPostProgressAsync(int inputField, string listId, string submitButton)
         {
             if (submitButton == "Refresh")
             {
@@ -349,7 +349,10 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public IActionResult OnPostTableControl(string indexPage, string tableButtonSubmit)
         {
-            var classes = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext.Session, "DataQuiz");
+
+            var messages = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext.Session, "DataQuiz");
+            var messagesSearch = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext.Session, "DataQuizSearch");
+
             int parseIndex = int.Parse(indexPage);
             int newIndex = tableButtonSubmit == "Next" ? parseIndex + 1 : parseIndex - 1;
 
@@ -357,17 +360,77 @@ namespace MagicLand_System_Web_Dev.Pages
             {
                 newIndex = parseIndex;
             }
-            if (parseIndex == classes.Count - 1 && tableButtonSubmit == "Next")
+
+            if (messagesSearch != null)
             {
-                newIndex = parseIndex;
+                if (parseIndex == messagesSearch.Count - 1 && tableButtonSubmit == "Next")
+                {
+                    newIndex = parseIndex;
+                }
+
+                CurrentStudentQuizInforMessage = messagesSearch[newIndex];
+            }
+            else
+            {
+                if (parseIndex == messages.Count - 1 && tableButtonSubmit == "Next")
+                {
+                    newIndex = parseIndex;
+                }
+
+                CurrentStudentQuizInforMessage = messages[newIndex];
             }
 
-            CurrentStudentQuizInforMessage = classes[newIndex];
             ViewData["IndexPage"] = newIndex;
-
             return Page();
         }
 
 
+        public IActionResult OnPostSearch(string searchKey, string searchType)
+        {
+            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+            var messages = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext!.Session, "DataQuiz");
+
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                if (searchType == "DATA")
+                {
+                    CurrentStudentQuizInforMessage = null;
+                    Classes = classes;
+                    return Page();
+                }
+
+                if (messages != null && messages.Any() && searchType == "MESSAGE")
+                {
+                    HttpContext.Session.Remove("DataQuizSearch");
+                    CurrentStudentQuizInforMessage = messages.First();
+                }
+
+                ViewData["IndexPage"] = 0;
+                return Page();
+            }
+
+            var key = searchKey.Trim().ToLower();
+            if (searchType == "MESSAGE")
+            {
+                messages = messages!.Where(mess => mess.StudentName.ToLower().Contains(key)).ToList();
+                if (messages.Any())
+                {
+                    CurrentStudentQuizInforMessage = messages.First();
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DataQuizSearch", messages);
+                    ViewData["IndexPage"] = 0;
+                }
+            }
+            if (searchType == "DATA")
+            {
+                CurrentStudentQuizInforMessage = null;
+                Classes = classes!.Where(
+                    c => c.ClassCode.ToLower().Contains(key) ||
+                    c.CourseBeLong.ToLower().Contains(key) ||
+                    c.LecturerBeLong.ToLower().Contains(key)
+                    ).ToList();
+            }
+
+            return Page();
+        }
     }
 }

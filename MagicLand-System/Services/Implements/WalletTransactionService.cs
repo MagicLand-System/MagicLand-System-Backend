@@ -288,7 +288,7 @@ namespace MagicLand_System.Services.Implements
                     });
 
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
-            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
+            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationTypeEnum.Payment.ToString(), cls.Image!, actionData);
         }
         private void GenerateStaffNewItems(
          PersonalWallet personalWallet, User currentPayer,
@@ -332,7 +332,7 @@ namespace MagicLand_System.Services.Implements
                     });
 
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
-            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationPriorityEnum.NORMAL.ToString(), cls.Image!, actionData);
+            NotificationMessageContant.PaymentSuccessBody(cls.ClassCode!, studentNameString), NotificationTypeEnum.Payment.ToString(), cls.Image!, actionData);
         }
 
 
@@ -354,7 +354,7 @@ namespace MagicLand_System.Services.Implements
                 Id = new Guid(),
                 Title = title,
                 Body = body,
-                Priority = type,
+                Type = type,
                 Image = image,
                 CreatedAt = DateTime.Now,
                 IsRead = false,
@@ -940,7 +940,7 @@ namespace MagicLand_System.Services.Implements
                 trans.UpdateTime = DateTime.Now;
 
                 var newNotification = GenerateNewNotification(personalWallet.User!, tilte, body,
-                    isSuccess ? NotificationPriorityEnum.NORMAL.ToString() : NotificationPriorityEnum.IMPORTANCE.ToString(), image, actionData);
+                    type == TransactionTypeEnum.TopUp ?  NotificationTypeEnum.TopUp.ToString() : NotificationTypeEnum.Payment.ToString(), image, actionData);
 
                 await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
             }

@@ -35,7 +35,7 @@
         <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Làm Bài Tập Toàn Bộ Học Sinh Trong Lớp</b></h6>
 
         <div class="form-group" onsubmit="return setLoader()">
-            <form method="post">
+            <form method="post" asp-page-handler="Progress">
                 <label for="inputField">Tỷ Lệ Sai: </label>
                 <div class="form-input" style="border: 1px solid black; display: inline-block;">
                     <button id="decreaseBtn" type="button" style="background-color: white; color: black; border: none; font-weight: bold;" onclick="changeValue(-5)">-</button>
@@ -67,7 +67,22 @@
             <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
             <div style="margin-left: 29%;">Now Progressing...</div>
         </div>
-        <div id="table-progress" class="table-container" style="overflow-y: auto; height: 358px; width: 73%; margin-top: 22px; position: relative}">
+
+        @if (Model.CurrentStudentQuizInforMessage != null || (Model.Classes != null && Model.Classes.Count > 0))
+        {
+            {
+                ViewData["Type"] = Model.CurrentStudentQuizInforMessage != null ? "MESSAGE" : "DATA";
+            }
+            <div class="from-search" style="float: left; margin-top: 30px; margin-bottom: 5px;">
+                <form method="post" asp-page-handler="Search">
+                    <input type="hidden" id="input-search-type" name="searchType" value="@ViewData["Type"]">
+                    <input type="text" id="input-search-value" name="searchKey" value="" />
+                    <button id="button-submit-search" type="submit" style="background-color: white; color: black">Tìm Kiếm</button>
+                </form>
+            </div>
+        }
+
+        <div id="table-progress" class="table-container" style="overflow-y: auto; height: 353px; width: 73%; margin-top: 22px; position: relative}">
             @if (Model.CurrentStudentQuizInforMessage != null)
             {
                 <table class="table">

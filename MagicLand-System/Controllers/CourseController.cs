@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -17,6 +18,44 @@ namespace MagicLand_System.Controllers
         {
             _courseService = courseService;
         }
+
+        #region document API Rate Course
+        /// <summary>
+        ///  Cho Phép Thêm Điểm Đánh Giá Cho Một Khóa
+        /// </summary>
+        /// Sample request:
+        ///
+        ///     {
+        ///        "courseId": "409229c7-4965-4863-b20d-08dc1a8affb9",
+        ///        "rateScore": 3,
+        ///     }
+        ///
+        /// <param name="courseId">Id Khóa Học</param>
+        /// <param name="rateScore">Điểm Đánh Giá [1-5]</param>
+        /// <response code="200">Trả Về Thông Báo</response>
+        /// <response code="400">Yêu Cầu Không Hơp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.CourseEndpoint.RatingCourse)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "PARENT")]
+        public async Task<IActionResult> RatingCourse([FromQuery] Guid courseId, [FromQuery] double rateScore)
+        {
+            if(rateScore < 1 || rateScore > 5)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    Error = $"Điểm Đánh Giá Phải Từ 1 Đến 5 Điểm",
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    TimeStamp = DateTime.Now,
+                });
+            }
+            var response = await _courseService.RatingCourseAsync(courseId, rateScore);
+            return Ok(response);
+        }
+
 
         #region document API Get Courses
         /// <summary>
@@ -133,7 +172,7 @@ namespace MagicLand_System.Controllers
         /// <param name="minPrice">Cho Khóa Học Gía Lớn Hơn Hoặc Bằng Gía Trị Này</param>
         /// <param name="maxPrice">Cho Khóa Học Gía Nhỏ Hơn Hoặc Bằng Gía Trị Này, Nếu Để Trống Mặc Định Gía Trị Lớn Nhất</param>
         /// <param name="subject">Cho Khóa Học Thuộc Lịch Vực Này</param>
-        /// <param name="rate">Cho Khóa Học Có Đánh Gía Cao Hơn Hoặc Bằng Gía Trị Này</param>
+        /// <param name="rate">Cho Khóa Học Có Đánh Gía Cao Hơn Hoặc Bằng Gía Trị Này (1-5)</param>
         /// <remarks>
         /// Sample request:
         ///

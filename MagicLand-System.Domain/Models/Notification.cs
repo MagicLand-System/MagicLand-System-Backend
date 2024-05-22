@@ -12,7 +12,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public string? Title { get; set; } = "";
         public string? Body { get; set; } = "";
-        public string? Priority { get; set; } = "NORMAL";
+        public string? Type { get; set; } = "";
         public string? Image { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsRead { get; set; } = false;

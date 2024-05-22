@@ -9,6 +9,7 @@ namespace MagicLand_System.PayLoad.Response.Courses
         public Guid? CartItemId { get; set; }
         public string? Image { get; set; }
         public double? Price { get; set; }
+        public double CourseRate { get; set; }
         public string? MainDescription { get; set; }
 
         public List<SubDescriptionTitleResponse>? SubDescriptionTitle { get; set; }
