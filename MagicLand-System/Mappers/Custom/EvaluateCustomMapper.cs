@@ -33,15 +33,16 @@ namespace MagicLand_System.Mappers.Custom
                 return default!;
             }
 
-             var response = new List<EvaluateStudentResponse>();
+            var response = new List<EvaluateStudentResponse>();
             foreach (var evaluate in evaluates)
             {
                 response.Add(new EvaluateStudentResponse
                 {
                     StudentId = evaluate.StudentId,
                     StudentName = evaluate.Student!.FullName!,
-                    Level = evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() 
-                    ? 1 : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() 
+                    AvatarImage = evaluate.Student.AvatarImage!,
+                    Level = evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString()
+                    ? 1 : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString()
                     ? 2 : evaluate.Status == EvaluateStatusEnum.GOOD.ToString() ? 3 : 0,
                     EvaluateDescription = evaluate.Status != null ? EnumUtil.CompareAndGetDescription<EvaluateStatusEnum>(evaluate.Status!) : "Chưa Đánh Giá",
                     Note = evaluate.Note,
