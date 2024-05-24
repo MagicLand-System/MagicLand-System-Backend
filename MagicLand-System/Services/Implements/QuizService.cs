@@ -126,7 +126,7 @@ namespace MagicLand_System.Services.Implements
             {
                 foreach (var res in responses)
                 {
-                    var isQuizDone = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                    var isQuizDone = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
                         orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                         predicate: x => x.StudentClass!.ClassId == classId && x.StudentClass.StudentId == studentId && x.ExamId == res.ExamId);
 
@@ -351,7 +351,7 @@ namespace MagicLand_System.Services.Implements
                 var examDate = DateTime.Parse(exam.Date!).Date;
                 var currentDate = GetCurrentTime().Date;
 
-                var test = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
+                var test = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == exam.ExamId && x.StudentClass!.StudentId == studentId);
                 if (test != null)
                 {
                     status = "Đã Hoàn Thành";
@@ -404,7 +404,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<QuizResponse>> LoadQuizOfExamByExamIdAsync(Guid examId, Guid classId, int? examPart)
+        public async Task<List<QuizResponse>> GetQuizOfExamtByExamIdAsync(Guid examId, Guid classId, int? examPart)
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
                 predicate: x => x.Id == classId,
@@ -604,7 +604,7 @@ namespace MagicLand_System.Services.Implements
             }
 
             Guid testResultId;
-            TestResult testResult;
+            ExamResult testResult;
 
             var currentStudentClass = await ValidateCurrentStudentClass(currentStudentId, cls);
 
@@ -701,7 +701,7 @@ namespace MagicLand_System.Services.Implements
                         QuestionId = currentNonAnswerQuestion.Id,
                         Question = currentNonAnswerQuestion.Description,
                         QuestionImage = currentNonAnswerQuestion.Img,
-                        TestResultId = testResultId,
+                        ExamResultResultId = testResultId,
                     });
 
                     multipleChoiceAnswers.Add(new MultipleChoiceAnswer
@@ -731,7 +731,7 @@ namespace MagicLand_System.Services.Implements
                 QuestionId = question.Id,
                 Question = question.Description,
                 QuestionImage = question.Img,
-                TestResultId = testResultId,
+                ExamResultResultId = testResultId,
             });
 
             multipleChoiceAnswers.Add(new MultipleChoiceAnswer
@@ -771,7 +771,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        private async Task SaveGrading(TempQuiz currentTempQuiz, TestResult testResult, List<ExamQuestion>? examQuestions, List<MultipleChoiceAnswer>? multipleChoiceAnswers, List<FlashCardAnswer>? flashCardAnswers)
+        private async Task SaveGrading(TempQuiz currentTempQuiz, ExamResult testResult, List<ExamQuestion>? examQuestions, List<MultipleChoiceAnswer>? multipleChoiceAnswers, List<FlashCardAnswer>? flashCardAnswers)
         {
             try
             {
@@ -798,7 +798,7 @@ namespace MagicLand_System.Services.Implements
 
                 currentTempQuiz.IsGraded = true;
                 _unitOfWork.GetRepository<TempQuiz>().UpdateAsync(currentTempQuiz);
-                await _unitOfWork.GetRepository<TestResult>().InsertAsync(testResult);
+                await _unitOfWork.GetRepository<ExamResult>().InsertAsync(testResult);
                 if (examQuestions != null)
                 {
                     await _unitOfWork.GetRepository<ExamQuestion>().InsertRangeAsync(examQuestions);
@@ -834,12 +834,12 @@ namespace MagicLand_System.Services.Implements
         //    return status;
         //}
 
-        private void GenrateTestResult(Syllabus syllabus, QuestionPackage? currentQuiz, int totalMark, StudentClass studentClass, int noAttempt, out Guid testResultId, out TestResult testResult)
+        private void GenrateTestResult(Syllabus syllabus, QuestionPackage? currentQuiz, int totalMark, StudentClass studentClass, int noAttempt, out Guid testResultId, out ExamResult testResult)
         {
             var currentExam = syllabus.ExamSyllabuses!.SingleOrDefault(es => es.ContentName!.Trim().ToLower() == currentQuiz!.ContentName!.Trim().ToLower());
 
             testResultId = Guid.NewGuid();
-            testResult = new TestResult
+            testResult = new ExamResult
             {
                 Id = testResultId,
                 ExamId = currentQuiz!.Id,
@@ -857,7 +857,7 @@ namespace MagicLand_System.Services.Implements
         private async Task<int> GetAttempt(Guid examId, Guid? currentStudentId, Guid classId, string packageType)
         {
             int noAttempt = 1;
-            var isExamHasDone = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+            var isExamHasDone = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                 orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                 predicate: x => x.StudentClass!.StudentId == currentStudentId && x.StudentClass.ClassId == classId && x.ExamId == examId);
 
@@ -1158,7 +1158,7 @@ namespace MagicLand_System.Services.Implements
 
 
             Guid testResultId;
-            TestResult testResult;
+            ExamResult testResult;
             var examQuestions = new List<ExamQuestion>();
             var flashCardAnswers = new List<FlashCardAnswer>();
             int correctMark = 0;
@@ -1191,7 +1191,7 @@ namespace MagicLand_System.Services.Implements
                         QuestionId = question.Id,
                         Question = question.Description,
                         QuestionImage = question.Img,
-                        TestResultId = testResultId,
+                        ExamResultResultId = testResultId,
                     });
 
                     int wrongAttemps = 0;
@@ -1240,7 +1240,7 @@ namespace MagicLand_System.Services.Implements
             return response;
         }
 
-        private QuizResultResponse SettingLastResultInfor(TimeOnly doingTime, TestResult testResult, int correctMark, double scoreEarned, string status, bool isFlashCard)
+        private QuizResultResponse SettingLastResultInfor(TimeOnly doingTime, ExamResult testResult, int correctMark, double scoreEarned, string status, bool isFlashCard)
         {
             testResult.CorrectMark = correctMark;
             testResult.ScoreEarned = scoreEarned;
@@ -1342,7 +1342,7 @@ namespace MagicLand_System.Services.Implements
                         QuestionId = questionInfor.Id,
                         Question = questionInfor.Description,
                         QuestionImage = questionInfor.Img,
-                        TestResultId = testResultId,
+                        ExamResultResultId = testResultId,
                     });
 
                     foreach (var group in groupedTempFlashCards)
@@ -1423,8 +1423,8 @@ namespace MagicLand_System.Services.Implements
             }
 
 
-            var newTestResults = new List<TestResult>();
-            var updateTestResults = new List<TestResult>();
+            var newTestResults = new List<ExamResult>();
+            var updateTestResults = new List<ExamResult>();
 
             await GenerateTestOffLineResult(exaOffLineStudentWork, cls, syllabus, currentQuiz, newTestResults, updateTestResults);
             message = await SaveGradeRequest(message, newTestResults, updateTestResults);
@@ -1432,18 +1432,18 @@ namespace MagicLand_System.Services.Implements
             return message;
         }
 
-        private async Task<string> SaveGradeRequest(string message, List<TestResult> newTestResults, List<TestResult> updateTestResults)
+        private async Task<string> SaveGradeRequest(string message, List<ExamResult> newTestResults, List<ExamResult> updateTestResults)
         {
             try
             {
                 if (updateTestResults.Count() > 0)
                 {
                     message += $", Các Học Sinh [{string.Join(", ", updateTestResults.Select(ur => ur.StudentClass!.StudentId))}] Đã Có Điểm Từ Trước Sẽ Được Cập Nhập Điểm Mới";
-                    _unitOfWork.GetRepository<TestResult>().UpdateRange(updateTestResults);
+                    _unitOfWork.GetRepository<ExamResult>().UpdateRange(updateTestResults);
                 }
                 if (newTestResults.Count() > 0)
                 {
-                    await _unitOfWork.GetRepository<TestResult>().InsertRangeAsync(newTestResults);
+                    await _unitOfWork.GetRepository<ExamResult>().InsertRangeAsync(newTestResults);
                 }
                 _unitOfWork.Commit();
             }
@@ -1455,7 +1455,7 @@ namespace MagicLand_System.Services.Implements
             return message;
         }
 
-        private async Task GenerateTestOffLineResult(ExamOffLineRequest exaOffLineStudentWork, Class cls, Syllabus syllabus, QuestionPackage? currentQuiz, List<TestResult> newTestResults, List<TestResult> updateTestResults)
+        private async Task GenerateTestOffLineResult(ExamOffLineRequest exaOffLineStudentWork, Class cls, Syllabus syllabus, QuestionPackage? currentQuiz, List<ExamResult> newTestResults, List<ExamResult> updateTestResults)
         {
             var checkingStudent = exaOffLineStudentWork.StudentQuizGardes.Select(x => x.StudentId).Where(id => !cls.StudentClasses.Select(sc => sc.StudentId).Contains(id)).ToList();
 
@@ -1481,7 +1481,7 @@ namespace MagicLand_System.Services.Implements
                     currentStudentClass = cls.StudentClasses.SingleOrDefault(sc => sc.StudentId == studentWork.StudentId);
                 }
 
-                var currentTest = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                var currentTest = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
                     predicate: x => x.StudentClass!.StudentId == studentWork.StudentId && x.ExamId == currentQuiz!.Id && x.StudentClass.ClassId == currentStudentClass!.ClassId,
                     include: x => x.Include(x => x.StudentClass!));
 
@@ -1494,7 +1494,7 @@ namespace MagicLand_System.Services.Implements
                 else
                 {
                     Guid testResultId;
-                    TestResult testResult;
+                    ExamResult testResult;
                     GenrateTestResult(syllabus, currentQuiz, 0, currentStudentClass!, 1, out testResultId, out testResult);
 
                     testResult.TotalScore = 10;
@@ -1510,7 +1510,7 @@ namespace MagicLand_System.Services.Implements
         {
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
-            var testResults = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+            var testResults = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                 predicate: x => x.StudentClass!.StudentId == currentStudentId,
                 include: x => x.Include(x => x.StudentClass!).Include(x => x.ExamQuestions));
 
@@ -1756,7 +1756,7 @@ namespace MagicLand_System.Services.Implements
 
         }
 
-        private FinalTestResultResponse GenerateFinalTestResult(List<TestResult> allTestResult, (ExamSyllabus, QuestionPackage) quizExam)
+        private FinalTestResultResponse GenerateFinalTestResult(List<ExamResult> allTestResult, (ExamSyllabus, QuestionPackage) quizExam)
         {
             var finalTestResult = new FinalTestResultResponse();
 
@@ -1938,7 +1938,7 @@ namespace MagicLand_System.Services.Implements
         {
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
-            var testResults = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+            var testResults = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                 orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                 predicate: x => x.StudentClass!.StudentId == currentStudentId && x.ExamId == examId,
                 include: x => x.Include(x => x.StudentClass!).Include(x => x.ExamQuestions));
@@ -1982,7 +1982,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<string> EvaluateExamOnLineAsync(Guid studentId, Guid examId, string status, int? noAttempt)
         {
-            var testResults = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+            var testResults = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                 orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                 predicate: x => x.StudentClass!.StudentId == studentId && x.ExamId == examId,
                 include: x => x.Include(x => x.StudentClass!.Class)!);
@@ -2018,7 +2018,7 @@ namespace MagicLand_System.Services.Implements
             try
             {
                 testResult!.ExamStatus = status;
-                _unitOfWork.GetRepository<TestResult>().UpdateAsync(testResult);
+                _unitOfWork.GetRepository<ExamResult>().UpdateAsync(testResult);
                 _unitOfWork.Commit();
 
                 return "Đánh Giá Bài Kiểm Tra Hoàn Tất";
@@ -2091,7 +2091,7 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
 
-                    var allTestResult = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+                    var allTestResult = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                         orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                         predicate: x => x.StudentClass!.StudentId == sc.StudentId && x.ExamId == quiz.Id);
 

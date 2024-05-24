@@ -42,7 +42,7 @@ namespace MagicLand_System.Domain
         public DbSet<SideFlashCard> SideFlashCards { get; set; }
         public DbSet<LecturerField> LecturerFields { get; set; }
         public DbSet<Evaluate> Evaluates { get; set; }
-        public DbSet<TestResult> TestResults { get; set; }
+        public DbSet<ExamResult> TestResults { get; set; }
         public DbSet<ExamQuestion> examQuestions { get; set; }
         public DbSet<MultipleChoiceAnswer> MultipleChoiceAnswers { get; set; }
         public DbSet<FlashCardAnswer> FlashCardAnswers { get; set; }
@@ -289,7 +289,7 @@ namespace MagicLand_System.Domain
                 entity.ToTable("LecturerField");
                 entity.HasKey(e => e.Id);
             });
-            modelBuilder.Entity<TestResult>(entity =>
+            modelBuilder.Entity<ExamResult>(entity =>
             {
                 entity.ToTable("TestResult");
                 entity.HasKey(e => e.Id);
@@ -299,7 +299,7 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("ExamQuestion");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.TestResult).WithMany(e => e.ExamQuestions).HasForeignKey(e => e.TestResultId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.ExamResult).WithMany(e => e.ExamQuestions).HasForeignKey(e => e.ExamResultResultId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.MultipleChoiceAnswer).WithOne(e => e.ExamQuestion).HasForeignKey<MultipleChoiceAnswer>(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Restrict);
 
             });

@@ -26,8 +26,7 @@ namespace MagicLand_System.Services.Interfaces
         Task<StudentResponse> UpdateStudentAsync(UpdateStudentRequest newStudentInfor);
         Task<string> DeleteStudentAsync(Guid id);
         Task<string> TakeStudentAttendanceAsync(AttendanceRequest request, SlotEnum slot);
-        Task<string> EvaluateStudentAsync(EvaluateRequest request, int noSession);
-        Task<List<EvaluateResponse>> GetStudentEvaluatesAsync(Guid classId, int? noSession);
+        Task<string> TakeStudentEvaluateAsync(EvaluateRequest request, int noSession);
         Task<List<AttendanceResponse>> GetStudentAttendanceFromClassInNow(Guid classId);
         Task<StudentResponse> GetStudentById(Guid id);
         Task<List<StudentStatisticResponse>> GetStatisticNewStudentRegisterAsync(PeriodTimeEnum time);

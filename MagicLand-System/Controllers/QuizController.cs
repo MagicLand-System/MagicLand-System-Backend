@@ -192,9 +192,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GetQuizOfExamByExamId([FromQuery] Guid id, [FromQuery] Guid classId, [FromQuery] int? examPart)
+        public async Task<IActionResult> GetQuizOfExamtByExamId([FromQuery] Guid id, [FromQuery] Guid classId, [FromQuery] int? examPart)
         {
-            var responses = await _quizService.LoadQuizOfExamByExamIdAsync(id, classId, examPart);
+            var responses = await _quizService.GetQuizOfExamtByExamIdAsync(id, classId, examPart);
             if (responses == default)
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");

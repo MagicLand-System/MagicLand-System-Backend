@@ -4,13 +4,11 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
-using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Request.Student;
 using MagicLand_System.PayLoad.Response.Attendances;
 using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Quizzes.Result;
 using MagicLand_System.PayLoad.Response.Quizzes.Result.Student;
 using MagicLand_System.PayLoad.Response.Schedules;
@@ -21,9 +19,6 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Org.BouncyCastle.Ocsp;
 
 
 namespace MagicLand_System.Services.Implements
@@ -597,7 +592,7 @@ namespace MagicLand_System.Services.Implements
         }
 
 
-        public async Task<string> EvaluateStudentAsync(EvaluateRequest request, int noSession)
+        public async Task<string> TakeStudentEvaluateAsync(EvaluateRequest request, int noSession)
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == request.ClassId,
             include: x => x.Include(x => x.Lecture)!
@@ -710,55 +705,7 @@ namespace MagicLand_System.Services.Implements
             return await EvaluateStudentProgress(studentEvaluateRequests, schedule);
         }
 
-        public async Task<List<EvaluateResponse>> GetStudentEvaluatesAsync(Guid classId, int? noSession)
-        {
-            var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == classId,
-            include: x => x.Include(x => x.Lecture)!
-           .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!).Include(x => x.StudentClasses));
 
-            if (cls == null)
-            {
-                throw new BadHttpRequestException($"Id [{classId} Của Lớp Học Không Tồn Tại]", StatusCodes.Status400BadRequest);
-            }
-            if (cls.Lecture!.Id != GetUserIdFromJwt())
-            {
-                throw new BadHttpRequestException($"Id [{cls.ClassCode}] Lớp Học Này Không Được Phân Công Dạy Bởi Bạn", StatusCodes.Status400BadRequest);
-            }
-
-            var studentClasses = cls.StudentClasses.ToList();
-            var schedules = cls.Schedules.ToList();
-            var responses = new List<EvaluateResponse>();
-
-            if (noSession != null)
-            {
-                await GetEvaluates(noSession.Value, schedules[noSession.Value - 1], studentClasses, responses);
-            }
-            else
-            {
-                for (int i = 0; i < schedules.Count(); i++)
-                {
-                    await GetEvaluates(i + 1, schedules[i], studentClasses, responses);
-                }
-            }
-
-            return responses;
-
-        }
-
-        private async Task GetEvaluates(int noSession, Schedule schedule, List<StudentClass> studentClasses, List<EvaluateResponse> responses)
-        {
-            var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(
-                  predicate: x => x.ScheduleId == schedule.Id && x.IsPublic == true,
-                  include: x => x.Include(x => x.Student!));
-
-            var savedStudentClass = studentClasses.Where(sc => sc.SavedTime != null).ToList();
-            if (savedStudentClass != null && savedStudentClass.Any())
-            {
-                evaluates = evaluates.Where(eva => !savedStudentClass.Select(ssc => ssc.StudentId).Contains(eva.StudentId)).ToList();
-            }
-
-            responses.Add(EvaluateCustomMapper.fromEvaluateInforRelatedToEvaluateResponse(schedule, evaluates.ToList(), noSession));
-        }
 
         public async Task<List<QuizResultWithStudentWork>> GetStudentQuizFullyInforAsync(Guid classId, List<Guid>? studentIdList, List<Guid>? examIdList, bool isLatestAttempt)
         {
@@ -838,10 +785,10 @@ namespace MagicLand_System.Services.Implements
 
                 foreach (var exlId in examsLoading)
                 {
-                    var testResults = new List<TestResult>();
+                    var testResults = new List<ExamResult>();
                     if (isLatestAttempt)
                     {
-                        var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
+                        var testResult = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
                             predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
                             orderBy: x => x.OrderByDescending(x => x.NoAttempt),
                             include: x => x.Include(x => x.ExamQuestions));
@@ -853,7 +800,7 @@ namespace MagicLand_System.Services.Implements
                     }
                     else
                     {
-                        var testResult = await _unitOfWork.GetRepository<TestResult>().GetListAsync(
+                        var testResult = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                            predicate: x => x.ExamId == exlId && x.StudentClass!.StudentId == stu.StudentId,
                            orderBy: x => x.OrderBy(x => x.NoAttempt),
                            include: x => x.Include(x => x.ExamQuestions));
@@ -1138,7 +1085,7 @@ namespace MagicLand_System.Services.Implements
                 if (quizId != default)
                 {
                     totalQuiz++;
-                    var isQuizDone = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == quizId && x.StudentClass!.StudentId == studentId);
+                    var isQuizDone = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == quizId && x.StudentClass!.StudentId == studentId);
                     if (isQuizDone is not null)
                     {
                         quizDone++;

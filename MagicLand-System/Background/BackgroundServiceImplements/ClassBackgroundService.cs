@@ -69,7 +69,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 {
                     if (studentClass.Count < cls.LeastNumberStudent)
                     {
-                        //await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.CANCELED, newNotifications, _unitOfWork);
+                        await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.CANCELED, newNotifications, _unitOfWork);
                         return;
                     }
                 }

@@ -10,9 +10,9 @@ namespace MagicLand_System.Domain.Models
         public string? QuestionImage { get; set; } = string.Empty;
 
 
-        [ForeignKey("TestResult")]
-        public Guid TestResultId { get; set; }
-        public TestResult? TestResult { get; set; }
+        [ForeignKey("ExamResult")]
+        public Guid ExamResultResultId { get; set; }
+        public ExamResult? ExamResult { get; set; }
 
         [ForeignKey("MultipleChoiceAnswer")]
         public Guid? MultipleChoiceAnswerId { get; set; }

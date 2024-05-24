@@ -2,7 +2,7 @@
 
 namespace MagicLand_System.Domain.Models
 {
-    public class TestResult
+    public class ExamResult
     {
         public Guid Id { get; set; }
         public Guid ExamId { get; set; }

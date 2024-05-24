@@ -88,9 +88,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(EvaluateResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetStudentEvaluates([FromQuery] Guid classId, [FromQuery] int? noSession)
+        public async Task<IActionResult> GetStudentEvaluate([FromQuery] Guid classId, [FromQuery] int? noSession)
         {
-            var response = await _studentService.GetStudentEvaluatesAsync(classId, noSession);
+            var response = await _classService.GetStudentEvaluatesAsync(classId, noSession);
             return Ok(response);
         }
 
@@ -156,9 +156,9 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> EvaluateStudent([FromBody] EvaluateRequest request, [FromQuery] int noSession)
+        public async Task<IActionResult> TakeStudentEvaluate([FromBody] EvaluateRequest request, [FromQuery] int noSession)
         {
-            var response = await _studentService.EvaluateStudentAsync(request, noSession);
+            var response = await _studentService.TakeStudentEvaluateAsync(request, noSession);
             return Ok(response);
         }
 
@@ -252,7 +252,7 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(ScheduleWithAttendanceResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetCurrentLetureAttendanceOfClasses([FromQuery] Guid classId, [FromQuery] DateTime date)
+        public async Task<IActionResult> GetAttendanceOfClassesInDate([FromQuery] Guid classId, [FromQuery] DateTime date)
         {
             var responses = await _classService.GetAttendanceOfClassesInDateAsync(classId, date);
             return Ok(responses);
