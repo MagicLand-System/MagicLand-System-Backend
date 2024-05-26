@@ -123,7 +123,9 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
         private async Task CheckingProgressingClass(DateTime currentDate, List<Notification> newNotifications, Class cls, IUnitOfWork _unitOfWork)
         {
-            var checkingSchedules = cls.Schedules.Where(sc => sc.Date.Date < currentDate.Date && sc.Date.Date > currentDate.Date.AddDays(-10)).ToList();
+            var schedules = cls.Schedules.ToList();
+
+            var checkingSchedules = schedules.Where(sc => sc.Date.Date < currentDate.Date && sc.Date.Date > currentDate.Date.AddDays(-10)).ToList();
 
             foreach (var schedule in checkingSchedules)
             {
@@ -135,6 +137,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
                           ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                          ($"{AttachValueEnum.Date}", $"{schedule.Date}"),
+                          ($"{AttachValueEnum.NoSlot}", $"{schedules.IndexOf(schedule) + 1}"),
                         });
 
                     await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpEvaluateLecturerTitle,
@@ -147,6 +151,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
                           ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                          ($"{AttachValueEnum.Date}", $"{schedule.Date}"),
+                          ($"{AttachValueEnum.NoSlot}", $"{schedules.IndexOf(schedule) + 1}"),
                         });
 
                     await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpAttendanceLecturerTitle,
@@ -167,6 +173,8 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         {
                           ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
                           ($"{AttachValueEnum.StudentId}", $"{attendance.StudentId}"),
+                          ($"{AttachValueEnum.Date}", $"{schedule.Date}"),
+                          ($"{AttachValueEnum.NoSlot}", $"{schedules.IndexOf(schedule) + 1}"),
                         });
 
                         await GenerateNotification(currentDate, newNotifications, null, NotificationMessageContant.MakeUpAttendanceTitle,

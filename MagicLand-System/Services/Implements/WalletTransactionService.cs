@@ -251,9 +251,11 @@ namespace MagicLand_System.Services.Implements
             double discountEachItem, CheckoutRequest request, Class cls, double currentRequestTotal, string studentNameString,
             out WalletTransaction newTransaction, out List<StudentClass> newStudentInClassList, out Notification newNotification)
         {
+            Guid newTransactionId = Guid.NewGuid();
+
             newTransaction = new WalletTransaction
             {
-                Id = new Guid(),
+                Id = newTransactionId,
                 TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Payment),
                 Money = currentRequestTotal,
                 Discount = discountEachItem,
@@ -285,6 +287,7 @@ namespace MagicLand_System.Services.Implements
                     {
                       ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
                       ($"{AttachValueEnum.StudentId}", $"{string.Join(", ", request.StudentIdList)}"),
+                      ($"{AttachValueEnum.TransactionId}", $"{newTransactionId}"),
                     });
 
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,
@@ -295,9 +298,10 @@ namespace MagicLand_System.Services.Implements
          double discountEachItem, CheckoutRequest request, Class cls, double currentRequestTotal, string studentNameString,
          out WalletTransaction newTransaction, out List<StudentClass> newStudentInClassList, out Notification newNotification)
         {
+            Guid newTransactionId = Guid.NewGuid();
             newTransaction = new WalletTransaction
             {
-                Id = new Guid(),
+                Id = newTransactionId,
                 TransactionCode = StringHelper.GenerateTransactionCode(TransactionTypeEnum.Payment),
                 Money = currentRequestTotal,
                 Discount = discountEachItem,
@@ -329,6 +333,7 @@ namespace MagicLand_System.Services.Implements
                     {
                       ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
                       ($"{AttachValueEnum.StudentId}", $"{string.Join(", ", request.StudentIdList)}"),
+                      ($"{AttachValueEnum.TransactionId}", $"{newTransactionId}"),
                     });
 
             newNotification = GenerateNewNotification(currentPayer, NotificationMessageContant.PaymentSuccessTitle,

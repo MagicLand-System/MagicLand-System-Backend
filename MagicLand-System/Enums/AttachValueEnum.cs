@@ -7,5 +7,7 @@
         CartItemId,
         TransactionId,
         CourseId,
+        Date,
+        NoSlot,
     }
 }
