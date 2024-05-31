@@ -1700,7 +1700,7 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                SettingLastResultInfor(finalResult, finalTestResults,
+                SettingLastResultInfor(finalResult, finalTestResults, identifyQuizExams,
                 (attendanceResult / schedules.Count) + (evaluateResult / schedules.Count), participationWeight);
 
                 responses.Add(finalResult);
@@ -1732,7 +1732,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
         }
-        private void SettingLastResultInfor(FinalResultResponse finalResult, List<FinalTestResultResponse> finalTestResults, double participationScore, double participationWeight)
+        private void SettingLastResultInfor(FinalResultResponse finalResult, List<FinalTestResultResponse> finalTestResults, List<(ExamSyllabus, QuestionPackage)> identifyQuizExams, double participationScore, double participationWeight)
         {
             var participationResult = new Participation
             {
@@ -1743,17 +1743,26 @@ namespace MagicLand_System.Services.Implements
 
             var total = finalTestResults.Sum(ft => ft.ScoreWeight) + participationResult.ScoreWeight;
             string status = total >= 5 ? "Passed" : "Not Passed";
-            if (finalTestResults.Any(ft => ft.Score == 0))
+            //if (finalTestResults.Any(ft => ft.Score == 0))
+            //{
+            //    status = "Not Passed";
+            //}
+
+            foreach (var ftr in finalTestResults)
             {
-                status = "Not Passed";
+                var quizExam = identifyQuizExams.SingleOrDefault(iqe => iqe.Item2.Id == ftr.ExamId);
+
+                if (ftr.ScoreWeight < quizExam.Item1.CompletionCriteria)
+                {
+                    status = "Not Passed";
+                    break;
+                }
             }
 
             finalResult.Average = total;
             finalResult.Status = status;
             finalResult.QuizzesResults = finalTestResults;
             finalResult.ParticipationResult = participationResult;
-
-
         }
 
         private FinalTestResultResponse GenerateFinalTestResult(List<ExamResult> allTestResult, (ExamSyllabus, QuestionPackage) quizExam)
@@ -1761,21 +1770,29 @@ namespace MagicLand_System.Services.Implements
             var finalTestResult = new FinalTestResultResponse();
 
             var testResults = allTestResult.Where(tr => tr.ExamId == quizExam.Item2.Id).ToList();
+
+            double weight = quizExam.Item1.Part == 2 ? quizExam.Item1.Weight / 2 : quizExam.Item1.Weight;
+            finalTestResult.ExamId = quizExam.Item2.Id;
+            finalTestResult.ExamName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
+            finalTestResult.QuizName = quizExam.Item2.Title;
+            finalTestResult.QuizType = quizExam.Item2.QuizType;
+            finalTestResult.QuizCategory = quizExam.Item1.Category;
+            finalTestResult.Weight = weight;
+
             if (testResults is not null)
             {
                 var testResult = testResults.OrderByDescending(x => x.NoAttempt).First();
-                double weight = quizExam.Item1.Part == 2 ? quizExam.Item1.Weight / 2 : quizExam.Item1.Weight;
 
-                finalTestResult.ExamId = quizExam.Item2.Id;
-                finalTestResult.ExamName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
-                finalTestResult.QuizName = quizExam.Item2.Title;
-                finalTestResult.QuizType = quizExam.Item2.QuizType;
-                finalTestResult.QuizCategory = quizExam.Item1.Category;
-                finalTestResult.Weight = weight;
                 finalTestResult.Score = testResult.ScoreEarned;
                 finalTestResult.ScoreWeight = CalculateScoreWeight(weight, testResult.ScoreEarned);
 
             }
+            else
+            {
+                finalTestResult.Score = 0;
+                finalTestResult.ScoreWeight = 0;
+            }
+
             return finalTestResult;
         }
 

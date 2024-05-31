@@ -85,7 +85,11 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     return;
                 }
 
-                if (cls.EndDate.Date == currentTime.AddDays(1).Date)
+                if(cls.Id == Guid.Parse("446BCA9A-CB94-4635-8B92-D94879DED7A2"))
+                {
+                    var a = "a";
+                }
+                if (cls.EndDate.Date == currentTime.AddDays(-1).Date)
                 {
                     await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
                     return;

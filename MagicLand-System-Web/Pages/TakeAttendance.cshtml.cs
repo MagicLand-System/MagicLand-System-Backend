@@ -104,7 +104,7 @@ namespace MagicLand_System_Web_Dev.Pages
             if (submitButton == "Refresh")
             {
                 CurrentStudentLearningMessage = null;
-                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                await FetchClass();
                 return Page();
             }
 
@@ -139,6 +139,8 @@ namespace MagicLand_System_Web_Dev.Pages
 
             Random random = new Random();
 
+            var defaultToken = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "DeveloperToken");
+            SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
             foreach (var cls in classes)
             {
                 var evaluateNote = new List<EvaluateDataRequest>();

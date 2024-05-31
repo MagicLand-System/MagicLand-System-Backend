@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MagicLand_System.Domain.Models.TempEntity.Quiz
+﻿namespace MagicLand_System.Domain.Models.TempEntity.Quiz
 {
     public class TempQuiz
     {

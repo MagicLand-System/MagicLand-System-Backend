@@ -110,7 +110,7 @@ namespace MagicLand_System_Web_Dev.Pages
             if (submitButton == "Refresh")
             {
                 CurrentStudentQuizInforMessage = null;
-                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                await FetchClass();
                 return Page();
             }
 

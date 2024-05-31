@@ -22,6 +22,7 @@ namespace MagicLand_System.Mappers.Custom
                 ItemType = cls != null ? "CLASS" : "COURSE",
                 Name = cls != null ? cls.Course!.Name : course.Name,
                 Code = cls != null ? cls.ClassCode : course.Syllabus!.SubjectCode,
+                Address = cls != null ? cls.Street + " " + cls.District + " " + cls.City : null,
                 Subject = course.SubjectName,
                 MinYearOldStudent = course.MinYearOldsStudent!.Value,
                 MaxYearOldStudent = course.MinYearOldsStudent!.Value,

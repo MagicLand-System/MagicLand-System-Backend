@@ -18,6 +18,7 @@ using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
 using MagicLand_System.PayLoad.Request.Checkout;
 using MagicLand_System.PayLoad.Response.Bills;
 using MagicLand_System.PayLoad.Response.Courses;
+using MagicLand_System.PayLoad.Response.Students;
 
 namespace MagicLand_System_Web_Dev.Pages
 {
@@ -133,7 +134,7 @@ namespace MagicLand_System_Web_Dev.Pages
             if (submitButton == "Refresh")
             {
                 Classes.Clear();
-                Classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                await FetchClass();
                 return Page();
             }
 
@@ -216,7 +217,25 @@ namespace MagicLand_System_Web_Dev.Pages
                     SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", parent.AccessToken!);
                     if (currentParentStudents == null || currentParentStudents.Count == 0)
                     {
-                        currentParentStudents = (await _apiHelper.FetchApiAsync<List<Student>>(ApiEndpointConstant.StudentEndpoint.GetStudentsOfCurrentUser, MethodEnum.GET, null)).Data;
+                        var result = await _apiHelper.FetchApiAsync<List<StudentWithAccountResponse>>(ApiEndpointConstant.StudentEndpoint.GetStudentsOfCurrentUser, MethodEnum.GET, null);
+                        if (result.Data != null)
+                        {
+                            currentParentStudents = new List<Student>();
+                            foreach (var stu in result.Data)
+                            {
+                                currentParentStudents.Add(new Student
+                                {
+                                    Id = stu.Id,
+                                    FullName = stu.FullName,
+                                    DateOfBirth = stu.DateOfBirth,
+                                    Email = stu.Email,
+                                    Gender = stu.Gender,
+                                    AddedTime = stu.AddedTime,
+                                    AvatarImage = stu.AvatarImage,
+                                    Parent = new User(),
+                                });
+                            }
+                        }
                         if (currentParentStudents == null)
                         {
                             phoneParentStored.Add(parent.Phone);

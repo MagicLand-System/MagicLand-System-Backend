@@ -5,7 +5,7 @@ namespace MagicLand_System_Web_Dev.Pages.DataContants
     public static class ClassData
     {
         public static readonly List<(string, string)> RoomOnlines, RoomOfflines, Slots;
-        public static readonly List<(string, int)> DayOfWeeks;
+        public static readonly List<(string, int, string)> DayOfWeeks;
         static ClassData()
         {
             RoomOnlines = new List<(string, string)>
@@ -39,7 +39,7 @@ namespace MagicLand_System_Web_Dev.Pages.DataContants
             ("418704FB-FAC8-4119-8795-C8FE5D348753", "19:00 - 21:00")
             };
 
-            DayOfWeeks = new List<(string, int)> { ("monday", 1), ("tuesday", 2), ("wednesday", 3), ("thursday", 4), ("friday", 5), ("saturday", 6), ("sunday", 7) };
+            DayOfWeeks = new List<(string, int, string)> { ("monday", 1, "2"), ("tuesday", 2, "3"), ("wednesday", 3, "4"), ("thursday", 4, "5"), ("friday", 5, "6"), ("saturday", 6, "7"), ("sunday", 7, "sunday") };
         }
     }
 }

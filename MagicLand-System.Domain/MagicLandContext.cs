@@ -47,6 +47,7 @@ namespace MagicLand_System.Domain
         public DbSet<MultipleChoiceAnswer> MultipleChoiceAnswers { get; set; }
         public DbSet<FlashCardAnswer> FlashCardAnswers { get; set; }
         public DbSet<CoursePrice> CoursePrices { get; set; }
+        public DbSet<Rate> Rates { get; set; }
         /// <summary>
         /// Temp Entity
         /// </summary>
@@ -348,6 +349,12 @@ namespace MagicLand_System.Domain
             {
                 entity.ToTable("TempQuizTime");
                 entity.HasKey(e => e.Id);
+            });
+            modelBuilder.Entity<Rate>(entity =>
+            {
+                entity.ToTable("Rate");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Course).WithMany(e => e.Rates).HasForeignKey(e => e.CourseId).OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

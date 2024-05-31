@@ -1,6 +1,7 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Class;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System_Web_Dev.Pages.DataContants;
@@ -141,13 +142,27 @@ namespace MagicLand_System_Web_Dev.Pages
 
         private async Task RenderProgress(CourseWithScheduleShorten course, int order, Random random)
         {
-            var scheduleRequests = new List<ScheduleRequest>();
+            var scheduleRequests = new List<(ScheduleRequest, int)>();
             var scheduleMessages = new List<ScheduleMessage>();
-            var startDate = DateTime.Now.AddDays(random.Next(1, 4));
+            var startDate = DateTime.Now;
 
             var lecturer = await GetLecturer(course, random, scheduleRequests, scheduleMessages, startDate);
 
             var room = random.Next(2, 4) % 2 == 0 ? ClassData.RoomOfflines[random.Next(0, ClassData.RoomOfflines.Count)] : ClassData.RoomOnlines[random.Next(0, ClassData.RoomOnlines.Count)];
+
+            var startDayOfWeek = scheduleRequests.OrderBy(x => x.Item2).First().Item1;
+
+            DayOfWeek targetDayOfWeek;
+            if (!Enum.TryParse(startDayOfWeek.DateOfWeek, true, out targetDayOfWeek))
+            {
+                Console.WriteLine("Invalid day of week string.");
+                return;
+            }
+
+            while (startDate.DayOfWeek != targetDayOfWeek)
+            {
+                startDate = startDate.AddDays(1);;
+            }
 
             var objectRequest = new CreateClassRequest
             {
@@ -158,7 +173,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 LimitNumberStudent = random.Next(25, 31),
                 LecturerId = lecturer.LectureId,
                 Method = random.Next(2, 4) % 2 == 0 ? "OFFLINE" : "ONLINE",
-                ScheduleRequests = scheduleRequests,
+                ScheduleRequests = scheduleRequests.Select(x => x.Item1).ToList(),
                 RoomId = Guid.Parse(room.Item2),
             };
 
@@ -179,7 +194,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 return;
             }
 
-            var result = await _apiHelper.FetchApiAsync<List<LecturerResponse>>(ApiEndpointConstant.UserEndpoint.GetLecturer, MethodEnum.POST, objectRequest);
+            var result = await _apiHelper.FetchApiAsync<CreateSingleClassResponse>(ApiEndpointConstant.ClassEnpoint.AddClass, MethodEnum.POST, objectRequest);
 
             ClassMessages.Add(new ClassDefaultMessage
             {
@@ -195,7 +210,7 @@ namespace MagicLand_System_Web_Dev.Pages
 
         }
 
-        private async Task<LecturerResponse> GetLecturer(CourseWithScheduleShorten course, Random random, List<ScheduleRequest> scheduleRequests,
+        private async Task<LecturerResponse> GetLecturer(CourseWithScheduleShorten course, Random random, List<(ScheduleRequest, int)> scheduleRequests,
             List<ScheduleMessage> scheduleMessages, DateTime startDate)
         {
             int numberSchedule = random.Next(1, 4);
@@ -205,15 +220,16 @@ namespace MagicLand_System_Web_Dev.Pages
                 var slot = ClassData.Slots[random.Next(0, ClassData.Slots.Count)];
                 var dayOfWeek = ClassData.DayOfWeeks[random.Next(0, ClassData.DayOfWeeks.Count)];
 
-                scheduleRequests.Add(new ScheduleRequest
+
+                scheduleRequests.Add((new ScheduleRequest
                 {
                     DateOfWeek = dayOfWeek.Item1,
                     SlotId = Guid.Parse(slot.Item1),
-                });
+                }, dayOfWeek.Item3 == "sunday" ? 8 : int.Parse(dayOfWeek.Item3)));
 
                 scheduleMessages.Add(new ScheduleMessage
                 {
-                    DayOfWeek = dayOfWeek.Item1,
+                    DayOfWeek = dayOfWeek.Item3,
                     Slot = slot.Item2,
                     Order = dayOfWeek.Item2
                 });
@@ -223,7 +239,7 @@ namespace MagicLand_System_Web_Dev.Pages
             var objectRequest = new FilterLecturerRequest
             {
                 StartDate = startDate,
-                Schedules = scheduleRequests,
+                Schedules = scheduleRequests.Select(x => x.Item1).ToList(),
                 CourseId = course.CourseId.ToString(),
             };
 

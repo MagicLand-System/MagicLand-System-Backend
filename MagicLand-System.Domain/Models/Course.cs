@@ -12,7 +12,6 @@ namespace MagicLand_System.Domain.Models
         public int? MinYearOldsStudent { get; set; } = 3;
         public int? MaxYearOldsStudent { get; set; } = 120;
         public string? Image { get; set; } = null;
-        public double TotalRate { get; set; } = 0.0;
         public string? MainDescription { get; set; }
         public DateTime? UpdateDate { get; set; } = default;
 
@@ -23,5 +22,6 @@ namespace MagicLand_System.Domain.Models
         public ICollection<Class> Classes { get; set; } = new List<Class>();
         public ICollection<SubDescriptionTitle> SubDescriptionTitles { get; set; } = new List<SubDescriptionTitle>();
         public ICollection<CoursePrice>? CoursePrices { get; set; }
+        public ICollection<Rate>? Rates { get; set; }
     }
 }

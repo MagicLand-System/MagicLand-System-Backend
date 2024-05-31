@@ -820,6 +820,7 @@ namespace MagicLand_System.Services.Implements
                 var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(
                     predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()) && x.Student!.StudentClasses.Any(sc => sc.ClassId == schedule.ClassId && sc.SavedTime == null));
 
+                var totalRate = await _unitOfWork.GetRepository<Rate>().GetListAsync(predicate: x => x.CourseId == schedule.Class.CourseId);
                 if (attendances != null && attendances.Count > 0)
                 {
                     var attendanceStatus = "NTA";
@@ -855,7 +856,7 @@ namespace MagicLand_System.Services.Implements
                         //CoursePrice = schedule.Class.Course.Price,
                         CourseId = schedule.Class.Course.Id,
                         CourseName = schedule.Class.Course.Name,
-                        CourseRate = schedule.Class.Course.TotalRate / 5,
+                        CourseRate = totalRate != null ? totalRate.Sum(r => r.RateScore) / 5 : 0,
                         LeastNumberStudent = schedule.Class.LeastNumberStudent,
                         LimitNumberStudent = schedule.Class.LimitNumberStudent,
                         StartDate = schedule.Class.StartDate,

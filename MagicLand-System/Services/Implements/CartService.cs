@@ -283,6 +283,11 @@ namespace MagicLand_System.Services.Implements
                            .Include(x => x.Lecture)
                            .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(s => s.Room)!);
 
+                        if (cls == null)
+                        {
+                            continue;
+                        }
+
                         cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                             predicate: x => x.Id == cls.CourseId,
                             include: x => x.Include(x => x.Syllabus!));
@@ -372,6 +377,8 @@ namespace MagicLand_System.Services.Implements
                         course.Syllabus = await _unitOfWork.GetRepository<Syllabus>()
                             .SingleOrDefaultAsync(predicate: x => x.Id == course.SyllabusId);
                         course.Classes = await _unitOfWork.GetRepository<Class>()
+                            .GetListAsync(predicate: x => x.CourseId == course.Id);
+                        course.Rates = await _unitOfWork.GetRepository<Rate>()
                             .GetListAsync(predicate: x => x.CourseId == course.Id);
 
                         courses.Add(course);
@@ -476,6 +483,11 @@ namespace MagicLand_System.Services.Implements
                         predicate: c => c.Id == item.ClassId,
                         include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot).Include(x => x.Course)!);
 
+
+                    if (cls == null)
+                    {
+                        continue;
+                    }
                     var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                         predicate: c => c.Id == cls.CourseId,
                         include: x => x.Include(x => x.Syllabus)!);

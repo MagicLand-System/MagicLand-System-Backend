@@ -98,7 +98,7 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Điểm Đánh Giá Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
 
-            filteredCourses = filteredCourses.Where(x => x.TotalRate / 5 >= rate).ToList();
+            filteredCourses = filteredCourses.Where(x => x.Rates != null && x.Rates.Sum(r => r.RateScore) / 5 >= rate).ToList();
 
             return filteredCourses;
         }
@@ -119,6 +119,8 @@ namespace MagicLand_System.Services.Implements
                 course.Syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.Course!.Id == course.Id,
                 include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
+
+                course.Rates = await _unitOfWork.GetRepository<Rate>().GetListAsync(predicate: x => x.CourseId == course.Id);
             }
 
             var coursePrerequisites = !courses.Any()
@@ -340,6 +342,8 @@ namespace MagicLand_System.Services.Implements
                     course.Classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
                     predicate: x => x.CourseId == course.Id,
                     include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
+
+                    course.Rates = await _unitOfWork.GetRepository<Rate>().GetListAsync(predicate: x => x.CourseId == course.Id);
                 }
 
                 return courses;
@@ -421,6 +425,8 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.Course!.Id == course.Id,
                 include: x => x.Include(x => x.Topics!.OrderBy(tp => tp.OrderNumber)).ThenInclude(tp => tp.Sessions!.OrderBy(ses => ses.NoSession)));
 
+                course.Rates = await _unitOfWork.GetRepository<Rate>().GetListAsync(predicate: x => x.CourseId == course.Id);
+
                 var courses = new List<Course>
                 {
                     course
@@ -468,6 +474,8 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.CourseId == course.Id && x.StudentClasses.Any(sc => sc.StudentId == currentStudent.StudentIdAccount),
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot!));
 
+                course.Rates = await _unitOfWork.GetRepository<Rate>().GetListAsync(predicate: x => x.CourseId == course.Id);
+
                 List<Course> currentPrequisiteCourses, currentRelatedCourses;
                 GenerateCourseCurrentItems(prequisiteCourses, relatedCourses, course, out currentPrequisiteCourses, out currentRelatedCourses);
 
@@ -490,6 +498,7 @@ namespace MagicLand_System.Services.Implements
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyWord.ToLower()), include: x => x
             .Include(x => x.Syllabus)
+            .Include(x => x.Rates)
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents));
 
@@ -1197,7 +1206,7 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<CourseWithScheduleShorten>> GetCourseByStaff()
         {
             var courses = (await _unitOfWork.GetRepository<Course>().GetListAsync(
-                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents).Include(x => x.Syllabus!))).ToList();
+                include: x => x.Include(x => x.SubDescriptionTitles).ThenInclude(sdt => sdt.SubDescriptionContents).Include(x => x.Syllabus!).Include(x => x.Rates))).ToList();
 
             var prequisiteCourses = await GetPrequisiteCourses(courses);
             var relatedCourses = await GetRelatedCourses(courses);
@@ -1235,6 +1244,7 @@ namespace MagicLand_System.Services.Implements
             ? await GetDefaultCourse()
             : await _unitOfWork.GetRepository<Course>().GetListAsync(predicate: x => x.Name!.ToLower().Contains(keyword.ToLower()), include: x => x
             .Include(x => x.Syllabus)
+            .Include(x => x.Rates)
             .Include(x => x.SubDescriptionTitles)
             .ThenInclude(sdt => sdt.SubDescriptionContents));
 
@@ -1427,8 +1437,14 @@ namespace MagicLand_System.Services.Implements
             }
             try
             {
-                course.TotalRate += rateScore;
-                _unitOfWork.GetRepository<Course>().UpdateAsync(course);
+                var newRater = new Rate
+                {
+                    Id = Guid.NewGuid(),
+                    Rater = GetUserIdFromJwt(),
+                    RateScore = rateScore,
+                };
+
+                await _unitOfWork.GetRepository<Rate>().InsertAsync(newRater);
                 _unitOfWork.Commit();
                 return "Đánh Giá Khóa Học Thành Công";
             }

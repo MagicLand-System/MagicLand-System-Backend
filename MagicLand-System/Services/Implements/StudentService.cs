@@ -932,6 +932,11 @@ namespace MagicLand_System.Services.Implements
                 {
                     res.IsSuspend = true;
                 }
+                var isRated = await _unitOfWork.GetRepository<Rate>().SingleOrDefaultAsync(predicate: x => x.CourseId == res.CourseId && x.Rater == GetUserIdFromJwt());
+                if (isRated != null)
+                {
+                    res.RateScore = isRated.RateScore;
+                }
                 res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
             }
 
