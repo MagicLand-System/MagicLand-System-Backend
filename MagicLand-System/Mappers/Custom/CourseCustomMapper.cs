@@ -34,7 +34,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
-                CourseRate = course.Rates != null ? course.Rates.Sum(r => r.RateScore) / 5 : 0,
+                CourseRate = course.Rates != null && course.Rates.Any() ? course.Rates.Sum(r => r.RateScore) / course.Rates.Count : 0,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
@@ -54,7 +54,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
-                CourseRate = course.Rates != null ? course.Rates.Sum(r => r.RateScore) / 5 : 0,
+                CourseRate = course.Rates != null && course.Rates.Any() ? course.Rates.Sum(r => r.RateScore) / course.Rates.Count : 0,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),
@@ -89,7 +89,7 @@ namespace MagicLand_System.Mappers.Custom
             {
                 CourseId = course.Id,
                 Image = course.Image,
-                CourseRate = course.Rates != null ? course.Rates.Sum(r => r.RateScore) / 5 : 0,
+                CourseRate = course.Rates != null && course.Rates.Any() ? course.Rates.Sum(r => r.RateScore) / course.Rates.Count : 0,
                 MainDescription = course.MainDescription,
                 SubDescriptionTitle = course.SubDescriptionTitles
                 .Select(sdt => CourseDescriptionCustomMapper.fromSubDesTileToSubDesTitleResponse(sdt)).ToList(),

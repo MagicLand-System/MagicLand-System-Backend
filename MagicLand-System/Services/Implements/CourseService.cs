@@ -98,9 +98,21 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException("Điểm Đánh Giá Không Hợp Lệ", StatusCodes.Status400BadRequest);
             }
 
-            filteredCourses = filteredCourses.Where(x => x.Rates != null && x.Rates.Sum(r => r.RateScore) / 5 >= rate).ToList();
+            var finalFilteredCourse = new List<Course>();
+            foreach (var fc in filteredCourses)
+            {
+                if (fc.Rates == null || !fc.Rates.Any())
+                {
+                    finalFilteredCourse.Add(fc);
+                    continue;
+                }
+                if (fc.Rates.Any() && fc.Rates.Sum(r => r.RateScore) / fc.Rates.Count >= rate)
+                {
+                    finalFilteredCourse.Add(fc);
+                }
+            }
 
-            return filteredCourses;
+            return finalFilteredCourse;
         }
 
         public async Task<CourseWithScheduleShorten> GetCourseByIdAsync(Guid id)
@@ -365,7 +377,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var currentRelatedCourses = await _unitOfWork.GetRepository<Course>().GetListAsync(
                     predicate: x => x.Syllabus!.PrequisiteSyllabusId == id,
-                    include: x => x.Include(x => x.Syllabus)!);
+                    include: x => x.Include(x => x.Syllabus)!.Include(x => x.Rates)!);
 
                 if (currentRelatedCourses != null && currentRelatedCourses.Any())
                 {
@@ -385,7 +397,7 @@ namespace MagicLand_System.Services.Implements
             {
                 var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                     predicate: x => x.SyllabusId == id,
-                    include: x => x.Include(x => x.Syllabus!));
+                    include: x => x.Include(x => x.Syllabus!).Include(x => x.Rates)!);
 
                 if (course != null)
                 {
@@ -1442,6 +1454,7 @@ namespace MagicLand_System.Services.Implements
                     Id = Guid.NewGuid(),
                     Rater = GetUserIdFromJwt(),
                     RateScore = rateScore,
+                    CourseId = courseId,
                 };
 
                 await _unitOfWork.GetRepository<Rate>().InsertAsync(newRater);

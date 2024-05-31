@@ -856,7 +856,7 @@ namespace MagicLand_System.Services.Implements
                         //CoursePrice = schedule.Class.Course.Price,
                         CourseId = schedule.Class.Course.Id,
                         CourseName = schedule.Class.Course.Name,
-                        CourseRate = totalRate != null ? totalRate.Sum(r => r.RateScore) / 5 : 0,
+                        CourseRate = totalRate != null && totalRate.Any() ? totalRate.Sum(r => r.RateScore) / totalRate.Count : 0,
                         LeastNumberStudent = schedule.Class.LeastNumberStudent,
                         LimitNumberStudent = schedule.Class.LimitNumberStudent,
                         StartDate = schedule.Class.StartDate,
