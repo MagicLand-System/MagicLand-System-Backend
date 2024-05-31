@@ -192,13 +192,13 @@ namespace MagicLand_System.Services.Implements
             {
                 allCompletedSyllabuses = allCompletedSyllabuses.Distinct().ToList();
 
-                var realtedCourses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                var relatedCompletedCourses = await _unitOfWork.GetRepository<Course>().GetListAsync(
                        predicate: x => allCompletedSyllabuses.Contains(x.Syllabus!.PrequisiteSyllabusId!.Value),
                        include: x => x.Include(x => x.Syllabus!));
 
-                if (realtedCourses != null && realtedCourses.Any())
+                if (relatedCompletedCourses != null && relatedCompletedCourses.Any())
                 {
-                    courses.AddRange(realtedCourses!.ToList());
+                    courses.AddRange(relatedCompletedCourses!.ToList());
 
                 }
             }
@@ -213,13 +213,29 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
 
-                    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Syllabus));
-                    if (course != null)
+                    var faveCourse = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id == id, include: x => x.Include(x => x.Syllabus)!);
+                    if (faveCourse != null)
                     {
-                        courses.Add(course);
+                        if (faveCourse!.Syllabus!.PrequisiteSyllabusId != null && faveCourse.Syllabus.PrequisiteSyllabusId != default)
+                        {
+                            var preCourse = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Syllabus!.Id == faveCourse.Syllabus.PrequisiteSyllabusId, include: x => x.Include(x => x.Syllabus)!);
+                            courses.Add(preCourse);
+                        }
+
+                        var relatedFavCourses = await _unitOfWork.GetRepository<Course>().GetListAsync(
+                        predicate: x => allCompletedSyllabuses.Contains(x.Syllabus!.PrequisiteSyllabusId!.Value),
+                        include: x => x.Include(x => x.Syllabus!));
+
+                        if (relatedFavCourses.Any())
+                        {
+                            courses.AddRange(relatedFavCourses);
+                        }
+
+                        courses.Add(faveCourse);
                     }
                 }
             }
+
             if (courses.Any())
             {
                 courses = courses.DistinctBy(x => x.Id).ToList();

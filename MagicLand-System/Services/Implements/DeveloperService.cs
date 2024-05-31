@@ -64,7 +64,7 @@ namespace MagicLand_System.Services.Implements
                             int index;
                             do
                             {
-                                index = random.Next(0, schedules.Count);
+                                index = random.Next(1, schedules.Count);
                             } while (absentDay.Contains(index));
                             absentDay.Add(index);
                         }
@@ -74,21 +74,29 @@ namespace MagicLand_System.Services.Implements
                         {
                             order++;
                             var currentAttendance = allAttendances.Single(x => x.ScheduleId == schedule.Id && x.StudentId == stu!.Id);
-                            currentAttendance.IsPresent = absentDay.Contains(order) ? false : true;
-
                             var currentEvaluate = allEvaluates.Single(x => x.ScheduleId == schedule.Id && x.StudentId == stu!.Id);
                             var evaluateIndex = random.Next(0, noteEvaluate.Count);
-                            currentEvaluate.Status = absentDay.Contains(order) ? null : noteEvaluate[evaluateIndex].Level;
-                            currentEvaluate.Note = absentDay.Contains(order) ? null : noteEvaluate[evaluateIndex].Note;
+
+                            if (currentAttendance.IsPresent == null)
+                            {
+                                currentAttendance.IsPresent = absentDay.Contains(order) ? false : true;
+                            };
+
+                            if (string.IsNullOrEmpty(currentEvaluate.Status))
+                            {
+
+                                currentEvaluate.Status = absentDay.Contains(order) ? null : noteEvaluate[evaluateIndex].Level;
+                                currentEvaluate.Note = absentDay.Contains(order) ? string.Empty : noteEvaluate[evaluateIndex].Note;
+                            }
 
                             updateAttendances.Add(currentAttendance);
                             updateEvaluates.Add(currentEvaluate);
 
                             attendanceAndEvaluateInfors.Add(new AttendanceAndEvaluateInfor
                             {
-                                AttendanceStatus = absentDay.Contains(order) ? "Vắng Mặt" : "Có Mặt",
-                                EvaluateStatus = absentDay.Contains(order) ? "Không Có Đánh Giá" : noteEvaluate[evaluateIndex].Level,
-                                EvaluateNote = absentDay.Contains(order) ? string.Empty : noteEvaluate[evaluateIndex].Note,
+                                AttendanceStatus = currentAttendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt",
+                                EvaluateStatus = currentEvaluate.Status == null ? "Không Có Đánh Giá" : currentEvaluate.Status,
+                                EvaluateNote = currentEvaluate.Note,
                                 Date = schedule.Date.ToString("MM/dd/yyyy"),
                             });
 
