@@ -42,8 +42,8 @@ namespace MagicLand_System.Domain
         public DbSet<SideFlashCard> SideFlashCards { get; set; }
         public DbSet<LecturerField> LecturerFields { get; set; }
         public DbSet<Evaluate> Evaluates { get; set; }
-        public DbSet<ExamResult> TestResults { get; set; }
-        public DbSet<ExamQuestion> examQuestions { get; set; }
+        public DbSet<ExamResult> ExamResults { get; set; }
+        public DbSet<ExamQuestion> ExamQuestions { get; set; }
         public DbSet<MultipleChoiceAnswer> MultipleChoiceAnswers { get; set; }
         public DbSet<FlashCardAnswer> FlashCardAnswers { get; set; }
         public DbSet<CoursePrice> CoursePrices { get; set; }
@@ -292,9 +292,9 @@ namespace MagicLand_System.Domain
             });
             modelBuilder.Entity<ExamResult>(entity =>
             {
-                entity.ToTable("TestResult");
+                entity.ToTable("ExamResult");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.StudentClass).WithMany(e => e.TestResults).HasForeignKey(e => e.StudentClassId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.StudentClass).WithMany(e => e.ExamResults).HasForeignKey(e => e.StudentClassId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<ExamQuestion>(entity =>
             {

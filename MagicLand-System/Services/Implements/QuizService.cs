@@ -445,10 +445,13 @@ namespace MagicLand_System.Services.Implements
                     question.FlashCards = flashCards.ToList();
                 }
             }
-
             var responses = QuestionCustomMapper.fromQuestionPackageToQuizResponseInLimitScore(quiz)!;
 
-            await GenereateTempExam(examId, quiz, responses);
+            var currentStudent = await GetUserFromJwt();
+            var studentClassId = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.ClassId == classId && x.StudentId == currentStudent.StudentIdAccount);
+
+            await GenereateTempExam(examId, studentClassId, quiz, responses);
+            //await GenereateTempExam(examId, quiz, responses);
             return responses;
         }
 
@@ -471,7 +474,7 @@ namespace MagicLand_System.Services.Implements
             //}
         }
 
-        private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)
+        private async Task GenereateTempExam(Guid examId, Guid studentClassId, QuestionPackage exam, List<QuizResponse> responses)
         {
             try
             {
@@ -484,71 +487,125 @@ namespace MagicLand_System.Services.Implements
                 {
                     totalMark = responses.Count();
                 }
-                var tempQuestions = new List<TempQuestion>();
-                var tempMCAnswers = new List<TempMCAnswer>();
-                var tempFCAnswers = new List<TempFCAnswer>();
 
-                Guid tempQuizId = Guid.NewGuid();
-                var tempQuiz = new TempQuiz
+                var tempQuestions = new List<ExamQuestion>();
+                var tempMCAnswers = new List<MultipleChoiceAnswer>();
+                var tempFCAnswers = new List<FlashCardAnswer>();
+
+                Guid tempExamId = Guid.NewGuid();
+                var tempExam = new ExamResult
                 {
-                    Id = tempQuizId,
+                    Id = tempExamId,
                     ExamId = examId,
-                    StudentId = (await GetUserFromJwt()).StudentIdAccount!.Value,
+                    StudentClassId = studentClassId,
                     TotalMark = totalMark,
-                    ExamType = quiz.QuizType,
-                    CreatedTime = DateTime.Now,
+                    TotalScore = exam.Score,
+                    QuizType = exam.QuizType,
                     IsGraded = false,
                 };
                 foreach (var res in responses)
                 {
-                    Guid tempQuestionId = Guid.NewGuid();
-                    tempQuestions.Add(new TempQuestion
+                    var newTempQuestion = new ExamQuestion
                     {
-                        Id = tempQuestionId,
+                        Id = Guid.NewGuid(),
                         QuestionId = res.QuestionId,
-                        TempQuizId = tempQuizId,
-                    });
+                        Question = res.QuestionDescription,
+                        QuestionImage = res.QuestionImage,
+                        ExamResultResultId = tempExamId,
+                    };
+
+                    tempQuestions.Add(newTempQuestion);
 
                     var multipleChoiceAnswers = res.AnswersMutipleChoicesInfor;
                     if (multipleChoiceAnswers != null && multipleChoiceAnswers.Count > 0)
                     {
                         foreach (var answer in multipleChoiceAnswers)
                         {
-                            tempMCAnswers.Add(new TempMCAnswer
+                            var newTempMCAnswer = new MultipleChoiceAnswer();
+                            Guid mcAnswerId = Guid.NewGuid();
+                            if (answer.Score != 0)
                             {
-                                Id = Guid.NewGuid(),
-                                AnswerId = answer.AnswerId,
-                                Score = answer.Score,
-                                TempQuestionId = tempQuestionId,
-                            });
+
+                                newTempMCAnswer.Id = mcAnswerId;
+                                newTempMCAnswer.CorrectAnswerId = answer.AnswerId;
+                                newTempMCAnswer.CorrectAnswer = answer.AnswerDescription;
+                                newTempMCAnswer.CorrectAnswerImage = answer.AnswerImage;
+                                newTempMCAnswer.Score = answer.Score;
+                            }
+                            else
+                            {
+                                newTempMCAnswer.Id = mcAnswerId;
+                                newTempMCAnswer.AnswerId = answer.AnswerId;
+                                newTempMCAnswer.Answer = answer.AnswerDescription;
+                                newTempMCAnswer.AnswerImage = answer.AnswerImage;
+                                newTempMCAnswer.Score = 0;
+                            }
+
+                            newTempMCAnswer.ExamQuestionId = newTempQuestion.Id;
+                            tempMCAnswers.Add(newTempMCAnswer);
                         }
                     }
+
                     var flashCardAnswers = res.AnwserFlashCarsInfor;
                     if (flashCardAnswers != null && flashCardAnswers.Count > 0)
                     {
-                        foreach (var answer in flashCardAnswers)
+                        var storedBrowserCard = new List<Guid>();
+
+                        foreach (var firstCard in flashCardAnswers)
                         {
-                            tempFCAnswers.Add(new TempFCAnswer
+                            if (storedBrowserCard.Contains(firstCard.CardId))
+                            {
+                                continue;
+                            }
+
+                            var secondCard = flashCardAnswers.ToList().Single(fc => fc.CardId != firstCard.CardId && fc.NumberCoupleIdentify == firstCard.NumberCoupleIdentify);
+
+                            tempFCAnswers.Add(new FlashCardAnswer
                             {
                                 Id = Guid.NewGuid(),
-                                CardId = answer.CardId,
-                                Score = answer.Score,
-                                NumberCoupleIdentify = answer.NumberCoupleIdentify,
-                                TempQuestionId = tempQuestionId,
+                                LeftCardAnswerId = firstCard.CardId,
+                                LeftCardAnswer = firstCard.CardDescription,
+                                LeftCardAnswerImage = firstCard.CardImage,
+                                RightCardAnswerId = secondCard!.CardId,
+                                RightCardAnswer = secondCard.CardDescription,
+                                RightCardAnswerImage = secondCard.CardImage,
+                                Score = firstCard.Score + secondCard.Score,
+                                ExamQuestionId = newTempQuestion.Id,
                             });
+
+                            storedBrowserCard.Add(firstCard.CardId);
+                            storedBrowserCard.Add(secondCard.CardId);
                         }
                     }
                 }
 
-                await _unitOfWork.GetRepository<TempQuiz>().InsertAsync(tempQuiz);
-                await _unitOfWork.GetRepository<TempQuestion>().InsertRangeAsync(tempQuestions);
+                var existingTempExam = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
+                    predicate: x => x.StudentClassId == studentClassId && x.ExamId == examId && x.IsGraded == false,
+                    include: x => x.Include(x => x.ExamQuestions)!);
+
+                if (existingTempExam != null)
+                {
+                    var examQuestionIds = existingTempExam.ExamQuestions.Select(eq => eq.Id).ToList();
+
+                    var deleteMCTempAnswers = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().GetListAsync(predicate: x => examQuestionIds.Contains(x.ExamQuestionId));
+
+                    if (deleteMCTempAnswers.Any())
+                    {
+                        _unitOfWork.GetRepository<MultipleChoiceAnswer>().DeleteRangeAsync(deleteMCTempAnswers);
+                    }
+
+                    _unitOfWork.GetRepository<ExamResult>().DeleteAsync(existingTempExam);
+                }
+
+                await _unitOfWork.GetRepository<ExamResult>().InsertAsync(tempExam);
+                await _unitOfWork.GetRepository<ExamQuestion>().InsertRangeAsync(tempQuestions);
                 if (tempMCAnswers.Any())
                 {
-                    await _unitOfWork.GetRepository<TempMCAnswer>().InsertRangeAsync(tempMCAnswers);
+                    await _unitOfWork.GetRepository<MultipleChoiceAnswer>().InsertRangeAsync(tempMCAnswers);
                 }
                 if (tempFCAnswers.Any())
                 {
-                    await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
+                    await _unitOfWork.GetRepository<FlashCardAnswer>().InsertRangeAsync(tempFCAnswers);
                 }
                 _unitOfWork.Commit();
             }
@@ -557,6 +614,94 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
             }
         }
+        #region old Save Temp 
+        //private async Task GenereateTempExam(Guid examId, QuestionPackage quiz, List<QuizResponse> responses)
+        //{
+        //    try
+        //    {
+        //        int totalMark = 0;
+        //        if (responses.SelectMany(r => r.AnwserFlashCarsInfor!).ToList().Any())
+        //        {
+        //            totalMark = responses.Sum(r => r.AnwserFlashCarsInfor!.Count()) / 2;
+        //        }
+        //        else
+        //        {
+        //            totalMark = responses.Count();
+        //        }
+        //        var tempQuestions = new List<TempQuestion>();
+        //        var tempMCAnswers = new List<TempMCAnswer>();
+        //        var tempFCAnswers = new List<TempFCAnswer>();
+
+        //        Guid tempQuizId = Guid.NewGuid();
+        //        var tempQuiz = new TempQuiz
+        //        {
+        //            Id = tempQuizId,
+        //            ExamId = examId,
+        //            StudentId = (await GetUserFromJwt()).StudentIdAccount!.Value,
+        //            TotalMark = totalMark,
+        //            ExamType = quiz.QuizType,
+        //            CreatedTime = DateTime.Now,
+        //            IsGraded = false,
+        //        };
+        //        foreach (var res in responses)
+        //        {
+        //            Guid tempQuestionId = Guid.NewGuid();
+        //            tempQuestions.Add(new TempQuestion
+        //            {
+        //                Id = tempQuestionId,
+        //                QuestionId = res.QuestionId,
+        //                TempQuizId = tempQuizId,
+        //            });
+
+        //            var multipleChoiceAnswers = res.AnswersMutipleChoicesInfor;
+        //            if (multipleChoiceAnswers != null && multipleChoiceAnswers.Count > 0)
+        //            {
+        //                foreach (var answer in multipleChoiceAnswers)
+        //                {
+        //                    tempMCAnswers.Add(new TempMCAnswer
+        //                    {
+        //                        Id = Guid.NewGuid(),
+        //                        AnswerId = answer.AnswerId,
+        //                        Score = answer.Score,
+        //                        TempQuestionId = tempQuestionId,
+        //                    });
+        //                }
+        //            }
+        //            var flashCardAnswers = res.AnwserFlashCarsInfor;
+        //            if (flashCardAnswers != null && flashCardAnswers.Count > 0)
+        //            {
+        //                foreach (var answer in flashCardAnswers)
+        //                {
+        //                    tempFCAnswers.Add(new TempFCAnswer
+        //                    {
+        //                        Id = Guid.NewGuid(),
+        //                        CardId = answer.CardId,
+        //                        Score = answer.Score,
+        //                        NumberCoupleIdentify = answer.NumberCoupleIdentify,
+        //                        TempQuestionId = tempQuestionId,
+        //                    });
+        //                }
+        //            }
+        //        }
+
+        //        await _unitOfWork.GetRepository<TempQuiz>().InsertAsync(tempQuiz);
+        //        await _unitOfWork.GetRepository<TempQuestion>().InsertRangeAsync(tempQuestions);
+        //        if (tempMCAnswers.Any())
+        //        {
+        //            await _unitOfWork.GetRepository<TempMCAnswer>().InsertRangeAsync(tempMCAnswers);
+        //        }
+        //        if (tempFCAnswers.Any())
+        //        {
+        //            await _unitOfWork.GetRepository<TempFCAnswer>().InsertRangeAsync(tempFCAnswers);
+        //        }
+        //        _unitOfWork.Commit();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]", StatusCodes.Status400BadRequest);
+        //    }
+        //}
+        #endregion
 
         public async Task<QuizResultResponse> GradeQuizMCAsync(QuizMCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime)
         {
@@ -568,7 +713,7 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.Course!.Id == cls.CourseId,
                 include: x => x.Include(x => x.ExamSyllabuses)!);
 
-            var quizzes = new List<QuestionPackage>();
+            var exams = new List<QuestionPackage>();
 
             var sessions = (await _unitOfWork.GetRepository<Topic>().GetListAsync(
                 predicate: x => x.SyllabusId == syllabus.Id,
@@ -579,85 +724,229 @@ namespace MagicLand_System.Services.Implements
                 var package = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
                 if (package != null)
                 {
-                    quizzes.Add(package);
+                    exams.Add(package);
                 }
             }
 
-            var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
+            var currentExam = exams.Find(q => q!.Id == quizStudentWork.ExamId);
 
-            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, false, isCheckingTime);
+            ValidateGradeCurrentExam(quizStudentWork.ExamId, currentExam, cls.Schedules.ToList(), doingTime, false, isCheckingTime);
 
-            var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
-                orderBy: x => x.OrderByDescending(x => x.CreatedTime),
-                predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
-                include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.MCAnswers));
+            var tempExam = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
+                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.ExamId == currentExam!.Id && x.IsGraded == false,
+                include: x => x.Include(x => x.ExamQuestions));
 
-            if (currentTempQuiz == null)
+            if (tempExam == null)
             {
-                throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ Khi Không Truy Suất Được Gói Câu Hỏi Trong Hệ Thống, Vui Lòng Truy Suất Lại Gói Câu Hỏi Và Làm Lại",
+                throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ Khi Không Truy Suất Được Gói Câu Hỏi Trong Hệ Thống Hoặc Gói Câu Hỏi Đã Được Chấm, Vui Lòng Truy Suất Lại Gói Câu Hỏi Khác Và Làm Lại",
                     StatusCodes.Status400BadRequest);
             }
-
-            if (currentTempQuiz.IsGraded == true)
-            {
-                throw new BadHttpRequestException($"Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác", StatusCodes.Status400BadRequest);
-            }
-
-            Guid testResultId;
-            ExamResult testResult;
 
             var currentStudentClass = await ValidateCurrentStudentClass(currentStudentId, cls);
 
             if (quizStudentWork.StudentQuestionResults.Count > 0)
             {
-                ValidateTempQuizDB(quizStudentWork.StudentQuestionResults.Count(), currentQuiz, currentTempQuiz, false);
+                ValidateTemExamDB(quizStudentWork.StudentQuestionResults.Count, currentExam, tempExam, false);
             }
 
-            var questionItems = ValidateStudentMCWorkRequest(quizStudentWork, currentTempQuiz);
+            var examItems = await ValidateStudentMCWorkRequest(quizStudentWork, tempExam);
+            int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentClass.StudentId, currentStudentClass.ClassId, currentExam!.PackageType);
 
-            int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentClass.StudentId, currentStudentClass.ClassId, currentQuiz!.PackageType);
-
-            GenrateTestResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, currentStudentClass, noAttempt, out testResultId, out testResult);
-
-            var examQuestions = new List<ExamQuestion>();
-            var multipleChoiceAnswers = new List<MultipleChoiceAnswer>();
             int correctMark = 0;
             double scoreEarned = 0;
-            string status = "Chưa Có Đánh Giá";
+            var questions = examItems.Item1;
+            var multipleChoiceAnswers = examItems.Item2;
+            var updateMCAnswers = new List<MultipleChoiceAnswer>();
 
             if (quizStudentWork.StudentQuestionResults.Count > 0)
             {
-                foreach (var sqr in quizStudentWork.StudentQuestionResults)
+                foreach (var quest in questions)
                 {
-                    var currentTempQuestion = questionItems.Item1.Find(q => q.QuestionId == sqr.QuestionId);
+                    var answerQuestion = multipleChoiceAnswers.Single(a => a.Score != 0 && a.ExamQuestionId == quest.Id);
+                    var studentWork = quizStudentWork.StudentQuestionResults.SingleOrDefault(sw => sw.QuestionId == quest.QuestionId);
+                    if (studentWork == null)
+                    {
+                        answerQuestion.AnswerId = default;
+                        answerQuestion.Answer = null;
+                        answerQuestion.AnswerImage = null;
+                        answerQuestion.Status = "NotAnswer";
+                        answerQuestion.Score = 0;
+                    }
+                    else
+                    {
+                        var studentAnswer = multipleChoiceAnswers.Single(a => a.AnswerId == studentWork.AnswerId || a.CorrectAnswerId == studentWork.AnswerId);
 
-                    var currentQuestion = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
-                    predicate: x => x.Id == currentTempQuestion!.QuestionId,
-                    include: x => x.Include(x => x.MutipleChoices!));
+                        correctMark += studentAnswer.Score != 0 ? +1 : 0;
+                        scoreEarned += studentAnswer.Score != 0 ? studentAnswer.Score : 0;
 
-                    var currentAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.AnswerId == sqr.AnswerId);
-                    var currentCorrectAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.Score != 0);
+                        answerQuestion.AnswerId = studentAnswer.Score != 0 ? studentAnswer.CorrectAnswerId : studentAnswer.AnswerId;
+                        answerQuestion.Answer = studentAnswer.Score != 0 ? studentAnswer.CorrectAnswer : studentAnswer.Answer;
+                        answerQuestion.AnswerImage = studentAnswer.Score != 0 ? studentAnswer.CorrectAnswerImage : studentAnswer.AnswerImage;
+                        answerQuestion.Status = studentAnswer.Score != 0 ? "Correct" : "Wrong";
+                    }
 
-                    correctMark += currentAnswer!.Score != 0 ? +1 : 0;
-                    scoreEarned += currentAnswer!.Score != 0 ? currentAnswer.Score : 0;
+                    quest.MultipleChoiceAnswerId = answerQuestion.Id;
+                    updateMCAnswers.Add(answerQuestion);
+                }
+            }
+            else
+            {
+                foreach (var quest in questions)
+                {
+                    var answerQuestion = multipleChoiceAnswers.Single(a => a.Score != 0 && a.ExamQuestionId == quest.Id);
 
-                    var answer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentAnswer!.AnswerId);
-                    var correctAnswer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentCorrectAnswer!.AnswerId);
+                    answerQuestion.AnswerId = default;
+                    answerQuestion.Answer = null;
+                    answerQuestion.AnswerImage = null;
+                    answerQuestion.Status = "NotAnswer";
+                    answerQuestion.Score = 0;
 
-                    GenerateMCResultItems(testResultId, examQuestions, multipleChoiceAnswers, sqr, currentQuestion, currentAnswer, answer, correctAnswer);
+                    quest.MultipleChoiceAnswer = answerQuestion;
                 }
             }
 
+            var examSyllabus = syllabus.ExamSyllabuses!.SingleOrDefault(es => es.ContentName!.Trim().ToLower() == currentExam!.ContentName!.Trim().ToLower());
 
-            await GenerateMCResultNonAnswerItems(questionItems.Item2, testResultId, examQuestions, multipleChoiceAnswers);
+            tempExam.CorrectMark = correctMark;
+            tempExam.ScoreEarned = scoreEarned;
+            tempExam.DoingTime = doingTime.ToTimeSpan();
+            tempExam.IsGraded = true;
+            tempExam.ExamName = "Bài Kiểm Tra Số " + currentExam.OrderPackage;
+            tempExam.QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString();
+            tempExam.QuizName = currentExam.Title;
+            tempExam.NoAttempt = noAttempt;
+            tempExam.ExamStatus = "Chưa Có Đánh Giá";
 
-            var response = SettingLastResultInfor(doingTime, testResult, correctMark, scoreEarned, status, false);
 
-            await SaveGrading(currentTempQuiz, testResult, examQuestions, multipleChoiceAnswers, null);
+            var response = new QuizResultResponse
+            {
+                TotalMark = tempExam.TotalMark,
+                CorrectMark = correctMark,
+                TotalScore = tempExam.TotalScore,
+                ScoreEarned = scoreEarned,
+                DoingTime = doingTime.ToTimeSpan(),
+                ExamStatus = "Chưa Có Đánh Giá",
+            };
+
+            try
+            {
+                var deleteAnswer = multipleChoiceAnswers.Where(a => a.CorrectAnswerId == default).ToList();
+                _unitOfWork.GetRepository<ExamResult>().UpdateAsync(tempExam);
+                _unitOfWork.GetRepository<ExamQuestion>().UpdateRange(questions);
+                _unitOfWork.GetRepository<MultipleChoiceAnswer>().DeleteRangeAsync(deleteAnswer);
+                _unitOfWork.GetRepository<MultipleChoiceAnswer>().UpdateRange(updateMCAnswers);
+                _unitOfWork.Commit();
+
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]" + ex.InnerException != null ? $"Inner: [{ex.InnerException}]" : "", StatusCodes.Status500InternalServerError);
+            }
 
             return response;
         }
 
+        #region old grade MC
+        //public async Task<QuizResultResponse> GradeQuizMCAsync(QuizMCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime)
+        //{
+        //    var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
+
+        //    var cls = await ValidateGradeQuizClass(quizStudentWork.ClassId, currentStudentId);
+
+        //    var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+        //        predicate: x => x.Course!.Id == cls.CourseId,
+        //        include: x => x.Include(x => x.ExamSyllabuses)!);
+
+        //    var quizzes = new List<QuestionPackage>();
+
+        //    var sessions = (await _unitOfWork.GetRepository<Topic>().GetListAsync(
+        //        predicate: x => x.SyllabusId == syllabus.Id,
+        //        include: x => x.Include(x => x.Sessions!))).SelectMany(x => x.Sessions!).ToList();
+
+        //    foreach (var ses in sessions)
+        //    {
+        //        var package = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
+        //        if (package != null)
+        //        {
+        //            quizzes.Add(package);
+        //        }
+        //    }
+
+        //    var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
+
+        //    ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, false, isCheckingTime);
+
+        //    var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
+        //        orderBy: x => x.OrderByDescending(x => x.CreatedTime),
+        //        predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
+        //        include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.MCAnswers));
+
+        //    if (currentTempQuiz == null)
+        //    {
+        //        throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ Khi Không Truy Suất Được Gói Câu Hỏi Trong Hệ Thống, Vui Lòng Truy Suất Lại Gói Câu Hỏi Và Làm Lại",
+        //            StatusCodes.Status400BadRequest);
+        //    }
+
+        //    if (currentTempQuiz.IsGraded == true)
+        //    {
+        //        throw new BadHttpRequestException($"Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác", StatusCodes.Status400BadRequest);
+        //    }
+
+        //    Guid testResultId;
+        //    ExamResult testResult;
+
+        //    var currentStudentClass = await ValidateCurrentStudentClass(currentStudentId, cls);
+
+        //    if (quizStudentWork.StudentQuestionResults.Count > 0)
+        //    {
+        //        ValidateTempQuizDB(quizStudentWork.StudentQuestionResults.Count(), currentQuiz, currentTempQuiz, false);
+        //    }
+
+        //    var questionItems = ValidateStudentMCWorkRequest(quizStudentWork, currentTempQuiz);
+
+        //    int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentClass.StudentId, currentStudentClass.ClassId, currentQuiz!.PackageType);
+
+        //    GenrateTestResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, currentStudentClass, noAttempt, out testResultId, out testResult);
+
+        //    var examQuestions = new List<ExamQuestion>();
+        //    var multipleChoiceAnswers = new List<MultipleChoiceAnswer>();
+        //    int correctMark = 0;
+        //    double scoreEarned = 0;
+        //    string status = "Chưa Có Đánh Giá";
+
+        //    if (quizStudentWork.StudentQuestionResults.Count > 0)
+        //    {
+        //        foreach (var sqr in quizStudentWork.StudentQuestionResults)
+        //        {
+        //            var currentTempQuestion = questionItems.Item1.Find(q => q.QuestionId == sqr.QuestionId);
+
+        //            var currentQuestion = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
+        //            predicate: x => x.Id == currentTempQuestion!.QuestionId,
+        //            include: x => x.Include(x => x.MutipleChoices!));
+
+        //            var currentAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.AnswerId == sqr.AnswerId);
+        //            var currentCorrectAnswer = currentTempQuestion!.MCAnswers.ToList().Find(a => a.Score != 0);
+
+        //            correctMark += currentAnswer!.Score != 0 ? +1 : 0;
+        //            scoreEarned += currentAnswer!.Score != 0 ? currentAnswer.Score : 0;
+
+        //            var answer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentAnswer!.AnswerId);
+        //            var correctAnswer = currentQuestion.MutipleChoices!.Find(mc => mc.Id == currentCorrectAnswer!.AnswerId);
+
+        //            GenerateMCResultItems(testResultId, examQuestions, multipleChoiceAnswers, sqr, currentQuestion, currentAnswer, answer, correctAnswer);
+        //        }
+        //    }
+
+
+        //    await GenerateMCResultNonAnswerItems(questionItems.Item2, testResultId, examQuestions, multipleChoiceAnswers);
+
+        //    var response = SettingLastResultInfor(doingTime, testResult, correctMark, scoreEarned, status, false);
+
+        //    await SaveGrading(currentTempQuiz, testResult, examQuestions, multipleChoiceAnswers, null);
+
+        //    return response;
+        //}
+        #endregion
         private async Task<StudentClass> ValidateCurrentStudentClass(Guid? currentStudentId, Class cls)
         {
             var currentStudent = cls.StudentClasses.SingleOrDefault(sc => sc.StudentId == currentStudentId);
@@ -682,72 +971,72 @@ namespace MagicLand_System.Services.Implements
             return currentStudent;
         }
 
-        private async Task GenerateMCResultNonAnswerItems(List<TempQuestion> nonAnswerTempQuestion, Guid testResultId, List<ExamQuestion> examQuestions, List<MultipleChoiceAnswer> multipleChoiceAnswers)
-        {
-            if (nonAnswerTempQuestion.Any() && nonAnswerTempQuestion != null)
-            {
-                foreach (var tempQuestion in nonAnswerTempQuestion)
-                {
-                    var currentNonAnswerQuestion = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
-                        predicate: x => x.Id == tempQuestion.QuestionId,
-                        include: x => x.Include(x => x.MutipleChoices!));
+        //private async Task GenerateMCResultNonAnswerItems(List<TempQuestion> nonAnswerTempQuestion, Guid testResultId, List<ExamQuestion> examQuestions, List<MultipleChoiceAnswer> multipleChoiceAnswers)
+        //{
+        //    if (nonAnswerTempQuestion.Any() && nonAnswerTempQuestion != null)
+        //    {
+        //        foreach (var tempQuestion in nonAnswerTempQuestion)
+        //        {
+        //            var currentNonAnswerQuestion = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
+        //                predicate: x => x.Id == tempQuestion.QuestionId,
+        //                include: x => x.Include(x => x.MutipleChoices!));
 
-                    var currentCorrectAnswer = currentNonAnswerQuestion!.MutipleChoices!.ToList().Find(a => a.Score != 0);
+        //            var currentCorrectAnswer = currentNonAnswerQuestion!.MutipleChoices!.ToList().Find(a => a.Score != 0);
 
-                    Guid examQuestionId = Guid.NewGuid();
-                    examQuestions.Add(new ExamQuestion
-                    {
-                        Id = examQuestionId,
-                        QuestionId = currentNonAnswerQuestion.Id,
-                        Question = currentNonAnswerQuestion.Description,
-                        QuestionImage = currentNonAnswerQuestion.Img,
-                        ExamResultResultId = testResultId,
-                    });
+        //            Guid examQuestionId = Guid.NewGuid();
+        //            examQuestions.Add(new ExamQuestion
+        //            {
+        //                Id = examQuestionId,
+        //                QuestionId = currentNonAnswerQuestion.Id,
+        //                Question = currentNonAnswerQuestion.Description,
+        //                QuestionImage = currentNonAnswerQuestion.Img,
+        //                ExamResultResultId = testResultId,
+        //            });
 
-                    multipleChoiceAnswers.Add(new MultipleChoiceAnswer
-                    {
-                        Id = Guid.NewGuid(),
-                        AnswerId = default,
-                        Answer = null,
-                        AnswerImage = null,
-                        CorrectAnswerId = currentCorrectAnswer!.Id,
-                        CorrectAnswer = currentCorrectAnswer.Description,
-                        CorrectAnswerImage = currentCorrectAnswer.Img,
-                        Status = "NotAnswer",
-                        Score = 0,
-                        ExamQuestionId = examQuestionId,
-                    });
-                }
-            }
-        }
+        //            multipleChoiceAnswers.Add(new MultipleChoiceAnswer
+        //            {
+        //                Id = Guid.NewGuid(),
+        //                AnswerId = default,
+        //                Answer = null,
+        //                AnswerImage = null,
+        //                CorrectAnswerId = currentCorrectAnswer!.Id,
+        //                CorrectAnswer = currentCorrectAnswer.Description,
+        //                CorrectAnswerImage = currentCorrectAnswer.Img,
+        //                Status = "NotAnswer",
+        //                Score = 0,
+        //                ExamQuestionId = examQuestionId,
+        //            });
+        //        }
+        //    }
+        //}
 
-        private void GenerateMCResultItems(Guid testResultId, List<ExamQuestion> examQuestions, List<MultipleChoiceAnswer> multipleChoiceAnswers,
-            MCStudentAnswer sqr, Question question, TempMCAnswer? currentAnswer, MultipleChoice? answer, MultipleChoice? correctAnswer)
-        {
-            Guid examQuestionId = Guid.NewGuid();
-            examQuestions.Add(new ExamQuestion
-            {
-                Id = examQuestionId,
-                QuestionId = question.Id,
-                Question = question.Description,
-                QuestionImage = question.Img,
-                ExamResultResultId = testResultId,
-            });
+        //private void GenerateMCResultItems(Guid testResultId, List<ExamQuestion> examQuestions, List<MultipleChoiceAnswer> multipleChoiceAnswers,
+        //    MCStudentAnswer sqr, Question question, TempMCAnswer? currentAnswer, MultipleChoice? answer, MultipleChoice? correctAnswer)
+        //{
+        //    Guid examQuestionId = Guid.NewGuid();
+        //    examQuestions.Add(new ExamQuestion
+        //    {
+        //        Id = examQuestionId,
+        //        QuestionId = question.Id,
+        //        Question = question.Description,
+        //        QuestionImage = question.Img,
+        //        ExamResultResultId = testResultId,
+        //    });
 
-            multipleChoiceAnswers.Add(new MultipleChoiceAnswer
-            {
-                Id = Guid.NewGuid(),
-                AnswerId = sqr.AnswerId,
-                Answer = answer!.Description,
-                AnswerImage = answer.Img != null ? answer.Img : string.Empty,
-                CorrectAnswerId = correctAnswer!.Id,
-                CorrectAnswer = correctAnswer.Description,
-                CorrectAnswerImage = correctAnswer.Img,
-                Status = currentAnswer!.Score != 0 ? "Correct" : "Wrong",
-                Score = currentAnswer.Score,
-                ExamQuestionId = examQuestionId,
-            });
-        }
+        //    multipleChoiceAnswers.Add(new MultipleChoiceAnswer
+        //    {
+        //        Id = Guid.NewGuid(),
+        //        AnswerId = sqr.AnswerId,
+        //        Answer = answer!.Description,
+        //        AnswerImage = answer.Img != null ? answer.Img : string.Empty,
+        //        CorrectAnswerId = correctAnswer!.Id,
+        //        CorrectAnswer = correctAnswer.Description,
+        //        CorrectAnswerImage = correctAnswer.Img,
+        //        Status = currentAnswer!.Score != 0 ? "Correct" : "Wrong",
+        //        Score = currentAnswer.Score,
+        //        ExamQuestionId = examQuestionId,
+        //    });
+        //}
 
         private void GenerateFCResultItems(Guid examQuestionId, List<FlashCardAnswer> flashCardAnswers,
             SideFlashCard firstCardAnswer, SideFlashCard secondCardAnswer, SideFlashCard correctSecondCardAnswer, string status, double score)
@@ -758,12 +1047,12 @@ namespace MagicLand_System.Services.Implements
                 LeftCardAnswerId = firstCardAnswer.Id,
                 LeftCardAnswer = firstCardAnswer.Description,
                 LeftCardAnswerImage = firstCardAnswer.Image,
-                RightCardAnswerId = secondCardAnswer.Id,
-                RightCardAnswer = secondCardAnswer.Description,
-                RightCardAnswerImage = secondCardAnswer.Image,
-                CorrectRightCardAnswerId = correctSecondCardAnswer.Id,
-                CorrectRightCardAnswer = correctSecondCardAnswer.Description,
-                CorrectRightCardAnswerImage = correctSecondCardAnswer.Image,
+                StudentCardAnswerId = secondCardAnswer.Id,
+                StudentCardAnswer = secondCardAnswer.Description,
+                StudentCardAnswerImage = secondCardAnswer.Image,
+                RightCardAnswerId = correctSecondCardAnswer.Id,
+                RightCardAnswer = correctSecondCardAnswer.Description,
+                RightCardAnswerImage = correctSecondCardAnswer.Image,
                 ExamQuestionId = examQuestionId,
                 Status = status,
                 Score = score,
@@ -812,29 +1101,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        //private string GenerateExamStatus(int totalMark, int correctMark)
-        //{
-        //    string status = string.Empty;
-        //    double percentage = (double)correctMark / (double)totalMark;
-        //    percentage = percentage * 100;
-
-        //    if (percentage < 50)
-        //    {
-        //        status = "Not Good";
-        //    }
-        //    if (percentage >= 50 && percentage <= 70)
-        //    {
-        //        status = "Good";
-        //    }
-        //    if (percentage > 70)
-        //    {
-        //        status = "Excellent";
-        //    }
-
-        //    return status;
-        //}
-
-        private void GenrateTestResult(Syllabus syllabus, QuestionPackage? currentQuiz, int totalMark, StudentClass studentClass, int noAttempt, out Guid testResultId, out ExamResult testResult)
+        private void UpdateExamResult(Syllabus syllabus, QuestionPackage? currentQuiz, int totalMark, StudentClass studentClass, int noAttempt, out Guid testResultId, out ExamResult testResult)
         {
             var currentExam = syllabus.ExamSyllabuses!.SingleOrDefault(es => es.ContentName!.Trim().ToLower() == currentQuiz!.ContentName!.Trim().ToLower());
 
@@ -854,12 +1121,33 @@ namespace MagicLand_System.Services.Implements
             };
         }
 
+        private void GenrateExamOfflineResult(Syllabus syllabus, QuestionPackage? currentQuiz, int totalMark, StudentClass studentClass, int noAttempt, out Guid testResultId, out ExamResult testResult)
+        {
+            var currentExam = syllabus.ExamSyllabuses!.SingleOrDefault(es => es.ContentName!.Trim().ToLower() == currentQuiz!.ContentName!.Trim().ToLower());
+
+            testResultId = Guid.NewGuid();
+            testResult = new ExamResult
+            {
+                Id = testResultId,
+                ExamId = currentQuiz!.Id,
+                ExamName = "Bài Kiểm Tra Số " + currentQuiz.OrderPackage,
+                QuizCategory = currentExam != null ? currentExam.Category : PackageTypeEnum.Review.ToString(),
+                QuizType = currentQuiz.QuizType,
+                QuizName = currentQuiz.Title,
+                TotalScore = currentQuiz.Score,
+                TotalMark = totalMark,
+                StudentClassId = studentClass.Id,
+                NoAttempt = noAttempt,
+            };
+        }
+
+
         private async Task<int> GetAttempt(Guid examId, Guid? currentStudentId, Guid classId, string packageType)
         {
             int noAttempt = 1;
             var isExamHasDone = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                 orderBy: x => x.OrderByDescending(x => x.NoAttempt),
-                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.StudentClass.ClassId == classId && x.ExamId == examId);
+                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.StudentClass.ClassId == classId && x.ExamId == examId && x.IsGraded == true);
 
             var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
                 predicate: x => x.ExamId == examId && x.ClassId == classId);
@@ -888,12 +1176,48 @@ namespace MagicLand_System.Services.Implements
 
             return noAttempt;
         }
+        #region old get no attempt
+        //private async Task<int> GetAttempt(Guid examId, Guid? currentStudentId, Guid classId, string packageType)
+        //{
+        //    int noAttempt = 1;
+        //    var isExamHasDone = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
+        //        orderBy: x => x.OrderByDescending(x => x.NoAttempt),
+        //        predicate: x => x.StudentClass!.StudentId == currentStudentId && x.StudentClass.ClassId == classId && x.ExamId == examId);
 
-        private (List<TempQuestion>, List<TempQuestion>) ValidateStudentMCWorkRequest(QuizMCRequest quizStudentWork, TempQuiz currentTempQuiz)
+        //    var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(
+        //        predicate: x => x.ExamId == examId && x.ClassId == classId);
+
+        //    if (isExamHasDone != null && isExamHasDone.Any())
+        //    {
+        //        if (quizTime is null && packageType != PackageTypeEnum.Review.ToString())
+        //        {
+        //            throw new BadHttpRequestException($"Bạn Đã Làm Vượt Quá Số Lần Cho Phép Của Bài Kiểm Tra", StatusCodes.Status400BadRequest);
+        //        }
+
+        //        if (quizTime is null && packageType == PackageTypeEnum.Review.ToString())
+        //        {
+        //            noAttempt = isExamHasDone.First().NoAttempt + 1;
+        //        }
+
+        //        if (quizTime is not null && (isExamHasDone.Count() < quizTime.AttemptAllowed))
+        //        {
+        //            noAttempt = isExamHasDone.First().NoAttempt + 1;
+        //        }
+        //        if (quizTime is not null && (isExamHasDone.Count() >= quizTime.AttemptAllowed))
+        //        {
+        //            throw new BadHttpRequestException($"Bạn Đã Làm Đủ Số Lần Cho Phép Của Bài Kiểm Tra", StatusCodes.Status400BadRequest);
+        //        }
+        //    }
+
+        //    return noAttempt;
+        //}
+        #endregion
+
+
+        private async Task<(List<ExamQuestion>, List<MultipleChoiceAnswer>)> ValidateStudentMCWorkRequest(QuizMCRequest quizStudentWork, ExamResult tempExam)
         {
             var questionRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.QuestionId).ToList();
-            var questions = currentTempQuiz.Questions.ToList();
-
+            var questions = tempExam.ExamQuestions.ToList();
 
             var invalidQuestion = questionRequest.Where(qr => !questions.Any(q => q.QuestionId == qr)).ToList();
             if (invalidQuestion != null && invalidQuestion.Any())
@@ -902,27 +1226,56 @@ namespace MagicLand_System.Services.Implements
                           StatusCodes.Status400BadRequest);
             }
 
+            var questionIdList = questions.Select(q => q.Id).ToList();
+
             var answerRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.AnswerId).ToList();
-            var answers = questions.SelectMany(qt => qt.MCAnswers!).ToList();
+            var answers = (await _unitOfWork.GetRepository<MultipleChoiceAnswer>().GetListAsync(predicate: x => questionIdList.Contains(x.ExamQuestionId))).ToList();
 
-            var invalidAnswer = answerRequest.Where(ar => !answers.Any(a => a.AnswerId == ar)).ToList();
-
+            var invalidAnswer = answerRequest.Where(ar => !answers.Any(a => a.AnswerId == ar && a.Score == 0 || a.CorrectAnswerId == ar)).ToList();
             if (invalidAnswer != null && invalidAnswer.Any())
             {
                 throw new BadHttpRequestException($"Một Số Id Câu Trả Lời Không Hợp Lệ Khi Không Thuộc Gói Câu Trả Lời Của Bài Kiểm Tra, [{string.Join(", ", invalidAnswer)}]",
                           StatusCodes.Status400BadRequest);
             }
 
-            var questionNotAnswer = questions.Where(q => !questionRequest.Any(qr => qr == q.QuestionId)).ToList();
-
-            return (questions, questionNotAnswer);
+            return (questions, answers);
         }
+        #region old validate student mc work 
+        //private (List<TempQuestion>, List<TempQuestion>) ValidateStudentMCWorkRequest(QuizMCRequest quizStudentWork, TempQuiz currentTempQuiz)
+        //{
+        //    var questionRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.QuestionId).ToList();
+        //    var questions = currentTempQuiz.Questions.ToList();
 
-        private (List<TempQuestion>, List<TempQuestion>, List<(List<TempFCAnswer>, Guid)>) ValidateStudentFCWorkRequest(QuizFCRequest quizStudentWork, TempQuiz currentTempQuiz)
+
+        //    var invalidQuestion = questionRequest.Where(qr => !questions.Any(q => q.QuestionId == qr)).ToList();
+        //    if (invalidQuestion != null && invalidQuestion.Any())
+        //    {
+        //        throw new BadHttpRequestException($"Một Số Id Câu Hỏi Không Hợp Lệ Khi Không Thuộc Gói Câu Hỏi Của Bài Kiểm Tra, [{string.Join(", ", invalidQuestion)}]",
+        //                  StatusCodes.Status400BadRequest);
+        //    }
+
+        //    var answerRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.AnswerId).ToList();
+        //    var answers = questions.SelectMany(qt => qt.MCAnswers!).ToList();
+
+        //    var invalidAnswer = answerRequest.Where(ar => !answers.Any(a => a.AnswerId == ar)).ToList();
+
+        //    if (invalidAnswer != null && invalidAnswer.Any())
+        //    {
+        //        throw new BadHttpRequestException($"Một Số Id Câu Trả Lời Không Hợp Lệ Khi Không Thuộc Gói Câu Trả Lời Của Bài Kiểm Tra, [{string.Join(", ", invalidAnswer)}]",
+        //                  StatusCodes.Status400BadRequest);
+        //    }
+
+        //    var questionNotAnswer = questions.Where(q => !questionRequest.Any(qr => qr == q.QuestionId)).ToList();
+
+        //    return (questions, questionNotAnswer);
+        //}
+        #endregion
+
+
+        private async Task<(List<ExamQuestion>, List<FlashCardAnswer>)> ValidateStudentFCWorkRequest(QuizFCRequest quizStudentWork, ExamResult tempExam)
         {
             var questionRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.QuestionId).ToList();
-            var questions = currentTempQuiz.Questions.ToList();
-
+            var questions = tempExam.ExamQuestions.ToList();
 
             var invalidQuestion = questionRequest.Where(qr => !questions.Any(q => q.QuestionId == qr)).ToList();
             if (invalidQuestion != null && invalidQuestion.Any())
@@ -931,17 +1284,15 @@ namespace MagicLand_System.Services.Implements
                           StatusCodes.Status400BadRequest);
             }
 
+            var questionIdList = questions.Select(q => q.Id).ToList();
+
             var answerRequest = quizStudentWork.StudentQuestionResults.SelectMany(sq => sq.Answers).ToList();
-            var flashCards = new List<Guid>();
-            foreach (var ar in answerRequest)
-            {
-                flashCards.Add(ar.FirstCardId);
-                flashCards.Add(ar.SecondCardId);
-            }
+            var answers = (await _unitOfWork.GetRepository<FlashCardAnswer>().GetListAsync(predicate: x => questionIdList.Contains(x.ExamQuestionId))).ToList();
 
-            var answers = questions.SelectMany(qt => qt.FCAnswers!).ToList();
+            var cardRequests = answerRequest.SelectMany(ar => new[] { ar.FirstCardId, ar.SecondCardId }).ToList();
+            var cardAnswers = answers.SelectMany(a => new[] { a.LeftCardAnswerId, a.RightCardAnswerId }).ToHashSet();
 
-            var invalidAnswer = flashCards.Where(fc => !answers.Any(a => a.CardId == fc)).ToList();
+            var invalidAnswer = cardRequests.Where(cr => !cardAnswers.Contains(cr)).ToList();
 
             if (invalidAnswer != null && invalidAnswer.Any())
             {
@@ -949,52 +1300,86 @@ namespace MagicLand_System.Services.Implements
                           StatusCodes.Status400BadRequest);
             }
 
-            var questionNotAnswers = new List<TempQuestion>();
-            var flashCardNotAnswers = new List<(List<TempFCAnswer>, Guid)>();
-
-            foreach (var quest in questions)
-            {
-                //if (!questionRequest.Any(qr => qr == quest.QuestionId))
-                //{
-
-                //}
-                var currentQuestRequest = quizStudentWork.StudentQuestionResults.Find(qr => qr.QuestionId == quest.QuestionId);
-                if (currentQuestRequest == null)
-                {
-                    questionNotAnswers.Add(quest);
-                    continue;
-                }
-                if (currentQuestRequest.Answers == null || !currentQuestRequest.Answers.Any())
-                {
-                    questionNotAnswers.Add(quest);
-                    continue;
-                }
-
-                var allAnswerCurrentQuestion = currentTempQuiz.Questions.SelectMany(q => q.FCAnswers.Where(fc => fc.TempQuestionId == quest.Id)).ToList();
-                var allCoupleCardAnswerRequest = quizStudentWork.StudentQuestionResults.Where(sqr => sqr.QuestionId == quest.QuestionId).SelectMany(sqr => sqr.Answers).ToList();
-                var allCardAnswerRequest = new List<Guid>();
-
-                foreach (var ar in allCoupleCardAnswerRequest)
-                {
-                    allCardAnswerRequest.Add(ar.FirstCardId);
-                    allCardAnswerRequest.Add(ar.SecondCardId);
-                }
-
-                var cardNotAnswers = allAnswerCurrentQuestion.Where(aacq => !allCardAnswerRequest.Any(acar => acar == aacq.CardId)).ToList();
-
-                if (cardNotAnswers.Any())
-                {
-                    flashCardNotAnswers.Add((cardNotAnswers, quest.QuestionId));
-                }
-            }
-
-            return (questions, questionNotAnswers, flashCardNotAnswers);
+            return (questions, answers);
         }
+        #region old validate student fc work
+        //private (List<TempQuestion>, List<TempQuestion>, List<(List<TempFCAnswer>, Guid)>) ValidateStudentFCWorkRequest(QuizFCRequest quizStudentWork, TempQuiz currentTempQuiz)
+        //{
+        //    var questionRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.QuestionId).ToList();
+        //    var questions = currentTempQuiz.Questions.ToList();
 
-        private void ValidateTempQuizDB(int totalQuestion, QuestionPackage? currentQuiz, TempQuiz currentTempQuiz, bool isFlashCard)
+
+        //    var invalidQuestion = questionRequest.Where(qr => !questions.Any(q => q.QuestionId == qr)).ToList();
+        //    if (invalidQuestion != null && invalidQuestion.Any())
+        //    {
+        //        throw new BadHttpRequestException($"Một Số Id Câu Hỏi Không Hợp Lệ Khi Không Thuộc Gói Câu Hỏi Của Bài Kiểm Tra, [{string.Join(", ", invalidQuestion)}]",
+        //                  StatusCodes.Status400BadRequest);
+        //    }
+
+        //    var answerRequest = quizStudentWork.StudentQuestionResults.SelectMany(sq => sq.Answers).ToList();
+        //    var flashCards = new List<Guid>();
+        //    foreach (var ar in answerRequest)
+        //    {
+        //        flashCards.Add(ar.FirstCardId);
+        //        flashCards.Add(ar.SecondCardId);
+        //    }
+
+        //    var answers = questions.SelectMany(qt => qt.FCAnswers!).ToList();
+
+        //    var invalidAnswer = flashCards.Where(fc => !answers.Any(a => a.CardId == fc)).ToList();
+
+        //    if (invalidAnswer != null && invalidAnswer.Any())
+        //    {
+        //        throw new BadHttpRequestException($"Một Số Id Của Thẻ Trả Lời Không Hợp Lệ Khi Không Thuộc Gói Câu Hỏi Đã Truy Suất Gần Nhất Của Bài Kiểm Tra, [{string.Join(", ", invalidAnswer)}]",
+        //                  StatusCodes.Status400BadRequest);
+        //    }
+
+        //    var questionNotAnswers = new List<TempQuestion>();
+        //    var flashCardNotAnswers = new List<(List<TempFCAnswer>, Guid)>();
+
+        //    foreach (var quest in questions)
+        //    {
+        //        //if (!questionRequest.Any(qr => qr == quest.QuestionId))
+        //        //{
+
+        //        //}
+        //        var currentQuestRequest = quizStudentWork.StudentQuestionResults.Find(qr => qr.QuestionId == quest.QuestionId);
+        //        if (currentQuestRequest == null)
+        //        {
+        //            questionNotAnswers.Add(quest);
+        //            continue;
+        //        }
+        //        if (currentQuestRequest.Answers == null || !currentQuestRequest.Answers.Any())
+        //        {
+        //            questionNotAnswers.Add(quest);
+        //            continue;
+        //        }
+
+        //        var allAnswerCurrentQuestion = currentTempQuiz.Questions.SelectMany(q => q.FCAnswers.Where(fc => fc.TempQuestionId == quest.Id)).ToList();
+        //        var allCoupleCardAnswerRequest = quizStudentWork.StudentQuestionResults.Where(sqr => sqr.QuestionId == quest.QuestionId).SelectMany(sqr => sqr.Answers).ToList();
+        //        var allCardAnswerRequest = new List<Guid>();
+
+        //        foreach (var ar in allCoupleCardAnswerRequest)
+        //        {
+        //            allCardAnswerRequest.Add(ar.FirstCardId);
+        //            allCardAnswerRequest.Add(ar.SecondCardId);
+        //        }
+
+        //        var cardNotAnswers = allAnswerCurrentQuestion.Where(aacq => !allCardAnswerRequest.Any(acar => acar == aacq.CardId)).ToList();
+
+        //        if (cardNotAnswers.Any())
+        //        {
+        //            flashCardNotAnswers.Add((cardNotAnswers, quest.QuestionId));
+        //        }
+        //    }
+
+        //    return (questions, questionNotAnswers, flashCardNotAnswers);
+        //}
+        #endregion
+        private void ValidateTemExamDB(int totalQuestion, QuestionPackage? exam, ExamResult tempExam, bool isFlashCard)
         {
 
-            if (currentTempQuiz.ExamType!.Trim().ToLower() != currentQuiz!.QuizType!.Trim().ToLower())
+            if (tempExam.QuizType!.Trim().ToLower() != exam!.QuizType!.Trim().ToLower())
             {
                 throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Gói Câu Hỏi Không Thuộc Dạng Đề Của Bài Kiểm Tra, Vui Lòng Chờ Sử Lý",
                           StatusCodes.Status500InternalServerError);
@@ -1002,16 +1387,37 @@ namespace MagicLand_System.Services.Implements
 
             if (!isFlashCard)
             {
-                if (totalQuestion > currentTempQuiz.TotalMark)
+                if (totalQuestion > tempExam.TotalMark)
                 {
                     throw new BadHttpRequestException("Số Lượng Câu Hỏi Và Trả Lời Bài Làm Của Học Sinh Lớn Hơn Với Số Lượng Câu Hỏi Và Câu Trả Lời Bộ Đề Đã Truy Suất Gần Nhất Vui Lòng Xem Lại Bài Làm",
                              StatusCodes.Status400BadRequest);
                 }
             }
-
         }
 
-        private void ValidateGradeCurrentQuiz(Guid examId, QuestionPackage? currentQuiz, List<Schedule> schedules, TimeOnly doingTime, bool isFlashCard, bool? isCheckingTime)
+        #region old validate temp quiz db
+        //private void ValidateTempQuizDB(int totalQuestion, QuestionPackage? currentQuiz, TempQuiz currentTempQuiz, bool isFlashCard)
+        //{
+
+        //    if (currentTempQuiz.ExamType!.Trim().ToLower() != currentQuiz!.QuizType!.Trim().ToLower())
+        //    {
+        //        throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Gói Câu Hỏi Không Thuộc Dạng Đề Của Bài Kiểm Tra, Vui Lòng Chờ Sử Lý",
+        //                  StatusCodes.Status500InternalServerError);
+        //    }
+
+        //    if (!isFlashCard)
+        //    {
+        //        if (totalQuestion > currentTempQuiz.TotalMark)
+        //        {
+        //            throw new BadHttpRequestException("Số Lượng Câu Hỏi Và Trả Lời Bài Làm Của Học Sinh Lớn Hơn Với Số Lượng Câu Hỏi Và Câu Trả Lời Bộ Đề Đã Truy Suất Gần Nhất Vui Lòng Xem Lại Bài Làm",
+        //                     StatusCodes.Status400BadRequest);
+        //        }
+        //    }
+
+        //}
+        #endregion
+
+        private void ValidateGradeCurrentExam(Guid examId, QuestionPackage? currentQuiz, List<Schedule> schedules, TimeOnly doingTime, bool isFlashCard, bool? isCheckingTime)
         {
             if (currentQuiz == null)
             {
@@ -1115,7 +1521,7 @@ namespace MagicLand_System.Services.Implements
 
             var cls = await ValidateGradeQuizClass(quizStudentWork.ClassId, currentStudentId);
 
-            var quizzes = new List<QuestionPackage>();
+            var exams = new List<QuestionPackage>();
 
             var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.Course!.Id == cls.CourseId,
@@ -1130,115 +1536,350 @@ namespace MagicLand_System.Services.Implements
                 var package = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
                 if (package != null)
                 {
-                    quizzes.Add(package);
+                    exams.Add(package);
                 }
             }
 
-            var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
+            var currentExam = exams.Single(q => q!.Id == quizStudentWork.ExamId);
 
-            ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, true, isCheckingTime);
+            ValidateGradeCurrentExam(quizStudentWork.ExamId, currentExam, cls.Schedules.ToList(), doingTime, true, isCheckingTime);
 
-            var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
-                orderBy: x => x.OrderByDescending(x => x.CreatedTime),
-                predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
-                include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.FCAnswers));
+            var tempExam = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
+                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.ExamId == currentExam!.Id && x.IsGraded == false,
+                include: x => x.Include(x => x.ExamQuestions));
 
-            if (currentTempQuiz == null)
+            if (tempExam == null)
             {
-                throw new BadHttpRequestException($"Vui Lòng Truy Suất Câu Hỏi Trước Khi Tính Điểm", StatusCodes.Status400BadRequest);
+                throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ Khi Không Truy Suất Được Gói Câu Hỏi Trong Hệ Thống Hoặc Gói Câu Hỏi Đã Được Chấm, Vui Lòng Truy Suất Lại Gói Câu Hỏi Khác Và Làm Lại",
+                    StatusCodes.Status400BadRequest);
             }
 
-            if (currentTempQuiz.IsGraded == true)
-            {
-                throw new BadHttpRequestException($"Lần Làm Gần Nhất Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác Và Làm Lại",
-                StatusCodes.Status400BadRequest);
-            }
-            var numberAnswerStudentWorks = quizStudentWork.StudentQuestionResults.Sum(sq => sq.Answers.Count());
-            ValidateTempQuizDB(numberAnswerStudentWorks, currentQuiz, currentTempQuiz, true);
-
-
-            Guid testResultId;
-            ExamResult testResult;
-            var examQuestions = new List<ExamQuestion>();
-            var flashCardAnswers = new List<FlashCardAnswer>();
-            int correctMark = 0;
-            double scoreEarned = 0;
-            string status = "Chưa Có Đánh Giá";
+            var totalQuestionRequest = quizStudentWork.StudentQuestionResults.Count;
+            ValidateTemExamDB(totalQuestionRequest, currentExam, tempExam, true);
 
             var currentStudentClass = await ValidateCurrentStudentClass(currentStudentId, cls);
 
-            int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentClass.StudentId, currentStudentClass.ClassId, currentQuiz!.PackageType);
+            var examItems = await ValidateStudentFCWorkRequest(quizStudentWork, tempExam);
+            int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentClass.StudentId, currentStudentClass.ClassId, currentExam!.PackageType);
 
-            GenrateTestResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, currentStudentClass, noAttempt, out testResultId, out testResult);
-            var questionItems = ValidateStudentFCWorkRequest(quizStudentWork, currentTempQuiz);
+            int correctMark = 0, wrongAttempt = 0;
+            double scoreEarned = 0.0;
+            var questions = examItems.Item1;
+            var flashCardAnswers = examItems.Item2;
+            var newFlashCardAnswers = new List<FlashCardAnswer>();
 
-            if (numberAnswerStudentWorks > 0)
+            if (totalQuestionRequest > 0)
             {
-                foreach (var sqr in quizStudentWork.StudentQuestionResults)
+                var studentAnswerRequest = quizStudentWork.StudentQuestionResults.SelectMany(sq => sq.Answers).ToList();
+                var browsedStudentAnswers = new List<FCStudentAnswer>();
+
+                foreach (var quest in questions)
                 {
-                    var currentQuestion = questionItems.Item1.Find(q => q.QuestionId == sqr.QuestionId);
-
-                    var question = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
-                    predicate: x => x.Id == currentQuestion!.QuestionId,
-                    include: x => x.Include(x => x.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
-
-                    var sideFlashCards = question.FlashCards!.SelectMany(fc => fc.SideFlashCards).ToList();
-
-                    Guid examQuestionId = Guid.NewGuid();
-                    examQuestions.Add(new ExamQuestion
+                    var flashCardQuestionAnswers = flashCardAnswers.Where(fc => fc.ExamQuestionId == quest.Id).ToList();
+                    foreach (var pairCard in flashCardQuestionAnswers)
                     {
-                        Id = examQuestionId,
-                        QuestionId = question.Id,
-                        Question = question.Description,
-                        QuestionImage = question.Img,
-                        ExamResultResultId = testResultId,
-                    });
+                        var studentAnswers = studentAnswerRequest.Where(sa =>
+                        pairCard.LeftCardAnswerId == sa.FirstCardId ||
+                        pairCard.LeftCardAnswerId == sa.SecondCardId ||
+                        pairCard.RightCardAnswerId == sa.FirstCardId ||
+                        pairCard.RightCardAnswerId == sa.SecondCardId).ToList();
 
-                    int wrongAttemps = 0;
-                    foreach (var ar in sqr.Answers)
-                    {
-                        foreach (var fc in question.FlashCards!)
+                        if (studentAnswers == null || !studentAnswers.Any())
                         {
-                            var currentFirstCardAnswer = fc.SideFlashCards.Find(sfc => sfc.Id == ar.FirstCardId);
-                            if (currentFirstCardAnswer != null)
+                            pairCard.StudentCardAnswerId = default;
+                            pairCard.StudentCardAnswer = null;
+                            pairCard.StudentCardAnswerImage = null;
+                            pairCard.Score = 0;
+                            pairCard.Status = "NotAnswer";
+                        }
+                        else
+                        {
+                            foreach (var answer in studentAnswers)
                             {
-                                var currentSecondCardAnswer = sideFlashCards.Find(sfc => sfc.Id == ar.SecondCardId);
-                                var correctSecondCard = fc.SideFlashCards.Find(sfc => sfc.Id != ar.FirstCardId);
-
-                                bool isCorrect = false;
-                                if (correctSecondCard!.Id == currentSecondCardAnswer!.Id)
+                                if (browsedStudentAnswers.Contains(answer))
                                 {
-                                    correctMark++;
-                                    scoreEarned += fc.Score;
-                                    isCorrect = true;
+                                    continue;
                                 }
 
-                                if (!isCorrect)
+                                browsedStudentAnswers.Add(answer);
+
+                                if (wrongAttempt > 3)
                                 {
-                                    wrongAttemps++;
-                                    if (wrongAttemps > 3)
-                                    {
-                                        throw new BadHttpRequestException($"Yêu Cầu Không Hợp Lệ, Bài Làm Có Nhiều Hơn 3 Cặp Thẻ Bị Sai Vui Lòng Kiểm Tra Lại", StatusCodes.Status400BadRequest);
-                                    }
+                                    throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ, Bài Làm Có Nhiều Hơn 3 Cặp Thẻ Bị Sai Vui Lòng Kiểm Tra Lại", StatusCodes.Status400BadRequest);
                                 }
-                                GenerateFCResultItems(examQuestionId, flashCardAnswers, currentFirstCardAnswer, currentSecondCardAnswer,
-                                correctSecondCard, isCorrect ? "Correct" : "Wrong", isCorrect ? fc.Score : 0);
+
+                                if (answer.FirstCardId == pairCard.LeftCardAnswerId)
+                                {
+                                    var result = await ValidateFCAsnwer(answer.SecondCardId, quest.Id, pairCard, newFlashCardAnswers, true);
+                                    correctMark += result.Item1;
+                                    scoreEarned += result.Item2;
+                                    wrongAttempt += result.Item3;
+                                    continue;
+                                }
+                                if (answer.FirstCardId == pairCard.RightCardAnswerId)
+                                {
+                                    var result = await ValidateFCAsnwer(answer.SecondCardId, quest.Id, pairCard, newFlashCardAnswers, false);
+                                    correctMark += result.Item1;
+                                    scoreEarned += result.Item2;
+                                    wrongAttempt += result.Item3;
+                                    continue;
+                                }
+
+                                if (answer.SecondCardId == pairCard.LeftCardAnswerId)
+                                {
+                                    var result = await ValidateFCAsnwer(answer.FirstCardId, quest.Id, pairCard, newFlashCardAnswers, true);
+                                    correctMark += result.Item1;
+                                    scoreEarned += result.Item2;
+                                    wrongAttempt += result.Item3;
+                                    continue;
+                                }
+
+                                if (answer.SecondCardId == pairCard.RightCardAnswerId)
+                                {
+                                    var result = await ValidateFCAsnwer(answer.FirstCardId, quest.Id, pairCard, newFlashCardAnswers, false);
+                                    correctMark += result.Item1;
+                                    scoreEarned += result.Item2;
+                                    wrongAttempt += result.Item3;
+                                    continue;
+                                }
                             }
                         }
                     }
                 }
             }
+            else
+            {
+                foreach (var pairCard in flashCardAnswers)
+                {
+                    pairCard.StudentCardAnswerId = default;
+                    pairCard.StudentCardAnswer = null;
+                    pairCard.StudentCardAnswerImage = null;
+                    pairCard.Score = 0;
+                    pairCard.Status = "NotAnswer";
+                }
+            }
 
-            await GenerateFCResultNonAnswerIQuestions(questionItems.Item2, testResultId, examQuestions, flashCardAnswers);
+            var examSyllabus = syllabus.ExamSyllabuses!.SingleOrDefault(es => es.ContentName!.Trim().ToLower() == currentExam!.ContentName!.Trim().ToLower());
 
-            await GenerateFCResultNonAnswerFlashCards(examQuestions, flashCardAnswers, questionItems);
+            tempExam.CorrectMark = correctMark;
+            tempExam.ScoreEarned = scoreEarned;
+            tempExam.DoingTime = doingTime.ToTimeSpan();
+            tempExam.IsGraded = true;
+            tempExam.ExamName = "Bài Kiểm Tra Số " + currentExam.OrderPackage;
+            tempExam.QuizCategory = examSyllabus != null ? examSyllabus.Category : PackageTypeEnum.Review.ToString();
+            tempExam.QuizName = currentExam.Title;
+            tempExam.NoAttempt = noAttempt;
+            tempExam.ExamStatus = "Chưa Có Đánh Giá";
 
-            var response = SettingLastResultInfor(doingTime, testResult, correctMark, scoreEarned, status, true);
 
-            await SaveGrading(currentTempQuiz, testResult, examQuestions, null, flashCardAnswers);
+            var response = new QuizResultResponse
+            {
+                TotalMark = tempExam.TotalMark,
+                CorrectMark = correctMark,
+                TotalScore = tempExam.TotalScore,
+                ScoreEarned = scoreEarned,
+                DoingTime = doingTime.ToTimeSpan(),
+                ExamStatus = "Chưa Có Đánh Giá",
+            };
+
+            try
+            {
+                var deleteCards = flashCardAnswers.Where(fc => string.IsNullOrEmpty(fc.Status)).ToList();
+                var updateCards = flashCardAnswers.Where(fc => !string.IsNullOrEmpty(fc.Status)).ToList();
+
+                if (deleteCards.Any())
+                {
+                    _unitOfWork.GetRepository<FlashCardAnswer>().DeleteRangeAsync(deleteCards);
+                }
+                _unitOfWork.GetRepository<ExamResult>().UpdateAsync(tempExam);
+                _unitOfWork.GetRepository<FlashCardAnswer>().UpdateRange(updateCards);
+                await _unitOfWork.GetRepository<FlashCardAnswer>().InsertRangeAsync(newFlashCardAnswers);
+                _unitOfWork.Commit();
+
+            }
+            catch (Exception ex)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}]" + ex.InnerException != null ? $"Inner: [{ex.InnerException}]" : "", StatusCodes.Status500InternalServerError);
+            }
+
 
             return response;
         }
+
+        private async Task<(int, double, int)> ValidateFCAsnwer(Guid answerOrderId, Guid examQuestionId, FlashCardAnswer pairCard, List<FlashCardAnswer> newFlashCardAnswers, bool isRightCard)
+        {
+            int correctMark = 0, wrongAttempt = 0;
+            double scoreEarned = 0.0;
+
+            var cardAnswerData = await _unitOfWork.GetRepository<SideFlashCard>().SingleOrDefaultAsync(predicate: x => x.Id == answerOrderId);
+
+            if ((answerOrderId == pairCard.RightCardAnswerId && isRightCard) || (answerOrderId == pairCard.LeftCardAnswerId && !isRightCard))
+            {
+
+                pairCard.StudentCardAnswerId = cardAnswerData.Id;
+                pairCard.StudentCardAnswer = cardAnswerData.Description;
+                pairCard.StudentCardAnswerImage = cardAnswerData.Image;
+                pairCard.Status = "Correct";
+                correctMark++;
+                scoreEarned = pairCard.Score;
+            }
+            else
+            {
+                newFlashCardAnswers.Add(new FlashCardAnswer
+                {
+                    Id = Guid.NewGuid(),
+                    LeftCardAnswerId = isRightCard ? pairCard.LeftCardAnswerId : pairCard.RightCardAnswerId,
+                    LeftCardAnswer = isRightCard ? pairCard.LeftCardAnswer : pairCard.RightCardAnswer,
+                    LeftCardAnswerImage = isRightCard ? pairCard.LeftCardAnswer : pairCard.RightCardAnswerImage,
+                    StudentCardAnswerId = cardAnswerData.Id,
+                    StudentCardAnswer = cardAnswerData.Description,
+                    StudentCardAnswerImage = cardAnswerData.Image,
+                    RightCardAnswerId = isRightCard ? pairCard.RightCardAnswerId : pairCard.LeftCardAnswerId,
+                    RightCardAnswer = isRightCard ? pairCard.RightCardAnswer : pairCard.LeftCardAnswer,
+                    RightCardAnswerImage = isRightCard ? pairCard.RightCardAnswerImage : pairCard.LeftCardAnswerImage,
+                    Status = "Wrong",
+                    Score = 0,
+                    ExamQuestionId = examQuestionId,
+                });
+
+                wrongAttempt++;
+            }
+
+            return (correctMark, scoreEarned, wrongAttempt);
+        }
+
+        #region old grade FC
+        //public async Task<QuizResultResponse> GradeQuizFCAsync(QuizFCRequest quizStudentWork, TimeOnly doingTime, bool? isCheckingTime)
+        //{
+        //    var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
+
+        //    var cls = await ValidateGradeQuizClass(quizStudentWork.ClassId, currentStudentId);
+
+        //    var quizzes = new List<QuestionPackage>();
+
+        //    var syllabus = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
+        //        predicate: x => x.Course!.Id == cls.CourseId,
+        //        include: x => x.Include(x => x.ExamSyllabuses)!);
+
+        //    var sessions = (await _unitOfWork.GetRepository<Topic>().GetListAsync(
+        //        predicate: x => x.SyllabusId == syllabus.Id,
+        //        include: x => x.Include(x => x.Sessions!))).SelectMany(x => x.Sessions!).ToList();
+
+        //    foreach (var ses in sessions)
+        //    {
+        //        var package = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.SessionId == ses.Id);
+        //        if (package != null)
+        //        {
+        //            quizzes.Add(package);
+        //        }
+        //    }
+
+        //    var currentQuiz = quizzes.Find(q => q!.Id == quizStudentWork.ExamId);
+
+        //    ValidateGradeCurrentQuiz(quizStudentWork.ExamId, currentQuiz, cls.Schedules.ToList(), doingTime, true, isCheckingTime);
+
+        //    var currentTempQuiz = await _unitOfWork.GetRepository<TempQuiz>().SingleOrDefaultAsync(
+        //        orderBy: x => x.OrderByDescending(x => x.CreatedTime),
+        //        predicate: x => x.StudentId == currentStudentId && x.ExamId == currentQuiz!.Id,
+        //        include: x => x.Include(x => x.Questions).ThenInclude(qt => qt.FCAnswers));
+
+        //    if (currentTempQuiz == null)
+        //    {
+        //        throw new BadHttpRequestException($"Vui Lòng Truy Suất Câu Hỏi Trước Khi Tính Điểm", StatusCodes.Status400BadRequest);
+        //    }
+
+        //    if (currentTempQuiz.IsGraded == true)
+        //    {
+        //        throw new BadHttpRequestException($"Lần Làm Gần Nhất Gói Câu Hỏi Của Bài Kiểm Tra Đã Được Chấm Điểm Làm Vui Lòng Tuy Suất Gói Câu Hỏi Khác Và Làm Lại",
+        //        StatusCodes.Status400BadRequest);
+        //    }
+        //    var numberAnswerStudentWorks = quizStudentWork.StudentQuestionResults.Sum(sq => sq.Answers.Count());
+        //    ValidateTemExamDB(numberAnswerStudentWorks, currentQuiz, currentTempQuiz, true);
+
+
+        //    Guid testResultId;
+        //    ExamResult testResult;
+        //    var examQuestions = new List<ExamQuestion>();
+        //    var flashCardAnswers = new List<FlashCardAnswer>();
+        //    int correctMark = 0;
+        //    double scoreEarned = 0;
+        //    string status = "Chưa Có Đánh Giá";
+
+        //    var currentStudentClass = await ValidateCurrentStudentClass(currentStudentId, cls);
+
+        //    int noAttempt = await GetAttempt(quizStudentWork.ExamId, currentStudentClass.StudentId, currentStudentClass.ClassId, currentQuiz!.PackageType);
+
+        //    GenrateExamOfflineResult(syllabus, currentQuiz, currentTempQuiz.TotalMark, currentStudentClass, noAttempt, out testResultId, out testResult);
+        //    var questionItems = ValidateStudentFCWorkRequest(quizStudentWork, currentTempQuiz);
+
+        //    if (numberAnswerStudentWorks > 0)
+        //    {
+        //        foreach (var sqr in quizStudentWork.StudentQuestionResults)
+        //        {
+        //            var currentQuestion = questionItems.Item1.Find(q => q.QuestionId == sqr.QuestionId);
+
+        //            var question = await _unitOfWork.GetRepository<Question>().SingleOrDefaultAsync(
+        //            predicate: x => x.Id == currentQuestion!.QuestionId,
+        //            include: x => x.Include(x => x.FlashCards!).ThenInclude(fc => fc.SideFlashCards));
+
+        //            var sideFlashCards = question.FlashCards!.SelectMany(fc => fc.SideFlashCards).ToList();
+
+        //            Guid examQuestionId = Guid.NewGuid();
+        //            examQuestions.Add(new ExamQuestion
+        //            {
+        //                Id = examQuestionId,
+        //                QuestionId = question.Id,
+        //                Question = question.Description,
+        //                QuestionImage = question.Img,
+        //                ExamResultResultId = testResultId,
+        //            });
+
+        //            int wrongAttemps = 0;
+        //            foreach (var ar in sqr.Answers)
+        //            {
+        //                foreach (var fc in question.FlashCards!)
+        //                {
+        //                    var currentFirstCardAnswer = fc.SideFlashCards.Find(sfc => sfc.Id == ar.FirstCardId);
+        //                    if (currentFirstCardAnswer != null)
+        //                    {
+        //                        var currentSecondCardAnswer = sideFlashCards.Find(sfc => sfc.Id == ar.SecondCardId);
+        //                        var correctSecondCard = fc.SideFlashCards.Find(sfc => sfc.Id != ar.FirstCardId);
+
+        //                        bool isCorrect = false;
+        //                        if (correctSecondCard!.Id == currentSecondCardAnswer!.Id)
+        //                        {
+        //                            correctMark++;
+        //                            scoreEarned += fc.Score;
+        //                            isCorrect = true;
+        //                        }
+
+        //                        if (!isCorrect)
+        //                        {
+        //                            wrongAttemps++;
+        //                            if (wrongAttemps > 3)
+        //                            {
+        //                                throw new BadHttpRequestException($"Yêu Cầu Không Hợp Lệ, Bài Làm Có Nhiều Hơn 3 Cặp Thẻ Bị Sai Vui Lòng Kiểm Tra Lại", StatusCodes.Status400BadRequest);
+        //                            }
+        //                        }
+        //                        GenerateFCResultItems(examQuestionId, flashCardAnswers, currentFirstCardAnswer, currentSecondCardAnswer,
+        //                        correctSecondCard, isCorrect ? "Correct" : "Wrong", isCorrect ? fc.Score : 0);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    await GenerateFCResultNonAnswerIQuestions(questionItems.Item2, testResultId, examQuestions, flashCardAnswers);
+
+        //    await GenerateFCResultNonAnswerFlashCards(examQuestions, flashCardAnswers, questionItems);
+
+        //    var response = SettingLastResultInfor(doingTime, testResult, correctMark, scoreEarned, status, true);
+
+        //    await SaveGrading(currentTempQuiz, testResult, examQuestions, null, flashCardAnswers);
+
+        //    return response;
+        //}
+        #endregion
 
         private QuizResultResponse SettingLastResultInfor(TimeOnly doingTime, ExamResult testResult, int correctMark, double scoreEarned, string status, bool isFlashCard)
         {
@@ -1299,9 +1940,9 @@ namespace MagicLand_System.Services.Implements
                                 continue;
                             }
 
-                            flashCardAnswer.CorrectRightCardAnswerId = currentCoupleCardInfor[i]!.Id;
-                            flashCardAnswer.CorrectRightCardAnswer = currentCoupleCardInfor[i].Description;
-                            flashCardAnswer.CorrectRightCardAnswerImage = currentCoupleCardInfor[i].Image;
+                            flashCardAnswer.RightCardAnswerId = currentCoupleCardInfor[i]!.Id;
+                            flashCardAnswer.RightCardAnswer = currentCoupleCardInfor[i].Description;
+                            flashCardAnswer.RightCardAnswerImage = currentCoupleCardInfor[i].Image;
                         }
 
                         flashCardAnswer.Score = 0;
@@ -1362,9 +2003,9 @@ namespace MagicLand_System.Services.Implements
                                 continue;
                             }
 
-                            flasCardAnswer.CorrectRightCardAnswerId = currentCardInfor!.Id;
-                            flasCardAnswer.CorrectRightCardAnswer = currentCardInfor.Description;
-                            flasCardAnswer.CorrectRightCardAnswerImage = currentCardInfor.Image;
+                            flasCardAnswer.RightCardAnswerId = currentCardInfor!.Id;
+                            flasCardAnswer.RightCardAnswer = currentCardInfor.Description;
+                            flasCardAnswer.RightCardAnswerImage = currentCardInfor.Image;
                         }
 
                         flasCardAnswer.Score = 0;
@@ -1495,7 +2136,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     Guid testResultId;
                     ExamResult testResult;
-                    GenrateTestResult(syllabus, currentQuiz, 0, currentStudentClass!, 1, out testResultId, out testResult);
+                    GenrateExamOfflineResult(syllabus, currentQuiz, 0, currentStudentClass!, 1, out testResultId, out testResult);
 
                     testResult.TotalScore = 10;
                     testResult.ScoreEarned = studentWork.Score;
@@ -1585,12 +2226,12 @@ namespace MagicLand_System.Services.Implements
                         StudentFirstCardAnswerId = fc.LeftCardAnswerId,
                         StudentFirstCardAnswerDecription = fc.LeftCardAnswer,
                         StudentFirstCardAnswerImage = fc.LeftCardAnswerImage,
-                        StudentSecondCardAnswerId = fc.RightCardAnswerId,
-                        StudentSecondCardAnswerDescription = fc.RightCardAnswer,
-                        StudentSecondCardAnswerImage = fc.RightCardAnswerImage,
-                        CorrectSecondCardAnswerId = fc.CorrectRightCardAnswerId,
-                        CorrectSecondCardAnswerDescription = fc.CorrectRightCardAnswer,
-                        CorrectSecondCardAnswerImage = fc.CorrectRightCardAnswerImage,
+                        StudentSecondCardAnswerId = fc.StudentCardAnswerId,
+                        StudentSecondCardAnswerDescription = fc.StudentCardAnswer,
+                        StudentSecondCardAnswerImage = fc.StudentCardAnswerImage,
+                        CorrectSecondCardAnswerId = fc.RightCardAnswerId,
+                        CorrectSecondCardAnswerDescription = fc.RightCardAnswer,
+                        CorrectSecondCardAnswerImage = fc.RightCardAnswerImage,
                         Status = fc.Status,
                         Score = fc.Score,
                     });
@@ -1681,7 +2322,7 @@ namespace MagicLand_System.Services.Implements
                 };
 
                 var allTestResult = (await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(
-                    selector: x => x.TestResults,
+                    selector: x => x.ExamResults,
                     predicate: x => x.ClassId == cls.Id && x.StudentId == student.Id)).ToList();
 
                 var finalTestResults = new List<FinalTestResultResponse>();
@@ -2184,95 +2825,6 @@ namespace MagicLand_System.Services.Implements
                 });
             }
         }
-        #region UnUse Code
 
-        //public async Task<List<FCQuizResponse>> GetFCQuestionPackageAsync(Guid examId)
-        //{
-        //    var fcQuestionPackage = await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(
-        //        predicate: x => x.Id == examId,
-        //        include: x => x.Include(x => x.Questions!).ThenInclude(quest => quest.FlashCards)!.ThenInclude(fc => fc.SideFlashCards));
-
-        //    if (fcQuestionPackage == null)
-        //    {
-        //        throw new BadHttpRequestException($"Id Của Bài Kiểm Tra Không Tồn Tại [{examId}]", StatusCodes.Status400BadRequest);
-        //    }
-
-        //    if (fcQuestionPackage.QuizType.ToLower() != QuizTypeEnum.flashcard.ToString())
-        //    {
-        //        throw new BadHttpRequestException($"Bài Kiểm Tra Không Thuộc Dạng Nối Thẻ Yêu Cầu Không Hợp Lệ", StatusCodes.Status400BadRequest);
-        //    }
-
-        //    var questions = fcQuestionPackage.Questions;
-        //    if (questions == null || !questions.Any())
-        //    {
-        //        throw new BadHttpRequestException($"Lỗi Hệ Thống Bài Kiểm Tra Không Tìm Thấy Gói Câu Hỏi, Vui Lòng Chờ Nhân Viên Sử Lý", StatusCodes.Status500InternalServerError);
-        //    }
-        //    var responses = new List<FCQuizResponse>();
-        //    foreach (var quest in questions)
-        //    {
-        //        var response = new FCQuizResponse
-        //        {
-        //            QuestionId = quest.Id,
-        //            QuestionDescription = quest.Description,
-        //            QuestionImage = quest.Img,
-        //        };
-
-        //        var fcAnswers = new List<CoupleFCAnswerResponse>();
-        //        int numberCouple = 0;
-        //        foreach (var fc in quest.FlashCards!)
-        //        {
-        //            numberCouple++;
-        //            var coupleFcAnswer = new CoupleFCAnswerResponse();
-
-        //            foreach (var sfc in fc.SideFlashCards)
-        //            {
-        //                coupleFcAnswer.CoupleFlashCard.Add(new FCAnswerResponse
-        //                {
-        //                    CardId = sfc.Id,
-        //                    CardDescription = sfc.Description,
-        //                    CardImage = sfc.Image,
-        //                    NumberCoupleIdentify = numberCouple,
-        //                    Score = fc.Score / 2,
-        //                });
-        //            }
-
-        //            fcAnswers.Add(coupleFcAnswer);
-        //        }
-
-        //        response.CardAnswers = fcAnswers;
-        //        responses.Add(response);
-        //    }
-
-        //    return responses;
-        //}
-
-        //public async Task<FullyExamRes> GetFullyExamInforStudent(Guid studentId, Guid examId)
-        //{
-        //    var response = new FullyExamRes();
-        //    var testResult = await _unitOfWork.GetRepository<TestResult>().SingleOrDefaultAsync(
-        //      predicate: x => x.StudentClass!.StudentId == studentId && x.ExamId == examId,
-        //      include: x => x.Include(x => x.StudentClass!).Include(x => x.ExamQuestions));
-
-        //    if (testResult != null && testResult.ExamType!.Trim().ToLower() != QuizTypeEnum.flashcard.ToString())
-        //    {
-        //        foreach (var examQuestion in testResult.ExamQuestions)
-        //        {
-        //            var multipleChoiceAnswerResult = new MCAnswerResultResponse();
-
-        //            var multipleChoiceAnswer = await GetMCStudentResult(examQuestion, multipleChoiceAnswerResult);
-
-        //            response.StudentWork!.Add(new StudentWorkResult
-        //            {
-        //                QuestionId = examQuestion.QuestionId,
-        //                QuestionDescription = examQuestion.Question,
-        //                QuestionImage = examQuestion.QuestionImage,
-        //                MultipleChoiceAnswerResult = multipleChoiceAnswer != null ? multipleChoiceAnswerResult : null,
-        //            });
-        //        }
-        //    }
-
-        //}
-
-        #endregion
     }
 }

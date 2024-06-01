@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MagicLand_System.Domain.Models
 {
@@ -13,12 +8,12 @@ namespace MagicLand_System.Domain.Models
         public Guid LeftCardAnswerId { get; set; }
         public string? LeftCardAnswer { get; set; } = string.Empty;
         public string? LeftCardAnswerImage { get; set; } = string.Empty;
+        public Guid StudentCardAnswerId { get; set; }
+        public string? StudentCardAnswer { get; set; } = string.Empty;
+        public string? StudentCardAnswerImage { get; set; } = string.Empty;
         public Guid RightCardAnswerId { get; set; }
         public string? RightCardAnswer { get; set; } = string.Empty;
         public string? RightCardAnswerImage { get; set; } = string.Empty;
-        public Guid CorrectRightCardAnswerId { get; set; }
-        public string? CorrectRightCardAnswer { get; set; } = string.Empty;
-        public string? CorrectRightCardAnswerImage { get; set; } = string.Empty;
         public string? Status { get; set; }
         public double Score { get; set; }
 

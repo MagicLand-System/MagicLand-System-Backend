@@ -17,6 +17,7 @@ namespace MagicLand_System.Domain.Models
         public double ScoreEarned { get; set; }
         public string? ExamStatus { get; set; }
         public int NoAttempt { get; set; }
+        public bool IsGraded { get; set; }
 
 
         [ForeignKey("StudentClass")]

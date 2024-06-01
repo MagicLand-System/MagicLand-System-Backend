@@ -4,6 +4,7 @@ using MagicLand_System.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MagicLand_System.Domain.Migrations
 {
     [DbContext(typeof(MagicLandContext))]
-    partial class MagicLandContextModelSnapshot : ModelSnapshot
+    [Migration("20240531103533_updateNameEntity")]
+    partial class updateNameEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -313,9 +316,6 @@ namespace MagicLand_System.Domain.Migrations
                     b.Property<string>("ExamStatus")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsGraded")
-                        .HasColumnType("bit");
-
                     b.Property<int>("NoAttempt")
                         .HasColumnType("int");
 
@@ -412,6 +412,15 @@ namespace MagicLand_System.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CorrectRightCardAnswer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CorrectRightCardAnswerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CorrectRightCardAnswerImage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ExamQuestionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -437,15 +446,6 @@ namespace MagicLand_System.Domain.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StudentCardAnswer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StudentCardAnswerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("StudentCardAnswerImage")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

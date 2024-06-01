@@ -18,6 +18,6 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("Class")]
         public Guid ClassId { get; set; }
         public Class? Class { get; set; }
-        public ICollection<ExamResult> TestResults { get; set; } = new List<ExamResult>();
+        public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
     }
 }
