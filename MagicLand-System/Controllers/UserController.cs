@@ -105,14 +105,10 @@ namespace MagicLand_System.Controllers
             return Ok(user);
         }
         [HttpPost(ApiEndpointConstant.UserEndpoint.Register)]
-        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequestObjectResult))]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
             var isSuccess = await _userService.RegisterNewUser(request);
             if (!isSuccess)
             {

@@ -128,7 +128,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 var priceValue = random.Next(20, 71) + "0000";
                 var objectRequest = new CreateCourseRequest
                 {
-                    CourseName = validSyllabus[order].SyllabusName + "_" + (order + 1),
+                    CourseName = validSyllabus[order].SyllabusName,
                     Price = int.Parse(priceValue),
                     MinAge = random.Next(4, 7),
                     MaxAge = random.Next(7, 11),

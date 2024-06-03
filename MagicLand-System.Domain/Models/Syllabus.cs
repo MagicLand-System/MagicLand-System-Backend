@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MagicLand_System.Domain.Models
+﻿namespace MagicLand_System.Domain.Models
 {
     public class Syllabus
     {
@@ -14,15 +7,15 @@ namespace MagicLand_System.Domain.Models
         public DateTime UpdateTime { get; set; }
         public DateTime? EffectiveDate { get; set; } = default;
         public string? StudentTasks { get; set; }
-        public double ScoringScale {  get; set; } 
-        public int TimePerSession { get; set; }  
+        public double ScoringScale { get; set; }
+        public int TimePerSession { get; set; }
         public double MinAvgMarkToPass { get; set; }
-        public string? Description { get; set; } 
+        public string? Description { get; set; }
         public string? SyllabusLink { get; set; }
         public string? SubjectCode { get; set; }
-        public int? NumOfSessions {  get; set; }
+        public int? NumOfSessions { get; set; }
         public Guid? PrequisiteSyllabusId { get; set; }
-        
+
 
         public Course? Course { get; set; }
 

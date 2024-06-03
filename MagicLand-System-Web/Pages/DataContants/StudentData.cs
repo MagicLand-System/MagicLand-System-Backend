@@ -9,7 +9,7 @@
         {
             StudentMiddleNames = new List<string>
             {
-                "Trần", "Văn", "Quản", "Thị", "Bảo", "Gia", "Hùng", "Đức", "Trọng", "Việt", "Huyền", "Thanh", "Quốc", "Tiến"
+                "Trần", "Văn", "Quản", "Thị", "Bảo", "Gia", "Hùng", "Đức", "Trọng", "Việt", "Huyền", "Thanh", "Quốc", "Tiến", "Phát", "Thủy", "Linh"
             };
 
             StudentLastNames = new List<string>

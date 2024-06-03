@@ -3,6 +3,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using MagicLand_System.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace MagicLand_System.Background.BackgroundServiceImplements
 {
@@ -23,25 +24,28 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<MagicLandContext>>();
                     var currentTime = BackgoundTime.GetTime();
-
+                    var deleteMCAnswers = new List<MultipleChoiceAnswer>();
                     var newDeleteNotification = new Notification
                     {
                         Id = Guid.NewGuid(),
                         Title = "Xóa Lúc " + currentTime,
                     };
 
-                    var tempQuiz = await _unitOfWork.GetRepository<TempQuiz>().GetListAsync(orderBy: x => x.OrderBy(x => x.CreatedTime));
+                    var tempExams = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(predicate: x => x.IsGraded == false, include: x => x.Include(x => x.ExamQuestions));
 
-                    foreach (var quiz in tempQuiz)
+                    foreach (var exam in tempExams)
                     {
-                        int time = currentTime.Day - quiz.CreatedTime.Day;
+                        var examQuestionIds = exam.ExamQuestions.Select(x => x.Id).ToList();
 
-                        if (time >= 1)
+                        var multipleChoiceAnswers = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().GetListAsync(predicate: x => examQuestionIds.Contains(x.ExamQuestionId));
+                        if (multipleChoiceAnswers.Any())
                         {
-                            _unitOfWork.GetRepository<TempQuiz>().DeleteAsync(quiz);
+                            deleteMCAnswers.AddRange(multipleChoiceAnswers);
                         }
                     }
 
+                    _unitOfWork.GetRepository<ExamResult>().DeleteRangeAsync(tempExams);
+                    _unitOfWork.GetRepository<MultipleChoiceAnswer>().DeleteRangeAsync(deleteMCAnswers);
                     await _unitOfWork.GetRepository<Notification>().InsertAsync(newDeleteNotification);
                     _unitOfWork.Commit();
                 }

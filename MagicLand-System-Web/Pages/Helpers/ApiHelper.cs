@@ -13,7 +13,7 @@ namespace MagicLand_System_Web_Dev.Pages.Helper
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string Scheme = "https";
         //private readonly string Scheme = "http";
-        private readonly string Domain = "deca-118-69-69-187.ngrok-free.app";
+        private readonly string Domain = "bf50-1-52-0-139.ngrok-free.app";
         //private readonly string Domain = "magiclandapiv2.somee.com";
         //private readonly string Domain = "localhost:5097";
         private string RootUrl = "", CallUrl = "", JsonContent = "";
