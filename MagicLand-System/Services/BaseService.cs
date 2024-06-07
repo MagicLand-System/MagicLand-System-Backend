@@ -67,7 +67,7 @@ namespace MagicLand_System.Services
                 return 0;
             }
 
-            var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(15));
+            var prices = coursePrices.Where(x => x.EndDate < DateTime.Now.AddYears(10)).ToList();
 
             foreach (var pr in prices)
             {
