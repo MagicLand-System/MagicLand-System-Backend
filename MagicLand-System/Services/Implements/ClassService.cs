@@ -3754,7 +3754,7 @@ namespace MagicLand_System.Services.Implements
 
                     if (roomIds.Count == 0)
                     {
-                        res.Room = rooms.OrderBy(x => x.Name).ToArray()[0];
+                        res.Room = rooms.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).OrderBy(x => x.Name).ToArray()[0];
                     }
                     List<Room> finalResult = new List<Room>();
                     foreach (var room in rooms)
@@ -3770,14 +3770,14 @@ namespace MagicLand_System.Services.Implements
                     }
                     else
                     {
-                        res.Room = finalResult.OrderBy(x => x.Name).ToArray()[0];
+                        res.Room = finalResult.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).OrderBy(x => x.Name).ToArray()[0];
                     }
 
                     return res;
                 }
 
             }
-            res.Room = rooms.OrderBy(x => x.Name).ToArray()[0];
+            res.Room = rooms.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).OrderBy(x => x.Name).ToArray()[0];
             res.Lecturer = lecturerResponses.OrderBy(x => x.NumberOfClassesTeaching).ToArray()[0];
             return res;
         }

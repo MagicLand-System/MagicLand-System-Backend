@@ -785,11 +785,11 @@ namespace MagicLand_System.Services.Implements
         {
             if (request != null)
             {
-                if (request.StartTime < DateTime.Now.AddMinutes(-120))
+                if (request.StartTime.AddHours(7) < DateTime.Now)
                 {
                     throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
                 }
-                if (request.EndTime < DateTime.Now.AddMinutes(-120))
+                if (request.EndTime.AddHours(7) < DateTime.Now)
                 {
                     throw new BadHttpRequestException("ngày hiệu lực không thể ở trong quá khứ", StatusCodes.Status400BadRequest);
                 }
