@@ -128,24 +128,42 @@ namespace MagicLand_System_Web_Dev.Pages
                     string studentFullName = firstStudentName + " " + StudentData.StudentMiddleNames[random.Next(0, StudentData.StudentMiddleNames.Count)]
                         + " " + StudentData.StudentLastNames[random.Next(0, StudentData.StudentLastNames.Count)];
 
+                    var gender = StudentData.Genders[random.Next(0, StudentData.Genders.Count)];
                     var studentRequest = new CreateStudentRequest
                     {
                         FullName = studentFullName,
                         DateOfBirth = DateTime.Now.AddYears(random.Next(-10, -4)),
-                        Gender = StudentData.Genders[random.Next(0, StudentData.Genders.Count)],
-                        AvatarImage = ImageUrlConstant.DefaultAvatar(),
+                        Gender = gender,
+                        AvatarImage = StudentData.GetStudentImage(gender, random),
                     };
 
                     var result = await _apiHelper.FetchApiAsync<AccountResponse>(ApiEndpointConstant.StudentEndpoint.StudentEnpointCreate, MethodEnum.POST, studentRequest);
-                    StudentMessages.Add(new StudentDefaultMessage
+                    if (result.IsSuccess)
                     {
-                        StudentName = studentRequest.FullName,
-                        AccountArise = result.Data.AccountPhone,
-                        ParentBelong = parent.FullName,
-                        Age = DateTime.Now.Year - studentRequest.DateOfBirth.Year,
-                        Status = result.StatusCode,
-                        Note = result.Message,
-                    });
+                        StudentMessages.Add(new StudentDefaultMessage
+                        {
+                            StudentName = studentRequest.FullName,
+                            AccountArise = result.Data.AccountPhone,
+                            ParentBelong = parent.FullName,
+                            Gender = studentRequest.Gender,
+                            Age = DateTime.Now.Year - studentRequest.DateOfBirth.Year,
+                            Status = result.StatusCode,
+                            Note = result.Message,
+                        });
+                    }
+                    else
+                    {
+                        StudentMessages.Add(new StudentDefaultMessage
+                        {
+                            StudentName = studentRequest.FullName,
+                            AccountArise = "Không",
+                            ParentBelong = parent.FullName,
+                            Gender = studentRequest.Gender,
+                            Age = DateTime.Now.Year - studentRequest.DateOfBirth.Year,
+                            Status = result.StatusCode,
+                            Note = result.Message,
+                        });
+                    }
                 }
             }
 
@@ -185,7 +203,7 @@ namespace MagicLand_System_Web_Dev.Pages
 
                 Parents = parents.Where(
                     c => c.FullName!.ToLower().Contains(key) ||
-                    c.Phone.ToLower().Contains(key) 
+                    c.Phone.ToLower().Contains(key)
                     ).ToList();
             }
 

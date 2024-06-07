@@ -11,6 +11,6 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("SubDescriptionTitle")]
         public Guid SubDescriptionTitleId { get; set; }
-        public SubDescriptionTitle SubDescriptionTitle { get; set; } = new SubDescriptionTitle();
+        public SubDescriptionTitle? SubDescriptionTitle { get; set; }
     }
 }

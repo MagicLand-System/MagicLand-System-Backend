@@ -87,7 +87,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 {
                     Description = SyllabusData.GetSyllabusDescription(subject.Item2),
                     MinAvgMarkToPass = random.Next(4, 5),
-                    SyllabusName = syllabusNameItems.Item1 + "-" + index,
+                    SyllabusName = syllabusNameItems.Item1,
                     ScoringScale = 10,
                     StudentTasks = "Hoàn thành các khóa học, thực hiện đầy đủ các bài tập và làm bài kiểm tra.",
                     SubjectCode = syllabusNameItems.Item2 + index,

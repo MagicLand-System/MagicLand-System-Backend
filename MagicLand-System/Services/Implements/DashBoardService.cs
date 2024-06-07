@@ -227,5 +227,10 @@ namespace MagicLand_System.Services.Implements
             }
             return groupedTransactions.OrderBy(x => x.DateIn).ToList();   
         }
+
+        public DateTime GetTime()
+        {
+            return GetCurrentTime();
+        }
     }
 }

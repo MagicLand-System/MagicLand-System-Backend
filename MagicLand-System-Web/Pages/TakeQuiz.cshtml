@@ -36,12 +36,14 @@
 
         <div class="form-group" onsubmit="return setLoader()">
             <form method="post" asp-page-handler="Progress">
+                @*
                 <label for="inputField">Tỷ Lệ Sai: </label>
                 <div class="form-input" style="border: 1px solid black; display: inline-block;">
-                    <button id="decreaseBtn" type="button" style="background-color: white; color: black; border: none; font-weight: bold;" onclick="changeValue(-5)">-</button>
-                    <input type="text" id="inputField" name="inputField" value="5" style="width: 45px; text-align: center;  border-right: 1px solid; border-left: 1px solid; border-bottom: none; border-top: none;height: 30px;" readonly />
-                    <button id="increaseBtn" type="button" style="background-color: white; color: black;  border: none; font-weight: bold;" onclick="changeValue(5)">+</button>
+                <button id="decreaseBtn" type="button" style="background-color: white; color: black; border: none; font-weight: bold;" onclick="changeValue(-5)">-</button>
+                <input type="text" id="inputField" name="inputField" value="5" style="width: 45px; text-align: center;  border-right: 1px solid; border-left: 1px solid; border-bottom: none; border-top: none;height: 30px;" readonly />
+                <button id="increaseBtn" type="button" style="background-color: white; color: black;  border: none; font-weight: bold;" onclick="changeValue(5)">+</button>
                 </div>
+                *@
 
                 <input type="hidden" id="input-value" name="listId" value="" />
                 <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>

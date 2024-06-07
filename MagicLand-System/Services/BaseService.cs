@@ -49,7 +49,27 @@ namespace MagicLand_System.Services
 
         protected DateTime GetCurrentTime()
         {
-            return DateTime.Now;
+            var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+
+            string days = configuration.GetSection("DateNumber:Days").Value!;
+            string hours = configuration.GetSection("DateNumber:Hours").Value!;
+            string minutes = configuration.GetSection("DateNumber:Minutes").Value!;
+
+
+            if (hours != "0" || days != "0" || minutes != "0")
+            {
+                return DateTime.Today
+                      .AddDays(int.Parse(days))
+                      .AddHours(int.Parse(hours))
+                      .AddMinutes(int.Parse(minutes));
+            }
+            else
+            {
+                return DateTime.Now;
+            }
         }
 
         protected async Task<double> GetDynamicPrice(Guid id, bool isClass)

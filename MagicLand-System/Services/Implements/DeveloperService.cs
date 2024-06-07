@@ -45,7 +45,7 @@ namespace MagicLand_System.Services.Implements
                 var allAttendances = schedules.SelectMany(sc => sc.Attendances);
                 var allEvaluates = schedules.SelectMany(sc => sc.Evaluates);
 
-                var numberAbsentDay = percentageAbsent / 5;
+                var numberAbsentDay = percentageAbsent == 0 ? 0 : percentageAbsent / 5;
 
                 Random random = new Random();
 
@@ -59,14 +59,17 @@ namespace MagicLand_System.Services.Implements
 
                         var absentDay = new List<int>();
 
-                        while (absentDay.Count < numberAbsentDay)
+                        if (numberAbsentDay != 0)
                         {
-                            int index;
-                            do
+                            while (absentDay.Count < numberAbsentDay)
                             {
-                                index = random.Next(1, schedules.Count);
-                            } while (absentDay.Contains(index));
-                            absentDay.Add(index);
+                                int index;
+                                do
+                                {
+                                    index = random.Next(1, schedules.Count);
+                                } while (absentDay.Contains(index));
+                                absentDay.Add(index);
+                            }
                         }
 
                         int order = 0;
@@ -75,11 +78,13 @@ namespace MagicLand_System.Services.Implements
                             order++;
                             var currentAttendance = allAttendances.Single(x => x.ScheduleId == schedule.Id && x.StudentId == stu!.Id);
                             var currentEvaluate = allEvaluates.Single(x => x.ScheduleId == schedule.Id && x.StudentId == stu!.Id);
+
                             var evaluateIndex = random.Next(0, noteEvaluate.Count);
 
                             if (currentAttendance.IsPresent == null)
                             {
                                 currentAttendance.IsPresent = absentDay.Contains(order) ? false : true;
+                                updateAttendances.Add(currentAttendance);
                             };
 
                             if (string.IsNullOrEmpty(currentEvaluate.Status))
@@ -87,16 +92,14 @@ namespace MagicLand_System.Services.Implements
 
                                 currentEvaluate.Status = absentDay.Contains(order) ? null : noteEvaluate[evaluateIndex].Level;
                                 currentEvaluate.Note = absentDay.Contains(order) ? string.Empty : noteEvaluate[evaluateIndex].Note;
+                                updateEvaluates.Add(currentEvaluate);
                             }
-
-                            updateAttendances.Add(currentAttendance);
-                            updateEvaluates.Add(currentEvaluate);
 
                             attendanceAndEvaluateInfors.Add(new AttendanceAndEvaluateInfor
                             {
                                 AttendanceStatus = currentAttendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt",
                                 EvaluateStatus = currentEvaluate.Status == null ? "Không Có Đánh Giá" : currentEvaluate.Status,
-                                EvaluateNote = currentEvaluate.Note,
+                                EvaluateNote = currentEvaluate.Note == null ? "" : currentEvaluate.Note,
                                 Date = schedule.Date.ToString("MM/dd/yyyy"),
                             });
 

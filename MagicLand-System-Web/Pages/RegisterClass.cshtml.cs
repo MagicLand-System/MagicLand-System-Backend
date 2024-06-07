@@ -218,6 +218,10 @@ namespace MagicLand_System_Web_Dev.Pages
                     if (currentParentStudents == null || currentParentStudents.Count == 0)
                     {
                         var result = await _apiHelper.FetchApiAsync<List<StudentWithAccountResponse>>(ApiEndpointConstant.StudentEndpoint.GetStudentsOfCurrentUser, MethodEnum.GET, null);
+                        if (!result.IsSuccess)
+                        {
+                            return RedirectToPage("/Error");
+                        }
                         if (result.Data != null)
                         {
                             currentParentStudents = new List<Student>();
@@ -312,6 +316,11 @@ namespace MagicLand_System_Web_Dev.Pages
 
                         break;
                     }
+                    else
+                    {
+                        return RedirectToPage("/Error");
+                    }
+
                 }
             }
 

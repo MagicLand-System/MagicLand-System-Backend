@@ -196,7 +196,16 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                var parsePhone = request.UserPhone.StartsWith("84") ? "+" + request.UserPhone : "+84" + request.UserPhone.Substring(1);
+                var parsePhone = 
+                    request.UserPhone.StartsWith("84") ? "+" + request.UserPhone 
+                    : request.UserPhone.StartsWith("0") ? "+84" + request.UserPhone.Substring(1) 
+                    : request.UserPhone.StartsWith("+84") ? request.UserPhone 
+                    : "+84" + request.UserPhone;
+
+                if (parsePhone.Length != 12)
+                {
+                    throw new BadHttpRequestException($"Error: Số Điện Thoại Không Hợp Lệ [{parsePhone}]", StatusCodes.Status400BadRequest);
+                }
 
                 var exsitedPhone = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Phone == parsePhone);
                 if (exsitedPhone != null)
@@ -966,7 +975,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var c in classes)
             {
                 var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId.ToString().Equals(studentId) && x.ClassId == c.Id);
-                if (studentClass.Status.Equals("Saved"))
+                if (studentClass.SavedTime != null)
                 {
                     continue;
                 }
@@ -1071,7 +1080,7 @@ namespace MagicLand_System.Services.Implements
                 var statusx = "Normal";
                 if (studentclass.Status != null)
                 {
-                    if (studentclass.Status.Equals("Saved"))
+                    if (studentclass.SavedTime != null)
                     {
                         statusx = "Saved";
                     }

@@ -133,7 +133,7 @@ namespace MagicLand_System_Web_Dev.Pages
                     MinAge = random.Next(4, 7),
                     MaxAge = random.Next(7, 11),
                     MainDescription = CourseData.MainDescriptions[random.Next(0, CourseData.MainDescriptions.Count)],
-                    Img = "https://firebasestorage.googleapis.com/v0/b/magic-2e5fc.appspot.com/o/courses%2FTo%C3%A1n%2Ftoan.jpg0c7a07be-eb5a-4da3-8af0-378b29f8a347?alt=media&token=33ae453d-eb1f-4024-9740-9d156b9138e2",
+                    Img = "",
                     SyllabusId = validSyllabus[order].Id.ToString(),
                     SubDescriptions = subDescription,
                 };

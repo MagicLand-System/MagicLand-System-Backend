@@ -3,9 +3,9 @@
     public static class SyllabusData
     {
         public static readonly List<(string, string)> Subjects;
-        public static readonly List<(string, string)> LanguageSubjectNameData, MathSubjectNameData, SingSubjectNameData, PhysicsSubjectNameData, ProgramerSubjectNameData, ArtSubjectNameData;
+        public static readonly List<(string, string)> LanguageSubjectNameData, MathSubjectNameData, PhysicsSubjectNameData, ProgramerSubjectNameData;
 
-        public static readonly List<string> LanguageDescription, MathDescription, SingDescription, PhysicsDescription, ProgramerDescription, ArtDescription;
+        public static readonly List<string> LanguageDescription, MathDescription, PhysicsDescription, ProgramerDescription;
 
         public static readonly List<(string, string)> QuizType;
 
@@ -18,7 +18,7 @@
 
             Subjects = new List<(string, string)>
             {
-                 ("Ngôn Ngữ", "Language"), ("Toán", "Math"), ("Hát", "Sing"), ("Vật Lý", "Physics"), ("Lập Trình", "Programer"), ("Hội Họa", "Art")
+                 ("Ngôn Ngữ", "Language"), ("Toán", "Math"),  ("Vật Lý", "Physics"), ("Lập Trình", "Programer")
             };
 
             LanguageSubjectNameData = new List<(string, string)>
@@ -29,7 +29,7 @@
 
             MathSubjectNameData = new List<(string, string)>
             {
-                ("Toán Tư Duy", "TTD"), ("Toán Tư Duy Cơ Bản", "TTDCB"), ("Toán Tư Duy Nân Cao", "TTDNC"), ("Toán Tiểu Học", "TTH"), ("Toán Tiểu Học Nân Cao", "TTHNC"),
+                ("Toán Tư Duy", "TTD"), ("Học Toán Cơ Bản", "HTCB"), ("Học Toán Nân Cao", "HTCBNC"), ("Toán Tiểu Học", "TTH"), ("Toán Tiểu Học Nân Cao", "TTHNC"),
                 ("Toán Cho Bé", "TCB"), ("Thế Giới Hình Và Số", "TGHVS"), ("Hình Và Số Học", "HVSH"), ("Toán Là Ngôn Ngữ", "TLNN"), ("Tư Duy Giải Toán", "TDGT")
             };
 
@@ -37,12 +37,6 @@
             {
                 ("Lập Trình", "LTS"), ("Làm Quen Ngôn Ngữ Máy", "LQNNM"), ("Ngôn Ngữ Máy Cơ Bản", "NNMCB"), ("Ngôn Ngữ Máy Nân Cao", "NNMNC"), ("Học Lập Trình C", "HLTC"),
                 ("Học Lập Trình C Trung Cấp", "HLTCTC"), ("Lý Thuyết Lập Trình", "LTLT"), ("Thế Giới Ngôn Ngữ Máy", "TGNNM"), ("Lập Trình Cơ Bản", "LTCB"), ("Các Ngôn Ngữ Lập Trình", "CNNLT")
-            };
-
-            SingSubjectNameData = new List<(string, string)>
-            {
-                ("Thế Giới Âm Nhạc", "TGAN"), ("Gai Điệu Quanh Ta", "GDQT"), ("Bản Giao Hưởng Của Cuộc Sống", "NNMCB"), ("Nốt Nhạc Vui Tươi", "NNVT"), ("Bé Hoc Hát", "BHH"),
-                ("Học Hát Cùng Nhau", "HHCN"), ("Lời Ca Cảm Xúc", "LCCX")
             };
 
             PhysicsSubjectNameData = new List<(string, string)>
@@ -56,21 +50,6 @@
     ("Chuyển Động Và Năng Lượng", "CDNL"),
     ("Cơ Học Đơn Giản", "CHDG")
 };
-
-            ArtSubjectNameData = new List<(string, string)>
-{
-    ("Vẽ Vui Nhộn", "VVN"),
-    ("Màu Sắc Diệu Kỳ", "MSDK"),
-    ("Khám Phá Hội Họa", "KPHH"),
-    ("Vẽ Thế Giới Quanh Em", "VTGQE"),
-    ("Nghệ Thuật Cắt Dán", "NTCD"),
-    ("Học Vẽ Cơ Bản", "HVCB"),
-    ("Tô Màu Hình Vẽ", "TMHV"),
-    ("Vẽ Tranh Phong Cảnh", "VTP"),
-    ("Vẽ Chân Dung", "VCD")
-};
-
-
 
 
             LanguageDescription = new List<string>
@@ -88,13 +67,6 @@
                 "Khóa học áp dùng phương pháp STEM, giúp trẻ phát huy tư duy sáng tạo cùng trí tưởng tượng trong môn toán. Chúng tôi hi vọng từ việc cảm nhận được toán học thật đẹp, hấp dẫn và gần gũi mà mỗi bé sẽ học toán bằng sự thích thú, từ đó phát triển tài năng của các em. Trong khóa học các bé được trải nghiệm các hoạt động được thiets kế khóe léo giúp các em tiếp cận toán học bằng sự quan sá, tưởng tượng, để phát triển trí thông minh, cảm xúc, phát triển năng lực giải quyết vấn đề và sáng tạo. Các bé sẽ được chơi mà học đầy cảm hứng.",
                 "Cùng với sự phát triển nhanh chóng của thế giới hiện đại, việc có một nền tảng vững chắc về toán học là vô cùng quan trọng cho sự thành công của các em trong tương lai. Chương trình học Toán cho trẻ em từ 4-10 tuổi được thiết kế để giúp các em phát triển tư duy logic, kỹ năng sống và sự tự tin trong việc giải quyết vấn đề",
             };
-
-            SingDescription = new List<string>
-{
-    "Âm nhạc không chỉ là một hoạt động giải trí mà còn là một phương tiện quan trọng giúp trẻ phát triển kỹ năng ngôn ngữ, tự tin thể hiện bản thân và cảm nhận sâu sắc về thế giới xung quanh. Chương trình này được thiết kế để khơi dậy niềm đam mê âm nhạc của trẻ thông qua các hoạt động hát, trò chơi âm nhạc và bài học sáng tạo.",
-    "Cung cấp một môi trường học tập vui vẻ và đầy động lực, giúp con bạn tiếp cận và yêu thích âm nhạc một cách tự nhiên và tự tin nhất. Hãy cùng trải nghiệm niềm vui và sự phấn khích khi khám phá thế giới âm thanh và giai điệu!",
-    "Khóa học áp dụng phương pháp giáo dục âm nhạc hài hòa, giúp trẻ phát triển khả năng sáng tạo và trí tưởng tượng thông qua âm nhạc. Từ việc cảm nhận vẻ đẹp và sự cuốn hút của âm nhạc, mỗi bé sẽ yêu thích và học hát với niềm vui, từ đó phát triển tài năng của mình. Trong khóa học, các bé sẽ tham gia vào các hoạt động thiết kế khéo léo giúp các em tiếp cận âm nhạc thông qua quan sát, tưởng tượng và trải nghiệm, nhằm phát triển trí thông minh cảm xúc, năng lực giải quyết vấn đề và sáng tạo. Các bé sẽ được vui chơi và học tập một cách đầy cảm hứng.",
-};
 
 
             PhysicsDescription = new List<string>
@@ -114,13 +86,6 @@
                 "Cùng với sự phát triển của công nghệ, việc hiểu biết về lập trình trở thành một kỹ năng quan trọng cho tương lai của các bé. Chương trình học Lập trình cho trẻ em từ 4-10 tuổi được thiết kế để giúp các em phát triển kỹ năng sống và tư duy logic thông qua lập trình",
             };
 
-            ArtDescription = new List<string>
-{
-    "Khóa học kết hợp giữa lý thuyết và thực hành, giúp trẻ hiểu rõ hơn về các nguyên lý nghệ thuật như bố cục, phối màu và hình học. Các em sẽ được thực hiện nhiều dự án sáng tạo, từ vẽ tranh phong cảnh đến làm thiệp thủ công.",
-    "Với phương pháp giáo dục nghệ thuật tiên tiến, chúng tôi khuyến khích trẻ tự do khám phá và thử nghiệm với các chất liệu và kỹ thuật mới. Điều này không chỉ giúp trẻ phát triển kỹ năng vẽ mà còn kích thích trí tưởng tượng và khả năng sáng tạo.",
-    "Chương trình học hội họa này được thiết kế để khơi dậy niềm đam mê nghệ thuật của trẻ. Các bài học sẽ giới thiệu về các danh họa nổi tiếng và phong cách nghệ thuật đa dạng, từ đó giúp trẻ mở rộng tầm nhìn và hiểu biết về nghệ thuật.",
-            };
-
         }
 
         public static string GetSyllabusDescription(string subjectCode)
@@ -133,14 +98,10 @@
                     return LanguageDescription[random.Next(0, LanguageDescription.Count)];
                 case "Math":
                     return MathDescription[random.Next(0, MathDescription.Count)];
-                case "Sing":
-                    return SingDescription[random.Next(0, SingDescription.Count)];
                 case "Physics":
                     return PhysicsDescription[random.Next(0, PhysicsDescription.Count)];
                 case "Programer":
                     return ProgramerDescription[random.Next(0, ProgramerDescription.Count)];
-                case "Art":
-                    return ArtDescription[random.Next(0, ArtDescription.Count)];
             }
 
             return string.Empty;
@@ -156,14 +117,10 @@
                     return LanguageSubjectNameData[random.Next(0, LanguageSubjectNameData.Count)];
                 case "Math":
                     return MathSubjectNameData[random.Next(0, MathSubjectNameData.Count)];
-                case "Sing":
-                    return SingSubjectNameData[random.Next(0, SingSubjectNameData.Count)];
                 case "Physics":
                     return PhysicsSubjectNameData[random.Next(0, PhysicsSubjectNameData.Count)];
                 case "Programer":
                     return ProgramerSubjectNameData[random.Next(0, ProgramerSubjectNameData.Count)];
-                case "Art":
-                    return ArtSubjectNameData[random.Next(0, ArtSubjectNameData.Count)];
             }
 
             return (string.Empty, string.Empty);

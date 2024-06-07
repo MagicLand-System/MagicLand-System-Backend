@@ -23,6 +23,6 @@ namespace MagicLand_System.Services.Interfaces
         Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id);
         Task<List<ExamResForStudent>> LoadExamOfClassByClassIdAsync(Guid id, Guid? studentId);
         Task<List<ExamExtraClassInfor>> LoadExamOfCurrentStudentAsync(int numberOfDate);
-        Task<List<QuizResponse>> GetQuizOfExamtByExamIdAsync(Guid examId, Guid classId, int? examPart);
+        Task<List<QuizResponse>> GetQuizOfExamtByExamIdAsync(Guid examId, Guid classId, int? examPart, bool isCheckingTime);
     }
 }

@@ -76,19 +76,15 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                 if (cls.StartDate.Date == currentTime.Date)
                 {
-                    if (studentClass.Count < cls.LeastNumberStudent)
-                    {
-                        return;
-                    }
+                    //if (studentClass.Count < cls.LeastNumberStudent)
+                    //{
+                    //    return;
+                    //}
 
                     await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.PROGRESSING, newNotifications, _unitOfWork);
                     return;
                 }
 
-                if(cls.Id == Guid.Parse("446BCA9A-CB94-4635-8B92-D94879DED7A2"))
-                {
-                    var a = "a";
-                }
                 if (cls.EndDate.Date == currentTime.AddDays(-1).Date)
                 {
                     await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);

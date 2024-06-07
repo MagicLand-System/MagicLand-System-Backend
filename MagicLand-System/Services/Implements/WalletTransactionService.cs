@@ -65,15 +65,24 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
                 }
+
+                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()));
+                if (classx == null)
+                {
+                    continue;
+                }
                 List<Student> students = new List<Student>();
                 foreach (var student in studentIdList)
                 {
                     var studentx = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(student.ToString()));
-                    students.Add(studentx);
+                    if (studentx != null)
+                    {
+                        students.Add(studentx);
+                    }
                 }
+
                 var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(transaction.PersonalWalletId.ToString()));
                 var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(personalWallet.UserId.ToString()));
-                var classx = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(classId.ToString()));
                 var courseId = classx.CourseId;
                 var courseName = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(courseId.ToString()), selector: x => x.Name);
                 WalletTransactionResponse response = new WalletTransactionResponse
@@ -945,7 +954,7 @@ namespace MagicLand_System.Services.Implements
                 trans.UpdateTime = DateTime.Now;
 
                 var newNotification = GenerateNewNotification(personalWallet.User!, tilte, body,
-                    type == TransactionTypeEnum.TopUp ?  NotificationTypeEnum.TopUp.ToString() : NotificationTypeEnum.Payment.ToString(), image, actionData);
+                    type == TransactionTypeEnum.TopUp ? NotificationTypeEnum.TopUp.ToString() : NotificationTypeEnum.Payment.ToString(), image, actionData);
 
                 await _unitOfWork.GetRepository<Notification>().InsertAsync(newNotification);
             }

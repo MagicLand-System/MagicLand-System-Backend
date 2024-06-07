@@ -14,7 +14,7 @@ namespace MagicLand_System.Domain.Models
 
         [ForeignKey("Course")]
         public Guid CourseId { get; set; }
-        public Course Course { get; set; } = new Course();
+        public Course? Course { get; set; }
 
         public ICollection<SubDescriptionContent> SubDescriptionContents { get; set; } = new List<SubDescriptionContent>();
     }

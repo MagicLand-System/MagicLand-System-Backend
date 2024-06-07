@@ -33,19 +33,22 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     var tempExams = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(predicate: x => x.IsGraded == false, include: x => x.Include(x => x.ExamQuestions));
 
-                    foreach (var exam in tempExams)
-                    {
-                        var examQuestionIds = exam.ExamQuestions.Select(x => x.Id).ToList();
+                    //foreach (var exam in tempExams)
+                    //{
+                    //    var examQuestionIds = exam.ExamQuestions.Select(x => x.Id).ToList();
 
-                        var multipleChoiceAnswers = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().GetListAsync(predicate: x => examQuestionIds.Contains(x.ExamQuestionId));
-                        if (multipleChoiceAnswers.Any())
-                        {
-                            deleteMCAnswers.AddRange(multipleChoiceAnswers);
-                        }
+                    //    var multipleChoiceAnswers = await _unitOfWork.GetRepository<MultipleChoiceAnswer>().GetListAsync(predicate: x => examQuestionIds.Contains(x.ExamQuestionId));
+                    //    if (multipleChoiceAnswers.Any())
+                    //    {
+                    //        deleteMCAnswers.AddRange(multipleChoiceAnswers);
+                    //    }
+                    //}
+                    if (tempExams.Any())
+                    {
+                        _unitOfWork.GetRepository<ExamResult>().DeleteRangeAsync(tempExams);
                     }
 
-                    _unitOfWork.GetRepository<ExamResult>().DeleteRangeAsync(tempExams);
-                    _unitOfWork.GetRepository<MultipleChoiceAnswer>().DeleteRangeAsync(deleteMCAnswers);
+                    //_unitOfWork.GetRepository<MultipleChoiceAnswer>().DeleteRangeAsync(deleteMCAnswers);
                     await _unitOfWork.GetRepository<Notification>().InsertAsync(newDeleteNotification);
                     _unitOfWork.Commit();
                 }

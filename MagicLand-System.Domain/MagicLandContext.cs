@@ -301,14 +301,14 @@ namespace MagicLand_System.Domain
                 entity.ToTable("ExamQuestion");
                 entity.HasKey(e => e.Id);
                 entity.HasOne(e => e.ExamResult).WithMany(e => e.ExamQuestions).HasForeignKey(e => e.ExamResultResultId).OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.MultipleChoiceAnswer).WithOne(e => e.ExamQuestion).HasForeignKey<MultipleChoiceAnswer>(e => e.ExamQuestionId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(entity => entity.MultipleChoiceAnswer).WithOne(e => e.ExamQuestion).HasForeignKey<MultipleChoiceAnswer>(e => e.ExamQuestionId).IsRequired(false);
 
             });
             modelBuilder.Entity<MultipleChoiceAnswer>(entity =>
             {
                 entity.ToTable("MultipleChoiceAnswer");
                 entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.ExamQuestion).WithOne(e => e.MultipleChoiceAnswer).HasForeignKey<ExamQuestion>(e => e.MultipleChoiceAnswerId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.ExamQuestion).WithOne(e => e.MultipleChoiceAnswer).HasForeignKey<MultipleChoiceAnswer>(e => e.ExamQuestionId).IsRequired().OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<FlashCardAnswer>(entity =>
             {

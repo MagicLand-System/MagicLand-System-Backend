@@ -361,7 +361,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
-                var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.Status.Equals("Saved"));
+                var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.SavedTime != null);
                 var scheduleCompleted = c.Schedules.Where(x => x.Date.Date <= DateTime.Now.Date);
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
@@ -580,7 +580,7 @@ namespace MagicLand_System.Services.Implements
             }
             Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
             var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
-            var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.Status.Equals("Saved"));
+            var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.SavedTime != null);
             MyClassResponse myClassResponse = new MyClassResponse
             {
                 ClassId = c.Id,
@@ -702,6 +702,7 @@ namespace MagicLand_System.Services.Implements
                 return new List<ClassProgressResponse>();
             }
             List<ClassProgressResponse> responses = new List<ClassProgressResponse>();
+            scheduleFounds = scheduleFounds.OrderBy(s => s.Date).ToList();
             foreach (var schedule in scheduleFounds)
             {
                 User lecturer = null;
@@ -742,7 +743,7 @@ namespace MagicLand_System.Services.Implements
                     EndTimeString = TimeOnly.Parse(schedule.Slot.EndTime).ToString("HH:mm"),
                 };
                 var status = "completed";
-                if (schedule.Date > DateTime.Now.AddHours(-23))
+                if (schedule.Date.Date > GetCurrentTime().Date)
                 {
                     status = "future";
                 }
@@ -1117,6 +1118,7 @@ namespace MagicLand_System.Services.Implements
 
                 attendance.IsPublic = false;
                 evaluate.IsPublic = false;
+
 
                 var makeUpAttendance = new Attendance
                 {
@@ -2542,150 +2544,39 @@ namespace MagicLand_System.Services.Implements
 
             //try
             //{
-            //var deleteClasses = new List<Class>();
-            //var deleteSyllabuses = new List<Syllabus>();
-            //var deleteCourses = new List<Course>();            
 
-            //var syllabuses = await _unitOfWork.GetRepository<Syllabus>().GetListAsync();
-
-            //foreach (var syll in syllabuses)
+            //    var Ids = new List<Guid>
             //{
-            //    var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.SyllabusId == syll.Id);
-            //    if (course == null)
-            //    {
-            //        deleteSyllabuses.Add(syll);
-            //        continue;
-            //    }
-            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId == course.Id);
-            //    if (classes == null && !classes.Any())
-            //    {
-            //        deleteCourses.Add(course);
-            //        deleteSyllabuses.Add(syll);
-            //        continue;
-            //    }
-            //    int classCount = 0;
+            //    Guid.Parse("e6a1f520-c953-4c14-b73e-fc027fd169d1"),
+            //    Guid.Parse("7f8487c5-1070-4f01-817a-5af3114dbe23")
+            //};
+
+            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => Ids.Contains(x.Id), include: x => x.Include(x => x.Schedules));
+
             //    foreach (var cls in classes)
             //    {
-            //        var studentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == cls.Id);
-            //        if (studentClass == null && (cls.Status != ClassStatusEnum.LOCKED.ToString() || cls.Status != ClassStatusEnum.CANCELED.ToString()))
+            //        int addDate = 4;
+            //        var schedules = cls.Schedules.OrderBy(sc => sc.Date).ToList();
+            //        foreach (var sc in schedules)
             //        {
-            //            classCount++;
-            //            deleteClasses.Add(cls);
-            //        }
-            //    }
-            //    if (classCount == classes.Count())
-            //    {
-            //        deleteCourses.Add(course);
-            //        deleteSyllabuses.Add(syll);
-            //    }
-            //}
-
-            //var temps = new List<TempItemPrice>();
-            //var course = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Classes));
-            //foreach (var cou in course)
-            //{
-            //    var coursePrices = (await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
-            //        selector: x => x.CoursePrices,
-            //        predicate: x => x.Id == cou.Id))!.ToArray();
-
-            //    foreach (var cls in cou.Classes)
-            //    {
-            //        double result = 0;
-
-            //        coursePrices = coursePrices.OrderBy(x => x.EffectiveDate).ToArray();
-
-            //        result = coursePrices.First().Price;
-            //        for (int i = 1; i < coursePrices.Length; i++)
-            //        {
-            //            if (cls.AddedDate >= coursePrices[i].EffectiveDate)
+            //            if (addDate == 64)
             //            {
-            //                result = coursePrices[i].Price;
+            //                addDate = 1;
             //            }
             //            else
             //            {
-            //                break;
+            //                addDate = addDate * 2;
             //            }
+
+            //            sc.DayOfWeek = addDate;
             //        }
-
-            //        temps.Add(new TempItemPrice
-            //        {
-            //            Id = Guid.NewGuid(),
-            //            ClassId = cls.Id,
-            //            CourseId = default,
-            //            Price = result,
-            //        });
             //    }
-
-            //    coursePrices = coursePrices!.OrderByDescending(x => x.EffectiveDate).ToArray();
-
-            //    var Couresult = coursePrices.Last().Price;
-
-            //    var currentValidPrice = coursePrices.FirstOrDefault(x => x.EffectiveDate <= DateTime.Now)?.Price;
-
-            //    if (currentValidPrice is not null)
-            //    {
-            //        Couresult = currentValidPrice.Value;
-            //    }
-
-            //    temps.Add(new TempItemPrice
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        ClassId = default,
-            //        CourseId = cou.Id,
-            //        Price = Couresult,
-            //    });
-            //}
-            //var newEva = new List<Evaluate>();
-            //var oldEva = new List<Evaluate>();
-            //var newAtten = new List<Attendance>();
-            //var oldAtten = new List<Attendance>();
-
-            //var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("C7EAB299-1511-4F61-B6D5-11BCBDCA650D"), include: x => x.Include(x => x.StudentClasses).Include(x => x.Schedules.OrderBy(sc => sc.Date)));
-            //foreach (var stu in cls.StudentClasses)
-            //{
-            //    foreach (var sch in cls.Schedules)
-            //    {
-            //var oa = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
-            //if (oa != null)
-            //{
-
-            //    oldAtten.Add(oa);
-            //}
-            //var oe = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(predicate: x => x.ScheduleId == sch.Id && x.StudentId == stu.StudentId);
-            //if (oe != null)
-            //{
-
-            //    oldEva.Add(oe);
-            //}
-
-            //newEva.Add(new Evaluate
-            //{
-            //    Id = Guid.NewGuid(),
-            //    Status = null,
-            //    Note = null,
-            //    IsValid = true,
-            //    StudentId = stu.StudentId,
-            //    ScheduleId = sch.Id,
-            //});
-
-            //        newAtten.Add(new Attendance
-            //        {
-            //            Id = Guid.NewGuid(),
-            //            IsPresent = null,
-            //            IsPublic = true,
-            //            IsValid = true,
-            //            Note = null,
-            //            StudentId = stu.StudentId,
-            //            ScheduleId = sch.Id,
-            //        });
-            //    }
-            //}
-
             //await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newEva);
             //await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newAtten);
             //_unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldEva);
             //_unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAtten);
-            //_unitOfWork.Commit();
+            //    _unitOfWork.GetRepository<Class>().UpdateRange(classes);
+            //    _unitOfWork.Commit();
 
 
             //}
@@ -2805,7 +2696,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<StudentInClass>> GetAllStudentInClass(string id)
         {
-            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && !x.Status.Equals("Saved"),
+            var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId.ToString().Equals(id) && x.SavedTime == null,
                include: x => x.Include(x => x.Student)!.ThenInclude(x => x.Parent));
 
 
@@ -2868,7 +2759,8 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync()
         {
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
+            var lecturerId = GetUserIdFromJwt();
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == lecturerId && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
                 include: x => x.Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Slot)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sche => sche.Room).Include(x => x.Course!));
 
@@ -4376,7 +4268,6 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Lớp đã bắt đầu không thể bảo lưu", StatusCodes.Status400BadRequest);
             }
-            studentClass.Status = "Saved";
             studentClass.SavedTime = DateTime.Now;
             _unitOfWork.GetRepository<StudentClass>().UpdateAsync(studentClass);
             var isSuc = await _unitOfWork.CommitAsync() > 0;
@@ -4385,7 +4276,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<SaveCourseResponse>> GetSaveCourseResponse(string? search, DateTime? dateOfBirth)
         {
-            var listFound = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.Status.Equals("Saved"));
+            var listFound = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.SavedTime != null);
             if (listFound == null)
             {
                 return new List<SaveCourseResponse>();
@@ -4594,7 +4485,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 Course course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(c.CourseId.ToString()), include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
                 var studentList = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id);
-                var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.Status.Equals("Saved"));
+                var studentClassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.SavedTime != null);
                 MyClassResponse myClassResponse = new MyClassResponse
                 {
                     ClassId = c.Id,

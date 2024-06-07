@@ -33,6 +33,12 @@ namespace MagicLand_System.Services.Implements
         public async Task<AccountResponse> AddStudent(CreateStudentRequest studentRequest)
         {
             var currentUser = await ValidateAddNewStudentRequest(studentRequest);
+            var age = DateTime.Now.Year - studentRequest.DateOfBirth.Year;
+            if (age < 4 || age > 10)
+            {
+                throw new BadHttpRequestException($"Độ Tuổi Của Bé Không Hợp Lệ Bé Phải Thuộc Từ [4-10] Tuổi",
+                          StatusCodes.Status400BadRequest);
+            }
             try
             {
                 Guid studentId = Guid.NewGuid();
@@ -637,10 +643,10 @@ namespace MagicLand_System.Services.Implements
                 var student = request.SingleOrDefault(r => r.StudentId == evaluate.StudentId);
                 if (student == null)
                 {
-                    var studentName = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == evaluate.StudentId, selector: x => x.FullName);
-                    studentNotHaveEvaluate.Add(studentName!);
+                    //var studentName = await _unitOfWork.GetRepository<Student>().SingleOrDefaultAsync(predicate: x => x.Id == evaluate.StudentId, selector: x => x.FullName);
+                    //studentNotHaveEvaluate.Add(studentName!);
 
-                    evaluate.Status = EvaluateStatusEnum.NORMAL.ToString();
+                    //evaluate.Status = EvaluateStatusEnum.NORMAL.ToString();
                     continue;
                 }
 
@@ -1034,11 +1040,11 @@ namespace MagicLand_System.Services.Implements
                         Method = cls.Method,
                         RoomInFloor = schedule.Room.Floor,
                         RoomName = schedule.Room.Name,
-                        AttendanceStatus = attendance != null ? attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
+                        AttendanceStatus = attendance != null ? attendance.IsPresent == null ? "Chưa Điểm Danh" : attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
                         Note = attendance != null ? attendance.Note : null,
                         LecturerName = lecturerName,
-                        EvaluateLevel = evaluate != null ? evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3 : 0,
-                        EvaluateDescription = evaluate != null ? evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
+                        EvaluateLevel = evaluate != null ? evaluate.Status == null ? 0 : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3 : 0,
+                        EvaluateDescription = evaluate != null ? evaluate.Status == null ? "Chưa Có Đánh Giá" : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
                         : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt" : "Chưa Có Đánh Giá",
                         EvaluateNote = evaluate != null ? evaluate.Note : null,
                     };
@@ -1090,7 +1096,7 @@ namespace MagicLand_System.Services.Implements
                 if (quizId != default)
                 {
                     totalQuiz++;
-                    var isQuizDone = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == quizId && x.StudentClass!.StudentId == studentId);
+                    var isQuizDone = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(predicate: x => x.ExamId == quizId && x.StudentClass!.StudentId == studentId && x.IsGraded == true);
                     if (isQuizDone is not null)
                     {
                         quizDone++;
@@ -1100,7 +1106,7 @@ namespace MagicLand_System.Services.Implements
             examProgress = (quizDone * 100) / totalQuiz;
 
             var schedules = cls.Schedules.ToList();
-            var currentDate = GetCurrentTime();
+            var currentDate = GetCurrentTime().Date;
 
             if (cls.Status == ClassStatusEnum.COMPLETED.ToString())
             {
@@ -1113,7 +1119,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     order++;
 
-                    var scheduleDate = sch.Date;
+                    var scheduleDate = sch.Date.Date;
                     var difference = currentDate - scheduleDate;
                     int day = difference.Days;
 
@@ -1122,15 +1128,20 @@ namespace MagicLand_System.Services.Implements
                         continue;
                     }
 
-                    if (day == 0)
+                    if (day < 0)
                     {
-                        learningProgress = (order * 100) / schedules.Count;
+                        learningProgress = ((order - 1) * 100) / schedules.Count;
                         break;
                     }
 
-                    if (day < 0)
+                    if (day == 0)
                     {
-                        learningProgress = (order - 1) * 100 / schedules.Count;
+                        if (order == 1)
+                        {
+                            learningProgress = 0;
+                            break;
+                        }
+                        learningProgress = ((order - 1) * 100) / schedules.Count;
                         break;
                     }
                 }

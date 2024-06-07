@@ -175,6 +175,7 @@ namespace MagicLand_System.Controllers
         /// <param name="id">Id Của Bài Kiểm Tra</param>
         /// <param name="classId">Id Của Lớp Có Bài Kiểm Tra</param>
         /// <param name="examPart">Phần Đề Của Bài Kiểm Tra (Dạng Kiểm Tra)</param>
+        /// <param name="isCheckingTime"></param>
         /// <remarks>
         /// Sample request:
         ///{     
@@ -192,9 +193,10 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(QuizResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(Exception))]
         [Authorize(Roles = "STUDENT")]
-        public async Task<IActionResult> GetQuizOfExamtByExamId([FromQuery] Guid id, [FromQuery] Guid classId, [FromQuery] int? examPart)
+        public async Task<IActionResult> GetQuizOfExamtByExamId([FromQuery] Guid id, [FromQuery] Guid classId, [FromQuery] int? examPart, [FromQuery] bool? isCheckingTime)
         {
-            var responses = await _quizService.GetQuizOfExamtByExamIdAsync(id, classId, examPart);
+            isCheckingTime ??= true;
+            var responses = await _quizService.GetQuizOfExamtByExamIdAsync(id, classId, examPart, isCheckingTime.Value);
             if (responses == default)
             {
                 return Ok("Bài Kiểm Tra Này Do Giáo Viên Tự Chọn Câu Hỏi Và Đề Tài");
@@ -424,7 +426,7 @@ namespace MagicLand_System.Controllers
                     if ((currentPair.FirstCardId == nextPair.FirstCardId && currentPair.SecondCardId == nextPair.SecondCardId) ||
                         (currentPair.FirstCardId == nextPair.SecondCardId && currentPair.SecondCardId == nextPair.FirstCardId))
                     {
-                        similarCoupleCards.Add(currentPair);
+                        //similarCoupleCards.Add(currentPair);
                         similarCoupleCards.Add(nextPair);
                     }
                 }
@@ -432,15 +434,20 @@ namespace MagicLand_System.Controllers
 
             if (similarCoupleCards != null && similarCoupleCards.Any())
             {
-                var duplicateCardStrings = similarCoupleCards.Select(card => $"({card.FirstCardId}, {card.SecondCardId})");
-                string duplicateCardsMessage = string.Join(", ", duplicateCardStrings);
-
-                return BadRequest(new ErrorResponse
+                foreach (var sc in similarCoupleCards)
                 {
-                    Error = $"Có Nhiều Hơn Các Cặp Thẻ Bị Trùng Lặp {duplicateCardsMessage}",
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    TimeStamp = DateTime.Now,
-                });
+                    studentAnswers.Remove(sc);
+                }
+
+                //var duplicateCardStrings = similarCoupleCards.Select(card => $"({card.FirstCardId}, {card.SecondCardId})");
+                //string duplicateCardsMessage = string.Join(", ", duplicateCardStrings);
+
+                //return BadRequest(new ErrorResponse
+                //{
+                //    Error = $"Có Nhiều Hơn Các Cặp Thẻ Bị Trùng Lặp {duplicateCardsMessage}",
+                //    StatusCode = StatusCodes.Status400BadRequest,
+                //    TimeStamp = DateTime.Now,
+                //});
             }
 
             var quizFCStudentWork = new QuizFCRequest

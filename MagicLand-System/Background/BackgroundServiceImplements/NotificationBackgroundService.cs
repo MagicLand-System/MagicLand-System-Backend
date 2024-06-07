@@ -132,7 +132,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id, include: x => x.Include(x => x.Student)!);
                 var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id);
 
-                if (evaluates.Any(evl => evl.Status == null || evl.Status == string.Empty))
+                if (evaluates.All(eva => string.IsNullOrEmpty(eva.Status)))
                 {
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
                         {
@@ -142,7 +142,20 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                         });
 
                     await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpEvaluateLecturerTitle,
-                           NotificationMessageContant.MakeUpEvaluateLecturerBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
+                         NotificationMessageContant.MakeUpEvaluateLecturerBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
+                          NotificationTypeEnum.RemindEvaluate.ToString(), cls.Image!, actionData, _unitOfWork);
+                }
+                else if (evaluates.Any(evl => evl.Status == null || evl.Status == string.Empty))
+                {
+                    var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                        {
+                          ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                          ($"{AttachValueEnum.Date}", $"{schedule.Date}"),
+                          ($"{AttachValueEnum.NoSlot}", $"{schedules.IndexOf(schedule) + 1}"),
+                        });
+
+                    await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.MakeUpEvaluateLecturerTitle,
+                           NotificationMessageContant.MakeUpEvaluateBody(cls, schedule.Date, schedule.Slot!.StartTime + " - " + schedule.Slot.EndTime),
                          NotificationTypeEnum.RemindEvaluate.ToString(), cls.Image!, actionData, _unitOfWork);
                 }
 

@@ -166,6 +166,7 @@ namespace MagicLand_System.Controllers
                     TimeStamp = DateTime.Now,
                 });
             }
+            response.OrderByDescending(r => r.AddedTime);
             return Ok(response);
         }
 

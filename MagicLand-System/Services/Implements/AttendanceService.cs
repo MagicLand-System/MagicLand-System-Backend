@@ -31,7 +31,7 @@ namespace MagicLand_System.Services.Implements
             }
             List<StaffAttandaceResponse> responses = new List<StaffAttandaceResponse>();
             var attandances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId.ToString().Equals(schedule.Id.ToString()), include: x => x.Include(x => x.Student).ThenInclude(x => x.Parent));
-            var studentclassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == classx.Id && x.Status.Equals("Saved"));
+            var studentclassCount = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == classx.Id && x.SavedTime != null);
             foreach (var attendance in attandances)
             {
                 var studentclass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == attendance.StudentId && x.ClassId == classx.Id);
@@ -39,7 +39,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     continue;
                 }
-                if (studentclass.Status.Equals("Saved"))
+                if (studentclass.SavedTime != null)
                 {
                     continue;
                 }

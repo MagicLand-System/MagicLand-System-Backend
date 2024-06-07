@@ -43,7 +43,12 @@ namespace MagicLand_System.Constants
         {
             return $"Bạn Có Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Điểm Danh. Vui Lòng Cập Nhập Điểm Danh";
         }
+
         public static string MakeUpEvaluateLecturerBody(Class cls, DateTime date, string slot)
+        {
+            return $"Bạn Có Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Đánh Giá. Vui Lòng Cập Nhập Đánh Giá";
+        }
+        public static string MakeUpEvaluateBody(Class cls, DateTime date, string slot)
         {
             return $"Bạn Có Một Số Học Sinh Ở Lớp {cls.ClassCode} - {cls.Method}, {EnumUtil.CompareAndGetDescription<DayOfWeekEnum>(date.DayOfWeek.ToString())} {date.Date:MM/dd} Vào Lúc {slot} Chưa Cập Nhập Đánh Giá. Vui Lòng Cập Nhập Đánh Giá";
         }
@@ -106,11 +111,11 @@ namespace MagicLand_System.Constants
             return $"Chúc Mừng Bé {studentName} Đã Hoàn Thành Lớp Học {classCode} Vào Ngày {DateTime.UtcNow.ToString("MM/dd/yyyy")} ,Vẫn Còn Đó Nhiều Khóa Học Thú Vị Khác Phụ Huynh Hãy Cho Bé Tham Gia Đi Nào";
         }
 
-        public static string RemindRegisterNewClassWhenMakeUpBody (string studentName, string newClassCode, string savedClassCode, DateTime date)
+        public static string RemindRegisterNewClassWhenMakeUpBody(string studentName, string newClassCode, string savedClassCode, DateTime date)
         {
             return $"Lớp Học {newClassCode} Mới Mở Có Thời Gian Bắt Đầu Vào Ngày {date.ToString("MM/dd/yyyy")} Thuộc Cùng Khóa Học Với Lớp Học Đã Bảo Lưu {savedClassCode} Của Bé {studentName} Hãy Nhanh Tay Đăng Ký Trước Khi Hết Hạn Bảo Lưu";
         }
 
-        
+
     }
 }

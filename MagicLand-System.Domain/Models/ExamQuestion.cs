@@ -14,8 +14,6 @@ namespace MagicLand_System.Domain.Models
         public Guid ExamResultResultId { get; set; }
         public ExamResult? ExamResult { get; set; }
 
-        [ForeignKey("MultipleChoiceAnswer")]
-        public Guid? MultipleChoiceAnswerId { get; set; }
         public MultipleChoiceAnswer? MultipleChoiceAnswer { get; set; }
 
         public ICollection<FlashCardAnswer>? FlashCardAnswers { get; set; }

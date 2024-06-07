@@ -105,7 +105,7 @@ namespace MagicLand_System_Web_Dev.Pages
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "Classes", Classes);
             }
         }
-        public async Task<IActionResult> OnPostProgressAsync(int inputField, string listId, string submitButton)
+        public async Task<IActionResult> OnPostProgressAsync(string listId, string submitButton)
         {
             if (submitButton == "Refresh")
             {
@@ -165,7 +165,6 @@ namespace MagicLand_System_Web_Dev.Pages
                             ClassId = Guid.Parse(cls.ClassId),
                             ExamId = exam.ExamId,
                         };
-                        var numberInCorrectAnswer = 0;
 
                         if (exam.QuizType == "offline")
                         {
@@ -185,7 +184,7 @@ namespace MagicLand_System_Web_Dev.Pages
                         }
                         else
                         {
-                            await QuizOnlineProgress(inputField, random, cls, exam, numberInCorrectAnswer, quizInfor);
+                            await QuizOnlineProgress(random, cls, exam, quizInfor);
                             string status = EvaluateData.GetQuizEvaluate(random.Next(5, 11), random);
 
                             SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", defaultToken);
@@ -228,39 +227,37 @@ namespace MagicLand_System_Web_Dev.Pages
             return Page();
         }
 
-        private async Task QuizOnlineProgress(int inputField, Random random, ClassDefaultMessage cls, ExamResForStudent exam, int numberInCorrectAnswer, QuizRequest quizInfor)
+        private async Task QuizOnlineProgress(Random random, ClassDefaultMessage cls, ExamResForStudent exam, QuizRequest quizInfor)
         {
             var quiz = await _apiHelper.FetchApiAsync<List<QuizResponse>>(
-                                        ApiEndpointConstant.QuizEndpoint.GetQuizOffExamByExamId + $"?id={exam.ExamId}" + $"&classId={cls.ClassId}", MethodEnum.GET, null);
+                                        ApiEndpointConstant.QuizEndpoint.GetQuizOffExamByExamId + $"?id={exam.ExamId}" + $"&classId={cls.ClassId}" + $"&isCheckingTime={false}", MethodEnum.GET, null);
 
             if (exam.QuizType == "flashcard")
             {
-                await QuizFlashCardProgress(inputField, random, numberInCorrectAnswer, quiz, quizInfor);
+                await QuizFlashCardProgress(random, quiz, quizInfor);
             }
             else
             {
-                await QuizMultipleChoiceProgress(inputField, random, quiz, quizInfor);
+                await QuizMultipleChoiceProgress(random, quiz, quizInfor);
             }
-
         }
 
-        private async Task QuizMultipleChoiceProgress(int inputField, Random random, ResultHelper<List<QuizResponse>> quiz, QuizRequest quizInfor)
+        private async Task QuizMultipleChoiceProgress(Random random, ResultHelper<List<QuizResponse>> quiz, QuizRequest quizInfor)
         {
-            int numberInCorrectAnswer = 0;
             var workRequest = new List<MCStudentAnswer>();
             var inCorrectIndexStored = new List<int>();
             int order = 0;
 
-            numberInCorrectAnswer = (inputField * quiz.Data.Count) / 100;
-            for (int i = 0; i < numberInCorrectAnswer; i++)
-            {
-                int incorrectIndex;
-                do
-                {
-                    incorrectIndex = random.Next(0, quiz.Data.Count);
-                } while (inCorrectIndexStored.Contains(incorrectIndex));
-                inCorrectIndexStored.Add(incorrectIndex);
-            }
+            //numberInCorrectAnswer = (inputField * quiz.Data.Count) / 100;
+            //for (int i = 0; i < numberInCorrectAnswer; i++)
+            //{
+            //    int incorrectIndex;
+            //    do
+            //    {
+            //        incorrectIndex = random.Next(0, quiz.Data.Count);
+            //    } while (inCorrectIndexStored.Contains(incorrectIndex));
+            //    inCorrectIndexStored.Add(incorrectIndex);
+            //}
 
             foreach (var question in quiz.Data)
             {
@@ -283,7 +280,7 @@ namespace MagicLand_System_Web_Dev.Pages
                               ApiEndpointConstant.QuizEndpoint.GradeQuizMC + $"?ClassId={quizInfor.ClassId}" + $"&ExamId={quizInfor.ExamId}" + $"&doingTime={TimeSpan.FromMinutes(1)}" + $"&isCheckingTime={false}", MethodEnum.POST, workRequest);
         }
 
-        private async Task QuizFlashCardProgress(int inputField, Random random, int numberInCorrectAnswer, ResultHelper<List<QuizResponse>> quiz, QuizRequest quizInfor)
+        private async Task QuizFlashCardProgress(Random random, ResultHelper<List<QuizResponse>> quiz, QuizRequest quizInfor)
         {
             var workRequest = new List<FCStudentQuestion>();
             var inCorrectIndexStored = new List<int>();
@@ -291,17 +288,17 @@ namespace MagicLand_System_Web_Dev.Pages
             foreach (var question in quiz.Data)
             {
                 var flashCardAnswers = question.AnwserFlashCarsInfor;
-                numberInCorrectAnswer = (inputField * flashCardAnswers!.Count / 2) / 100;
+                //numberInCorrectAnswer = (inputField * flashCardAnswers!.Count / 2) / 100;
 
-                for (int i = 0; i < numberInCorrectAnswer; i++)
-                {
-                    int incorrectIndex;
-                    do
-                    {
-                        incorrectIndex = random.Next(0, flashCardAnswers!.Count / 2);
-                    } while (inCorrectIndexStored.Contains(incorrectIndex));
-                    inCorrectIndexStored.Add(incorrectIndex);
-                }
+                //for (int i = 0; i < numberInCorrectAnswer; i++)
+                //{
+                //    int incorrectIndex;
+                //    do
+                //    {
+                //        incorrectIndex = random.Next(0, flashCardAnswers!.Count / 2);
+                //    } while (inCorrectIndexStored.Contains(incorrectIndex));
+                //    inCorrectIndexStored.Add(incorrectIndex);
+                //}
 
                 var answerStored = new List<Guid>();
                 var answerRequest = new List<FCStudentAnswer>();

@@ -596,11 +596,12 @@ namespace MagicLand_System.Services.Implements
         {
             if (request != null)
             {
+                var newCourseId = Guid.NewGuid();
                 Course course = new Course
                 {
                     AddedDate = DateTime.Now,
                     //CourseCategoryId = Guid.Parse(request.CourseCategoryId),
-                    Id = Guid.NewGuid(),
+                    Id = newCourseId,
                     Image = request.Img,
                     MaxYearOldsStudent = request.MaxAge,
                     MinYearOldsStudent = request.MinAge,
@@ -608,32 +609,38 @@ namespace MagicLand_System.Services.Implements
                     Name = request.CourseName,
                     //Price = request.Price,
                     UpdateDate = DateTime.Now,
-                    SyllabusId = Guid.Parse(request.SyllabusId),
                 };
-                List<SubDescriptionTitle> subDescriptionTitles = new List<SubDescriptionTitle>();
+
+                var subDescriptionTitles = new List<SubDescriptionTitle>();
+                var contents = new List<SubDescriptionContent>();
+
                 var listSubDescription = request.SubDescriptions;
-                List<SubDescriptionContent> contents = new List<SubDescriptionContent>();
+
                 foreach (var sd in listSubDescription)
                 {
+                    var newTitleId = Guid.NewGuid();
+
                     var newTitle = new SubDescriptionTitle
                     {
                         Title = sd.Title,
-                        Id = Guid.NewGuid(),
-                        CourseId = course.Id,
+                        Id = newTitleId,
+                        CourseId = newCourseId,
+                        Course = null,
                     };
+
                     var contentList = sd.SubDescriptionContentRequests;
                     foreach (var content in contentList)
                     {
                         var newDescrption = new SubDescriptionContent
                         {
-                            SubDescriptionTitleId = newTitle.Id,
+                            SubDescriptionTitleId = newTitleId,
                             Content = content.Content,
                             Description = content.Description,
                             Id = Guid.NewGuid(),
                         };
+
                         contents.Add(newDescrption);
                     }
-                    newTitle.SubDescriptionContents = contents;
                     subDescriptionTitles.Add(newTitle);
                 }
                 //List<string> preIds = request.PreRequisiteIds;
@@ -651,7 +658,7 @@ namespace MagicLand_System.Services.Implements
                 //        prerequisites.Add(newPreQ);
                 //    }
                 //}
-                course.SubDescriptionTitles = subDescriptionTitles;
+                //course.SubDescriptionTitles = subDescriptionTitles;
                 var syll = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(request.SyllabusId), include: x => x.Include(x => x.Topics).ThenInclude(x => x.Sessions).Include(x => x.SyllabusCategory));
                 var NumOfSess = 0;
                 List<Session> sessions = new List<Session>();
@@ -665,24 +672,30 @@ namespace MagicLand_System.Services.Implements
                 course.NumberOfSession = sessions.Count;
                 //course.SubjectName = syll.SubjectCode;
                 course.SubjectName = syll.SyllabusCategory.Name;
-                //syll.CourseId = course.Id;
-                await _unitOfWork.GetRepository<Course>().InsertAsync(course);
-                await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
-                await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
-                //await _unitOfWork.GetRepository<CoursePrerequisite>().InsertRangeAsync(prerequisites);
-                _unitOfWork.GetRepository<Syllabus>().UpdateAsync(syll);
-                CoursePrice coursePrice = new CoursePrice
-                {
-                    CourseId = course.Id,
-                    //EffectiveDate = DateTime.UtcNow,
-                    Price = request.Price,
-                    StartDate = DateTime.Now,
-                    EndDate = DateTime.ParseExact("2040-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                };
+                course.SyllabusId = syll.Id;
 
-                await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);
-                var isSuccess = await _unitOfWork.CommitAsync() > 0;
-                return isSuccess;
+                try
+                {
+                    await _unitOfWork.GetRepository<Course>().InsertAsync(course);
+                    await _unitOfWork.GetRepository<SubDescriptionTitle>().InsertRangeAsync(subDescriptionTitles);
+                    await _unitOfWork.GetRepository<SubDescriptionContent>().InsertRangeAsync(contents);
+                    CoursePrice coursePrice = new CoursePrice
+                    {
+                        CourseId = newCourseId,
+                        //EffectiveDate = DateTime.UtcNow,
+                        Price = request.Price,
+                        StartDate = DateTime.Now,
+                        EndDate = DateTime.ParseExact("2040-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    };
+
+                    await _unitOfWork.GetRepository<CoursePrice>().InsertAsync(coursePrice);
+                    _unitOfWork.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
+                }
             }
             return false;
         }
@@ -1340,7 +1353,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Bạn chưa đăng ký lớp học nào của khóa");
             }
-            if (!studentClass.Status.Equals("Saved"))
+            if (studentClass.SavedTime == null)
             {
                 throw new BadHttpRequestException("Bạn chưa bảo lưu khóa học");
             }

@@ -11,6 +11,7 @@ using MagicLand_System_Web_Dev.Pages.Message.SubMessage;
 using MagicLand_System_Web_Dev.Pages.Messages.DefaultMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace MagicLand_System_Web_Dev.Pages
@@ -161,18 +162,28 @@ namespace MagicLand_System_Web_Dev.Pages
 
             while (startDate.DayOfWeek != targetDayOfWeek)
             {
-                startDate = startDate.AddDays(1);;
+                startDate = startDate.AddDays(1); ;
+            }
+
+            string classCode = string.Empty;
+            var json = await _apiHelper.FetchApiAsync<object>(ApiEndpointConstant.ClassEnpoint.AutoCreateClassEndPoint + $"?courseId={course.CourseId}", MethodEnum.GET, null);
+
+            using (JsonDocument jsonDoc = JsonDocument.Parse(json.Data.ToString()))
+            {
+                JsonElement root = jsonDoc.RootElement;
+
+                classCode = root.GetProperty("classCode").GetString();
             }
 
             var objectRequest = new CreateClassRequest
             {
-                ClassCode = course.CourseDetail!.SubjectCode + "-" + order,
+                ClassCode = classCode,
                 CourseId = course.CourseId,
                 StartDate = startDate,
                 LeastNumberStudent = random.Next(1, 6),
                 LimitNumberStudent = random.Next(25, 31),
                 LecturerId = lecturer.LectureId,
-                Method = random.Next(2, 4) % 2 == 0 ? "OFFLINE" : "ONLINE",
+                Method = random.Next(2, 4) % 2 == 0 ? "offline" : "online",
                 ScheduleRequests = scheduleRequests.Select(x => x.Item1).ToList(),
                 RoomId = Guid.Parse(room.Item2),
             };
@@ -213,7 +224,7 @@ namespace MagicLand_System_Web_Dev.Pages
         private async Task<LecturerResponse> GetLecturer(CourseWithScheduleShorten course, Random random, List<(ScheduleRequest, int)> scheduleRequests,
             List<ScheduleMessage> scheduleMessages, DateTime startDate)
         {
-            int numberSchedule = random.Next(1, 4);
+            int numberSchedule = random.Next(1, 3);
 
             for (int i = 0; i < numberSchedule; i++)
             {

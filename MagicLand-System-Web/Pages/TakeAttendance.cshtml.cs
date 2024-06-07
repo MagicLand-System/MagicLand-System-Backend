@@ -153,6 +153,11 @@ namespace MagicLand_System_Web_Dev.Pages
 
                 var result = await _apiHelper.FetchApiAsync<List<StudentLearningInfor>>(
                     ApiEndpointConstant.DeveloperEndpoint.TakeFullAttendanceAndEvaluate + $"?classId={cls.ClassId}&percentageAbsent={inputField}", MethodEnum.PUT, evaluateNote);
+
+                if (!result.IsSuccess)
+                {
+                    return RedirectToPage("/Error");
+                }
                 CurrentStudentLearningMessage = result.Data.First();
                 ViewData["IndexPage"] = 0;
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "DataLearning", result.Data);

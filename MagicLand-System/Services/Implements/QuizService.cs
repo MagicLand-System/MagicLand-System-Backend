@@ -20,6 +20,7 @@ using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -206,8 +207,38 @@ namespace MagicLand_System.Services.Implements
         {
             var schedule = cls.Schedules.ToList()[session.NoSession - 1];
             var date = schedule.Date.ToString("yyyy-MM-ddTHH:mm:ss");
+            var scheduleStartTime = schedule.Slot!.StartTime;
             var startTime = DateTime.Parse(date).Date.Add(TimeSpan.Parse(schedule.Slot!.StartTime));
-            var endTime = DateTime.Parse(date).Date.Add(TimeSpan.Parse(schedule.Slot!.EndTime));
+
+
+            var addTime = 0;
+            //if (scheduleStartTime.StartsWith("7"))
+            //{
+            //    addTime = 23 - 7;
+            //}
+            //if (scheduleStartTime.StartsWith("9"))
+            //{
+            //    addTime = 23 - 9;
+            //}
+            //if (scheduleStartTime.StartsWith("12"))
+            //{
+            //    addTime = 23 - 12;
+            //}
+            //if (scheduleStartTime.StartsWith("14"))
+            //{
+            //    addTime = 23 - 14;
+            //}
+            //if (scheduleStartTime.StartsWith("16"))
+            //{
+            //    addTime = 23 - 16;
+            //}
+            //if (scheduleStartTime.StartsWith("19"))
+            //{
+            //    addTime = 23 - 19;
+            //}
+
+
+            var endTime = DateTime.Parse(date).Date.Add(TimeSpan.Parse(schedule.Slot!.EndTime)).AddHours(addTime);
             int attempt = 1, duration = 600;
             bool isNonRequireTime = quiz.PackageType != PackageTypeEnum.Review.ToString() && quiz.PackageType != PackageTypeEnum.ProgressTest.ToString() ? false : true;
 
@@ -261,6 +292,11 @@ namespace MagicLand_System.Services.Implements
                 predicate: x => x.Id == classId,
                 include: x => x.Include(x => x.Course).Include(x => x.StudentClasses)
                 .Include(x => x.Schedules.OrderBy(sc => sc.Date)).ThenInclude(sc => sc.Slot)!);
+
+            if (cls == null)
+            {
+                throw new BadHttpRequestException($"Id Lớp Học Không Hợp Lệ", StatusCodes.Status400BadRequest);
+            }
 
             if (studentId != null && studentId != default)
             {
@@ -404,7 +440,7 @@ namespace MagicLand_System.Services.Implements
             }
         }
 
-        public async Task<List<QuizResponse>> GetQuizOfExamtByExamIdAsync(Guid examId, Guid classId, int? examPart)
+        public async Task<List<QuizResponse>> GetQuizOfExamtByExamIdAsync(Guid examId, Guid classId, int? examPart, bool isCheckingTime)
         {
             var cls = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
                 predicate: x => x.Id == classId,
@@ -429,7 +465,7 @@ namespace MagicLand_System.Services.Implements
                 return default!;
             }
 
-            await ValidateDayDoingExam(examId, cls, quiz);
+            await ValidateDayDoingExam(examId, cls, quiz, isCheckingTime);
 
             foreach (var question in quiz.Questions!)
             {
@@ -455,7 +491,7 @@ namespace MagicLand_System.Services.Implements
             return responses;
         }
 
-        private async Task ValidateDayDoingExam(Guid examId, Class cls, QuestionPackage quiz)
+        private async Task ValidateDayDoingExam(Guid examId, Class cls, QuestionPackage quiz, bool isCheckingTime)
         {
             var sessions = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(
                 predicate: x => x.Course!.Id == cls.CourseId,
@@ -466,12 +502,15 @@ namespace MagicLand_System.Services.Implements
                 throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Không Thuộc Lớp Đang Truy Suất", StatusCodes.Status400BadRequest);
             }
 
-            //var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
+            if (isCheckingTime)
+            {
+                var dayDoingExam = cls.Schedules.ToList()[quiz.NoSession - 1].Date;
 
-            //if (dayDoingExam.Date > GetCurrentTime().Date)
-            //{
-            //    throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
-            //}
+                if (dayDoingExam.Date > GetCurrentTime().Date)
+                {
+                    throw new BadHttpRequestException($"Id [{examId}] Của Bài Kiểm Tra Vẫn Chưa Tới Ngày Làm Bài Không Thể Truy Suất Câu Hỏi", StatusCodes.Status400BadRequest);
+                }
+            }
         }
 
         private async Task GenereateTempExam(Guid examId, Guid studentClassId, QuestionPackage exam, List<QuizResponse> responses)
@@ -525,20 +564,21 @@ namespace MagicLand_System.Services.Implements
                             Guid mcAnswerId = Guid.NewGuid();
                             if (answer.Score != 0)
                             {
-
                                 newTempMCAnswer.Id = mcAnswerId;
                                 newTempMCAnswer.CorrectAnswerId = answer.AnswerId;
                                 newTempMCAnswer.CorrectAnswer = answer.AnswerDescription;
                                 newTempMCAnswer.CorrectAnswerImage = answer.AnswerImage;
                                 newTempMCAnswer.Score = answer.Score;
+
                             }
                             else
                             {
-                                newTempMCAnswer.Id = mcAnswerId;
-                                newTempMCAnswer.AnswerId = answer.AnswerId;
-                                newTempMCAnswer.Answer = answer.AnswerDescription;
-                                newTempMCAnswer.AnswerImage = answer.AnswerImage;
-                                newTempMCAnswer.Score = 0;
+                                continue;
+                                //newTempMCAnswer.Id = mcAnswerId;
+                                //newTempMCAnswer.AnswerId = answer.AnswerId;
+                                //newTempMCAnswer.Answer = answer.AnswerDescription;
+                                //newTempMCAnswer.AnswerImage = answer.AnswerImage;
+                                //newTempMCAnswer.Score = 0;
                             }
 
                             newTempMCAnswer.ExamQuestionId = newTempQuestion.Id;
@@ -733,13 +773,19 @@ namespace MagicLand_System.Services.Implements
             ValidateGradeCurrentExam(quizStudentWork.ExamId, currentExam, cls.Schedules.ToList(), doingTime, false, isCheckingTime);
 
             var tempExam = await _unitOfWork.GetRepository<ExamResult>().SingleOrDefaultAsync(
-                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.ExamId == currentExam!.Id && x.IsGraded == false,
+                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.ExamId == currentExam!.Id && x.NoAttempt == 0,
                 include: x => x.Include(x => x.ExamQuestions));
 
             if (tempExam == null)
             {
                 throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ Khi Không Truy Suất Được Gói Câu Hỏi Trong Hệ Thống Hoặc Gói Câu Hỏi Đã Được Chấm, Vui Lòng Truy Suất Lại Gói Câu Hỏi Khác Và Làm Lại",
                     StatusCodes.Status400BadRequest);
+            }
+
+            if (tempExam.IsGraded == true)
+            {
+                throw new BadHttpRequestException($"Bài Làm Không Hợp Lệ Khi Gói Câu Hỏi Đã Được Chấm, Vui Lòng Truy Suất Lại Gói Câu Hỏi Khác Và Làm Lại",
+                   StatusCodes.Status400BadRequest);
             }
 
             var currentStudentClass = await ValidateCurrentStudentClass(currentStudentId, cls);
@@ -783,9 +829,11 @@ namespace MagicLand_System.Services.Implements
                         answerQuestion.Answer = studentAnswer.Score != 0 ? studentAnswer.CorrectAnswer : studentAnswer.Answer;
                         answerQuestion.AnswerImage = studentAnswer.Score != 0 ? studentAnswer.CorrectAnswerImage : studentAnswer.AnswerImage;
                         answerQuestion.Status = studentAnswer.Score != 0 ? "Correct" : "Wrong";
+                        answerQuestion.Score = studentAnswer.Score != 0 ? answerQuestion.Score : 0;
+
                     }
 
-                    quest.MultipleChoiceAnswerId = answerQuestion.Id;
+                    quest.MultipleChoiceAnswer = answerQuestion;
                     updateMCAnswers.Add(answerQuestion);
                 }
             }
@@ -830,10 +878,7 @@ namespace MagicLand_System.Services.Implements
 
             try
             {
-                var deleteAnswer = multipleChoiceAnswers.Where(a => a.CorrectAnswerId == default).ToList();
                 _unitOfWork.GetRepository<ExamResult>().UpdateAsync(tempExam);
-                _unitOfWork.GetRepository<ExamQuestion>().UpdateRange(questions);
-                _unitOfWork.GetRepository<MultipleChoiceAnswer>().DeleteRangeAsync(deleteAnswer);
                 _unitOfWork.GetRepository<MultipleChoiceAnswer>().UpdateRange(updateMCAnswers);
                 _unitOfWork.Commit();
 
@@ -1072,10 +1117,10 @@ namespace MagicLand_System.Services.Implements
                                                 where eq.Id == mc.ExamQuestionId
                                                 select eq;
 
-                        foreach (var eq in matchingQuestions)
-                        {
-                            eq.MultipleChoiceAnswerId = mc.Id;
-                        }
+                        //foreach (var eq in matchingQuestions)
+                        //{
+                        //    eq.MultipleChoiceAnswerId = mc.Id;
+                        //}
                     }
                     await _unitOfWork.GetRepository<MultipleChoiceAnswer>().InsertRangeAsync(multipleChoiceAnswers);
                 }
@@ -1230,6 +1275,22 @@ namespace MagicLand_System.Services.Implements
 
             var answerRequest = quizStudentWork.StudentQuestionResults.Select(sq => sq.AnswerId).ToList();
             var answers = (await _unitOfWork.GetRepository<MultipleChoiceAnswer>().GetListAsync(predicate: x => questionIdList.Contains(x.ExamQuestionId))).ToList();
+            var answersFromQP = (await _unitOfWork.GetRepository<QuestionPackage>().SingleOrDefaultAsync(predicate: x => x.Id == tempExam.ExamId, selector: x => x.Questions!.SelectMany(q => q.MutipleChoices!))).ToList();
+            foreach (var afq in answersFromQP)
+            {
+                if (answers.Select(a => a.AnswerId).Contains(afq.Id) || answers.Select(a => a.CorrectAnswerId).Contains(afq.Id) || afq.Score != 0)
+                {
+                    continue;
+                }
+                answers.Add(new MultipleChoiceAnswer
+                {
+                    Id = default,
+                    AnswerId = afq.Id,
+                    Answer = afq.Description,
+                    AnswerImage = afq.Img,
+                });
+            }
+
 
             var invalidAnswer = answerRequest.Where(ar => !answers.Any(a => a.AnswerId == ar && a.Score == 0 || a.CorrectAnswerId == ar)).ToList();
             if (invalidAnswer != null && invalidAnswer.Any())
@@ -2079,11 +2140,13 @@ namespace MagicLand_System.Services.Implements
             {
                 if (updateTestResults.Count() > 0)
                 {
+                    updateTestResults.ForEach(t => t.IsGraded = true);
                     message += $", Các Học Sinh [{string.Join(", ", updateTestResults.Select(ur => ur.StudentClass!.StudentId))}] Đã Có Điểm Từ Trước Sẽ Được Cập Nhập Điểm Mới";
                     _unitOfWork.GetRepository<ExamResult>().UpdateRange(updateTestResults);
                 }
                 if (newTestResults.Count() > 0)
                 {
+                    newTestResults.ForEach(t => t.IsGraded = true);
                     await _unitOfWork.GetRepository<ExamResult>().InsertRangeAsync(newTestResults);
                 }
                 _unitOfWork.Commit();
@@ -2152,7 +2215,7 @@ namespace MagicLand_System.Services.Implements
             var currentStudentId = (await GetUserFromJwt()).StudentIdAccount;
 
             var testResults = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
-                predicate: x => x.StudentClass!.StudentId == currentStudentId,
+                predicate: x => x.StudentClass!.StudentId == currentStudentId && x.IsGraded == true,
                 include: x => x.Include(x => x.StudentClass!).Include(x => x.ExamQuestions));
 
 
@@ -2333,7 +2396,9 @@ namespace MagicLand_System.Services.Implements
                     if (quizExam.Item2 == null || quizExam.Item2 == default)
                     {
                         participationWeight = quizExam.Item1.Weight;
-                        await CalculateParticipation(attendanceResult, evaluateResult, schedules, student.Id);
+                        var partiResult = await CalculateParticipation(schedules, student.Id);
+                        attendanceResult = partiResult.Item1;
+                        evaluateResult = partiResult.Item2;
                     }
                     else
                     {
@@ -2342,14 +2407,16 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 SettingLastResultInfor(finalResult, finalTestResults, identifyQuizExams,
-                (attendanceResult / schedules.Count) + (evaluateResult / schedules.Count), participationWeight);
+                (attendanceResult + evaluateResult) / (schedules.Count * 2), participationWeight);
 
                 responses.Add(finalResult);
             }
         }
 
-        private async Task CalculateParticipation(double attendanceResult, double evaluateResult, List<Schedule> schedules, Guid studentId)
+        private async Task<(double, double)> CalculateParticipation(List<Schedule> schedules, Guid studentId)
         {
+            double attendanceResult = 0.0, evaluateResult = 0.0;
+
             foreach (var schedule in schedules)
             {
                 var isPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(
@@ -2372,6 +2439,8 @@ namespace MagicLand_System.Services.Implements
                     evaluateResult += 0;
                 }
             }
+
+            return (attendanceResult, evaluateResult);
         }
         private void SettingLastResultInfor(FinalResultResponse finalResult, List<FinalTestResultResponse> finalTestResults, List<(ExamSyllabus, QuestionPackage)> identifyQuizExams, double participationScore, double participationWeight)
         {
@@ -2751,7 +2820,7 @@ namespace MagicLand_System.Services.Implements
 
                     var allTestResult = await _unitOfWork.GetRepository<ExamResult>().GetListAsync(
                         orderBy: x => x.OrderByDescending(x => x.NoAttempt),
-                        predicate: x => x.StudentClass!.StudentId == sc.StudentId && x.ExamId == quiz.Id);
+                        predicate: x => x.StudentClass!.StudentId == sc.StudentId && x.ExamId == quiz.Id && x.IsGraded == true);
 
                     var currentExam = exams!.SingleOrDefault(e => StringHelper.TrimStringAndNoSpace(e.ContentName!) == StringHelper.TrimStringAndNoSpace(quiz.ContentName));
 
@@ -2806,9 +2875,9 @@ namespace MagicLand_System.Services.Implements
 
                 if (cls.Status == ClassStatusEnum.COMPLETED.ToString())
                 {
-                    double attendanceScore = 0, evaluateScore = 0;
-                    await CalculateParticipation(attendanceScore, evaluateScore, cls.Schedules.ToList(), sc.Id);
-                    participationScore = (attendanceScore + evaluateScore) / cls.Schedules.Count;
+                    var partiResult = await CalculateParticipation(cls.Schedules.ToList(), sc.StudentId);
+
+                    participationScore = (partiResult.Item1 + partiResult.Item2) / (cls.Schedules.Count * 2);
                 }
 
                 responses.Add(new StudenInforAndScore
@@ -2820,7 +2889,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         Score = participationScore,
                         Weight = participationWeight,
-                        ScoreWeight = participationScore * participationWeight,
+                        ScoreWeight = CalculateScoreWeight(participationWeight, participationScore),
                     },
                 });
             }
