@@ -69,6 +69,21 @@ namespace MagicLand_System_Web_Dev.Pages
                 return Page();
             }
 
+            var objectRequest = new LoginRequest
+            {
+                Phone = "+84971822093",
+            };
+
+            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+            if (result.IsSuccess)
+            {
+                var user = result.Data;
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+                return Page();
+            }
+
             return Page();
         }
 
@@ -315,10 +330,6 @@ namespace MagicLand_System_Web_Dev.Pages
                         });
 
                         break;
-                    }
-                    else
-                    {
-                        return RedirectToPage("/Error");
                     }
 
                 }

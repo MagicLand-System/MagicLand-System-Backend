@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request.Evaluates;
@@ -8,13 +7,12 @@ using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
 
 namespace MagicLand_System.Services.Implements
 {
     public class DeveloperService : BaseService<DeveloperService>, IDeveloperService
     {
-        public DeveloperService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<DeveloperService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public DeveloperService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<DeveloperService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 

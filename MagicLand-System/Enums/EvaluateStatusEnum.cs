@@ -4,8 +4,8 @@ namespace MagicLand_System.Enums
 {
     public enum EvaluateStatusEnum
     {
-        [Description("Chưa Tốt")]
-        NOTGOOD,
+        [Description("Xuất Sắc")]
+        EXCELLENT,
         [Description("Bình Thường")]
         NORMAL,
         [Description("Tốt")]

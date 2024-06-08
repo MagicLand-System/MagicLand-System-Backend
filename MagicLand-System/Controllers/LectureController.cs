@@ -3,6 +3,7 @@ using MagicLand_System.Enums;
 using MagicLand_System.PayLoad.Request.Attendance;
 using MagicLand_System.PayLoad.Request.Evaluates;
 using MagicLand_System.PayLoad.Response.Attendances;
+using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Classes.ForLecturer;
 using MagicLand_System.PayLoad.Response.Evaluates;
 using MagicLand_System.PayLoad.Response.Lectures;
@@ -208,7 +209,7 @@ namespace MagicLand_System.Controllers
 
         #region document API Get Current Lecture Classes
         /// <summary>
-        ///  Truy Suất Các Lớp Học Có Lịch Dạy Gần Nhất
+        ///  Truy Suất Các Lớp Học Có Lịch Dạy
         /// </summary>
         /// <response code="200">Trả Về Lịch Dạy Của Các Lớp Gần Nhất</response>
         /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
@@ -292,9 +293,29 @@ namespace MagicLand_System.Controllers
         [ProducesResponseType(typeof(LectureScheduleResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(BadRequest))]
         [Authorize(Roles = "LECTURER")]
-        public async Task<IActionResult> GetLectureSchedule()
+        public async Task<IActionResult> GetLectureSchedule([FromQuery] Guid? classId)
         {
-            var responses = await _userService.GetLectureScheduleAsync();
+            var responses = await _userService.GetLectureScheduleAsync(classId);
+            return Ok(responses);
+        }
+
+
+        #region document API Get All Class 
+        /// <summary>
+        ///  Truy Suất Tất Cả Các Lớp Của Giáo Viên Hiện Tại
+        /// </summary>
+        /// <response code="200">Trả Về Các Lớp Học Của Giáo Viên| Trả Rỗng Khi Giáo Viên Không Có Lịch</response>
+        /// <response code="400">Yêu Cầu Không Hợp Lệ</response>
+        /// <response code="403">Chức Vụ Không Hợp Lệ</response>
+        /// <response code="500">Lỗi Hệ Thống Phát Sinh</response>
+        #endregion
+        [HttpGet(ApiEndpointConstant.LectureEndpoint.GetLecturerClasses)]
+        [ProducesResponseType(typeof(ClassWithSlotShorten), StatusCodes.Status200OK)]
+        [ProducesErrorResponseType(typeof(BadRequest))]
+        [Authorize(Roles = "LECTURER")]
+        public async Task<IActionResult> GetLectureClasses([FromQuery] ClassStatusEnum? status)
+        {
+            var responses = await _classService.GetCurrentLecturerAllClassesAsync(status);
             return Ok(responses);
         }
     }

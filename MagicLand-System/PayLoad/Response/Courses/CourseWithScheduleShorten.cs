@@ -8,6 +8,7 @@ namespace MagicLand_System.PayLoad.Response.Courses
         public List<RelatedCourseResponse> RelatedCourses { get; set; } = new List<RelatedCourseResponse>();
         public string? Status { get; set; }
         public bool IsSuspend { get; set; } = false;
+        public bool? IsPassed { get; set; } = null;
         public int NumberClassOnGoing { get; set; }
         public DateTime? UpdateDate { get; set; }
     }

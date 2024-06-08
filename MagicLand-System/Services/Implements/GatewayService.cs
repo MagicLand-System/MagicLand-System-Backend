@@ -1,10 +1,7 @@
 ﻿using AutoMapper;
-using AutoMapper.Internal;
 using MagicLand_System.Config;
 using MagicLand_System.Constants;
 using MagicLand_System.Domain;
-using MagicLand_System.Domain.Models;
-using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.PayLoad.Request.Vnpay;
 using MagicLand_System.Repository.Interfaces;
@@ -18,7 +15,7 @@ namespace MagicLand_System.Services.Implements
     public class GatewayService : BaseService<GatewayService>, IGatewayService
     {
         private readonly VnpayConfig _vnpayConfig;
-        public GatewayService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<GatewayService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOptions<VnpayConfig> vnpayConfig) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public GatewayService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<GatewayService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOptions<VnpayConfig> vnpayConfig, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
             _vnpayConfig = vnpayConfig.Value;
         }

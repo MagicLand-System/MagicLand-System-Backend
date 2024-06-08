@@ -11,11 +11,11 @@ namespace MagicLand_System_Web_Dev.Pages.Helper
     {
         private readonly HttpClient _httpClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        //private readonly string Scheme = "https";
-        private readonly string Scheme = "http";
-        //private readonly string Domain = "2505-118-69-69-187.ngrok-free.app";
+        private readonly string Scheme = "https";
+        //private readonly string Scheme = "http";
+        private readonly string Domain = "5e30-42-112-79-37.ngrok-free.app";
         //private readonly string Domain = "magiclandapiv2.somee.com";
-        private readonly string Domain = "localhost:5097";
+        //private readonly string Domain = "localhost:5097";
         private string RootUrl = "", CallUrl = "", JsonContent = "";
 
         public ApiHelper(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)

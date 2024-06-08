@@ -30,6 +30,7 @@ using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -37,7 +38,7 @@ namespace MagicLand_System.Services.Implements
     {
         private IRoomService _roomService;
         private IUserService _userService;
-        public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IRoomService roomService, IUserService userService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public ClassService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<ClassService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IRoomService roomService, IUserService userService, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
             _roomService = roomService;
             _userService = userService;
@@ -51,9 +52,6 @@ namespace MagicLand_System.Services.Implements
             {
                 return null;
             }
-            //var name = course.Name;
-            //var words = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            //string abbreviation = string.Join("", words.Select(word => word[0]));
             if (course.Syllabus == null)
             {
                 throw new BadHttpRequestException("course chưa gắn syllabus", StatusCodes.Status400BadRequest);
@@ -91,11 +89,11 @@ namespace MagicLand_System.Services.Implements
                 LeastNumberStudent = request.LeastNumberStudent,
                 LimitNumberStudent = request.LimitNumberStudent,
                 LecturerId = request.LecturerId,
-                Status = "UPCOMING",
+                Status = ClassStatusEnum.UPCOMING.ToString(),
                 Method = request.Method,
-                District = "Tân Bình",
-                City = "Hồ Chí Minh",
-                Street = "138 Lương Định Của",
+                District = AddressContant.District,
+                City = AddressContant.City,
+                Street = AddressContant.Street,
                 AddedDate = DateTime.Now,
                 Image = course.Image,
             };
@@ -114,31 +112,31 @@ namespace MagicLand_System.Services.Implements
             List<DayOfWeek> convertedDateOfWeek = new List<DayOfWeek>();
             foreach (var dayOfWeek in daysOfWeek)
             {
-                if (dayOfWeek.ToLower().Equals("sunday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Sunday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Sunday);
                 }
-                if (dayOfWeek.ToLower().Equals("monday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Monday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Monday);
                 }
-                if (dayOfWeek.ToLower().Equals("tuesday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Tuesday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Tuesday);
                 }
-                if (dayOfWeek.ToLower().Equals("wednesday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Wednesday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Wednesday);
                 }
-                if (dayOfWeek.ToLower().Equals("thursday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Thursday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Thursday);
                 }
-                if (dayOfWeek.ToLower().Equals("friday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Friday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Friday);
                 }
-                if (dayOfWeek.ToLower().Equals("saturday"))
+                if (dayOfWeek.ToLower().Equals(DayOfWeek.Saturday.ToString().ToLower()))
                 {
                     convertedDateOfWeek.Add(DayOfWeek.Saturday);
                 }
@@ -149,30 +147,34 @@ namespace MagicLand_System.Services.Implements
             DateTime startDate = request.StartDate;
             List<Schedule> schedules = new List<Schedule>();
             List<ScheduleRequest> sc = request.ScheduleRequests;
+            
             while (scheduleAdded < numberOfSessions)
             {
                 if (convertedDateOfWeek.Contains(startDate.DayOfWeek))
                 {
                     string dateString = startDate.DayOfWeek.ToString().ToLower();
                     Guid slotId = Guid.NewGuid();
+                    List<Guid> slotIds = new List<Guid>();
                     foreach (var sq in sc)
                     {
                         if (sq.DateOfWeek.ToLower().Equals(dateString))
                         {
-                            slotId = sq.SlotId;
+                            slotIds.Add(sq.SlotId);
                         }
                     }
-
-                    schedules.Add(new Schedule
+                    foreach(var sl in slotIds)
                     {
-                        Id = Guid.NewGuid(),
-                        ClassId = createdClass.Id,
-                        Date = startDate,
-                        RoomId = request.RoomId,
-                        SlotId = slotId,
-                        DayOfWeek = (int)Math.Pow(2, (int)startDate.DayOfWeek),
-                    });
-                    scheduleAdded++;
+                        schedules.Add(new Schedule
+                        {
+                            Id = Guid.NewGuid(),
+                            ClassId = createdClass.Id,
+                            Date = startDate,
+                            RoomId = request.RoomId,
+                            SlotId = sl,
+                            DayOfWeek = (int)Math.Pow(2, (int)startDate.DayOfWeek),
+                        });
+                        scheduleAdded++;
+                    }
                 }
                 startDate = startDate.AddDays(1);
             }
@@ -205,32 +207,32 @@ namespace MagicLand_System.Services.Implements
             foreach (var schedule in request.ScheduleRequests)
             {
                 var dow = "";
-                if (schedule.DateOfWeek.ToLower().Equals("sunday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Sunday.ToString().ToLower()))
                 {
                     dow = "Chủ Nhật";
                 }
-                if (schedule.DateOfWeek.ToLower().Equals("monday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Monday.ToString().ToLower()))
                 {
                     dow = "Thứ 2";
                 }
-                if (schedule.DateOfWeek.ToLower().Equals("tuesday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Tuesday.ToString().ToLower()))
                 {
                     dow = "Thứ 3";
 
                 }
-                if (schedule.DateOfWeek.ToLower().Equals("wednesday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Wednesday.ToString().ToLower()))
                 {
                     dow = "Thứ 4";
                 }
-                if (schedule.DateOfWeek.ToLower().Equals("thursday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Thursday.ToString().ToLower()))
                 {
                     dow = "Thứ 5";
                 }
-                if (schedule.DateOfWeek.ToLower().Equals("friday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Friday.ToString().ToLower()))
                 {
                     dow = "Thứ 6";
                 }
-                if (schedule.DateOfWeek.ToLower().Equals("saturday"))
+                if (schedule.DateOfWeek.ToLower().Equals(DayOfWeek.Saturday.ToString().ToLower()))
                 {
                     dow = "Thứ 7";
                 }
@@ -299,7 +301,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Sunday",
+                            DayOfWeek = DayOfWeekEnum.Sunday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -308,7 +310,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Monday",
+                            DayOfWeek = DayOfWeekEnum.Monday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -317,7 +319,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Tuesday",
+                            DayOfWeek = DayOfWeekEnum.Tuesday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -326,7 +328,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Wednesday",
+                            DayOfWeek = DayOfWeekEnum.Wednesday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -335,7 +337,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Thursday",
+                            DayOfWeek = DayOfWeekEnum.Thursday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -344,7 +346,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Friday",
+                            DayOfWeek = DayOfWeekEnum.Friday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -353,7 +355,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Saturday",
+                            DayOfWeek = DayOfWeekEnum.Saturday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -474,13 +476,6 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<MyClassResponse> GetClassDetail(string id)
         {
-            //var listClass = await GetAllClass();
-            //if (listClass == null)
-            //{
-            //    return null;
-            //}
-            //var matchClass = listClass.SingleOrDefault(x => x.ClassId.ToString().Equals(id.ToString()));
-            //return matchClass;
             var c = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id), include: x => x.Include(x => x.Schedules));
             var slots = await _unitOfWork.GetRepository<Slot>().GetListAsync();
             var schedulex = (await _unitOfWork.GetRepository<Schedule>().GetListAsync(predicate: x => x.ClassId == c.Id)).FirstOrDefault();
@@ -518,7 +513,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Sunday",
+                        DayOfWeek = DayOfWeekEnum.Sunday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -527,7 +522,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Monday",
+                        DayOfWeek = DayOfWeek.Monday.ToString() ,
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -536,7 +531,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Tuesday",
+                        DayOfWeek = DayOfWeek.Tuesday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -545,7 +540,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Wednesday",
+                        DayOfWeek = DayOfWeekEnum.Wednesday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -554,7 +549,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Thursday",
+                        DayOfWeek = DayOfWeekEnum.Thursday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -563,7 +558,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Friday",
+                        DayOfWeek = DayOfWeekEnum.Friday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -572,7 +567,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Saturday",
+                        DayOfWeek = DayOfWeekEnum.Saturday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -657,7 +652,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("số lượng tối thiểu phải nhỏ hơn số lượng tối đa", StatusCodes.Status400BadRequest);
             }
-            classFound.Status = "UPCOMING";
+            classFound.Status = ClassStatusEnum.UPCOMING.ToString();
             classFound.AddedDate = DateTime.Now;
             _unitOfWork.GetRepository<Class>().UpdateAsync(classFound);
             bool isSuccess = await _unitOfWork.CommitAsync() > 0;
@@ -1141,6 +1136,7 @@ namespace MagicLand_System.Services.Implements
                     ScheduleId = Guid.Parse(request.ScheduleId),
                 };
 
+                
                 _unitOfWork.GetRepository<Evaluate>().UpdateAsync(evaluate);
                 _unitOfWork.GetRepository<Attendance>().UpdateAsync(attendance);
                 await _unitOfWork.GetRepository<Evaluate>().InsertAsync(makeUpEvaluate);
@@ -2053,6 +2049,7 @@ namespace MagicLand_System.Services.Implements
                     CourseId = courseId.ToString(),
                     Schedules = scheduleRequests,
                     StartDate = date.Value.AddHours(7),
+                    Method = rq.Method,
                 });
                 if (roomLec.Lecturer == null && roomLec.Room == null)
                 {
@@ -2544,38 +2541,23 @@ namespace MagicLand_System.Services.Implements
 
             //try
             //{
+            //    var clas = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(predicate: x => x.Id == Guid.Parse("0cb51892-3244-430f-ad83-9cc73d6b41a8"), include: x => x.Include(x => x.Schedules));
 
-            //    var Ids = new List<Guid>
-            //{
-            //    Guid.Parse("e6a1f520-c953-4c14-b73e-fc027fd169d1"),
-            //    Guid.Parse("7f8487c5-1070-4f01-817a-5af3114dbe23")
-            //};
-
-            //    var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => Ids.Contains(x.Id), include: x => x.Include(x => x.Schedules));
-
-            //    foreach (var cls in classes)
+            //    var schedules = clas.Schedules.OrderBy(sc => sc.Date).ToList();
+            //    foreach (var sc in schedules)
             //    {
-            //        int addDate = 4;
-            //        var schedules = cls.Schedules.OrderBy(sc => sc.Date).ToList();
-            //        foreach (var sc in schedules)
-            //        {
-            //            if (addDate == 64)
-            //            {
-            //                addDate = 1;
-            //            }
-            //            else
-            //            {
-            //                addDate = addDate * 2;
-            //            }
-
-            //            sc.DayOfWeek = addDate;
-            //        }
+            //        sc.Date = sc.Date.AddMonths(-1);
             //    }
+
+            //    clas.StartDate = clas.StartDate.AddMonths(-1);
+            //    clas.EndDate = clas.EndDate.AddMonths(-1);
+            //    clas.Status = ClassStatusEnum.COMPLETED.ToString();
+
             //await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(newEva);
             //await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(newAtten);
             //_unitOfWork.GetRepository<Evaluate>().DeleteRangeAsync(oldEva);
             //_unitOfWork.GetRepository<Attendance>().DeleteRangeAsync(oldAtten);
-            //    _unitOfWork.GetRepository<Class>().UpdateRange(classes);
+            //    _unitOfWork.GetRepository<Class>().UpdateAsync(clas);
             //    _unitOfWork.Commit();
 
 
@@ -2768,6 +2750,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Giáo Viên Chưa Được Phân Dạy Ở Bất Kỳ Lớp Nào", StatusCodes.Status400BadRequest);
             }
+
             var nearestClasses = classes.Where(cls => cls.Schedules.Any(sc => sc.Date.Date == GetCurrentTime().Date || sc.Date.Date == GetCurrentTime().AddDays(1).Date)).ToList();
 
             if (!nearestClasses.Any())
@@ -3995,9 +3978,9 @@ namespace MagicLand_System.Services.Implements
            .Where(cls => cls.StudentClasses.Count + 1 <= cls.LimitNumberStudent)
            .Where(cls => cls.Id != currentClass.Id).ToList();
 
-            if (currentClass.Status.ToLower().Equals("upcoming"))
+            if (currentClass.Status.ToLower().Equals(ClassStatusEnum.UPCOMING.ToString().ToLower()))
             {
-                suitableClasses = suitableClasses.Where(x => x.Status.ToLower().Equals("upcoming")).ToList();
+                suitableClasses = suitableClasses.Where(x => x.Status.ToLower().Equals(ClassStatusEnum.UPCOMING.ToString().ToLower())).ToList();
             }
             else
             {
@@ -4143,7 +4126,7 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<CanNotMakeUpResponse>> GetCanNotMakeUpResponses(string? search, DateTime? dateOfBirth)
         {
-            var listFound = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.Note.Equals("CanNotMakeUp"));
+            var listFound = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.Note.Equals(OthersEnum.CanNotMakeUp.ToString()));
             if (listFound == null)
             {
                 return new List<CanNotMakeUpResponse>();
@@ -4535,6 +4518,38 @@ namespace MagicLand_System.Services.Implements
                 result.Add(myClassResponse);
             }
             return result;
+        }
+
+        public async Task<List<ClassWithSlotShorten>> GetCurrentLecturerAllClassesAsync(ClassStatusEnum? status)
+        {
+            status = status ??= ClassStatusEnum.PROGRESSING;
+            status = status == ClassStatusEnum.DEFAULT ? ClassStatusEnum.PROGRESSING : status;
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt());
+            if (!classes.Any())
+            {
+                throw new BadHttpRequestException("Không Có Lớp Học Thỏa Mãn", StatusCodes.Status400BadRequest);
+            }
+
+            classes = classes.Where(cls => cls.Status == status.ToString()).ToList();
+            foreach (var cls in classes)
+            {
+                cls.Course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
+                predicate: x => x.Id == cls.CourseId);
+
+                cls.Schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                orderBy: x => x.OrderBy(x => x.Date),
+                predicate: x => x.ClassId == cls.Id,
+                include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
+            }
+
+            var responses = classes.Select(c => _mapper.Map<ClassWithSlotShorten>(c)).ToList();
+
+            foreach (var res in responses)
+            {
+                res.CoursePrice = await GetDynamicPrice(res.ClassId, true);
+            }
+
+            return responses;
         }
 
         #endregion

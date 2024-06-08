@@ -2,22 +2,18 @@
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Domain.Models.TempEntity.Class;
-using MagicLand_System.Domain.Models.TempEntity.Quiz;
 using MagicLand_System.Enums;
 using MagicLand_System.Helpers;
 using MagicLand_System.Mappers.Custom;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Request.Syllabus;
-using MagicLand_System.PayLoad.Response.Quizes;
 using MagicLand_System.PayLoad.Response.Quizzes;
-using MagicLand_System.PayLoad.Response.Quizzes.Questions;
 using MagicLand_System.PayLoad.Response.Quizzes.Staff;
 using MagicLand_System.PayLoad.Response.Sessions;
 using MagicLand_System.PayLoad.Response.Syllabuses;
 using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
-using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
@@ -26,9 +22,10 @@ namespace MagicLand_System.Services.Implements
 {
     public class SyllabusService : BaseService<SyllabusService>, ISyllabusService
     {
-        public SyllabusService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<SyllabusService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SyllabusService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<SyllabusService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
+
 
         #region thanh_lee code
         public async Task<bool> AddSyllabus(OverallSyllabusRequest request, bool isNewVersion)
@@ -692,9 +689,38 @@ namespace MagicLand_System.Services.Implements
             var quizTime = await _unitOfWork.GetRepository<TempQuizTime>().SingleOrDefaultAsync(predicate: x => x.ExamId == quiz.Id && x.ClassId == classId);
 
             var startTime = DateTime.Parse(session.Date!).Date.Add(session.StartTime!.Value.ToTimeSpan());
-            var endTime = DateTime.Parse(session.Date!).Date.Add(session.EndTime!.Value.ToTimeSpan());
+            var scheduleStartTime = session.StartTime.ToString();
             int attempt = 1, duration = 600;
             bool isNonRequireTime = quiz.PackageType != PackageTypeEnum.Review.ToString() && quiz.PackageType != PackageTypeEnum.ProgressTest.ToString() ? false : true;
+
+
+            var addTime = 0;
+            if (scheduleStartTime.StartsWith("7"))
+            {
+                addTime = 23 - 7;
+            }
+            if (scheduleStartTime.StartsWith("9"))
+            {
+                addTime = 23 - 9;
+            }
+            if (scheduleStartTime.StartsWith("12"))
+            {
+                addTime = 23 - 12;
+            }
+            if (scheduleStartTime.StartsWith("14"))
+            {
+                addTime = 23 - 14;
+            }
+            if (scheduleStartTime.StartsWith("16"))
+            {
+                addTime = 23 - 16;
+            }
+            if (scheduleStartTime.StartsWith("19"))
+            {
+                addTime = 23 - 19;
+            }
+
+            var endTime = DateTime.Parse(session.Date!).Date.Add(session.EndTime!.Value.ToTimeSpan()).AddHours(addTime);
 
             if (quizTime != null)
             {
@@ -1545,7 +1571,9 @@ namespace MagicLand_System.Services.Implements
             foreach (var syl in allSyllabus)
             {
                 var ix = syl.CourseName.Trim().ToLower().Equals("undefined");
-                if (syl.CourseName.Trim().ToLower().Equals("undefined") && (syl.EffectiveDate.Value.AddDays(-2) < DateTime.Now))
+                var effectiveDate = syl.EffectiveDate.Value.AddDays(-2);
+
+                if (syl.CourseName.Trim().ToLower().Equals("undefined") && (effectiveDate < GetCurrentTime()))
                 {
                     filterSyllabus.Add(syl);
                 }

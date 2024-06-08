@@ -1,7 +1,6 @@
-﻿using MagicLand_System.Domain.Models;
+﻿using MagicLand_System.Services;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Quartz;
 
@@ -13,18 +12,20 @@ namespace MagicLand_System.Controllers
         private readonly IDashboardService _dashboardService;
         private readonly IConfiguration _configuration;
         private readonly ISchedulerFactory _schedulerFactory;
+        public readonly FirebaseStorageService _firebaseStorageService;
 
-        public SystemController(ILogger<SystemController> logger, IDashboardService dashboardService, IConfiguration configuration, ISchedulerFactory schedulerFactory) : base(logger)
+        public SystemController(ILogger<SystemController> logger, IDashboardService dashboardService, IConfiguration configuration, ISchedulerFactory schedulerFactory, FirebaseStorageService firebaseStorageService) : base(logger)
         {
             _dashboardService = dashboardService;
             _configuration = configuration;
             _schedulerFactory = schedulerFactory;
+            _firebaseStorageService = firebaseStorageService;
         }
 
         [HttpPost("/System/SetTime")]
         public async Task<IActionResult> SetTime([FromBody] DateTime date)
         {
-            var today = DateTime.Today;
+            var today = _dashboardService.GetTime();
             var day = (date.Date - today).Days;
             var hours = date.TimeOfDay.Hours;
             var minutes = date.TimeOfDay.Minutes;

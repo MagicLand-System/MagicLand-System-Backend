@@ -13,9 +13,10 @@ namespace MagicLand_System.Services.Implements
 {
     public class AttendanceService : BaseService<AttendanceService>, IAttendanceService
     {
-        public AttendanceService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<AttendanceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public AttendanceService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<AttendanceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
+
         public async Task<List<StaffAttandaceResponse>> LoadAttandance(string scheduleId, string? searchString)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(scheduleId), include: x => x.Include(x => x.Class));
@@ -35,7 +36,7 @@ namespace MagicLand_System.Services.Implements
             foreach (var attendance in attandances)
             {
                 var studentclass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == attendance.StudentId && x.ClassId == classx.Id);
-                if (attendance.Note.Equals("CanNotMakeUp"))
+                if (attendance.Note.Equals(OthersEnum.CanNotMakeUp.ToString()))
                 {
                     continue;
                 }

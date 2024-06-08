@@ -1,36 +1,31 @@
 ﻿using AutoMapper;
-using Azure;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Enums;
 using MagicLand_System.PayLoad;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.PayLoad.Response.Carts;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Drawing;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicLand_System.Services.Implements
 {
     public class DashBoardService : BaseService<DashBoardService>, IDashboardService
     {
-        public DashBoardService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<DashBoardService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public DashBoardService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<DashBoardService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 
-        public async Task<List<DashboardRegisterResponse>> GetDashboardRegisterResponses(string quarter,string? courseId)
+        public async Task<List<DashboardRegisterResponse>> GetDashboardRegisterResponses(string quarter, string? courseId)
         {
             string[] parts = quarter.Split('-');
-            var qua = parts[0];   
+            var qua = parts[0];
             var year = parts[1];
             var startDate = DateTime.Now;
             var endDate = DateTime.Now;
             var yearNumber = int.Parse(year);
-            if(int.Parse(qua) == 1)
+            if (int.Parse(qua) == 1)
             {
                 startDate = new DateTime(yearNumber, 1, 1);
                 endDate = new DateTime(yearNumber, 3, 31);
@@ -52,24 +47,24 @@ namespace MagicLand_System.Services.Implements
             }
             var startAnchor = startDate;
             List<DashboardRegisterResponse> responses = new List<DashboardRegisterResponse>();
-          
+
             while (startAnchor <= endDate)
             {
                 var endAnchor = startAnchor.AddDays(7);
-                if(endAnchor.Date > endDate.Date)
+                if (endAnchor.Date > endDate.Date)
                 {
                     endAnchor = endDate;
                 }
                 var listStudentClass = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.AddedTime.Value.Date >= startAnchor.Date && x.AddedTime.Value.Date <= endDate.Date);
                 if (courseId != null)
                 {
-                    var classIds = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.CourseId.ToString().Equals(courseId.ToString()),selector : x => x.Id);
+                    var classIds = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.CourseId.ToString().Equals(courseId.ToString()), selector: x => x.Id);
                     listStudentClass = listStudentClass.Where(x => classIds.Any(p => p == x.ClassId)).ToList();
                 }
                 var response = new DashboardRegisterResponse
                 {
                     NumberOfRegisters = listStudentClass.Count,
-                    Date = startAnchor.Date.Day + "/" + startAnchor.Date.Month + "-" + endAnchor.Date.Day + "/"+ endAnchor.Date.Month,
+                    Date = startAnchor.Date.Day + "/" + startAnchor.Date.Month + "-" + endAnchor.Date.Day + "/" + endAnchor.Date.Month,
                     StartDateIn = startAnchor,
                 };
                 startAnchor = endAnchor.AddDays(1);
@@ -80,29 +75,30 @@ namespace MagicLand_System.Services.Implements
 
         public async Task<List<FavoriteCourseResponse>> GetFavoriteCourseResponse(DateTime? startDate, DateTime? endDate)
         {
-            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include : x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
+            var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(include: x => x.Include(x => x.Syllabus).ThenInclude(x => x.SyllabusCategory));
             List<FavoriteCourseResponse> responses = new List<FavoriteCourseResponse>();
             foreach (var course in courses)
             {
                 var numberOfclass = 0;
                 var numberOfStudent = 0;
                 var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status.Equals("UPCOMING") && x.CourseId == course.Id);
-                if(classes == null || classes.Count == 0)
+                if (classes == null || classes.Count == 0)
                 {
                     numberOfclass = 0;
-                } else
+                }
+                else
                 {
-                    numberOfclass = classes.Count;  
+                    numberOfclass = classes.Count;
                     foreach (var c in classes)
                     {
-                        var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate : x => x.ClassId == c.Id && x.AddedTime >= startDate && x.AddedTime <= endDate);
-                        if(students != null)
+                        var students = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(predicate: x => x.ClassId == c.Id && x.AddedTime >= startDate && x.AddedTime <= endDate);
+                        if (students != null)
                         {
                             numberOfStudent = numberOfStudent + students.Count;
                         }
                     }
                 }
-                responses.Add(new FavoriteCourseResponse 
+                responses.Add(new FavoriteCourseResponse
                 {
                     Id = course.Id,
                     CourseName = course.Name,
@@ -122,8 +118,8 @@ namespace MagicLand_System.Services.Implements
             var users = await _unitOfWork.GetRepository<User>().GetListAsync(include: x => x.Include(x => x.Role));
             var parents = users.Where(x => x.Role.Name.Equals(RoleEnum.PARENT.GetDescriptionFromEnum<RoleEnum>()));
             var staff = users.Where(x => x.Role.Name.Equals(RoleEnum.STAFF.GetDescriptionFromEnum<RoleEnum>()) || x.Role.Name.Equals(RoleEnum.ADMIN.GetDescriptionFromEnum<RoleEnum>()) || x.Role.Name.Equals(RoleEnum.LECTURER.GetDescriptionFromEnum<RoleEnum>()));
-            var students = await _unitOfWork.GetRepository<Student>().GetListAsync();   
-            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate : x => x.Status.ToLower().Equals("upcoming"));
+            var students = await _unitOfWork.GetRepository<Student>().GetListAsync();
+            var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.Status.ToLower().Equals("upcoming"));
             return new NumberOfMemberResponse
             {
                 NumOfChildrens = students.Count,
@@ -136,16 +132,16 @@ namespace MagicLand_System.Services.Implements
         public async Task<List<RevenueDashBoardResponse>> GetRevenueDashBoardResponse(DateTime? startDate, DateTime? endDate)
         {
             startDate = startDate.Value.AddHours(7);
-            var wallettransaction = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate : x => x.CreateTime >= startDate && x.CreateTime <= endDate);
+            var wallettransaction = await _unitOfWork.GetRepository<WalletTransaction>().GetListAsync(predicate: x => x.CreateTime >= startDate && x.CreateTime <= endDate);
             var groupwallet = wallettransaction.GroupBy(x => new { x.CreateTime, x.Method }).Select(g => new
             {
                 CreateTime = g.Key.CreateTime,
-                Method = g.Key.Method,  
+                Method = g.Key.Method,
                 Revenue = g.Sum(x => x.Money),
                 DateIn = g.Key.CreateTime,
             });
-            List<RevenueDashBoardResponse> revenueDashBoardResponses = new List<RevenueDashBoardResponse>();    
-            foreach ( var group in groupwallet)
+            List<RevenueDashBoardResponse> revenueDashBoardResponses = new List<RevenueDashBoardResponse>();
+            foreach (var group in groupwallet)
             {
                 var date = group.CreateTime;
                 var day = date.Day;
@@ -155,9 +151,9 @@ namespace MagicLand_System.Services.Implements
                     Method = group.Method,
                     Date = day + "/" + month,
                     Revenue = group.Revenue,
-                    DateIn = date,  
+                    DateIn = date,
                 };
-                if (group.Method.Equals("SystemWallet")) 
+                if (group.Method.Equals("SystemWallet"))
                 {
                     revenueRes.Method = "Ví";
                     revenueDashBoardResponses.Add(revenueRes);
@@ -169,7 +165,7 @@ namespace MagicLand_System.Services.Implements
                 }
             }
             var groupedTransactions = revenueDashBoardResponses
-            .GroupBy(t => new { t.Date, t.Method})
+            .GroupBy(t => new { t.Date, t.Method })
             .Select(g => new RevenueDashBoardResponse
             {
                 Date = g.Key.Date,
@@ -225,7 +221,7 @@ namespace MagicLand_System.Services.Implements
                 });
                 endx = endx.AddDays(1);
             }
-            return groupedTransactions.OrderBy(x => x.DateIn).ToList();   
+            return groupedTransactions.OrderBy(x => x.DateIn).ToList();
         }
 
         public DateTime GetTime()

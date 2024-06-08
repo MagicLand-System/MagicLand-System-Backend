@@ -1,5 +1,6 @@
 using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System_Web_Dev.Pages.Enums;
@@ -24,6 +25,20 @@ namespace MagicLand_System_Web_Dev.Pages
         public string CurrentTime { get; set; } = string.Empty;
         public async Task<IActionResult> OnGetAsync()
         {
+            var objectRequest = new LoginRequest
+            {
+                Phone = "+84971822093",
+            };
+
+            var authresult = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+            if (authresult.IsSuccess)
+            {
+                var user = authresult.Data;
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+            }
+
             try
             {
                 var result = await _apiHelper.FetchApiAsync<DateTime>("/System/GetTime", MethodEnum.GET, null);

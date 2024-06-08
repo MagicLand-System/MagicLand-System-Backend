@@ -29,7 +29,7 @@ namespace MagicLand_System.Services.Implements
 {
     public class UserService : BaseService<UserService>, IUserService
     {
-        public UserService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public UserService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<UserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 
@@ -196,10 +196,10 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
 
-                var parsePhone = 
-                    request.UserPhone.StartsWith("84") ? "+" + request.UserPhone 
-                    : request.UserPhone.StartsWith("0") ? "+84" + request.UserPhone.Substring(1) 
-                    : request.UserPhone.StartsWith("+84") ? request.UserPhone 
+                var parsePhone =
+                    request.UserPhone.StartsWith("84") ? "+" + request.UserPhone
+                    : request.UserPhone.StartsWith("0") ? "+84" + request.UserPhone.Substring(1)
+                    : request.UserPhone.StartsWith("+84") ? request.UserPhone
                     : "+84" + request.UserPhone;
 
                 if (parsePhone.Length != 12)
@@ -592,10 +592,21 @@ namespace MagicLand_System.Services.Implements
             _unitOfWork.GetRepository<WalletTransaction>().UpdateRange(oldTransactions);
         }
 
-        public async Task<List<LectureScheduleResponse>> GetLectureScheduleAsync()
+        public async Task<List<LectureScheduleResponse>> GetLectureScheduleAsync(Guid? classId)
         {
             var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(predicate: x => x.LecturerId == GetUserIdFromJwt() && x.Status == ClassStatusEnum.PROGRESSING.ToString(),
                 include: x => x.Include(x => x.Course!));
+
+
+            if (!classes.Any())
+            {
+                throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);
+            }
+
+            if (classId != null && classId != default)
+            {
+                classes = classes.Where(cls => cls.Id == classId).ToList();
+            }
 
             foreach (var cls in classes)
             {
@@ -603,11 +614,6 @@ namespace MagicLand_System.Services.Implements
                 orderBy: x => x.OrderBy(x => x.Date),
                 predicate: x => x.ClassId == cls.Id,
                 include: x => x.Include(x => x.Slot!).Include(x => x.Room!));
-            }
-
-            if (!classes.Any())
-            {
-                throw new BadHttpRequestException("Giáo Viên Không Có Lịch Dạy Hoặc Lớp Học Chưa Bắt Đầu", StatusCodes.Status400BadRequest);
             }
 
             var responses = new List<LectureScheduleResponse>();
@@ -1279,9 +1285,9 @@ namespace MagicLand_System.Services.Implements
                         AttendanceStatus = attendance != null ? attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
                         Note = attendance != null ? attendance.Note : null,
                         LecturerName = lecturerName,
-                        EvaluateLevel = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3,
+                        EvaluateLevel = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.EXCELLENT.ToString() ? 1 : 3,
                         EvaluateDescription = evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
-                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt",
+                        : evaluate.Status == EvaluateStatusEnum.EXCELLENT.ToString() ? "Không Tốt" : "Tốt",
                         EvaluateNote = evaluate.Note,
                         CourseName = course.Name,
                         SessionIdInDate = identifySession.Find(x => x.Item1 == i + 1).Item3,

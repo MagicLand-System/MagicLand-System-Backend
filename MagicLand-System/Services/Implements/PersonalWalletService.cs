@@ -10,19 +10,19 @@ namespace MagicLand_System.Services.Implements
 {
     public class PersonalWalletService : BaseService<PersonalWallet>, IPersonalWalletService
     {
-        public PersonalWalletService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<PersonalWallet> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public PersonalWalletService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<PersonalWallet> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 
         public async Task<WalletResponse> GetWalletOfCurrentUser()
         {
             var id = GetUserIdFromJwt();
-            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()),include: x => x.Include(x => x.PersonalWallet));
+            var currentUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(id.ToString()), include: x => x.Include(x => x.PersonalWallet));
             if (currentUser == null)
             {
                 return new WalletResponse();
             }
-            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate : x => x.UserId.ToString().Equals(currentUser.Id.ToString()));
+            var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.ToString().Equals(currentUser.Id.ToString()));
             if (personalWallet == null)
             {
                 return new WalletResponse();

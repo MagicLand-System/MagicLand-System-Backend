@@ -30,7 +30,8 @@ namespace MagicLand_System_Web_Dev.Pages
         public async Task<IActionResult> OnGetAsync()
         {
             IsLoading = false;
-            var token = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "Token");
+
+            //var token = SessionHelper.GetObjectFromJson<string>(HttpContext.Session, "Token");
             var data = SessionHelper.GetObjectFromJson<List<SyllabusDefaultMessage>>(HttpContext.Session, "DataSyllabus");
 
             if (data != null && data.Count > 0)
@@ -38,10 +39,10 @@ namespace MagicLand_System_Web_Dev.Pages
                 SyllabusMessages = data;
             }
 
-            if (token != null)
-            {
-                return Page();
-            }
+            //if (token != null)
+            //{
+            //    return Page();
+            //}
 
             var objectRequest = new LoginRequest
             {

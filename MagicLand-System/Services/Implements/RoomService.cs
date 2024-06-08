@@ -3,19 +3,17 @@ using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Response.Classes;
-using MagicLand_System.PayLoad.Response.Courses;
 using MagicLand_System.PayLoad.Response.Rooms;
 using MagicLand_System.PayLoad.Response.Users;
 using MagicLand_System.Repository.Interfaces;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace MagicLand_System.Services.Implements
 {
     public class RoomService : BaseService<RoomService>, IRoomService
     {
-        public RoomService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<RoomService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public RoomService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<RoomService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 
@@ -35,10 +33,11 @@ namespace MagicLand_System.Services.Implements
                 //{
                 //    lecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == schedule.Class.LecturerId, selector: x => x.FullName);
                 //}
-                if(schedule.SubLecturerId != null)
+                if (schedule.SubLecturerId != null)
                 {
                     lecturerName = schedule.SubLecturerId.ToString();
-                } else
+                }
+                else
                 {
                     lecturerName = schedule.Class.LecturerId.ToString();
                 }
@@ -79,7 +78,7 @@ namespace MagicLand_System.Services.Implements
                 }
                 foreach (var response in responses)
                 {
-                    response.LecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate : x => x.Id.ToString().Equals(response.LecturerName),selector : x => x.FullName);
+                    response.LecturerName = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id.ToString().Equals(response.LecturerName), selector: x => x.FullName);
                 }
                 responses = responses.OrderByDescending(x => x.Date).ThenBy(x => x.Name).ToList();
 
@@ -128,7 +127,7 @@ namespace MagicLand_System.Services.Implements
                         StartTime = slot.StartTime,
                         LecturerResponse = lecturer,
                     };
-                    if(searchString != null && sch.IsUse)
+                    if (searchString != null && sch.IsUse)
                     {
                         var isMatch = false;
                         isMatch = ((sch.ClassCode.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (lecturer.FullName.Trim().ToLower().Contains(searchString.ToLower().Trim())) || (sch.Date.ToString() == searchString));
@@ -136,9 +135,10 @@ namespace MagicLand_System.Services.Implements
                         {
                             sch.IsUse = false;
                             roomSchedules.Add(sch);
-                        } 
+                        }
                         roomSchedules.Add((sch));
-                    } else
+                    }
+                    else
                     {
                         roomSchedules.Add(sch);
                     }
@@ -303,7 +303,7 @@ namespace MagicLand_System.Services.Implements
                             finalResult.Add(room);
                         }
                     }
-                    if(request.Method != null)
+                    if (request.Method != null)
                     {
                         finalResult = finalResult.Where(x => x.Type.ToLower().Equals(request.Method.ToLower())).ToList();
                     }
@@ -319,7 +319,7 @@ namespace MagicLand_System.Services.Implements
             if (classCode == null)
             {
                 return new ClassFromClassCode();
-            }         
+            }
             var lecturer = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.Id == classx.LecturerId, include: x => x.Include(x => x.LecturerField));
             var lecturerResponse = new LecturerResponse
             {

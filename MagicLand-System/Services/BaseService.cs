@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using MagicLand_System.Config;
 using MagicLand_System.Domain;
 using MagicLand_System.Domain.Models;
 using MagicLand_System.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Configuration;
 using System.Security.Claims;
 
 namespace MagicLand_System.Services
@@ -13,12 +15,14 @@ namespace MagicLand_System.Services
         protected ILogger<T> _logger;
         protected IMapper _mapper;
         protected IHttpContextAccessor _httpContextAccessor;
-        public BaseService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<T> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        protected IConfiguration _configuration;
+        public BaseService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<T> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _configuration = configuration;
         }
         protected string GetCurrentUserIpAdress()
         {
@@ -49,15 +53,9 @@ namespace MagicLand_System.Services
 
         protected DateTime GetCurrentTime()
         {
-            var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .Build();
-
-            string days = configuration.GetSection("DateNumber:Days").Value!;
-            string hours = configuration.GetSection("DateNumber:Hours").Value!;
-            string minutes = configuration.GetSection("DateNumber:Minutes").Value!;
-
+            string days = _configuration.GetSection("DateNumber:Days").Value!;
+            string hours = _configuration.GetSection("DateNumber:Hours").Value!;
+            string minutes = _configuration.GetSection("DateNumber:Minutes").Value!;
 
             if (hours != "0" || days != "0" || minutes != "0")
             {
@@ -110,6 +108,13 @@ namespace MagicLand_System.Services
                 return false;
             }
             return true;
+        }
+
+        protected List<ExcelConfig> GetExcelConfigs()
+        {
+            var excelConfigs = new List<ExcelConfig>();
+            _configuration.GetSection("Excel").Bind(excelConfigs);
+            return excelConfigs;
         }
     }
 

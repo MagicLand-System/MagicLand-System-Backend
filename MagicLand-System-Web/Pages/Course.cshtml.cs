@@ -1,5 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Domain.Models;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Course;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Syllabuses.ForStaff;
@@ -34,6 +35,20 @@ namespace MagicLand_System_Web_Dev.Pages
             var data = SessionHelper.GetObjectFromJson<List<CourseDefaultMessage>>(HttpContext!.Session, "DataCourse");
             var validSyllabus = SessionHelper.GetObjectFromJson<List<SyllabusResponseV2>>(HttpContext!.Session, "ValidSyllabus");
 
+
+            var objectRequest = new LoginRequest
+            {
+                Phone = "+84971822093",
+            };
+
+            var authresult = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+            if (authresult.IsSuccess)
+            {
+                var user = authresult.Data;
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+            }
 
             if (data != null && data.Count > 0)
             {

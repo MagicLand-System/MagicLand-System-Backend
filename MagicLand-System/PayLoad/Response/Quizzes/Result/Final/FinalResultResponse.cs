@@ -8,9 +8,10 @@
         public string? ClassName { get; set; }
         public string? CourseName { get; set; }
         public string? StudentName { get; set; }
-        public List<FinalTestResultResponse>? QuizzesResults { get; set; }
+        public List<FinalExamResultResponse>? QuizzesResults { get; set; }
         public Participation? ParticipationResult { get; set; }
         public double Average { get; set; }
+        public bool IsRate { get; set; }
         public string? Status { get; set; }
     }
 }

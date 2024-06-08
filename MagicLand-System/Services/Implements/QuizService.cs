@@ -26,8 +26,10 @@ namespace MagicLand_System.Services.Implements
 {
     public class QuizService : BaseService<QuizService>, IQuizService
     {
-        public QuizService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<QuizService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly FirebaseStorageService _firebaseService;
+        public QuizService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<QuizService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, FirebaseStorageService firebaseStorageService) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
+            _firebaseService = firebaseStorageService;
         }
 
         public async Task<List<ExamWithQuizResponse>> LoadQuizzesAsync()
@@ -81,16 +83,10 @@ namespace MagicLand_System.Services.Implements
 
             quizzesResponse.Add(quizResponse);
 
-            //GenerateQuizMutipleChoice(quizzesResponse, course, session, questionPackage);
-
-            //GenerateQuizFlashCard(quizFlashCards, course, session, questionPackage);
         }
 
         public async Task<List<ExamWithQuizResponse>> LoadQuizzesByCourseIdAsync(Guid id)
         {
-            //var quizMultipleChoices = new List<QuizMultipleChoiceResponse>();
-            //var quizFlashCards = new List<QuizFlashCardResponse>();
-
             var quizzesResponse = new List<ExamWithQuizResponse>();
 
             var courses = await _unitOfWork.GetRepository<Course>().GetListAsync(
@@ -212,30 +208,30 @@ namespace MagicLand_System.Services.Implements
 
 
             var addTime = 0;
-            //if (scheduleStartTime.StartsWith("7"))
-            //{
-            //    addTime = 23 - 7;
-            //}
-            //if (scheduleStartTime.StartsWith("9"))
-            //{
-            //    addTime = 23 - 9;
-            //}
-            //if (scheduleStartTime.StartsWith("12"))
-            //{
-            //    addTime = 23 - 12;
-            //}
-            //if (scheduleStartTime.StartsWith("14"))
-            //{
-            //    addTime = 23 - 14;
-            //}
-            //if (scheduleStartTime.StartsWith("16"))
-            //{
-            //    addTime = 23 - 16;
-            //}
-            //if (scheduleStartTime.StartsWith("19"))
-            //{
-            //    addTime = 23 - 19;
-            //}
+            if (scheduleStartTime.StartsWith("7"))
+            {
+                addTime = 23 - 7;
+            }
+            if (scheduleStartTime.StartsWith("9"))
+            {
+                addTime = 23 - 9;
+            }
+            if (scheduleStartTime.StartsWith("12"))
+            {
+                addTime = 23 - 12;
+            }
+            if (scheduleStartTime.StartsWith("14"))
+            {
+                addTime = 23 - 14;
+            }
+            if (scheduleStartTime.StartsWith("16"))
+            {
+                addTime = 23 - 16;
+            }
+            if (scheduleStartTime.StartsWith("19"))
+            {
+                addTime = 23 - 19;
+            }
 
 
             var endTime = DateTime.Parse(date).Date.Add(TimeSpan.Parse(schedule.Slot!.EndTime)).AddHours(addTime);
@@ -487,7 +483,6 @@ namespace MagicLand_System.Services.Implements
             var studentClassId = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(selector: x => x.Id, predicate: x => x.ClassId == classId && x.StudentId == currentStudent.StudentIdAccount);
 
             await GenereateTempExam(examId, studentClassId, quiz, responses);
-            //await GenereateTempExam(examId, quiz, responses);
             return responses;
         }
 
@@ -2372,6 +2367,7 @@ namespace MagicLand_System.Services.Implements
                     throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh, Dữ Liệu Lịch Học Của Lớp Không Tồn Tại Vui Lòng Chờ Sử Lý", StatusCodes.Status500InternalServerError);
                 }
 
+                var studentClass = await _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == student.Id && x.ClassId == cls.Id);
                 var identifyQuizExams = await GenerateIdentifyQuizExam(cls.CourseId);
 
                 var finalResult = new FinalResultResponse
@@ -2388,122 +2384,187 @@ namespace MagicLand_System.Services.Implements
                     selector: x => x.ExamResults,
                     predicate: x => x.ClassId == cls.Id && x.StudentId == student.Id)).ToList();
 
-                var finalTestResults = new List<FinalTestResultResponse>();
+                var finalTestResults = new List<FinalExamResultResponse>();
 
-                double participationWeight = 0.0, attendanceResult = 0.0, evaluateResult = 0.0;
+                double participationWeight = 0.0, participationResult = 0.0;
                 foreach (var quizExam in identifyQuizExams)
                 {
                     if (quizExam.Item2 == null || quizExam.Item2 == default)
                     {
                         participationWeight = quizExam.Item1.Weight;
-                        var partiResult = await CalculateParticipation(schedules, student.Id);
-                        attendanceResult = partiResult.Item1;
-                        evaluateResult = partiResult.Item2;
+                        participationResult = await CalculateParticipation(schedules, student.Id);
                     }
                     else
                     {
-                        finalTestResults.Add(GenerateFinalTestResult(allTestResult, quizExam));
+                        finalTestResults.Add(GenerateFinalExamResult(allTestResult, quizExam));
                     }
                 }
 
-                SettingLastResultInfor(finalResult, finalTestResults, identifyQuizExams,
-                (attendanceResult + evaluateResult) / (schedules.Count * 2), participationWeight);
+                var participationScore = participationResult / (schedules.Count * 2);
+
+                await SettingLastResultInfor(finalResult, finalTestResults, identifyQuizExams, participationScore, participationWeight, studentClass);
+
+                var rate = await _unitOfWork.GetRepository<Rate>().SingleOrDefaultAsync(predicate: x => x.CourseId == cls.CourseId && x.Rater == student.ParentId);
+                if (rate != null)
+                {
+                    finalResult.IsRate = true;
+                }
+                else
+                {
+                    finalResult.IsRate = false;
+                }
 
                 responses.Add(finalResult);
             }
         }
 
-        private async Task<(double, double)> CalculateParticipation(List<Schedule> schedules, Guid studentId)
+        private async Task<double> CalculateParticipation(List<Schedule> schedules, Guid studentId)
         {
-            double attendanceResult = 0.0, evaluateResult = 0.0;
-
-            foreach (var schedule in schedules)
+            try
             {
-                var isPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(
-                    selector: x => x.IsPresent,
-                    predicate: x => x.StudentId == studentId && x.ScheduleId == schedule.Id);
+                var configs = GetExcelConfigs();
+                var file = await _firebaseService.GetFileAsync(_configuration["Firebase:FileName"]!);
+                List<(string, int)> evaluateScoreConfig = new List<(string, int)>(), attendanceScoreConfig = new List<(string, int)>();
 
-                var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(
-                    selector: x => x.Status,
-                    predicate: x => x.StudentId == studentId && x.ScheduleId == schedule.Id);
-
-                attendanceResult += isPresent != null && isPresent.Value ? 10 : 0;
-
-                if (evaluate != null)
+                foreach (var con in configs)
                 {
-                    evaluateResult += evaluate == EvaluateStatusEnum.NOTGOOD.ToString() ? 5
-                    : evaluate == EvaluateStatusEnum.NORMAL.ToString() ? 7 : 10;
+                    var value = _firebaseService.GetCellPairs(file, con.SheetName, con.StartCell, con.EndCell);
+                    if (con.SheetName.ToLower() == ExcelItemEnum.Evaluate.ToString().ToLower())
+                    {
+                        evaluateScoreConfig = value;
+                    }
+                    else
+                    {
+                        attendanceScoreConfig = value;
+                    }
+                }
+
+                double attendanceResult = 0.0, evaluateResult = 0.0;
+
+                foreach (var schedule in schedules)
+                {
+                    var isPresent = await _unitOfWork.GetRepository<Attendance>().SingleOrDefaultAsync(
+                        selector: x => x.IsPresent,
+                        predicate: x => x.StudentId == studentId && x.ScheduleId == schedule.Id);
+
+                    if (isPresent != null && isPresent == true)
+                    {
+                        attendanceResult += attendanceScoreConfig.Single(x => x.Item1.ToLower() == AttendanceStatusEnum.Present.ToString().ToLower()).Item2;
+                    }
+                    if (isPresent != null && isPresent != true)
+                    {
+                        attendanceResult += attendanceScoreConfig.Single(x => x.Item1.ToLower() == AttendanceStatusEnum.Absent.ToString().ToLower()).Item2;
+                    }
+
+                    var evaluate = await _unitOfWork.GetRepository<Evaluate>().SingleOrDefaultAsync(
+                        selector: x => x.Status,
+                        predicate: x => x.StudentId == studentId && x.ScheduleId == schedule.Id);
+
+
+                    if (string.IsNullOrEmpty(evaluate) && evaluate == EvaluateStatusEnum.NORMAL.ToString())
+                    {
+                        evaluateResult += evaluateScoreConfig.Single(x => x.Item1.ToLower() == EvaluateStatusEnum.NORMAL.ToString().ToLower()).Item2;
+                    }
+
+                    if (string.IsNullOrEmpty(evaluate) && evaluate == EvaluateStatusEnum.GOOD.ToString())
+                    {
+                        evaluateResult += evaluateScoreConfig.Single(x => x.Item1.ToLower() == EvaluateStatusEnum.GOOD.ToString().ToLower()).Item2;
+                    }
+
+                    if (string.IsNullOrEmpty(evaluate) && evaluate == EvaluateStatusEnum.EXCELLENT.ToString())
+                    {
+                        evaluateResult += evaluateScoreConfig.Single(x => x.Item1.ToLower() == EvaluateStatusEnum.EXCELLENT.ToString().ToLower()).Item2;
+                    }
+                }
+
+                return attendanceResult + evaluateResult;
+            }
+            catch (Exception e)
+            {
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{e.Message}], Dữ Liệu Không Đồng Bộ Vui Lòng Chờ Sử Lý", StatusCodes.Status500InternalServerError);
+            }
+        }
+        private async Task SettingLastResultInfor(FinalResultResponse finalResult, List<FinalExamResultResponse> finalExamResults, List<(ExamSyllabus, QuestionPackage)> identifyQuizExams, double participationScore, double participationWeight, StudentClass studentClass)
+        {
+            try
+            {
+                var participationResult = new Participation
+                {
+                    Weight = participationWeight,
+                    Score = participationScore,
+                    ScoreWeight = CalculateScoreWeight(participationWeight, participationScore),
+                };
+
+                var syllabusId = identifyQuizExams.First().Item1.SyllabusId;
+
+                var minAvgToPass = await _unitOfWork.GetRepository<Syllabus>().SingleOrDefaultAsync(predicate: x => x.Id == syllabusId, selector: x => x.MinAvgMarkToPass);
+
+                var total = finalExamResults.Sum(ft => ft.ScoreWeight) + participationResult.ScoreWeight;
+                string status = total >= minAvgToPass ? FinalStatusEnum.Passed.ToString() : FinalStatusEnum.NotPassed.ToString();
+
+                foreach (var ftr in finalExamResults)
+                {
+                    var quizExam = identifyQuizExams.SingleOrDefault(iqe => iqe.Item2.Id == ftr.ExamId);
+
+                    if (ftr.ScoreWeight <= quizExam.Item1.CompletionCriteria)
+                    {
+                        status = FinalStatusEnum.NotPassed.ToString();
+                        break;
+                    }
+                }
+
+                finalResult.Average = total;
+                finalResult.Status = status;
+                finalResult.QuizzesResults = finalExamResults;
+                finalResult.ParticipationResult = participationResult;
+
+                if (studentClass.Status == FinalStatusEnum.Passed.ToString() || studentClass.Status == FinalStatusEnum.NotPassed.ToString())
+                {
+                    return;
                 }
                 else
                 {
-                    evaluateResult += 0;
+                    studentClass.Status = status;
+                    _unitOfWork.GetRepository<StudentClass>().UpdateAsync(studentClass);
+                    _unitOfWork.Commit();
                 }
+
             }
-
-            return (attendanceResult, evaluateResult);
-        }
-        private void SettingLastResultInfor(FinalResultResponse finalResult, List<FinalTestResultResponse> finalTestResults, List<(ExamSyllabus, QuestionPackage)> identifyQuizExams, double participationScore, double participationWeight)
-        {
-            var participationResult = new Participation
+            catch (Exception ex)
             {
-                Weight = participationWeight,
-                Score = participationScore,
-                ScoreWeight = CalculateScoreWeight(participationWeight, participationScore),
-            };
-
-            var total = finalTestResults.Sum(ft => ft.ScoreWeight) + participationResult.ScoreWeight;
-            string status = total >= 5 ? "Passed" : "Not Passed";
-            //if (finalTestResults.Any(ft => ft.Score == 0))
-            //{
-            //    status = "Not Passed";
-            //}
-
-            foreach (var ftr in finalTestResults)
-            {
-                var quizExam = identifyQuizExams.SingleOrDefault(iqe => iqe.Item2.Id == ftr.ExamId);
-
-                if (ftr.ScoreWeight < quizExam.Item1.CompletionCriteria)
-                {
-                    status = "Not Passed";
-                    break;
-                }
+                throw new BadHttpRequestException($"Lỗi Hệ Thống Phát Sinh [{ex.Message}], Dữ Liệu Không Đồng Bộ Vui Lòng Chờ Sử Lý", StatusCodes.Status500InternalServerError);
             }
-
-            finalResult.Average = total;
-            finalResult.Status = status;
-            finalResult.QuizzesResults = finalTestResults;
-            finalResult.ParticipationResult = participationResult;
         }
 
-        private FinalTestResultResponse GenerateFinalTestResult(List<ExamResult> allTestResult, (ExamSyllabus, QuestionPackage) quizExam)
+        private FinalExamResultResponse GenerateFinalExamResult(List<ExamResult> allExamResult, (ExamSyllabus, QuestionPackage) quizExam)
         {
-            var finalTestResult = new FinalTestResultResponse();
+            var finalExamResult = new FinalExamResultResponse();
 
-            var testResults = allTestResult.Where(tr => tr.ExamId == quizExam.Item2.Id).ToList();
+            var examResults = allExamResult.Where(tr => tr.ExamId == quizExam.Item2.Id).ToList();
 
             double weight = quizExam.Item1.Part == 2 ? quizExam.Item1.Weight / 2 : quizExam.Item1.Weight;
-            finalTestResult.ExamId = quizExam.Item2.Id;
-            finalTestResult.ExamName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
-            finalTestResult.QuizName = quizExam.Item2.Title;
-            finalTestResult.QuizType = quizExam.Item2.QuizType;
-            finalTestResult.QuizCategory = quizExam.Item1.Category;
-            finalTestResult.Weight = weight;
+            finalExamResult.ExamId = quizExam.Item2.Id;
+            finalExamResult.ExamName = "Bài Kiểm Tra Số" + quizExam.Item2.OrderPackage;
+            finalExamResult.QuizName = quizExam.Item2.Title;
+            finalExamResult.QuizType = quizExam.Item2.QuizType;
+            finalExamResult.QuizCategory = quizExam.Item1.Category;
+            finalExamResult.Weight = weight;
 
-            if (testResults is not null)
+            if (examResults is not null)
             {
-                var testResult = testResults.OrderByDescending(x => x.NoAttempt).First();
+                var examResult = examResults.OrderByDescending(x => x.NoAttempt).First();
 
-                finalTestResult.Score = testResult.ScoreEarned;
-                finalTestResult.ScoreWeight = CalculateScoreWeight(weight, testResult.ScoreEarned);
+                finalExamResult.Score = examResult.ScoreEarned;
+                finalExamResult.ScoreWeight = CalculateScoreWeight(weight, examResult.ScoreEarned);
 
             }
             else
             {
-                finalTestResult.Score = 0;
-                finalTestResult.ScoreWeight = 0;
+                finalExamResult.Score = 0;
+                finalExamResult.ScoreWeight = 0;
             }
 
-            return finalTestResult;
+            return finalExamResult;
         }
 
         private async Task<List<(ExamSyllabus, QuestionPackage)>> GenerateIdentifyQuizExam(Guid courseId)
@@ -2871,13 +2932,13 @@ namespace MagicLand_System.Services.Implements
                     }
                 }
                 double participationScore = 0;
-                var participationWeight = exams!.Single(e => e.Category!.Trim().ToLower() == "participation").Weight;
+                var participationWeight = exams!.Single(e => e.Category!.Trim().ToLower() == OthersEnum.Participation.ToString().ToLower()).Weight;
 
                 if (cls.Status == ClassStatusEnum.COMPLETED.ToString())
                 {
                     var partiResult = await CalculateParticipation(cls.Schedules.ToList(), sc.StudentId);
 
-                    participationScore = (partiResult.Item1 + partiResult.Item2) / (cls.Schedules.Count * 2);
+                    participationScore = partiResult / (cls.Schedules.Count * 2);
                 }
 
                 responses.Add(new StudenInforAndScore

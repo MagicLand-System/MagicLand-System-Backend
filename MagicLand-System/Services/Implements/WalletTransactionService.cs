@@ -20,10 +20,9 @@ namespace MagicLand_System.Services.Implements
 {
     public class WalletTransactionService : BaseService<WalletTransactionService>, IWalletTransactionService
     {
-        public WalletTransactionService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<WalletTransactionService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public WalletTransactionService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<WalletTransactionService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
-
 
         public async Task<WalletTransactionResponse> GetWalletTransaction(string id)
         {
@@ -173,6 +172,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Và Thực Hiện Lại Giao Dịch", StatusCodes.Status500InternalServerError);
             }
+
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
             double total = await CalculateTotal(requests);
@@ -550,12 +550,13 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 var allRegisteredCourse = await _unitOfWork.GetRepository<StudentClass>().GetListAsync(
-                    selector: x => x.Class!.CourseId,
+                    include: x => x.Include(x => x.Class)!,
                     predicate: x => x.StudentId == id);
 
-                if (allRegisteredCourse.Contains(cls.CourseId))
+                var registeredInSameCourse = allRegisteredCourse.SingleOrDefault(ar => ar.Class!.CourseId == cls.CourseId);
+                if (registeredInSameCourse != null && registeredInSameCourse.Status != FinalStatusEnum.Passed.ToString())
                 {
-                    throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Một Lớp Ghi Nhất Ở Mỗi Khóa, Học Sinh [{student.FullName}] Đã Dăng Ký Một Lớp Khác Thuộc Chung Khóa Học Với Lớp Này",
+                    throw new BadHttpRequestException($"Học Sinh Chỉ Có Thể Đăng Ký Một Lớp Ghi Nhất Ở Mỗi Khóa, Học Sinh [{student.FullName}] Đã Dăng Ký Một Lớp Khác Thuộc Chung Khóa Học Với Lớp Này, Hoặc Bé Đã Vượt Qua Khóa Học Này",
                     StatusCodes.Status400BadRequest);
                 }
 
@@ -597,20 +598,20 @@ namespace MagicLand_System.Services.Implements
         private async Task ValidateCoursePrerProgress(Student student, Class cls, List<Course> allPrequisiteCourse)
         {
             var courseCompleted = await _unitOfWork.GetRepository<Course>().GetListAsync(
-                predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId.Equals(student.Id) && c.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString()))));
+                predicate: x => x.Classes.Any(c => c.StudentClasses.Any(sc => sc.StudentId.Equals(student.Id) && sc.Status == FinalStatusEnum.Passed.ToString()) && c.Status!.Trim().Equals(ClassStatusEnum.COMPLETED.ToString())));
 
             if (courseCompleted?.Any() ?? false)
             {
                 var courseNotSatisfied = allPrequisiteCourse.Where(cr => !courseCompleted.Any(c => cr.Id == c.Id)).ToList();
                 if (courseNotSatisfied?.Any() ?? false)
                 {
-                    throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
+                    throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Hoặc Chưa Đạt Khóa Học Tiên Quyết " +
                         $"[ {string.Join(", ", courseNotSatisfied.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
                 }
             }
             else
             {
-                throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Khóa Học Tiên Quyết " +
+                throw new BadHttpRequestException($"Học Sinh {student.FullName} Chưa Hoàn Thành Hoặc Chủa Đạt Khóa Học Tiên Quyết " +
                        $"[ {string.Join(", ", allPrequisiteCourse.Select(c => c.Name))} ] Để Tham Gia Vào Lớp [{cls.ClassCode}]", StatusCodes.Status400BadRequest);
             }
 
@@ -686,21 +687,6 @@ namespace MagicLand_System.Services.Implements
         private double CalculateDiscountEachItem(int numberItem, double total)
         {
             double discount = 0.0;
-
-            //if (numberItem == 2)
-            //{
-            //    discount = double.Round((total * 10) / 100 / numberItem);
-            //}
-
-            //if (numberItem >= 3)
-            //{
-            //    int percent = 10 + (numberItem - 2) * 5;
-            //    percent = percent > 30 ? 30 : percent;
-
-            //    discount = double.Round((total * percent) / 100 / numberItem);
-            //}
-
-            discount = total / numberItem;
             return discount;
         }
 
@@ -858,6 +844,10 @@ namespace MagicLand_System.Services.Implements
                     var studentIdList = pair.Value.Select(v => Guid.Parse(v)).ToList();
                     var studentAttendanceList = await RenderStudentItemScheduleList(classId, studentIdList);
 
+                    var insertAttendances = new List<Attendance>();
+                    var insertEvaluates = new List<Evaluate>();
+                    var insertStudentClasses = new List<StudentClass>();
+
                     var studentClassList = studentIdList.Select(id =>
                     new StudentClass
                     {
@@ -866,9 +856,26 @@ namespace MagicLand_System.Services.Implements
                         ClassId = classId,
                     }).ToList();
 
-                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(studentAttendanceList.Item1);
-                    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(studentAttendanceList.Item2);
-                    await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(studentClassList);
+                    foreach (var id in studentIdList)
+                    {
+                        var haveStudent = _unitOfWork.GetRepository<StudentClass>().SingleOrDefaultAsync(predicate: x => x.StudentId == id);
+                        if (haveStudent != null)
+                        {
+                            continue;
+                        }
+
+                        var currentStudentEvaluates = studentAttendanceList.Item2.Where(eva => eva.StudentId == id).ToList();
+                        var currentStudentAttendances = studentAttendanceList.Item1.Where(att => att.StudentId == id).ToList();
+                        var currentStudentClass = studentClassList.Single(stu => stu.StudentId == id);
+
+                        insertAttendances.AddRange(currentStudentAttendances);
+                        insertEvaluates.AddRange(currentStudentEvaluates);
+                        insertStudentClasses.Add(currentStudentClass);
+                    }
+
+                    await _unitOfWork.GetRepository<Attendance>().InsertRangeAsync(insertAttendances);
+                    await _unitOfWork.GetRepository<Evaluate>().InsertRangeAsync(insertEvaluates);
+                    await _unitOfWork.GetRepository<StudentClass>().InsertRangeAsync(insertStudentClasses);
                     continue;
                 }
 

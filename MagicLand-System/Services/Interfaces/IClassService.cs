@@ -37,6 +37,7 @@ namespace MagicLand_System.Services.Interfaces
         Task ValidateScheduleOfClassesAsync(List<Guid> classIdList);
         Task<List<ClassForAttendance>> GetAllClassForAttandance(string? searchString, DateTime dateTime, string? attendanceStatus);
         Task<List<ClassWithSlotOutSideResponse>> GetCurrentLectureClassesScheduleAsync();
+        Task<List<ClassWithSlotShorten>> GetCurrentLecturerAllClassesAsync(ClassStatusEnum? status);
         Task<ScheduleWithAttendanceResponse> GetAttendanceOfClassesInDateAsync(Guid classId, DateTime date);
         Task<List<EvaluateResponse>> GetStudentEvaluatesAsync(Guid classId, int? noSession);
         Task<List<ClassWithDailyScheduleRes>> GetSuitableClassAsync(Guid classId, List<Guid> studentIdList);

@@ -14,7 +14,7 @@ namespace MagicLand_System.Services.Implements
 {
     public class CartService : BaseService<CartService>, ICartService
     {
-        public CartService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<CartService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public CartService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<CartService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 
@@ -168,7 +168,6 @@ namespace MagicLand_System.Services.Implements
         {
             var currentParentCart = await FetchCurrentParentCart();
 
-            //string message = string.Empty;
             try
             {
                 var classCode = await _unitOfWork.GetRepository<Class>().SingleOrDefaultAsync(
@@ -181,8 +180,6 @@ namespace MagicLand_System.Services.Implements
 
                     if (studentIds.Count() == 0 && currentCartItem!.StudentInCarts.Count() == 0)
                     {
-                        //throw new BadHttpRequestException($"Id [{classId}] Của Lớp Đã Có Trong Giỏ Hàng", StatusCodes.Status400BadRequest);
-                        //return $"[{classCode}] Đã Có Trong Giỏ Hàng";
                         return false;
                     }
 
@@ -198,8 +195,6 @@ namespace MagicLand_System.Services.Implements
                             studentName.Add(name!);
                         }
 
-                        //throw new BadHttpRequestException($"Bạn Đã Có Bé [{string.Join(", ", studentName)}] Trong Lớp [{classCode}] Ở Giỏ Hàng", StatusCodes.Status400BadRequest);
-                        //return $"Bạn Đã Có Bé [{string.Join(", ", studentName)}] Trong Lớp [{classCode}] Ở Giỏ Hàng";
                         return false;
                     }
 
@@ -213,13 +208,6 @@ namespace MagicLand_System.Services.Implements
                        );
                     }
 
-                    //message = await _unitOfWork.CommitAsync() > 0
-                    //    ? await GetDetailCurrentParrentCart()
-                    //    : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
-
-                    //message = await _unitOfWork.CommitAsync() > 0
-                    //? $"Thêm Thành Công Lớp [{classCode}] Vào Giỏ Hàng"
-                    //: $"Thêm Thất Bại Lớp [{classCode}] Vào Giỏ Hàng, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
 
                     return await _unitOfWork.CommitAsync() > 0;
                 }
@@ -243,13 +231,6 @@ namespace MagicLand_System.Services.Implements
                         );
                     }
 
-                    //message = await _unitOfWork.CommitAsync() > 0
-                    //     ? await GetDetailCurrentParrentCart()
-                    //     : throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh", StatusCodes.Status500InternalServerError);
-
-                    //message = await _unitOfWork.CommitAsync() > 0
-                    //? $"Thêm Thành Công Lớp [{classCode}] Vào Giỏ Hàng"
-                    //: $"Thêm Thất Bại Lớp [{classCode}] Vào Giỏ Hàng, Vui Lòng Chờ Hệ Thống Sử Lý Và Thử Lại Sau";
 
                     return await _unitOfWork.CommitAsync() > 0;
                 }

@@ -20,12 +20,11 @@ using MagicLand_System.Services.Interfaces;
 using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace MagicLand_System.Services.Implements
 {
     public class StudentService : BaseService<StudentService>, IStudentService
     {
-        public StudentService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<StudentService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public StudentService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<StudentService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 
@@ -651,7 +650,7 @@ namespace MagicLand_System.Services.Implements
                 }
 
                 evaluate.Status = student.Level == 1
-                ? EvaluateStatusEnum.NOTGOOD.ToString() : student.Level == 2
+                ? EvaluateStatusEnum.EXCELLENT.ToString() : student.Level == 2
                 ? EvaluateStatusEnum.NORMAL.ToString() : EvaluateStatusEnum.GOOD.ToString();
                 evaluate.Note = student.Note!;
             }
@@ -1043,9 +1042,9 @@ namespace MagicLand_System.Services.Implements
                         AttendanceStatus = attendance != null ? attendance.IsPresent == null ? "Chưa Điểm Danh" : attendance.IsPresent == true ? "Có Mặt" : "Vắng Mặt" : "Chưa Điểm Danh",
                         Note = attendance != null ? attendance.Note : null,
                         LecturerName = lecturerName,
-                        EvaluateLevel = evaluate != null ? evaluate.Status == null ? 0 : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? 1 : 3 : 0,
+                        EvaluateLevel = evaluate != null ? evaluate.Status == null ? 0 : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? 2 : evaluate.Status == EvaluateStatusEnum.EXCELLENT.ToString() ? 1 : 3 : 0,
                         EvaluateDescription = evaluate != null ? evaluate.Status == null ? "Chưa Có Đánh Giá" : evaluate.Status == EvaluateStatusEnum.NORMAL.ToString() ? "Bình Thường"
-                        : evaluate.Status == EvaluateStatusEnum.NOTGOOD.ToString() ? "Không Tốt" : "Tốt" : "Chưa Có Đánh Giá",
+                        : evaluate.Status == EvaluateStatusEnum.EXCELLENT.ToString() ? "Không Tốt" : "Tốt" : "Chưa Có Đánh Giá",
                         EvaluateNote = evaluate != null ? evaluate.Note : null,
                     };
 

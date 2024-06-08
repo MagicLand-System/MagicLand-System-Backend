@@ -10,7 +10,7 @@ namespace MagicLand_System.Services.Implements
 {
     public class NotificationService : BaseService<NotificationService>, INotificationService
     {
-        public NotificationService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<NotificationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public NotificationService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<NotificationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 

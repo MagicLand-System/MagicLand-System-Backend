@@ -132,6 +132,27 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                 var attendances = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id, include: x => x.Include(x => x.Student)!);
                 var evaluates = await _unitOfWork.GetRepository<Evaluate>().GetListAsync(predicate: x => x.ScheduleId == schedule.Id);
 
+                var makeUpAttendance = attendances.Where(att => att.MakeUpFromScheduleId != null).ToList();
+                if (makeUpAttendance.Any() && schedule.Date.Date == currentDate.AddDays(1).Date)
+                {
+                    foreach (var item in makeUpAttendance)
+                    {
+                        var makeUpShedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(predicate: x => x.Id == item.Id, include: x => x.Include(x => x.Slot).Include(x => x.Room)!);
+
+                        var actionData = StringHelper.GenerateJsonString(new List<(string, string)>
+                        {
+                          ($"{AttachValueEnum.ClassId}", $"{cls.Id}"),
+                          ($"{AttachValueEnum.Date}", $"{schedule.Date}"),
+                          ($"{AttachValueEnum.NoSlot}", $"{schedules.IndexOf(schedule) + 1}"),
+                        });
+
+                        await GenerateNotification(currentDate, newNotifications, cls.LecturerId, NotificationMessageContant.StudentScheduleMakeUp,
+                             NotificationMessageContant.StudentScheduleMakeUpBody(cls.ClassCode, item.Student.FullName!, makeUpShedule.Date, makeUpShedule.Room.Name!, makeUpShedule.Slot!.StartTime + "-" + makeUpShedule.Slot.EndTime),
+                              NotificationTypeEnum.RemindEvaluate.ToString(), cls.Image!, actionData, _unitOfWork);
+
+                    }
+                }
+
                 if (evaluates.All(eva => string.IsNullOrEmpty(eva.Status)))
                 {
                     var actionData = StringHelper.GenerateJsonString(new List<(string, string)>

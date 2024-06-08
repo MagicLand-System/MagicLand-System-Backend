@@ -8,7 +8,7 @@ namespace MagicLand_System.Services.Implements
 {
     public class SlotService : BaseService<SlotService>, ISlotService
     {
-        public SlotService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<SlotService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SlotService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<SlotService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
 

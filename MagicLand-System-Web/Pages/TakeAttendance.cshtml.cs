@@ -1,6 +1,8 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.Enums;
+using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Request.Evaluates;
+using MagicLand_System.PayLoad.Response;
 using MagicLand_System.PayLoad.Response.Classes;
 using MagicLand_System.PayLoad.Response.Custom;
 using MagicLand_System_Web_Dev.Pages.DataContants;
@@ -34,6 +36,21 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
+            var objectRequest = new LoginRequest
+            {
+                Phone = "+84971822093",
+            };
+
+            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+            if (result.IsSuccess)
+            {
+                var user = result.Data;
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+                return Page();
+            }
+
             var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
             var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
 

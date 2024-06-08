@@ -21,9 +21,10 @@ namespace MagicLand_System.Services.Implements
 {
     public class CourseService : BaseService<CourseService>, ICourseService
     {
-        public CourseService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<CourseService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public CourseService(IUnitOfWork<MagicLandContext> unitOfWork, ILogger<CourseService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor, configuration)
         {
         }
+
 
         #region thanh_lee code
         public async Task<List<CourseWithScheduleShorten>> FilterCourseAsync(
@@ -468,6 +469,27 @@ namespace MagicLand_System.Services.Implements
                 response.Price = await GetDynamicPrice(id, false);
 
                 var currentStudentClass = course.Classes.First(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId)).StudentClasses.Single(sc => sc.StudentId == studentId);
+
+                var classes = course.Classes.Where(cls => cls.StudentClasses.Any(sc => sc.StudentId == studentId) && cls.Status == ClassStatusEnum.COMPLETED.ToString()).ToList();
+                if (classes.Any())
+                {
+                    var currentStudentCompletedClassed = classes.SelectMany(cls => cls.StudentClasses).Where(sc => sc.StudentId == studentId).ToList();
+
+                    if (currentStudentCompletedClassed.Any(sc => sc.Status == FinalStatusEnum.Passed.ToString()))
+                    {
+                        response.IsPassed = true;
+                    }
+                    else if (currentStudentCompletedClassed.All(sc => sc.Status == FinalStatusEnum.NotPassed.ToString()))
+                    {
+                        response.IsPassed = false;
+                    }
+                    else
+                    {
+                        response.IsPassed = null;
+                    }
+                }
+
+
                 if (currentStudentClass.SavedTime != null)
                 {
                     response.IsSuspend = true;
@@ -1478,16 +1500,21 @@ namespace MagicLand_System.Services.Implements
             }
             try
             {
-                var newRater = new Rate
+                var rater = GetUserIdFromJwt();
+                var rate = await _unitOfWork.GetRepository<Rate>().SingleOrDefaultAsync(predicate: x => x.CourseId == courseId && x.Rater == rater);
+                if (rate == null)
                 {
-                    Id = Guid.NewGuid(),
-                    Rater = GetUserIdFromJwt(),
-                    RateScore = rateScore,
-                    CourseId = courseId,
-                };
+                    var newRater = new Rate
+                    {
+                        Id = Guid.NewGuid(),
+                        Rater = GetUserIdFromJwt(),
+                        RateScore = rateScore,
+                        CourseId = courseId,
+                    };
 
-                await _unitOfWork.GetRepository<Rate>().InsertAsync(newRater);
-                _unitOfWork.Commit();
+                    await _unitOfWork.GetRepository<Rate>().InsertAsync(newRater);
+                    _unitOfWork.Commit();
+                }
                 return "Đánh Giá Khóa Học Thành Công";
             }
             catch (Exception ex)

@@ -201,6 +201,8 @@
             public const string GetCurrentClassesSchedule = GetAll + "/current/classes";
             public const string GetClassesAttendanceWithDate = GetAll + "/class/date/attendances";
             public const string GetLectureSchedule = GetAll + "/schedules";
+            public const string GetLecturerClasses = GetAll + "/classes/all";
+
         }
 
         public static class AttendanceEndpoint

@@ -1,4 +1,6 @@
 
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using MagicLand_System.Background;
 using MagicLand_System.Background.BackgroundServiceImplements;
 using MagicLand_System.Background.BackgroundServiceInterfaces;
@@ -8,6 +10,7 @@ using MagicLand_System.Domain;
 using MagicLand_System.Middlewares;
 using MagicLand_System.Repository.Implement;
 using MagicLand_System.Repository.Interfaces;
+using MagicLand_System.Services;
 using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -115,7 +118,6 @@ builder.Services.AddScoped<ISyllabusService, SyllabusService>();
 builder.Services.AddScoped<IDashboardService, DashBoardService>();
 builder.Services.AddScoped<IDeveloperService, DeveloperService>();
 
-
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
@@ -141,6 +143,17 @@ builder.Services.AddScoped<ITransactionBackgroundService, TransactionBackgroundS
 builder.Services.AddScoped<INotificationBackgroundService, NotificationBackgroundService>();
 builder.Services.AddScoped<ITempEntityBackgroundService, TempEntityBackgroundService>();
 
+var serviceAccountKeyPath = Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["Firebase:ServiceAccountKeyPath"]!);
+var storageBucket = builder.Configuration["Firebase:StorageBucket"];
+
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", serviceAccountKeyPath);
+
+FirebaseApp.Create(new AppOptions
+{
+    Credential = GoogleCredential.FromFile(serviceAccountKeyPath)
+});
+
+builder.Services.AddSingleton(new FirebaseStorageService(storageBucket!));
 
 var app = builder.Build();
 

@@ -25,8 +25,14 @@ namespace MagicLand_System.Constants
         public const string ClassStartedTitle = "Lớp Học Đã Bắt Đầu";
         public const string ClassCanceledTitle = "Lớp Học Đã Hủy";
         public const string ClassCompletedTitle = "Bé Đã Hoàn Thành Lớp Học";
+        public const string StudentScheduleMakeUp = "Bé Có Lịch Học Bù";
         public const string RemindRegisterNewClassWhenMakeUpTitle = "Đăng Ký Lớp Mới Cho Lớp Đã Bảo Lưu";
 
+
+        public static string StudentScheduleMakeUpBody(string classCode, string studentName, DateTime date, string room, string slot)
+        {
+            return $"Bé {studentName} Thuộc Lớp {classCode} Có Lịch Học Bù Vào Ngày {date.ToString("MM/dd/yyyy")}, Phòng {room} Vào Giờ {slot}, Phụ Huynh Nhớ Dẫn Bé Đi Học Nhé";
+        }
         public static string ChangeClassRequestBody(string classCode, string studentName)
         {
             return $"Học Sinh {studentName} Thuộc Lớp {classCode} Cần Được Chuyển Lớp, Do Lớp Đã Hủy Vì Không Đủ Số Lượng Học Sinh";
