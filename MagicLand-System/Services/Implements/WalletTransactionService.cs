@@ -164,6 +164,7 @@ namespace MagicLand_System.Services.Implements
             {
                 throw new BadHttpRequestException("Lỗi Hệ Thống Phát Sinh Không Thể Xác Thực Người Dùng Vui Lòng Đăng Nhập Và Thực Hiện Lại Giao Dịch", StatusCodes.Status500InternalServerError);
             }
+
             var personalWallet = await _unitOfWork.GetRepository<PersonalWallet>().SingleOrDefaultAsync(predicate: x => x.UserId.Equals(GetUserIdFromJwt()));
 
             double total = await CalculateTotal(requests);

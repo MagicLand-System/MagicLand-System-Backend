@@ -30,6 +30,7 @@ using MagicLand_System.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 
 namespace MagicLand_System.Services.Implements
 {
@@ -149,30 +150,34 @@ namespace MagicLand_System.Services.Implements
             DateTime startDate = request.StartDate;
             List<Schedule> schedules = new List<Schedule>();
             List<ScheduleRequest> sc = request.ScheduleRequests;
+            
             while (scheduleAdded < numberOfSessions)
             {
                 if (convertedDateOfWeek.Contains(startDate.DayOfWeek))
                 {
                     string dateString = startDate.DayOfWeek.ToString().ToLower();
                     Guid slotId = Guid.NewGuid();
+                    List<Guid> slotIds = new List<Guid>();
                     foreach (var sq in sc)
                     {
                         if (sq.DateOfWeek.ToLower().Equals(dateString))
                         {
-                            slotId = sq.SlotId;
+                            slotIds.Add(sq.SlotId);
                         }
                     }
-
-                    schedules.Add(new Schedule
+                    foreach(var sl in slotIds)
                     {
-                        Id = Guid.NewGuid(),
-                        ClassId = createdClass.Id,
-                        Date = startDate,
-                        RoomId = request.RoomId,
-                        SlotId = slotId,
-                        DayOfWeek = (int)Math.Pow(2, (int)startDate.DayOfWeek),
-                    });
-                    scheduleAdded++;
+                        schedules.Add(new Schedule
+                        {
+                            Id = Guid.NewGuid(),
+                            ClassId = createdClass.Id,
+                            Date = startDate,
+                            RoomId = request.RoomId,
+                            SlotId = sl,
+                            DayOfWeek = (int)Math.Pow(2, (int)startDate.DayOfWeek),
+                        });
+                        scheduleAdded++;
+                    }
                 }
                 startDate = startDate.AddDays(1);
             }
@@ -299,7 +304,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Sunday",
+                            DayOfWeek = DayOfWeekEnum.Sunday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -308,7 +313,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Monday",
+                            DayOfWeek = DayOfWeekEnum.Monday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -317,7 +322,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Tuesday",
+                            DayOfWeek = DayOfWeekEnum.Tuesday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -326,7 +331,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Wednesday",
+                            DayOfWeek = DayOfWeekEnum.Wednesday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -335,7 +340,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Thursday",
+                            DayOfWeek = DayOfWeekEnum.Thursday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -344,7 +349,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Friday",
+                            DayOfWeek = DayOfWeekEnum.Friday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -353,7 +358,7 @@ namespace MagicLand_System.Services.Implements
                     {
                         schedules.Add(new DailySchedule
                         {
-                            DayOfWeek = "Saturday",
+                            DayOfWeek = DayOfWeekEnum.Saturday.ToString(),
                             EndTime = slot.EndTime,
                             StartTime = slot.StartTime,
                         });
@@ -518,7 +523,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Sunday",
+                        DayOfWeek = DayOfWeekEnum.Sunday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -527,7 +532,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Monday",
+                        DayOfWeek = DayOfWeek.Monday.ToString() ,
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -536,7 +541,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Tuesday",
+                        DayOfWeek = DayOfWeek.Tuesday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -545,7 +550,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Wednesday",
+                        DayOfWeek = DayOfWeekEnum.Wednesday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -554,7 +559,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Thursday",
+                        DayOfWeek = DayOfWeekEnum.Thursday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -563,7 +568,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Friday",
+                        DayOfWeek = DayOfWeekEnum.Friday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -572,7 +577,7 @@ namespace MagicLand_System.Services.Implements
                 {
                     schedules.Add(new DailySchedule
                     {
-                        DayOfWeek = "Saturday",
+                        DayOfWeek = DayOfWeekEnum.Saturday.ToString(),
                         EndTime = slot.EndTime,
                         StartTime = slot.StartTime,
                     });
@@ -2051,6 +2056,7 @@ namespace MagicLand_System.Services.Implements
                     CourseId = courseId.ToString(),
                     Schedules = scheduleRequests,
                     StartDate = date.Value.AddHours(7),
+                    Method = rq.Method,
                 });
                 if (roomLec.Lecturer == null && roomLec.Room == null)
                 {
