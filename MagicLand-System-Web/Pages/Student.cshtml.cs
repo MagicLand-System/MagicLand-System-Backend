@@ -49,7 +49,6 @@ namespace MagicLand_System_Web_Dev.Pages
                 var user = result.Data;
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
                 SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-                return Page();
             }
             var messages = SessionHelper.GetObjectFromJson<List<StudentDefaultMessage>>(HttpContext.Session, "DataStudent");
             var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
