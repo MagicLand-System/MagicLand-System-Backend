@@ -4463,11 +4463,7 @@ namespace MagicLand_System.Services.Implements
             List<Class> filterCls = new List<Class>();
             foreach (var cls in classes)
             {
-                var count = cls.StudentClasses.Where(x => x.StudentId.ToString().Equals(studentId));
-                if (count.Count() == 0)
-                {
-                    filterCls.Add(cls);
-                }
+                filterCls.Add(cls);
             }
             var att = await _unitOfWork.GetRepository<Attendance>().GetListAsync(predicate: x => x.StudentId.ToString().Equals(studentId), include: x => x.Include(x => x.Schedule));
             List<Schedule> schedules = new List<Schedule>();
