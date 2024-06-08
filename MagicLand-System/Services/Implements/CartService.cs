@@ -486,6 +486,10 @@ namespace MagicLand_System.Services.Implements
                     var course = await _unitOfWork.GetRepository<Course>().SingleOrDefaultAsync(
                       predicate: c => c.Id == item.CourseId,
                       include: x => x.Include(x => x.Syllabus)!);
+                    if (course == null)
+                    {
+                        continue;
+                    }
 
                     var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
                         predicate: c => c.CourseId == item.CourseId,
