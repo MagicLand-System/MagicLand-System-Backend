@@ -29,7 +29,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     var classes = await _unitOfWork.GetRepository<Class>().GetListAsync(
                         predicate: x => x.Status != ClassStatusEnum.CANCELED.ToString() && x.Status != ClassStatusEnum.COMPLETED.ToString(),
-                        include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Attendances));
+                        include: x => x.Include(x => x.Schedules).ThenInclude(sc => sc.Attendances).Include(x => x.Schedules).ThenInclude(sc => sc.Attendances)!);
 
                     var newNotifications = new List<Notification>();
                     newNotifications.Add(new Notification
@@ -40,6 +40,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
 
                     foreach (var cls in classes)
                     {
+
                         await CheckingDateTime(cls, currentTime, newNotifications, _unitOfWork);
                     }
 
@@ -85,7 +86,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     return;
                 }
 
-                if (cls.EndDate.Date == currentTime.AddDays(-1).Date)
+                if (cls.EndDate.Date == currentTime.AddDays(-1).Date || cls.EndDate.Date < currentTime.Date)
                 {
                     await UpdateItem(studentClass, cls, currentTime, ClassStatusEnum.COMPLETED, newNotifications, _unitOfWork);
                     return;
@@ -150,6 +151,7 @@ namespace MagicLand_System.Background.BackgroundServiceImplements
                     foreach (var schedule in schedules)
                     {
                         schedule.Attendances.ToList().ForEach(att => att.IsPublic = true);
+                        schedule.Evaluates.ToList().ForEach(eva => eva.IsPublic = true);
                     }
 
                     studentClass.ForEach(sc => sc.CanChangeClass = false);

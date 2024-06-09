@@ -36,42 +36,51 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var objectRequest = new LoginRequest
+            try
             {
-                Phone = "+84971822093",
-            };
 
-            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+                var objectRequest = new LoginRequest
+                {
+                    Phone = "+84971822093",
+                };
 
-            if (result.IsSuccess)
-            {
-                var user = result.Data;
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-            }
+                var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
 
-            var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
-            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                if (result.IsSuccess)
+                {
+                    var user = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+                }
 
-            if (messages != null && messages.Count > 0)
-            {
-                CurrentStudentLearningMessage = messages.First();
-                ViewData["IndexPage"] = 0;
-            }
+                var messages = SessionHelper.GetObjectFromJson<List<StudentLearningInfor>>(HttpContext.Session, "DataLearning");
+                var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+
+                if (messages != null && messages.Count > 0)
+                {
+                    CurrentStudentLearningMessage = messages.First();
+                    ViewData["IndexPage"] = 0;
+                }
 
 
-            if (classes != null && classes.Count > 0)
-            {
-                Classes = classes;
-            }
-            else
-            {
-                await FetchClass();
+                if (classes != null && classes.Count > 0)
+                {
+                    Classes = classes;
+                }
+                else
+                {
+                    await FetchClass();
+
+                    return Page();
+                }
 
                 return Page();
             }
+            catch (Exception ex)
+            {
+                return RedirectToPage("/Error");
+            }
 
-            return Page();
         }
 
         private async Task FetchClass()

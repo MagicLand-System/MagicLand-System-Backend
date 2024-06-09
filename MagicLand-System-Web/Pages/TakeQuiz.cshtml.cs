@@ -43,42 +43,50 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnGet()
         {
-            IsLoading = false;
-            var messages = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext!.Session, "DataQuiz");
-            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "Classes");
-
-            var objectRequest = new LoginRequest
+            try
             {
-                Phone = "+84971822093",
-            };
+                IsLoading = false;
+                var messages = SessionHelper.GetObjectFromJson<List<StudentQuizInforMessage>>(HttpContext!.Session, "DataQuiz");
+                var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "Classes");
 
-            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+                var objectRequest = new LoginRequest
+                {
+                    Phone = "+84971822093",
+                };
 
-            if (result.IsSuccess)
-            {
-                var user = result.Data;
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-            }
+                var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
 
-            if (messages != null && messages.Count > 0)
-            {
-                CurrentStudentQuizInforMessage = messages.First();
-                ViewData["IndexPage"] = 0;
-            }
+                if (result.IsSuccess)
+                {
+                    var user = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+                }
 
-            if (classes != null && classes.Count > 0)
-            {
-                Classes = classes;
-            }
-            else
-            {
-                await FetchClass();
+                if (messages != null && messages.Count > 0)
+                {
+                    CurrentStudentQuizInforMessage = messages.First();
+                    ViewData["IndexPage"] = 0;
+                }
+
+                if (classes != null && classes.Count > 0)
+                {
+                    Classes = classes;
+                }
+                else
+                {
+                    await FetchClass();
+
+                    return Page();
+                }
 
                 return Page();
             }
+            catch (Exception ex)
+            {
+                return RedirectToPage("/Error");
+            }
 
-            return Page();
         }
 
         private async Task FetchClass()

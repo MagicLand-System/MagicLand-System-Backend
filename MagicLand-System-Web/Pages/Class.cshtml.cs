@@ -37,57 +37,64 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnGet()
         {
-            var objectRequest = new LoginRequest
+            try
             {
-                Phone = "+84971822093",
-            };
-
-            var authresult = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
-
-            if (authresult.IsSuccess)
-            {
-                var user = authresult.Data;
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-            }
-            IsLoading = false;
-            if (ClassMessages == null || ClassMessages.Count == 0)
-            {
-                var messages = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
-                var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
-
-                if (messages != null && messages.Count > 0)
+                var objectRequest = new LoginRequest
                 {
-                    ClassMessages = messages;
+                    Phone = "+84971822093",
+                };
+
+                var authresult = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+                if (authresult.IsSuccess)
+                {
+                    var user = authresult.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
                 }
-
-                if (courses != null && courses.Count > 0)
+                IsLoading = false;
+                if (ClassMessages == null || ClassMessages.Count == 0)
                 {
-                    Courses = courses;
-                }
-                else
-                {
-                    var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
+                    var messages = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext!.Session, "DataClass");
+                    var courses = SessionHelper.GetObjectFromJson<List<CourseWithScheduleShorten>>(HttpContext!.Session, "Courses");
 
-                    if (result.IsSuccess)
+                    if (messages != null && messages.Count > 0)
                     {
-                        if (result.Data == null)
-                        {
-                            SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", Courses);
-                        }
-                        else
-                        {
-                            Courses = result.Data;
-                            SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data!);
-                        }
-
-                        return Page();
+                        ClassMessages = messages;
                     }
 
-                }
-            }
+                    if (courses != null && courses.Count > 0)
+                    {
+                        Courses = courses;
+                    }
+                    else
+                    {
+                        var result = await _apiHelper.FetchApiAsync<List<CourseWithScheduleShorten>>(ApiEndpointConstant.CourseEndpoint.GetAll, MethodEnum.GET, null);
 
-            return Page();
+                        if (result.IsSuccess)
+                        {
+                            if (result.Data == null)
+                            {
+                                SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", Courses);
+                            }
+                            else
+                            {
+                                Courses = result.Data;
+                                SessionHelper.SetObjectAsJson(HttpContext.Session, "Courses", result.Data!);
+                            }
+
+                            return Page();
+                        }
+
+                    }
+                }
+
+                return Page();
+            }
+            catch (Exception e)
+            {
+                return RedirectToPage("/Error");
+            }
         }
         public async Task<IActionResult> OnPostProgressAsync(int inputField, string listCourseId, string submitButton)
         {

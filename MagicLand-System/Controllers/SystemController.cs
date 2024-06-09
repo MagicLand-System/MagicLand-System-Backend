@@ -25,7 +25,7 @@ namespace MagicLand_System.Controllers
         [HttpPost("/System/SetTime")]
         public async Task<IActionResult> SetTime([FromBody] DateTime date)
         {
-            var today = _dashboardService.GetTime();
+            var today = DateTime.Today;
             var day = (date.Date - today).Days;
             var hours = date.TimeOfDay.Hours;
             var minutes = date.TimeOfDay.Minutes;

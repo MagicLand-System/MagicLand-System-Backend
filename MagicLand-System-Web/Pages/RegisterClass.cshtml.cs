@@ -42,49 +42,58 @@ namespace MagicLand_System_Web_Dev.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
-            IsLoading = false;
-            var messages = SessionHelper.GetObjectFromJson<List<RegisterInforMessage>>(HttpContext.Session, "DataRegister");
-            var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
-            var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
+            try
+            {
+                IsLoading = false;
+                var messages = SessionHelper.GetObjectFromJson<List<RegisterInforMessage>>(HttpContext.Session, "DataRegister");
+                var classes = SessionHelper.GetObjectFromJson<List<ClassDefaultMessage>>(HttpContext.Session, "Classes");
+                var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
 
 
-            if (messages != null && messages.Count > 0)
-            {
-                RegisterInforMessages = messages;
-            }
 
-            if (parents == null || parents.Count == 0)
-            {
-                await FetchParent();
-            }
+                var objectRequest = new LoginRequest
+                {
+                    Phone = "+84971822093",
+                };
 
-            if (classes != null && classes.Count > 0)
-            {
-                Classes = classes;
-            }
-            else
-            {
-                await FetchClass();
+                var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+                if (result.IsSuccess)
+                {
+                    var user = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+                }
+
+                if (messages != null && messages.Count > 0)
+                {
+                    RegisterInforMessages = messages;
+                }
+
+                if (parents == null || parents.Count == 0)
+                {
+                    await FetchParent();
+                }
+
+                if (classes != null && classes.Count > 0)
+                {
+                    Classes = classes;
+                }
+                else
+                {
+                    await FetchClass();
+
+                    return Page();
+                }
+
 
                 return Page();
             }
-
-            var objectRequest = new LoginRequest
+            catch (Exception ex)
             {
-                Phone = "+84971822093",
-            };
-
-            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
-
-            if (result.IsSuccess)
-            {
-                var user = result.Data;
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-                return Page();
+                return RedirectToPage("/Error");
             }
-
-            return Page();
+         
         }
 
         private async Task FetchParent()

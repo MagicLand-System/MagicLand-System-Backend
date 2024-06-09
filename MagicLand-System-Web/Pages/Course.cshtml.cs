@@ -31,56 +31,64 @@ namespace MagicLand_System_Web_Dev.Pages
         public List<SyllabusResponseV2> ValidSyllabus { get; set; } = new List<SyllabusResponseV2>();
         public async Task<IActionResult> OnGet()
         {
-            IsLoading = false;
-            var data = SessionHelper.GetObjectFromJson<List<CourseDefaultMessage>>(HttpContext!.Session, "DataCourse");
-            var validSyllabus = SessionHelper.GetObjectFromJson<List<SyllabusResponseV2>>(HttpContext!.Session, "ValidSyllabus");
-
-
-            var objectRequest = new LoginRequest
+            try
             {
-                Phone = "+84971822093",
-            };
+                IsLoading = false;
+                var data = SessionHelper.GetObjectFromJson<List<CourseDefaultMessage>>(HttpContext!.Session, "DataCourse");
+                var validSyllabus = SessionHelper.GetObjectFromJson<List<SyllabusResponseV2>>(HttpContext!.Session, "ValidSyllabus");
 
-            var authresult = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
 
-            if (authresult.IsSuccess)
-            {
-                var user = authresult.Data;
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-            }
-
-            if (data != null && data.Count > 0)
-            {
-                CourseMessages = data;
-            }
-
-            if (validSyllabus != null && validSyllabus.Count > 0)
-            {
-                ValidSyllabus = validSyllabus;
-            }
-            else
-            {
-                var result = await _apiHelper.FetchApiAsync<List<SyllabusResponseV2>>(ApiEndpointConstant.SyllabusEndpoint.AvailableSyl, MethodEnum.GET, null);
-
-                if (result.IsSuccess)
+                var objectRequest = new LoginRequest
                 {
-                    if (result.Data == null)
-                    {
-                        SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", ValidSyllabus);
-                    }
-                    else
-                    {
-                        ValidSyllabus = result.Data;
-                        SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", result.Data!);
-                    }
+                    Phone = "+84971822093",
+                };
 
-                    return Page();
+                var authresult = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+
+                if (authresult.IsSuccess)
+                {
+                    var user = authresult.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
                 }
 
+                if (data != null && data.Count > 0)
+                {
+                    CourseMessages = data;
+                }
+
+                if (validSyllabus != null && validSyllabus.Count > 0)
+                {
+                    ValidSyllabus = validSyllabus;
+                }
+                else
+                {
+                    var result = await _apiHelper.FetchApiAsync<List<SyllabusResponseV2>>(ApiEndpointConstant.SyllabusEndpoint.AvailableSyl, MethodEnum.GET, null);
+
+                    if (result.IsSuccess)
+                    {
+                        if (result.Data == null)
+                        {
+                            SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", ValidSyllabus);
+                        }
+                        else
+                        {
+                            ValidSyllabus = result.Data;
+                            SessionHelper.SetObjectAsJson(HttpContext.Session, "ValidSyllabus", result.Data!);
+                        }
+
+                        return Page();
+                    }
+
+                }
+                return Page();
+
+            }
+            catch (Exception ex)
+            {
+                return RedirectToPage("/Error");
             }
 
-            return Page();
         }
         public async Task<IActionResult> OnPostAsync(string submitButton)
         {

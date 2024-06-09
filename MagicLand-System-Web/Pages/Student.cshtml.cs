@@ -36,40 +36,49 @@ namespace MagicLand_System_Web_Dev.Pages
         public List<LoginResponse> Parents { get; set; } = new List<LoginResponse>();
         public async Task<IActionResult> OnGetAsync()
         {
-            IsLoading = false;
-            var objectRequest = new LoginRequest
+            try
             {
-                Phone = "+84971822093",
-            };
+                IsLoading = false;
+                var objectRequest = new LoginRequest
+                {
+                    Phone = "+84971822093",
+                };
 
-            var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
+                var result = await _apiHelper.FetchApiAsync<LoginResponse>(ApiEndpointConstant.AuthenticationEndpoint.Authentication, MethodEnum.POST, objectRequest);
 
-            if (result.IsSuccess)
-            {
-                var user = result.Data;
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
-                SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
-            }
-            var messages = SessionHelper.GetObjectFromJson<List<StudentDefaultMessage>>(HttpContext.Session, "DataStudent");
-            var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
-            if (messages != null && messages.Count > 0)
-            {
-                StudentMessages = messages;
-            }
+                if (result.IsSuccess)
+                {
+                    var user = result.Data;
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "Token", user!.AccessToken);
+                    SessionHelper.SetObjectAsJson(HttpContext.Session, "DeveloperToken", user!.AccessToken);
+                }
+                var messages = SessionHelper.GetObjectFromJson<List<StudentDefaultMessage>>(HttpContext.Session, "DataStudent");
+                var parents = SessionHelper.GetObjectFromJson<List<LoginResponse>>(HttpContext.Session, "Parents");
+                if (messages != null && messages.Count > 0)
+                {
+                    StudentMessages = messages;
+                }
 
 
-            if (parents != null && parents.Count > 0)
-            {
-                Parents = parents;
-            }
-            else
-            {
-                await FetchParent();
+                if (parents != null && parents.Count > 0)
+                {
+                    Parents = parents;
+                }
+                else
+                {
+                    await FetchParent();
+
+                    return Page();
+                }
 
                 return Page();
+
+            }
+            catch (Exception ex)
+            {
+                return RedirectToPage("/Error");
             }
 
-            return Page();
         }
 
         private async Task FetchParent()
