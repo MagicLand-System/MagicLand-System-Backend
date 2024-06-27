@@ -29,5 +29,13 @@ namespace MagicLand_System.Utils
         {
             return Enum.GetValues(typeof(T)).Cast<T>();
         }
+
+        public static string CompareAndGetDescription<T>(string stringCompare)
+        {
+            var value = GetValues<T>().FirstOrDefault(val => val!.ToString() == stringCompare);
+
+            return GetDescriptionFromEnum<T>(value);
+        }
+
     }
 }

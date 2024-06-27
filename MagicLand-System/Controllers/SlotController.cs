@@ -1,8 +1,6 @@
 ﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Response;
-using MagicLand_System.Services.Implements;
 using MagicLand_System.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -11,17 +9,17 @@ namespace MagicLand_System.Controllers
     public class SlotController : BaseController<SlotController>
     {
         private readonly ISlotService _slotService;
-        public SlotController(ILogger<SlotController> logger , ISlotService slotService) : base(logger)
+        public SlotController(ILogger<SlotController> logger, ISlotService slotService) : base(logger)
         {
             _slotService = slotService;
         }
-        [HttpGet(ApiEndpointConstant.SlotEnpoint.GetAll)]
+        [HttpGet(ApiEndpointConstant.SlotEndpoint.GetAll)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(ErrorResponse))]
         public async Task<IActionResult> GetSlots()
         {
             var slots = await _slotService.GetSlots();
-            if(slots == null) 
+            if (slots == null)
             {
                 return NotFound(new ErrorResponse
                 {

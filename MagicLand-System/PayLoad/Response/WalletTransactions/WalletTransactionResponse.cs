@@ -16,5 +16,13 @@ namespace MagicLand_System.PayLoad.Response.WalletTransactions
         public double Money { get; set; }
         public Domain.Models.Class MyClassResponse { get; set; }
         public string CourseName {  get; set; } 
+        public string Method {  get; set; } 
+        public string? TransactionCode {  get; set; }   
+        public string Status { get; set; }
+        public string Currency { get; set; }
+        public string? CreateBy { get; set; }
+        public string? Signature { get; set; }
+        public double Discount { get; set; } = 0.0;
+
     }
 }

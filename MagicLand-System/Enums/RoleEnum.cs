@@ -5,6 +5,8 @@
         ADMIN,
         STAFF,
         PARENT,
-        LECTURER
+        LECTURER,
+        STUDENT,
+        DEVELOPER,
     }
 }

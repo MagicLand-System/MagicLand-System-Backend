@@ -4,8 +4,6 @@
     {
         public Guid Id { get; set; }
         public required string Name { get; set; }
-        public string? Status { get; set; }
-
 
         public ICollection<User> Accounts { get; set; } = new List<User>();
 

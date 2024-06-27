@@ -5,7 +5,6 @@ namespace MagicLand_System.Domain.Models
     public class Class
     {
         public Guid Id { get; set; }
-        public string? Name { get; set; }
         public string? ClassCode { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -30,5 +29,6 @@ namespace MagicLand_System.Domain.Models
 
         public ICollection<StudentClass> StudentClasses { get; set; } = new List<StudentClass>();
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
+
     }
 }

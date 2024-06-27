@@ -1,0 +1,257 @@
+﻿@page
+@model MagicLand_System_Web_Dev.Pages.StudentModel
+@{
+    ViewData["Title"] = "Student";
+    ViewData["Page"] = "Student";
+    var Message = ViewData["Message"]?.ToString();
+    var a = "das";
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #student {
+        background-color: lightblue;
+    }
+
+        #student .nav-link {
+            color: blue !important;
+        }
+
+        #student i.fa {
+            color: blue;
+        }
+</style>
+
+<section class="body-class">
+    <div class="text-center">
+        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Nhiều Học Sinh Thuộc Ngẫu Nhiên Phụ Huynh</b></h6>
+
+        <div class="form-group" onsubmit="return setLoader()">
+            <form method="post" asp-page-handler="Progress">
+                <label for="inputField">Nhập Số Học Sinh: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <input type="hidden" id="input-value" name="listPhone" value="" />
+                <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Người Dùng</button>
+            </form>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-warning" style="margin-left: auto; width: 75%;">
+                @Message
+            </div>
+        }
+
+        @if (Model.IsLoading)
+        {
+            <script>
+                setLoader();
+            </script>
+        }
+
+        <div class="form-loader" id="loaderContainer" style="text-align: center; display:none;">
+            <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
+            <div style="margin-left: 29%;">Now Progressing...</div>
+        </div>
+
+        @if ((Model.StudentMessages != null && Model.StudentMessages.Count > 0) || (Model.Parents != null && Model.Parents.Count > 0))
+        {
+            {
+                ViewData["Type"] = Model.StudentMessages != null && Model.StudentMessages.Count > 0 ? "MESSAGE" : "DATA";
+            }
+            <div class="from-search" style="float: left; margin-top: 30px; margin-bottom: 5px;">
+                <form method="post" asp-page-handler="Search">
+                    <input type="hidden" id="input-search-type" name="searchType" value="@ViewData["Type"]">
+                    <input type="text" id="input-search-value" name="searchKey" value="" />
+                    <button id="button-submit-search" type="submit" style="background-color: white; color: black">Tìm Kiếm</button>
+                </form>
+            </div>
+        }
+
+
+        <div id="table-progress" class="table-container" style="overflow-y: auto; height: 363px; width: 73%; margin-top: 22px; position: relative}">
+            @if (Model.StudentMessages != null && Model.StudentMessages.Count() > 0)
+            {
+                <table class="table">
+                    <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                        <tr>
+                            <th>
+                                Thứ Tự
+                            </th>
+                            <th>
+                                Tên
+                            </th>
+                            <th>
+                                Số Tài Khoản Phát Sinh
+                            </th>
+                            <th>
+                                Thuộc Phụ Huynh
+                            </th>
+                            <th>
+                                Độ Tuổi
+                            </th>
+                            <th style="width: 120px">
+                                Giới Tính
+                            </th>
+                            <th style="width: 100px">
+                                Trạng Thái
+                            </th>
+                            <th style="width: 100px">
+                                Ghi Chú
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 0;
+                        }
+                        @foreach (var item in Model.StudentMessages)
+                        {
+                            {
+                                index++;
+                            }
+                            <tr>
+                                <td>
+                                    @index
+                                </td>
+                                <td>
+                                    @item.StudentName
+                                </td>
+                                <td>
+                                    @item.AccountArise
+                                </td>
+                                <td>
+                                    @item.ParentBelong
+                                </td>
+                                <td>
+                                    @item.Age
+                                </td>
+                                <td>
+                                    @item.Gender
+                                </td>
+                                <td>
+                                    @item.Status
+                                </td>
+                                <td>
+                                    @item.Note
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (Model.Parents != null)
+            {
+                if (Model.Parents.Count == 0)
+                {
+                    <h6>Không Tìm Thấy Người Dùng Nào</h6>
+                }
+                else
+                {
+                    <table class="table">
+                        <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                            <tr>
+                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Phụ Huynh Hoặc Tất Cả Phụ Huynh</th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    Thứ Tự
+                                </th>
+                                <th>
+                                    Tên
+                                </th>
+                                <th>
+                                    Số Điện Thoại
+                                </th>
+                                <th>
+                                    Email
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            @{
+                                int index = 0;
+                            }
+                            @foreach (var item in Model.Parents)
+                            {
+                                {
+                                    index++;
+                                }
+                                <tr id="row-@index" onclick="rowClicked('@item.Phone', '@index')">
+                                    <td>
+                                        @index
+                                    </td>
+                                    <td>
+                                        @item.FullName
+                                    </td>
+                                    <td>
+                                        @item.Phone
+                                    </td>
+                                    <td>
+                                        @item.Email
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<script>
+    function setLoader() {
+        console.log("Set Loader");
+        var loaderContainer = document.getElementById("loaderContainer");
+        var buttonSubmit = document.getElementById("button-submit");
+
+        var tableProgress = document.getElementById("table-progress");
+        var height = tableProgress.style.height;
+
+        console.log(height);
+
+        if (loaderContainer.style.display === "none") {
+            loaderContainer.style.display = "block";
+            buttonSubmit.style.opacity = "0.5";
+            buttonSubmit.disabled = true;
+            tableProgress.style.height = "200px";
+            return true;
+        } else {
+            loaderContainer.style.display = "none";
+        }
+
+        if (@Model.IsLoading) {
+            buttonSubmit.style.opacity = "1";
+            tableProgress.style.height = "363px";
+            buttonSubmit.disabled = false;
+        }
+    }
+
+    function rowClicked(id, rowIndex) {
+        console.log("run in");
+        var rowSelect = document.getElementById('row-' + rowIndex);
+
+        var computedStyle = window.getComputedStyle(rowSelect);
+        var rowSelectColor = computedStyle.getPropertyValue("background-color");
+
+        console.log(rowSelectColor);
+
+        if (rowSelectColor === "rgb(173, 216, 230)") {
+            var currentValue = document.getElementById('input-value').value;
+            currentValue = currentValue.replace('|' + id + '|', '');
+
+            document.getElementById('input-value').value = currentValue
+            rowSelect.style.backgroundColor = "transparent";
+        } else {
+            document.getElementById('input-value').value += "|" + id + "|";
+            rowSelect.style.backgroundColor = "lightblue";
+        }
+
+    }
+</script>
+

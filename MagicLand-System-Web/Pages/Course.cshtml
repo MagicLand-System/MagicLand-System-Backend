@@ -1,0 +1,223 @@
+﻿@page
+@model CourseModel
+@{
+    ViewData["Title"] = "Course";
+    ViewData["Page"] = "Course";
+    var Message = ViewData["Message"]?.ToString();
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #course {
+        background-color: lightblue;
+    }
+
+        #course .nav-link {
+            color: blue !important;
+        }
+
+        #course i.fa {
+            color: blue;
+        }
+</style>
+
+<section class="body-class">
+    <div class="text-center">
+        <p class="display-3" style="font-weight: bold; font-size: 30px"><b>Tạo Khóa Học Cho Các Giáo Trình Đang Trống Khóa Học</b></p>
+
+        <div class="form-group" onsubmit="return setLoader()">
+            <form method="post">
+                <button id="button-submit" name="submitButton" type="submit" style="background-color: white; color: black; margin-left: 35px; width: 135px;" value="Progress">Xử Lý</button>
+                <button id="button-refresh" name="submitButton" type="submit" style="background-color: white; color: black; margin-left: 35px; width: 135px;" value="Refresh">Kiểm Tra Lại</button>
+            </form>
+        </div>
+
+
+        <div class="form-group" onsubmit="return setLoader()">
+            <form method="post">
+            </form>
+        </div>
+
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-warning" style="margin-left: auto; width: 75%;">
+                @Message
+            </div>
+        }
+
+        @if (Model.IsLoading)
+        {
+            <script>
+                setLoader();
+            </script>
+        }
+
+        <div class="form-loader" id="loaderContainer" style="text-align: center; display:none;">
+            <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
+            <div id="progressMessage" style="margin-left: 29%;">Now Progressing</div>
+        </div>
+
+
+        <div class="table-container" style="overflow-y: auto; height: 383px; width: 73%; margin-top: 22px; position: relative}">
+            @if (Model.CourseMessages != null && Model.CourseMessages.Count() > 0)
+            {
+                <table class="table">
+                    <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                        <tr>
+                            <th>
+                                Thứ Tự
+                            </th>
+                            <th>
+                                Tên Khóa Học
+                            </th>
+                            <th>
+                                Thuộc Giáo Trình
+                            </th>
+                            <th>
+                                Giá Mặc Định
+                            </th>
+                            <th>
+                                Độ Tuổi
+                            </th>
+                            <th>
+                                Trạng Thái
+                            </th>
+                            <th style="width: 170px">
+                                Ghi Chú
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 0;
+                        }
+                        @foreach (var item in Model.CourseMessages)
+                        {
+                            {
+                                index++;
+                            }
+                            <tr>
+                                <td>
+                                    @index
+                                </td>
+                                <td>
+                                    @item.CourseName
+                                </td>
+                                <td>
+                                    @item.SyllabusBelong
+                                </td>
+                                <td>
+                                    @item.CoursePrice
+                                </td>
+                                <td>
+                                    @item.AgeRange
+                                </td>
+                                <td>
+                                    @item.Status
+                                </td>
+                                <td>
+                                    @item.Note
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (Model.ValidSyllabus != null)
+            {
+                if (Model.ValidSyllabus.Count == 0)
+                {
+                    <h6>Các Giáo Trình Đã Được Phân Bố Khóa Dạy</h6>
+                }
+                else
+                {
+                    <table class="table">
+                        <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                            <tr>
+                                <th colspan="5" style="text-align: center; font-size: larger; font-weight: bold;">Các Giáo Trình Chưa Có Khóa Dạy</th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    Thứ Tự
+                                </th>
+                                <th>
+                                    Tên Giáo Trình
+                                </th>
+                                <th>
+                                    Thời Gian Hiệu Lực
+                                </th>
+                                <th>
+                                    Khóa Đang Dạy
+                                </th>
+                                <th>
+                                    Mã Giáo Trình
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int index = 0;
+                            }
+                            @foreach (var item in Model.ValidSyllabus)
+                            {
+                                {
+                                    index++;
+                                }
+                                <tr>
+                                    <td>
+                                        @index
+                                    </td>
+                                    <td>
+                                        @item.SyllabusName
+                                    </td>
+                                    <td>
+                                        @item.EffectiveDate
+                                    </td>
+                                    <td>
+                                        Trống
+                                    </td>
+                                    <td>
+                                        @item.SubjectCode
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<script>
+    function setLoader() {
+        var loaderContainer = document.getElementById("loaderContainer");
+        var buttonSubmit = document.getElementById("button-submit");
+        var buttonRefresh = document.getElementById("button-refresh");
+
+        if (loaderContainer.style.display === "none") {
+            loaderContainer.style.display = "block";
+            buttonSubmit.style.opacity = "0.5";
+            buttonSubmit.disabled = true;
+
+
+            return true;
+        } else {
+            loaderContainer.style.display = "none";
+        }
+
+        if (@Model.IsLoading) {
+            buttonSubmit.style.opacity = "1";
+            buttonSubmit.disabled = false;
+
+        }
+    }
+
+
+</script>

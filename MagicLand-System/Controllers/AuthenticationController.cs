@@ -1,10 +1,7 @@
-﻿using Azure.Messaging;
-using MagicLand_System.Constants;
+﻿using MagicLand_System.Constants;
 using MagicLand_System.PayLoad.Request;
 using MagicLand_System.PayLoad.Response;
 using MagicLand_System.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicLand_System.Controllers
@@ -14,11 +11,11 @@ namespace MagicLand_System.Controllers
     {
         private readonly IUserService _userService;
 
-        public AuthenticationController(ILogger<AuthenticationController> logger,IUserService userService) : base(logger)
+        public AuthenticationController(ILogger<AuthenticationController> logger, IUserService userService) : base(logger)
         {
             _userService = userService;
         }
-        [HttpPost(ApiEndpointConstant.Authentication.AuthenticationEndpoint)]
+        [HttpPost(ApiEndpointConstant.AuthenticationEndpoint.Authentication)]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
         public async Task<IActionResult> Authentication([FromBody] LoginRequest loginRequest)
@@ -35,7 +32,7 @@ namespace MagicLand_System.Controllers
             }
             return Ok(loginResponse);
         }
-        [HttpPost(ApiEndpointConstant.Authentication.AuthenticationEndpointRefreshToken)]
+        [HttpPost(ApiEndpointConstant.AuthenticationEndpoint.RefreshToken)]
         [ProducesResponseType(typeof(NewTokenResponse), StatusCodes.Status200OK)]
         [ProducesErrorResponseType(typeof(UnauthorizedObjectResult))]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest refreshTokenRequest)

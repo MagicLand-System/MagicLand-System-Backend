@@ -11,19 +11,19 @@ namespace MagicLand_System.Helpers
             switch (dateNumber)
             {
                 case 1:
-                    return "2";
-                case 2:
-                    return "3";
-                case 4:
-                    return "4";
-                case 8:
-                    return "5";
-                case 16:
-                    return "6";
-                case 32:
-                    return "7";
-                case 64:
                     return DateFilter.Sunday.ToString();
+                case 2:
+                    return "2";
+                case 4:
+                    return "3";
+                case 8:
+                    return "4";
+                case 16:
+                    return "5";
+                case 32:
+                    return "6";
+                case 64:
+                    return "7";
                 default:
                     return "2";
             }

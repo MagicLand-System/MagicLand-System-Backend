@@ -1,13 +1,8 @@
 ﻿using MagicLand_System.Domain.Paginate;
 using MagicLand_System.Repository.Interfaces;
-using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MagicLand_System.Repository.Implement
 {
@@ -19,6 +14,7 @@ namespace MagicLand_System.Repository.Implement
         public GenericRepository(DbContext context)
         {
             _dbContext = context;
+            _dbContext.Database.SetCommandTimeout(180);
             _dbSet = context.Set<T>();
         }
 
@@ -56,6 +52,7 @@ namespace MagicLand_System.Repository.Implement
 
         public virtual async Task<ICollection<T>> GetListAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
         {
+
             IQueryable<T> query = _dbSet;
 
             if (include != null) query = include(query).IgnoreAutoIncludes();
@@ -65,7 +62,7 @@ namespace MagicLand_System.Repository.Implement
             if (orderBy != null) return await orderBy(query).AsNoTracking().ToListAsync();
 
             return await query.AsNoTracking().ToListAsync();
-        }   
+        }
 
         public virtual async Task<ICollection<TResult>> GetListAsync<TResult>(Expression<Func<T, TResult>> selector, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
         {

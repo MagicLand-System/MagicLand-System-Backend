@@ -9,19 +9,19 @@ namespace MagicLand_System.Mappers.Custom
         {
             if (user == null)
             {
-                return new UserResponse();
+                return default!;
             }
 
-            UserResponse response = new UserResponse
+            var response = new UserResponse
             {
                 Id = user.Id,
                 FullName = user.FullName,
-                Phone = user.Phone,
+                Phone = user.Phone!,
                 Email = user.Email,
                 Gender = user.Gender,
-                DateOfBirth = user.DateOfBirth,
-                AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? DefaultAvatarConstant.DefaultAvatar() : user.AvatarImage,
-                Address = user.City + " " + user.District + " " + user.Street,
+                DateOfBirth = user.DateOfBirth!.Value,
+                AvatarImage = string.IsNullOrEmpty(user.AvatarImage) ? ImageUrlConstant.DefaultAvatar() : user.AvatarImage,
+                Address = user.Address,
             };
 
             return response;

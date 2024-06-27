@@ -7,6 +7,7 @@ namespace MagicLand_System.Domain.Models
         public Guid Id { get; set; }
         public int DayOfWeek { get; set; }
         public DateTime Date { get; set; }
+        public Guid? SubLecturerId { get; set; } = null;
 
         [ForeignKey("Class")]
         public Guid ClassId { get; set; }
@@ -19,7 +20,10 @@ namespace MagicLand_System.Domain.Models
         [ForeignKey("Room")]
         public Guid RoomId { get; set; }
         public Room? Room { get; set; }
+
+
         public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public ICollection<Evaluate> Evaluates { get; set; } = new List<Evaluate>();
 
 
     }

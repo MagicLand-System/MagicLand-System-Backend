@@ -1,0 +1,47 @@
+﻿@page
+@model MagicLand_System_Web_Dev.Pages.SettingTimeModel
+@{
+    ViewData["Title"] = "Setting Time";
+    ViewData["Page"] = "Time";
+    var Message = ViewData["Message"]?.ToString();
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #time {
+        background-color: lightblue;
+    }
+
+        #time .nav-link {
+            color: blue !important;
+        }
+
+        #time i.fa {
+            color: blue;
+        }
+
+
+    tbody, td, tfoot, th, thead, tr {
+        align-content: center;
+    }
+</style>
+
+
+<h1>@Model.CurrentTime</h1>
+
+<form method="post" asp-page-handler="Progress">
+    <label for="inputField">Thiết Lập Thời Gian: </label>
+    <input type="datetime-local" id="time" name="time" value="@Model.CurrentTime" />
+    <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+    <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Trở Lại Mặt Định</button>
+</form>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-warning" style="margin-left: auto; width: 75%; text-align:center">
+        @Message
+    </div>
+}

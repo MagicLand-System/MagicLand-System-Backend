@@ -1,0 +1,320 @@
+﻿@page
+@model MagicLand_System_Web_Dev.Pages.RegisterClassModel
+@{
+    ViewData["Title"] = "Register Class";
+    ViewData["Page"] = "RegisterClass";
+    var Message = ViewData["Message"]?.ToString();
+    <link rel="stylesheet" href="~/css/cutom.css" />
+}
+<style>
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    #registerClass {
+        background-color: lightblue;
+    }
+
+        #registerClass .nav-link {
+            color: blue !important;
+        }
+
+        #registerClass i.fa {
+            color: blue;
+        }
+
+
+    tbody, td, tfoot, th, thead, tr {
+        align-content: center;
+    }
+</style>
+
+<section class="body-class">
+    <div class="text-center">
+        <h6 class="display-3" style="font-weight: bold; font-size: 30px"><b>Đăng Ký Hàng Loạt Học Sinh Vào Lớp</b></h6>
+
+        <div class="form-group" onsubmit="return setLoader()">
+            <form method="post" asp-page-handler="Progress">
+                <label for="inputField">Nhập Số Học Sinh: </label>
+                <input type="text" id="inputField" name="inputField" />
+                <input type="hidden" id="input-value" name="listId" value="" />
+                <button id="button-submit" type="submit" style="background-color: white; color: black">Xử Lý</button>
+                <button id="button-refresh" type="submit" style="background-color: white; color: black; margin-left: 26px;" value="Refresh" name="submitButton">Tải Lớp Học</button>
+            </form>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-warning" style="margin-left: auto; width: 75%;">
+                @Message
+            </div>
+        }
+
+        @if (Model.IsLoading)
+        {
+            <script>
+                setLoader();
+            </script>
+        }
+
+        <div class="form-loader" id="loaderContainer" style="text-align: center; display:none;">
+            <div class="loader" style="margin-left: 62%; margin-right: auto;"></div>
+            <div style="margin-left: 29%;">Now Progressing...</div>
+        </div>
+
+        
+        @if ((Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count > 0) || (Model.Classes != null && Model.Classes.Count > 0))
+        {
+            {
+                ViewData["Type"] = Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count > 0 ? "MESSAGE" : "DATA";
+            }
+            <div class="from-search" style="float: left; margin-top: 30px; margin-bottom: 5px;">
+                <form method="post" asp-page-handler="Search">
+                    <input type="hidden" id="input-search-type" name="searchType" value="@ViewData["Type"]">
+                    <input type="text" id="input-search-value" name="searchKey" value="" />
+                    <button id="button-submit-search" type="submit" style="background-color: white; color: black">Tìm Kiếm</button>
+                </form>
+            </div>
+        }
+
+        <div id="table-progress" class="table-container" style="overflow-y: auto; height: 363px; width: 73%; margin-top: 22px; position: relative}">
+            @if (Model.RegisterInforMessages != null && Model.RegisterInforMessages.Count() > 0)
+            {
+                <table class="table">
+                    <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                        <tr>
+                            <th>
+                                Thứ Tự
+                            </th>
+                            <th>
+                                Tên Học Sinh
+                            </th>
+                            <th>
+                                Thuộc Phụ Huynh
+                            </th>
+                            <th>
+                                Lớp Đăng Ký
+                            </th>
+                            <th style="width: 100px">
+                                Trạng Thái
+                            </th>
+                            <th style="width: 100px">
+                                Ghi Chú
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 0;
+                        }
+                        @foreach (var item in Model.RegisterInforMessages)
+                        {
+                            {
+                                index++;
+                            }
+                            <tr>
+                                <td>
+                                    @index
+                                </td>
+                                <td>
+                                    @item.StudentName
+                                </td>
+                                <td>
+                                    @item.ParentBelong
+                                </td>
+                                <td>
+                                    @item.RegisteredClass
+                                </td>
+                                <td>
+                                    @item.Status
+                                </td>
+                                <td>
+                                    @item.Note
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (Model.Classes != null)
+            {
+                if (Model.Classes.Count == 0)
+                {
+                    <h6>Hiện Chưa Có Lớp Học Nào Đang Mở</h6>
+                }
+                else
+                {
+                    <table class="table">
+                        <thead style="position: sticky; top: -1px; background-color: gainsboro;">
+                            <tr>
+                                <th colspan="8" style="text-align: center; font-size: larger; font-weight: bold;">Chọn Một Lớp Học</th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    Thứ Tự
+                                </th>
+                                <th>
+                                    Mã Lớp Học
+                                </th>
+                                <th>
+                                    Thuộc Khóa
+                                </th>
+                                <th>
+                                    Ngày Bắt Đầu
+                                </th>
+                                <th style="width: 200px">
+                                    Lịch Học
+                                </th>
+                                <th>
+                                    Thuộc Giáo Viên
+                                </th>
+                                <th>
+                                    Số Học Sinh Đã Đăng Ký
+                                </th>
+                                <th>
+                                    Giới Hạn Học Sinh Đăng Ký
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            @{
+                                int index = 0;
+                            }
+                            @foreach (var item in Model.Classes)
+                            {
+                                {
+                                    index++;
+                                }
+                                <tr id="row-@index" onclick="rowClicked('@item.ClassId', '@index')">
+                                    <td>
+                                        @index
+                                    </td>
+                                    <td>
+                                        @item.ClassCode
+                                    </td>
+                                    <td>
+                                        @item.CourseBeLong
+                                    </td>
+                                    <td>
+                                        @item.StartDate
+                                    </td>
+                                    <td>
+                                        <div class="table-container-schedule" style="overflow-y: auto;  height: 100px; align-content: center;">
+                                            <table style="border-collapse: collapse; border: none; text-align: center; width: 100%">
+                                                @for (int i = 0; i < item.Schedules.Count; i++)
+                                                {
+                                                    if (i != 0)
+                                                    {
+                                                        <tbody style="border-top: 1px solid black;">
+                                                            @if (item.Schedules[i].DayOfWeek.ToLower() == "sunday")
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Chủ Nhật: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+                                                            else
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Thứ @item.Schedules[i].DayOfWeek: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+
+                                                        </tbody>
+                                                    }
+                                                    else
+                                                    {
+                                                        <tbody>
+                                                            @if (item.Schedules[i].DayOfWeek.ToLower() == "sunday")
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Chủ Nhật: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+                                                            else
+                                                            {
+                                                                <tr>
+                                                                    <td style="border: none"> Thứ @item.Schedules[i].DayOfWeek: @item.Schedules[i].Slot</td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    }
+                                                }
+                                            </table>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @item.LecturerBeLong
+                                    </td>
+                                    <td>
+                                        @item.StudentRegistered
+                                    </td>
+                                    <td>
+                                        @item.MaxStudentRegistered
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<script>
+    function setLoader() {
+        console.log("Set Loader");
+        var loaderContainer = document.getElementById("loaderContainer");
+        var buttonSubmit = document.getElementById("button-submit");
+
+        var tableProgress = document.getElementById("table-progress");
+        var height = tableProgress.style.height;
+
+        console.log(height);
+
+        if (loaderContainer.style.display === "none") {
+            loaderContainer.style.display = "block";
+            buttonSubmit.style.opacity = "0.5";
+            buttonSubmit.disabled = true;
+            tableProgress.style.height = "305px";
+            return true;
+        } else {
+            loaderContainer.style.display = "none";
+        }
+
+        if (@Model.IsLoading) {
+            buttonSubmit.style.opacity = "1";
+            tableProgress.style.height = "363px";
+            buttonSubmit.disabled = false;
+        }
+    }
+
+    function rowClicked(id, rowIndex) {
+        var tbody = document.getElementById("table-body");
+        var rows = tbody.querySelectorAll("tr");
+        rows.forEach(function (row) {
+            row.style.backgroundColor = "transparent";
+        });
+
+        var rowSelect = document.getElementById('row-' + rowIndex);
+        document.getElementById('input-value').value = "|" + id + "|";
+        rowSelect.style.backgroundColor = "lightblue";
+
+        //var computedStyle = window.getComputedStyle(rowSelect);
+        //var rowSelectColor = computedStyle.getPropertyValue("background-color");
+
+        //console.log(rowSelectColor);
+
+        //if (rowSelectColor === "rgb(173, 216, 230)") {
+        //    var currentValue = document.getElementById('input-value').value;
+        //    currentValue = currentValue.replace('|' + id + '|', '');
+
+        //    document.getElementById('input-value').value = currentValue
+        //    rowSelect.style.backgroundColor = "transparent";
+        //} else {
+        //    document.getElementById('input-value').value += "|" + id + "|";
+        //    rowSelect.style.backgroundColor = "lightblue";
+        //}
+
+    }
+</script>
